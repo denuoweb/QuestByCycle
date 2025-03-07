@@ -57,7 +57,8 @@ def login():
 
     try:
         if login_form.validate_on_submit():
-            email = sanitize_html(login_form.email.data)
+            # Normalize email to lowercase after sanitizing it.
+            email = sanitize_html(login_form.email.data or "").lower()
             password = login_form.password.data
             if not email or not password:
                 flash('Please enter both email and password.')
@@ -156,7 +157,7 @@ def register():
                 flash('You must agree to the terms of service, license agreement, and privacy policy.', 'warning')
                 return render_template('register.html', form=register_form, game_id=request.args.get('game_id'), quest_id=request.args.get('quest_id'), next=request.args.get('next'))
 
-            email = sanitize_html(register_form.email.data)
+            email = sanitize_html(register_form.email.data or "").lower()
             base_username = email.split('@')[0]
             existing_user = User.query.filter_by(email=email).first()
             if existing_user:
