@@ -1808,21 +1808,3 @@ small {
         display: block; 
     }
 }
-
-/* Badge Modal styling */
-#badgeModal .modal-content {
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    background-color: #D0E6B5;
-    color: #333;
-}
-#badgeModal .modal-header {
-    background-color: #D0E6B5;
-    border-bottom: 1px solid #ccc;
-}
-#badgeModal .modal-title {
-    font-weight: bold;
-}
-#badgeModal .modal-body {
-    background-color: #fff;
-}

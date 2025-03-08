@@ -1,18 +1,17 @@
 <!-- Badge Modal -->
 <div id="badgeModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="badgeModalTitle">Badge Details</h5>
-        <!-- Using Bootstrap's close button -->
-        <button type="button" class="btn-close" aria-label="Close" onclick="closeModal('badgeModal')"></button>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title" id="badgeModalTitle">Badge Details</h5>
+      <button type="button" class="btn-close" aria-label="Close" onclick="closeModal('badgeModal')"></button>
+    </div>
+    <div class="modal-body" id="badgeModalBody" style="background-color: #fff;">
+      <div id="badgeImageContainer" style="text-align: center; margin-bottom: 10px;">
+        <!-- The badge image will be loaded here -->
+        <img id="badgeModalImage" src="" alt="" style="max-width: 100%; border-radius: 8px;">
       </div>
-      <div class="modal-body" id="badgeModalBody" style="background-color: #fff;">
-        <div id="badgeImageContainer" style="text-align: center; margin-bottom: 10px;">
-          <!-- The badge image will be loaded here -->
-          <img id="badgeModalImage" src="" alt="" style="max-width: 100%; border-radius: 8px;">
-        </div>
-        <div id="badgeModalText"></div>
-      </div>
+      <div id="badgeModalText"></div>
     </div>
   </div>
+</div>
   
