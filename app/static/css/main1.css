@@ -16,10 +16,99 @@ main {
     background-attachment: fixed;
 }
 
-.navbar-nav .nav-link {
-    font-weight: bold; /* Makes text bold */
+/* Revised Epic Navbar Style */
+.navbar {
+    background: linear-gradient(135deg, #0056b3, #007bff);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
+    padding: 15px 30px;
 }
-
+/* Brand styling */
+.navbar-brand {
+    font-family: 'Arial', sans-serif;
+    font-size: 2rem;
+    color: #fff !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+    white-space: nowrap;
+}
+/* Navigation link styling */
+.navbar-nav .nav-link {
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    font-size: 1.3rem;
+    color: #fff !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.6);
+    margin: 0 10px;
+    transition: transform 0.3s ease, text-shadow 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap; /* Keep icon and text together */
+}
+.navbar-nav .nav-link i {
+    margin-right: 5px;
+}
+.navbar-nav .nav-link:hover {
+    transform: scale(1.05);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+/* Dropdown menu adjustments */
+.dropdown-menu {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-family: 'Arial', sans-serif;
+    z-index: 2000 !important;  /* Ensure dropdown appears on top */
+}
+.dropdown-menu .dropdown-item {
+    color: #333;
+    transition: background 0.3s ease;
+    white-space: nowrap;
+}
+.dropdown-menu .dropdown-item:hover {
+    background: #f8f8f8;
+}
+/* For viewports between 992px and 1589px, ensure overflow does not clip dropdowns */
+@media (min-width: 992px) and (max-width: 1589px) {
+    .navbar-nav {
+        flex-wrap: nowrap;
+        overflow-x: visible !important;
+    }
+    .navbar {
+        padding: 15px 20px;
+    }
+}
+/* Additional adjustments for screens below 1550px: reduce margins and font sizes */
+@media (max-width: 1550px) {
+    .navbar-nav .nav-link {
+        margin: 0 5px;
+        font-size: 1.2rem;
+    }
+    /* Remove any horizontal scroll to allow dropdowns to extend */
+    .navbar-nav {
+        overflow-x: visible !important;
+    }
+}
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .navbar-nav .nav-link {
+        font-size: 1.2rem;
+    }
+    .navbar-brand {
+        font-size: 1.8rem;
+    }
+}
+/* Hamburger Menu Customization */
+.navbar-toggler {
+    border-color: white !important;
+    background-color: transparent !important;
+}
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(255,255,255,1)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E") !important;
+}
+.navbar-toggler:focus,
+.navbar-toggler:active {
+    outline: none;
+    box-shadow: none;
+}
 .modal-backdrop {
     z-index: 1030 !important;
 }
