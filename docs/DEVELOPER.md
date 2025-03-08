@@ -284,7 +284,6 @@ JavaScript files are located in `app/static/js` and include:
 - `all_submissions_modal.js`
 - `badge_management.js`
 - `bootstrap.min.js`
-- `contact_modal.js`
 - `generated_quest.js`
 - `highlight.min.js`
 - `index_management.js`
