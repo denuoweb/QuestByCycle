@@ -144,7 +144,8 @@ def manage_badges():
         return redirect(url_for('badges.manage_badges'))
 
     badges = Badge.query.all()
-    return render_template('manage_badges.html', form=form, badges=badges)
+    return render_template('manage_badges.html', form=form, badges=badges,
+        in_admin_dashboard=True)
 
 
 @badges_bp.route('/update/<int:badge_id>', methods=['POST'])

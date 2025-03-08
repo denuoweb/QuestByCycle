@@ -124,6 +124,7 @@ def manage_game_quests(game_id):
         quests=quests,
         form=form,
         game_id=game_id,
+        in_admin_dashboard=True
     )
 
 
@@ -187,9 +188,11 @@ def add_quest(game_id):
             db.session.rollback()
             flash(f"An error occurred: {error}", "error")
 
-        return redirect(url_for("quests.manage_game_quests", game_id=game_id))
+        return redirect(url_for("quests.manage_game_quests", game_id=game_id,
+            in_admin_dashboard=True))
 
-    return render_template("add_quest.html", form=form, game_id=game_id)
+    return render_template("add_quest.html", form=form, game_id=game_id,
+        in_admin_dashboard=True)
 
 
 @quests_bp.route("/quest/<int:quest_id>/submit", methods=["POST"])

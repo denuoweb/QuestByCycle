@@ -131,7 +131,8 @@ def create_game():
         except SQLAlchemyError as error:
             db.session.rollback()
             flash(f'An error occurred while creating the game: {error}', 'error')
-    return render_template('create_game.html', title='Create Game', form=form)
+    return render_template('create_game.html', title='Create Game', form=form,
+        in_admin_dashboard=True)
 
 
 @games_bp.route('/update_game/<int:game_id>', methods=['GET', 'POST'])
@@ -200,7 +201,8 @@ def update_game(game_id):
         'update_game.html',
         form=form,
         game_id=game_id,
-        leaderboard_image=game.leaderboard_image
+        leaderboard_image=game.leaderboard_image,
+        in_admin_dashboard=True
     )
 
 
@@ -399,7 +401,7 @@ def generate_qr_for_game(game_id):
         f"alt='Welcome'>\n"
         f"    </div>\n"
         f"    <h1>Join the Game!</h1>\n"
-        f"    <h2>Scan to login or register and automatically join '{game.title}'!</h2>\n"
+        f"    <h2>Scan to join '{game.title}'!</h2>\n"
         f"    <img src='data:image/png;base64,{img_data}' alt='QR Code'>\n"
         f"</body>\n"
         f"</html>\n"

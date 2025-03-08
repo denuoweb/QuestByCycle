@@ -183,13 +183,13 @@
 
 <body data-user-id="{{ current_user.id if current_user.is_authenticated else 'none' }}">
 <!-- BEGIN: Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light" style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
+<nav class="navbar navbar-expand-lg navbar-light bg-light" style="padding: 0; margin: 0;">
   <div class="container-fluid">
     <!-- Brand -->
-    <a class="navbar-brand" href="{{ url_for('main.index') }}" style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
+    <a class="navbar-brand" href="{{ url_for('main.index') }}" style="padding: 0; margin: 0;">
       <img src="{{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=175) }}"
            alt="Quest by Cycle"
-           style="vertical-align: middle; margin-top: 0; margin-bottom: 0;">
+           style="vertical-align: middle;">
     </a>
     <!-- Hamburger for mobile -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
@@ -202,59 +202,65 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
         {% if current_user.is_authenticated %}
-          {% if selected_game_id %}
-            <li class="nav-item">
-              <a class="nav-link" href="javascript:void(0)" onclick="showGameInfoModal('{{ selected_game_id }}')">
-                <i class="fas fa-book me-1"></i> Game Info
+          {% if not in_admin_dashboard %}
+            <!-- Non-admin navigation options, only visible when not in admin dashboard -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="gameDropdownButton" role="button" 
+                 data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-gamepad me-1"></i>
+                {% if selected_game %}
+                  {{ selected_game.title }}
+                {% else %}
+                  Select a Game
+                {% endif %}
               </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="javascript:void(0)" onclick="openModal('sponsorsModal', '{{ selected_game_id }}')">
-                <i class="fas fa-handshake me-1"></i> Sponsors
-              </a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="javascript:void(0)" id="leaderboardNavbarLink" data-game-id="{{ selected_game_id }}">
-                <i class="fas fa-trophy me-1"></i> Leaderboard
-              </a>
-            </li>
-          {% endif %}
-
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="gameDropdownButton" role="button" 
-               data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="fas fa-gamepad me-1"></i>
-              {% if selected_game %}
-                {{ selected_game.title }}
-              {% else %}
-                Select a Game
-              {% endif %}
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="gameDropdownButton">
-              {% for gameObj, joined_at in user_games|sort(reverse=True, attribute='joined_at') %}
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="gameDropdownButton">
+                {% for gameObj, joined_at in user_games|sort(reverse=True, attribute='joined_at') %}
+                  <li>
+                    <a class="dropdown-item d-flex flex-column text-center" 
+                       href="{{ url_for('main.index', game_id=gameObj.id) }}">
+                      <i class="fas fa-gamepad me-1"></i>
+                      <span class="game-title">{{ gameObj.title }}</span>
+                      <small class="text-muted">Joined on: {{ joined_at.strftime('%m-%d-%Y') if joined_at else 'N/A' }}</small>
+                    </a>
+                  </li>
+                {% endfor %}
+                <li><hr class="dropdown-divider"></li>
                 <li>
-                  <a class="dropdown-item d-flex flex-column text-center" 
-                     href="{{ url_for('main.index', game_id=gameObj.id) }}">
-                    <i class="fas fa-gamepad me-1"></i>
-                    <span class="game-title">{{ gameObj.title }}</span>
-                    <small class="text-muted">Joined on: {{ joined_at.strftime('%m-%d-%Y') if joined_at else 'N/A' }}</small>
+                  <a class="dropdown-item bold-item text-center" href="#" onclick="handleGameSelection({ value: 'join_custom_game' })">
+                    <i class="fas fa-plus-circle me-1"></i> Join Custom Game
                   </a>
                 </li>
-              {% endfor %}
-              <li><hr class="dropdown-divider"></li>
-              <li>
-                <a class="dropdown-item bold-item text-center" href="#" onclick="handleGameSelection({ value: 'join_custom_game' })">
-                  <i class="fas fa-plus-circle me-1"></i> Join Custom Game
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="javascript:void(0)" onclick="showUserProfileModal('{{ current_user.id }}')">
+                <i class="fas fa-user me-1"></i> Profile
+              </a>
+            </li>
+            {% if selected_game_id %}
+              <li class="nav-item">
+                <a class="nav-link" href="javascript:void(0)" id="leaderboardNavbarLink" data-game-id="{{ selected_game_id }}">
+                  <i class="fas fa-trophy me-1"></i> Leaderboard
                 </a>
               </li>
-            </ul>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="javascript:void(0)" onclick="showUserProfileModal('{{ current_user.id }}')">
-              <i class="fas fa-user me-1"></i> Profile
-            </a>
-          </li>
+              <li class="nav-item">
+                <a class="nav-link" href="javascript:void(0)" onclick="showGameInfoModal('{{ selected_game_id }}')">
+                  <i class="fas fa-book me-1"></i> Game Info
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="javascript:void(0)" onclick="openModal('sponsorsModal', '{{ selected_game_id }}')">
+                  <i class="fas fa-handshake me-1"></i> Sponsors
+                </a>
+              </li>
+            {% endif %}
+          {% endif %}
+          {% if in_admin_dashboard %}
+            <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+          {% endif %}
           {% if current_user.is_admin %}
+            <!-- Admin Dashboard navigation always available to admin users -->
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('admin.admin_dashboard', selected_game_id=selected_game_id) }}">
                 <i class="fas fa-user-shield me-1"></i> Admin Dashboard
@@ -280,165 +286,166 @@
   </div>
 </nav>
 <!-- END: Navbar -->
-  <div class="content-wrap">
-    <main>
-      {% block content %}{% endblock %}
-    </main>
+
+<div class="content-wrap">
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<footer class="footer">
+  <div class="footer-section text">
+    <strong>Supporting cycling initiatives for a greener planet.</strong>
+    <p>Enjoy the full experience by installing our app.</p>
+    <button id="install" hidden class="btn btn-primary">Install App</button>
+    <div id="manual-install" hidden>
+      <p>To install this app:</p>
+      <ul>
+        <li>
+          <strong>Safari (iOS/iPadOS):</strong> Tap the <strong>Share</strong> button (the square with an arrow pointing up) and then select <strong>Add to Home Screen</strong>.
+        </li>
+        <li>
+          <strong>Safari (macOS):</strong> Use the File menu and choose <strong>Save As...</strong> to save a shortcut or bookmark to your desktop.
+        </li>
+        <li>
+          <strong>Firefox:</strong> Tap the menu button (⋮) and choose <strong>Add to Home screen</strong>.
+        </li>
+      </ul>
+    </div>
   </div>
+  <div class="footer-content">
+    <div class="footer-section logos">
+      <p>Sponsored by</p>
+      <a href="https://climaterevolutions.org" target="_blank">
+        <img src="{{ url_for('static', filename='images/climate-revolutions-logo.png') }}" alt="Climate Revolutions by Bike Logo" class="footer-logo">
+      </a>
+      <a href="https://www.350eugene.org/" target="_blank">
+        <img src="{{ url_for('static', filename='images/350EUG-logo.png') }}" alt="350Eugene Logo" class="footer-logo">
+      </a>
+    </div>
+    <div class="footer-section links">
+      <a href="javascript:void(0)" onclick="openModal('privacyModal')">Privacy Policy</a>
+      <a href="javascript:void(0)" onclick="openModal('termsModal')">Terms of Service</a>
+      <a href="javascript:void(0)" onclick="openModal('licenseModal')">License Agreement</a>
+    </div>
+    <div class="footer-section social">
+      <a href="{{ selected_game.twitter_url if selected_game else 'https://twitter.com/QuestByCycle' }}" target="_blank" class="social-link">
+        <i class="fab fa-twitter"></i>
+      </a>
+      <a href="{{ selected_game.facebook_url if selected_game else 'https://facebook.com/QuestByCycle' }}" target="_blank" class="social-link">
+        <i class="fab fa-facebook-f"></i>
+      </a>
+      <a href="{{ selected_game.instagram_url if selected_game else 'https://instagram.com/QuestByCycle' }}" target="_blank" class="social-link">
+        <i class="fab fa-instagram"></i>
+      </a>
+    </div>
+  </div>
+  <div class="footer-section legal">
+    &copy; {{ current_year }} QuestByCycle. All rights reserved.
+  </div>
+</footer>
 
-  <footer class="footer">
-    <div class="footer-section text">
-      <strong>Supporting cycling initiatives for a greener planet.</strong>
-      <p>Enjoy the full experience by installing our app.</p>
-      <button id="install" hidden class="btn btn-primary">Install App</button>
-      <div id="manual-install" hidden>
-        <p>To install this app:</p>
-        <ul>
-          <li>
-            <strong>Safari (iOS/iPadOS):</strong> Tap the <strong>Share</strong> button (the square with an arrow pointing up) and then select <strong>Add to Home Screen</strong>.
-          </li>
-          <li>
-            <strong>Safari (macOS):</strong> Use the File menu and choose <strong>Save As...</strong> to save a shortcut or bookmark to your desktop.
-          </li>
-          <li>
-            <strong>Firefox:</strong> Tap the menu button (⋮) and choose <strong>Add to Home screen</strong>.
-          </li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-content">
-      <div class="footer-section logos">
-        <p>Sponsored by</p>
-        <a href="https://climaterevolutions.org" target="_blank">
-          <img src="{{ url_for('static', filename='images/climate-revolutions-logo.png') }}" alt="Climate Revolutions by Bike Logo" class="footer-logo">
-        </a>
-        <a href="https://www.350eugene.org/" target="_blank">
-          <img src="{{ url_for('static', filename='images/350EUG-logo.png') }}" alt="350Eugene Logo" class="footer-logo">
-        </a>
-      </div>
-      <div class="footer-section links">
-        <a href="javascript:void(0)" onclick="openModal('privacyModal')">Privacy Policy</a>
-        <a href="javascript:void(0)" onclick="openModal('termsModal')">Terms of Service</a>
-        <a href="javascript:void(0)" onclick="openModal('licenseModal')">License Agreement</a>
-      </div>
-      <div class="footer-section social">
-        <a href="{{ selected_game.twitter_url if selected_game else 'https://twitter.com/QuestByCycle' }}" target="_blank" class="social-link">
-          <i class="fab fa-twitter"></i>
-        </a>
-        <a href="{{ selected_game.facebook_url if selected_game else 'https://facebook.com/QuestByCycle' }}" target="_blank" class="social-link">
-          <i class="fab fa-facebook-f"></i>
-        </a>
-        <a href="{{ selected_game.instagram_url if selected_game else 'https://instagram.com/QuestByCycle' }}" target="_blank" class="social-link">
-          <i class="fab fa-instagram"></i>
-        </a>
-      </div>
-    </div>
-    <div class="footer-section legal">
-      &copy; {{ current_year }} QuestByCycle. All rights reserved.
-    </div>
-  </footer>
-
-  <!-- Service Worker for PWA updates -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}").then((registration) => {
-        registration.addEventListener("updatefound", () => {
-          const newWorker = registration.installing;
-          newWorker.addEventListener("statechange", () => {
-            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              if (confirm("A new version is available. Reload to update?")) {
-                window.location.reload();
-              }
+<!-- Service Worker for PWA updates -->
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("{{ url_for('static', filename='sw.js') }}").then((registration) => {
+      registration.addEventListener("updatefound", () => {
+        const newWorker = registration.installing;
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            if (confirm("A new version is available. Reload to update?")) {
+              window.location.reload();
             }
-          });
+          }
         });
       });
+    });
 
-      navigator.serviceWorker.addEventListener("message", (event) => {
-        if (event.data.type === "UPDATE_AVAILABLE") {
-          if (confirm("A new version is available. Reload to update?")) {
-            window.location.reload();
-          }
+    navigator.serviceWorker.addEventListener("message", (event) => {
+      if (event.data.type === "UPDATE_AVAILABLE") {
+        if (confirm("A new version is available. Reload to update?")) {
+          window.location.reload();
         }
-      });
-    }
-  </script>
+      }
+    });
+  }
+</script>
 
-  <script>
-    const installButton = document.getElementById("install");
-    const manualInstall = document.getElementById("manual-install");
-    let deferredPrompt = null;
-    const userAgent = window.navigator.userAgent;
-    const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
-    if (isSafari) {
-      manualInstall.hidden = false;
-      console.log("Safari detected. Showing manual installation instructions.");
-    } else {
+<script>
+  const installButton = document.getElementById("install");
+  const manualInstall = document.getElementById("manual-install");
+  let deferredPrompt = null;
+  const userAgent = window.navigator.userAgent;
+  const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+  if (isSafari) {
+    manualInstall.hidden = false;
+    console.log("Safari detected. Showing manual installation instructions.");
+  } else {
+    manualInstall.hidden = true;
+  }
+  window.addEventListener("beforeinstallprompt", (event) => {
+    console.log("beforeinstallprompt event triggered");
+    event.preventDefault();
+    deferredPrompt = event;
+    installButton.hidden = false;
+    installButton.addEventListener("click", async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const result = await deferredPrompt.userChoice;
+        console.log(`User response: ${result.outcome}`);
+        deferredPrompt = null;
+      }
+      installButton.hidden = true;
+    });
+  });
+  if (!window.beforeinstallprompt) {
+    installButton.hidden = true;
+    if (!isSafari) {
       manualInstall.hidden = true;
     }
-    window.addEventListener("beforeinstallprompt", (event) => {
-      console.log("beforeinstallprompt event triggered");
-      event.preventDefault();
-      deferredPrompt = event;
-      installButton.hidden = false;
-      installButton.addEventListener("click", async () => {
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          const result = await deferredPrompt.userChoice;
-          console.log(`User response: ${result.outcome}`);
-          deferredPrompt = null;
-        }
+  }
+  window.addEventListener("appinstalled", () => {
+    console.log("PWA installed");
+    installButton.hidden = true;
+    manualInstall.hidden = true;
+  });
+  if (navigator.getInstalledRelatedApps) {
+    navigator.getInstalledRelatedApps().then((apps) => {
+      if (apps.length > 0) {
+        console.log("Related apps detected:", apps);
         installButton.hidden = true;
-      });
-    });
-    if (!window.beforeinstallprompt) {
-      installButton.hidden = true;
-      if (!isSafari) {
-        manualInstall.hidden = true;
       }
-    }
-    window.addEventListener("appinstalled", () => {
-      console.log("PWA installed");
-      installButton.hidden = true;
-      manualInstall.hidden = true;
     });
-    if (navigator.getInstalledRelatedApps) {
-      navigator.getInstalledRelatedApps().then((apps) => {
-        if (apps.length > 0) {
-          console.log("Related apps detected:", apps);
-          installButton.hidden = true;
+  }
+</script>
+
+<script>
+  function handleGameSelection(option) {
+    const selectedValue = option.value;
+    if (selectedValue === 'join_custom_game') {
+      openModal('joinCustomGameModal');
+    } else {
+      window.location.href = selectedValue;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const leaderboardLink = document.getElementById('leaderboardNavbarLink');
+    if (leaderboardLink) {
+      console.log('Leaderboard link found:', leaderboardLink);
+      leaderboardLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        const gameId = leaderboardLink.dataset.gameId || 0;
+        if (typeof showLeaderboardModal === 'function') {
+          showLeaderboardModal(gameId);
+        } else {
+          console.error('showLeaderboardModal function is not defined.');
         }
       });
+    } else {
+      console.error('Leaderboard link element not found.');
     }
-  </script>
-
-  <script>
-    function handleGameSelection(option) {
-      const selectedValue = option.value;
-      if (selectedValue === 'join_custom_game') {
-        openModal('joinCustomGameModal');
-      } else {
-        window.location.href = selectedValue;
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-      const leaderboardLink = document.getElementById('leaderboardNavbarLink');
-      if (leaderboardLink) {
-        console.log('Leaderboard link found:', leaderboardLink);
-        leaderboardLink.addEventListener('click', function(e) {
-          e.preventDefault();
-          const gameId = leaderboardLink.dataset.gameId || 0;
-          if (typeof showLeaderboardModal === 'function') {
-            showLeaderboardModal(gameId);
-          } else {
-            console.error('showLeaderboardModal function is not defined.');
-          }
-        });
-      } else {
-        console.error('Leaderboard link element not found.');
-      }
-    });
-  </script>
+  });
+</script>
 </body>
 </html>

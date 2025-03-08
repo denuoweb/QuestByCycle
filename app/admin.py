@@ -120,13 +120,8 @@ def create_super_admin(app):
 @login_required
 @require_admin
 def admin_dashboard():
-    selected_game_id = request.args.get('selected_game_id', 0)
-    # Use selected_game_id as needed, for example:
-    selected_game = Game.query.get(selected_game_id) if selected_game_id and int(selected_game_id) > 0 else None
     games = Game.query.all()  # or however you fetch games
-    form = CarouselImportForm()
-    return render_template('admin_dashboard.html', games=games, form=form,
-                           selected_game_id=selected_game_id, selected_game=selected_game)
+    return render_template('admin_dashboard.html', in_admin_dashboard=True, games=games)
 
 
 @admin_bp.route('/user_management', methods=['GET'])
@@ -164,7 +159,8 @@ def user_management(game_id=None):
         users=users,
         games=games,
         selected_game=selected_game,
-        user_game_scores=user_game_scores
+        user_game_scores=user_game_scores,
+        in_admin_dashboard=True
     )
 
 
