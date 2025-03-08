@@ -290,6 +290,9 @@
     <div id="game_IdHolder" data-game-id="{{ selected_game_id }}" style="display:none;"></div>
     {% include 'modals/login_modal.html' %}
     {% include 'modals/register_modal.html' %}
+    {% include "modals/terms_modal.html" %}
+    {% include "modals/privacy_modal.html" %}
+    {% include "modals/license_modal.html" %}
     {% include 'modals/game_info_modal.html' %}
     {% include 'modals/quest_detail_modal.html' %}
     {% include 'modals/badge_modal.html' %}
@@ -307,7 +310,6 @@
     <script src="{{ url_for('static', filename='js/modal_common.js') }}"></script>
     <script src="{{ url_for('static', filename='js/badge_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/game_info_modal.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/auth_modals.js') }}"></script>
     <script src="{{ url_for('static', filename='js/all_submissions_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/contact_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/join_custom_game_modal.js') }}"></script>

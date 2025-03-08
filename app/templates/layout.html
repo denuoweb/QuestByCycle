@@ -269,10 +269,10 @@
         {% else %}
           <!-- For non-authenticated users -->
           <li class="nav-item">
-            <a href="javascript:void(0)" class="btn btn-secondary btn-lg" onclick="openLoginModal()">Login</a>
+            <a href="javascript:void(0)" class="btn btn-secondary btn-lg" onclick="openModal('loginModal')">Login</a>
           </li>
           <li class="nav-item">
-            <a href="javascript:void(0)" class="btn btn-primary btn-lg" onclick="openRegisterModal()">Register Today!</a>
+            <a href="javascript:void(0)" class="btn btn-primary btn-lg" onclick="openModal('registerModal')">Register Today!</a>
           </li>
         {% endif %}
       </ul>
@@ -317,9 +317,9 @@
         </a>
       </div>
       <div class="footer-section links">
-        <a href="{{ url_for('auth.privacy_policy') }}">Privacy Policy</a>
-        <a href="{{ url_for('auth.terms_of_service') }}">Terms of Service</a>
-        <a href="{{ url_for('auth.license_agreement') }}">License Agreement</a>
+        <a href="javascript:void(0)" onclick="openModal('privacyModal')">Privacy Policy</a>
+        <a href="javascript:void(0)" onclick="openModal('termsModal')">Terms of Service</a>
+        <a href="javascript:void(0)" onclick="openModal('licenseModal')">License Agreement</a>
       </div>
       <div class="footer-section social">
         <a href="{{ selected_game.twitter_url if selected_game else 'https://twitter.com/QuestByCycle' }}" target="_blank" class="social-link">
