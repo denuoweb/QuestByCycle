@@ -1,9 +1,8 @@
-<!-- app/templates/modals/register_modal.html -->
 <div id="registerModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
             <h5 class="modal-title">Register</h5>
-            <button type="button" class="btn-close" aria-label="Close" onclick="closeRegisterModal()"></button>
+            <button type="button" class="btn-close" aria-label="Close" onclick="closeModal('registerModal')"></button>
         </div>
         <div class="modal-body">
             <form method="post" action="{{ url_for('auth.register', game_id=request.args.get('game_id'), quest_id=request.args.get('quest_id'), next=request.args.get('next')) }}">
@@ -30,8 +29,8 @@
                         </label>
                     </div>
                     <div>
-                        <a href="{{ url_for('auth.terms_of_service') }}">Terms of Service</a> and 
-                        <a href="{{ url_for('auth.privacy_policy') }}">Privacy Policy</a>
+                        <a href="javascript:void(0)" onclick="openModal('termsModal')">Terms of Service</a>, and 
+                        <a href="javascript:void(0)" onclick="openModal('privacyModal')">Privacy Policy</a>
                     </div>
                 </div>
                 <div class="form-group">
