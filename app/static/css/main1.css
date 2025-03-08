@@ -18,7 +18,7 @@ main {
 
 /* Revised Epic Navbar Style */
 .navbar {
-    background: linear-gradient(135deg, #0056b3, #007bff);
+    background: linear-gradient(135deg, #88c2ff, #007bff);
     box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4);
     padding: 15px 30px;
 }
