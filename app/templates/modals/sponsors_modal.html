@@ -1,35 +1,33 @@
 <div id="sponsorsModal" class="modal">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="sponsorsModalLabel">Sponsors</h5>
-                <button type="button" class="btn-close" aria-label="Close" onclick="closeModal('sponsorsModal')"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" class="game-id" value="">
-                {% if current_user.is_admin %}
-                    <a href="{{ url_for('admin.manage_sponsors', game_id=game.id) }}" class="btn btn-primary">Manage Sponsors</a>
-                {% endif %}
-                <div class="d-flex flex-column align-items-center">
-                    {% for tier in ['Gold', 'Silver', 'Bronze', 'Other'] %}
-                        {% for sponsor in game.sponsors if sponsor.tier == tier %}
-                            <div class="col-md-8 mb-4">
-                                <div class="card shadow-lg {% if tier == 'Gold' %}border-warning{% elif tier == 'Silver' %}border-secondary{% elif tier == 'Bronze' %}border-danger{% else %}border-primary{% endif %}">
-                                    <div class="card-header {% if tier == 'Gold' %}bg-warning text-dark{% elif tier == 'Silver' %}bg-secondary text-white{% elif tier == 'Bronze' %}bg-danger text-white{% else %}bg-primary text-white{% endif %} text-center">
-                                        <h3 class="card-title font-weight-bold">{{ sponsor.name }}</h3>
-                                    </div>
-                                    <img class="card-img-top" src="{{ url_for('static', filename=sponsor.logo) }}" alt="{{ sponsor.name }} logo">
-                                    <div class="card-body bg-light">
-                                        <p class="card-text">{{ sponsor.description | safe }}</p>
-                                        {% if sponsor.website %}
-                                            <a href="{{ sponsor.website }}" class="btn {% if tier == 'Gold' %}btn-warning{% elif tier == 'Silver' %}btn-secondary{% elif tier == 'Bronze' %}btn-danger{% else %}btn-primary{% endif %}" target="_blank">Visit Website</a>
-                                        {% endif %}
-                                    </div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="sponsorsModalLabel">Sponsors</h5>
+            <button type="button" class="btn-close" aria-label="Close" onclick="closeModal('sponsorsModal')"></button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" class="game-id" value="">
+            {% if current_user.is_admin %}
+                <a href="{{ url_for('admin.manage_sponsors', game_id=game.id) }}" class="btn btn-primary">Manage Sponsors</a>
+            {% endif %}
+            <div class="d-flex flex-column align-items-center">
+                {% for tier in ['Gold', 'Silver', 'Bronze', 'Other'] %}
+                    {% for sponsor in game.sponsors if sponsor.tier == tier %}
+                        <div class="col-md-8 mb-4">
+                            <div class="card shadow-lg {% if tier == 'Gold' %}border-warning{% elif tier == 'Silver' %}border-secondary{% elif tier == 'Bronze' %}border-danger{% else %}border-primary{% endif %}">
+                                <div class="card-header {% if tier == 'Gold' %}bg-warning text-dark{% elif tier == 'Silver' %}bg-secondary text-white{% elif tier == 'Bronze' %}bg-danger text-white{% else %}bg-primary text-white{% endif %} text-center">
+                                    <h3 class="card-title font-weight-bold">{{ sponsor.name }}</h3>
+                                </div>
+                                <img class="card-img-top" src="{{ url_for('static', filename=sponsor.logo) }}" alt="{{ sponsor.name }} logo">
+                                <div class="card-body bg-light">
+                                    <p class="card-text">{{ sponsor.description | safe }}</p>
+                                    {% if sponsor.website %}
+                                        <a href="{{ sponsor.website }}" class="btn {% if tier == 'Gold' %}btn-warning{% elif tier == 'Silver' %}btn-secondary{% elif tier == 'Bronze' %}btn-danger{% else %}btn-primary{% endif %}" target="_blank">Visit Website</a>
+                                    {% endif %}
                                 </div>
                             </div>
-                        {% endfor %}
+                        </div>
                     {% endfor %}
-                </div>
+                {% endfor %}
             </div>
         </div>
     </div>

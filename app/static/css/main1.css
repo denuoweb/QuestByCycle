@@ -585,15 +585,6 @@ article h3 {
     animation: fadeIn 0.3s;
 }
 
-.modal-dialog {
-    width: 100%;
-    max-width: 1000px;
-    background: #27529c;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
 .modal-header {
     border-bottom: 1px solid #eee;
     padding-bottom: 10px;
