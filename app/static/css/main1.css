@@ -214,7 +214,7 @@ main {
 .badge-item:hover .badge-icon {
     transform: scale(1.2);
 }
-.badge-item:hover, .quest-item:hover, .game-item:hover, .message-item:hover, .submission-item:hover {
+.badge-item:hover, .message-item:hover, .submission-item:hover {
     transform: translateY(-10px);
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
