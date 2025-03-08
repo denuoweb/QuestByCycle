@@ -127,10 +127,3 @@ function deleteSubmission(submissionId) {
             alert('Error during deletion: ' + error.message);
         });
 }
-
-function closeAllSubmissionsModal() {
-    const allSubmissionsModal = document.getElementById('allSubmissionsModal');
-    allSubmissionsModal.style.display = 'none';
-    allSubmissionsModal.style.backgroundColor = ''; // Reset background color to default
-    document.body.classList.remove('body-no-scroll');
-}

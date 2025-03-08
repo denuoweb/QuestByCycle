@@ -1,13 +1,3 @@
-// Function to open the quest creation modal
-function openQuestCreationModal() {
-    openModal('questCreationModal');
-}
-
-function closeQuestCreationModal() {
-    document.getElementById('questCreationModal').style.display = 'none';
-    resetModalContent();  // Ensure clean state on next open
-}
-
 $(document).ready(function() {
     $('#generateAIQuestModal').modal({
         show: false

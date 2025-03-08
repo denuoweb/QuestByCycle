@@ -282,7 +282,7 @@
         {% endif %}
         {% if current_user.is_authenticated and current_user.is_admin %}
             <div class="text-center mb-4">
-                <button data-game-id="{{ game.id }}" class="btn btn-primary btn-lg mb-2" onclick="openQuestCreationModal(this)">Create New Quest</button>
+                <button data-game-id="{{ game.id }}" class="btn btn-primary btn-lg mb-2" onclick="openModal('generateAIQuestModal')">Create New Quest</button>
             </div>
         {% endif %}
     {% endif %}
@@ -311,7 +311,6 @@
     <script src="{{ url_for('static', filename='js/badge_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/game_info_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/all_submissions_modal.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/contact_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/join_custom_game_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/leaderboard_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/submission_detail_modal.js') }}"></script>

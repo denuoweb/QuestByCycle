@@ -29,14 +29,5 @@ function showGameInfoModal(gameId) {
         });
 }
 
-function closegameInfoModal() {
-    let modal = document.getElementById('gameInfoModal');
-    if (modal) {
-        modal.style.display = 'none';
-        // Optionally, remove it from the DOM to keep things clean
-        modal.parentNode.removeChild(modal);
-    }
-}
-
 // Expose the function globally so it can be called by inline onclick attributes.
 window.showGameInfoModal = showGameInfoModal;

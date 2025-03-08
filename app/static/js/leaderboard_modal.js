@@ -158,13 +158,3 @@ function updateMeterBackground(percent, selectedGameId) {
     const imageIndex = 9 - Math.min(Math.floor(percent / 10), 9); // Invert the index for the clearest image at 100%
     completionMeter.style.backgroundImage = `url('/static/images/leaderboard/smoggy_skyline_${selectedGameId}_${imageIndex}.png')`;
 }
-
-function closeLeaderboardModal() {
-    const leaderboardModal = document.getElementById('leaderboardModal');
-    if (!leaderboardModal) {
-        console.error('Leaderboard modal container not found');
-        return;  // Exit if no container is found
-    }
-    leaderboardModal.style.display = 'none';
-    document.body.classList.remove('body-no-scroll');
-}

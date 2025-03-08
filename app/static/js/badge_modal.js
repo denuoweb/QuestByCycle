@@ -101,16 +101,3 @@ function openBadgeModal(element) {
     openModal('badgeModal');
   });
 }
-
-
-
-
-
-/**
- * Close the badge modal.
- */
-function closeBadgeModal() {
-  document.getElementById('badgeModal').style.display = 'none';
-  document.body.classList.remove('body-no-scroll');
-
-}

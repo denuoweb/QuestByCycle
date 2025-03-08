@@ -5,7 +5,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Contact Us</h5>
-                <button type="button" class="btn-close" aria-label="Close" onclick="closeContactModal()"></button>
+                <button type="button" class="btn-close" aria-label="Close" onclick="closeModal('contactModal')"></button>
             </div>
             <form id="contactForm" method="post" action="{{ url_for('main.contact') }}">
                 {{ form.hidden_tag() }}

@@ -29,7 +29,6 @@ const APP_STATIC_RESOURCES = [
   "/static/js/badge_management.js",
   "/static/js/bootstrap.bundle.min.js",
   "/static/js/bootstrap.bundle.min.js.map",
-  "/static/js/contact_modal.js",
   "/static/js/generated_quest.js",
   "/static/js/highlight.min.js",
   "/static/js/index_management.js",

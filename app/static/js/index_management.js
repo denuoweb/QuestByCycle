@@ -181,7 +181,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     const response = JSON.parse(request.responseText);
                     if (response.success) {
                         alert('Your message has been sent successfully.');
-                        closeContactModal();
+                        closeModal('contactModal');
                     } else {
                         alert('Failed to send your message. Please try again.');
                     }

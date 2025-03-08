@@ -46,21 +46,6 @@ function showSubmissionDetail(image) {
     submissionModal.style.backgroundColor = 'rgba(0,0,0,0.7)';
 }
 
-function closeSubmissionDetailModal() {
-    const submissionModal = document.getElementById('submissionDetailModal');
-    submissionModal.style.display = 'none';
-    submissionModal.style.backgroundColor = ''; // Reset background color to default
-    document.body.classList.remove('body-no-scroll');
-}
-
-function closeSponsorsModal() {
-    const sponsorsModal = document.getElementById('sponsorsModal');
-    sponsorsModal.style.display = 'none';
-    sponsorsModal.style.backgroundColor = ''; // Reset background color to default
-    document.body.classList.remove('body-no-scroll');
-}
-
-
 function isValidUrl(string) {
     try {
         new URL(string);

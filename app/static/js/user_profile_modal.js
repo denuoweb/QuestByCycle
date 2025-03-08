@@ -653,13 +653,3 @@ function deleteMessage(messageId, userId) {
             alert('Error during deletion: ' + error.message);
         });
 }
-
-function closeUserProfileModal() {
-    const userProfileModal = document.getElementById('userProfileModal');
-    if (!userProfileModal) {
-        console.error('User profile modal container not found');
-        return;  // Exit if no container is found
-    }
-    userProfileModal.style.display = 'none';
-    document.body.classList.remove('body-no-scroll');
-}

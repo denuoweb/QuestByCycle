@@ -4,7 +4,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="joinCustomGameModalLabel">Join Custom Game</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="closeJoinCustomGameModal()"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="closeModal('joinCustomGameModal')"></button>
             </div>
             <div class="modal-body">
                 <form id="joinCustomGameForm" action="{{ url_for('games.join_custom_game') }}" method="post">

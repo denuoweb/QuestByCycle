@@ -47,11 +47,6 @@ function lazyLoadImages() {
     });
 }
 
-function closeQuestDetailModal() {
-    document.getElementById('questDetailModal').style.display = 'none';
-    resetModalContent();  // Ensure clean state on next open
-}
-
 function populateQuestDetails(quest, userCompletionCount, canVerify, questId, nextEligibleTime) {
     const completeText = userCompletionCount >= quest.completion_limit ? " - complete" : "";
     const elements = {
