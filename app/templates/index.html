@@ -53,118 +53,121 @@
             </div>
         {% endif %}
         {% if current_user.is_authenticated %}
-            <div class="row">
-                {% if profile %}
-                <div class="col-md-6 mb-4">
-                    {% if current_user.is_authenticated %}
-                        <div id="flash-messages" class="flash-messages-container">
-                            {% with messages = get_flashed_messages(with_categories=true) %}
-                                {% if messages %}
-                                    <div id="flash-messages-data">
-                                        {% for category, message in messages %}
-                                            <div class="flash-message {{ category }}">
-                                                <i class="fas fa-info-circle"></i>
-                                                <span>{{ message }}</span>
+            <!-- Wrap the inner row in a column -->
+            <div class="col-12">
+                <div class="row">
+                    {% if profile %}
+                    <div class="col-md-6 mb-4">
+                        {% if current_user.is_authenticated %}
+                            <div id="flash-messages" class="flash-messages-container">
+                                {% with messages = get_flashed_messages(with_categories=true) %}
+                                    {% if messages %}
+                                        <div id="flash-messages-data">
+                                            {% for category, message in messages %}
+                                                <div class="flash-message {{ category }}">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    <span>{{ message }}</span>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                            <div id="modal-flash-messages">
+                                </div>
+                        {% endif %}
+                        <div id="profileView" class="card mb-4 w-100 profile-view epic-profile-container text-center">
+                            <div class="text-center">
+                                <h2 class="display-3 font-weight-bold welcome-text">
+                                    Welcome, {{ profile.display_name or profile.username }}
+                                </h2>
+                            </div>
+                            <div class="profile-header position-relative">
+                                <div class="profile-photo-full">
+                                    <img src="{{ url_for('static', filename=profile.profile_picture or 'images/default_profile_picture.png') }}"
+                                        alt="Profile Picture" class="img-fluid full-width-profile-img">
+                                </div>
+                            </div>
+                            <p id="total-points" class="font-weight-bold text-warning">
+                                <i class="fas fa-leaf"></i> Your Carbon Reduction Points: <br>
+                                <span class="points-emphasized">{{ total_points }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    <div class="col-md-6">
+                        <div id="whats-happening-step">
+                            <div class="game-item">
+                                <div id="gameNameContainer">
+                                    <h2 id="gameNameHeader">Loading game...</h2>
+                                    <h3>Recent Activity</h3>
+                                </div>
+                                {% if current_user.is_admin %}
+                                    <form action="{{ url_for('main.shout_board', game_id=selected_game_id) }}" method="post">
+                                        {{ form.hidden_tag() }}
+                                        <div class="form-group">
+                                            <input type="hidden" name="message" id="message-input">
+                                            <div id="quill-editor"></div>
+                                        </div>
+                                        {{ form.submit() }}
+                                    </form>
+                                {% endif %}
+                                <div class="shout-messages-container">
+                                    <div class="shout-messages">
+                                        {% for activity in activities %}
+                                            <div class="activity{% if activity.is_pinned %} pinned{% endif %} message-divider">
+                                                {% if activity.__tablename__ == 'shout_board_message' %}
+                                                    <strong>
+                                                        {{ activity.timestamp.strftime('%m-%d') }} -
+                                                        <a href="javascript:void(0)" onclick="showUserProfileModal('{{ activity.user.id }}')">
+                                                            {{ activity.user.display_name or activity.user.username }}
+                                                        </a>
+                                                    </strong>
+                                                    <span class="activity-message">{{ activity.message|safe }}</span>
+                                                    {% if current_user.is_admin %}
+                                                        <form action="{{ url_for('main.pin_message', game_id=selected_game_id, message_id=activity.id) }}" method="post">
+                                                            {{ form.hidden_tag() }}
+                                                            <button type="submit" class="blue_button">
+                                                                {{ 'Unpin' if activity.is_pinned else 'Pin' }}
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                    <div class="like-section">
+                                                        <button type="button" class="blue_button like-button" id="like-button-{{ activity.id }}"
+                                                                onclick="likeMessage('{{ activity.id }}')">
+                                                            {{ 'Liked' if activity.liked_by_user else 'Like' }}
+                                                        </button>
+                                                        <span id="like-count-{{ activity.id }}" class="like-count">{{ activity.likes|length }}</span>👍
+                                                    </div>
+                                                {% elif activity.__tablename__ == 'user_quests' %}
+                                                    <strong>
+                                                        {{ activity.completed_at.strftime('%m-%d') }} -
+                                                        <a href="javascript:void(0)" onclick="showUserProfileModal('{{ activity.user.id }}')">
+                                                            {{ activity.user.display_name or activity.user.username }}
+                                                        </a>
+                                                    </strong>
+                                                    <span class="activity-message">
+                                                        completed a quest <br>
+                                                        <a href="javascript:void(0);" class="quest-title" onclick="openQuestDetailModal('{{ activity.quest.id }}')">
+                                                            {{ activity.quest.title }}
+                                                        </a>
+                                                    </span>
+                                                    <div class="like-section">
+                                                        <button class="blue_button like-button" id="like-button-{{ activity.quest.id }}"
+                                                                onclick="likeQuest('{{ activity.quest.id }}');"
+                                                                class="{{ 'liked-button-style' if activity.quest.liked_by_user else '' }}"
+                                                                {{ 'disabled' if activity.quest.liked_by_user }}>
+                                                            {{ 'Liked' if activity.quest.liked_by_user else 'Like' }}
+                                                        </button>
+                                                        <span id="like-count-{{ activity.quest.id }}" class="like-count">{{ activity.quest.likes|length }}</span>👍
+                                                    </div>
+                                                {% endif %}
                                             </div>
                                         {% endfor %}
-                                    </div>
-                                {% endif %}
-                            {% endwith %}
-                        </div>
-                        <div id="modal-flash-messages">
-                            </div>
-                    {% endif %}
-                    <div id="profileView" class="card mb-4 w-100 profile-view epic-profile-container text-center">
-                        <div class="text-center">
-                            <h2 class="display-3 font-weight-bold welcome-text">
-                                Welcome, {{ profile.display_name or profile.username }}
-                            </h2>
-                        </div>
-                        <div class="profile-header position-relative">
-                            <div class="profile-photo-full">
-                                <img src="{{ url_for('static', filename=profile.profile_picture or 'images/default_profile_picture.png') }}"
-                                    alt="Profile Picture" class="img-fluid full-width-profile-img">
-                            </div>
-                        </div>
-                        <p id="total-points" class="font-weight-bold text-warning">
-                            <i class="fas fa-leaf"></i> Your Carbon Reduction Points: <br>
-                            <span class="points-emphasized">{{ total_points }}</span>
-                        </p>
-                    </div>
-                </div>
-                {% endif %}
-                <div class="col-md-6">
-                    <div id="whats-happening-step">
-                        <div class="game-item">
-                            <div id="gameNameContainer">
-                                <h2 id="gameNameHeader">Loading game...</h2>
-                                <h3>Recent Activity</h3>
-                            </div>
-                            {% if current_user.is_admin %}
-                                <form action="{{ url_for('main.shout_board', game_id=selected_game_id) }}" method="post">
-                                    {{ form.hidden_tag() }}
-                                    <div class="form-group">
-                                        <input type="hidden" name="message" id="message-input">
-                                        <div id="quill-editor"></div>
-                                    </div>
-                                    {{ form.submit() }}
-                                </form>
-                            {% endif %}
-                            <div class="shout-messages-container">
-                                <div class="shout-messages">
-                                    {% for activity in activities %}
-                                        <div class="activity{% if activity.is_pinned %} pinned{% endif %} message-divider">
-                                            {% if activity.__tablename__ == 'shout_board_message' %}
-                                                <strong>
-                                                    {{ activity.timestamp.strftime('%m-%d') }} -
-                                                    <a href="javascript:void(0)" onclick="showUserProfileModal('{{ activity.user.id }}')">
-                                                        {{ activity.user.display_name or activity.user.username }}
-                                                    </a>
-                                                </strong>
-                                                <span class="activity-message">{{ activity.message|safe }}</span>
-                                                {% if current_user.is_admin %}
-                                                    <form action="{{ url_for('main.pin_message', game_id=selected_game_id, message_id=activity.id) }}" method="post">
-                                                        {{ form.hidden_tag() }}
-                                                        <button type="submit" class="blue_button">
-                                                            {{ 'Unpin' if activity.is_pinned else 'Pin' }}
-                                                        </button>
-                                                    </form>
-                                                {% endif %}
-                                                <div class="like-section">
-                                                    <button type="button" class="blue_button like-button" id="like-button-{{ activity.id }}"
-                                                            onclick="likeMessage('{{ activity.id }}')">
-                                                        {{ 'Liked' if activity.liked_by_user else 'Like' }}
-                                                    </button>
-                                                    <span id="like-count-{{ activity.id }}" class="like-count">{{ activity.likes|length }}</span>👍
-                                                </div>
-                                            {% elif activity.__tablename__ == 'user_quests' %}
-                                                <strong>
-                                                    {{ activity.completed_at.strftime('%m-%d') }} -
-                                                    <a href="javascript:void(0)" onclick="showUserProfileModal('{{ activity.user.id }}')">
-                                                        {{ activity.user.display_name or activity.user.username }}
-                                                    </a>
-                                                </strong>
-                                                <span class="activity-message">
-                                                    completed a quest <br>
-                                                    <a href="javascript:void(0);" class="quest-title" onclick="openQuestDetailModal('{{ activity.quest.id }}')">
-                                                        {{ activity.quest.title }}
-                                                    </a>
-                                                </span>
-                                                <div class="like-section">
-                                                    <button class="blue_button like-button" id="like-button-{{ activity.quest.id }}"
-                                                            onclick="likeQuest('{{ activity.quest.id }}');"
-                                                            class="{{ 'liked-button-style' if activity.quest.liked_by_user else '' }}"
-                                                            {{ 'disabled' if activity.quest.liked_by_user }}>
-                                                        {{ 'Liked' if activity.quest.liked_by_user else 'Like' }}
-                                                    </button>
-                                                    <span id="like-count-{{ activity.quest.id }}" class="like-count">{{ activity.quest.likes|length }}</span>👍
-                                                </div>
-                                            {% endif %}
+                                        <div class="arrow-buttons">
+                                            <button class="btn epic-button" id="scrollUpButton">⬆</button>
+                                            <button class="btn epic-button" id="scrollDownButton">⬇</button>
                                         </div>
-                                    {% endfor %}
-                                    <div class="arrow-buttons">
-                                        <button class="btn epic-button" id="scrollUpButton">⬆</button>
-                                        <button class="btn epic-button" id="scrollDownButton">⬇</button>
                                     </div>
                                 </div>
                             </div>
