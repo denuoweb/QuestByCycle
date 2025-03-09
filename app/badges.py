@@ -65,8 +65,7 @@ def get_badges():
         game = Game.query.get(game_id)
         if not game:
             return jsonify(error="Game not found"), 404
-
-        # Filter badges by joining with Quest and filtering by game_id.
+        # Filter badges that are linked to quests for the current game.
         badges = Badge.query.join(Quest).filter(
             Quest.game_id == game_id,
             Quest.badge_id.isnot(None)
@@ -76,35 +75,55 @@ def get_badges():
     
     badges_data = []
     for badge in badges:
-        awarding_quest = (
-            next((quest for quest in badge.quests if quest.game_id == game_id), None)
-            if game_id else (badge.quests[0] if badge.quests else None)
-        )
-        
-        # Calculate the user's completions for the awarding quest.
-        if awarding_quest and current_user.is_authenticated:
-            user_quest = UserQuest.query.filter_by(
-                user_id=current_user.id,
-                quest_id=awarding_quest.id
-            ).first()
-            user_completions_value = user_quest.completions if user_quest else 0
+        # Filter tasks (quests) for the current game if applicable.
+        if game_id:
+            awarding_quests = [quest for quest in badge.quests if quest.game_id == game_id]
         else:
-            user_completions_value = 0
-
+            awarding_quests = badge.quests
+        
+        # Aggregate the information from all awarding quests.
+        if awarding_quests:
+            task_names = ", ".join(quest.title for quest in awarding_quests)
+            task_ids = ", ".join(str(quest.id) for quest in awarding_quests)
+            badge_awarded_counts = ", ".join(str(quest.badge_awarded) for quest in awarding_quests)
+        else:
+            task_names = None
+            task_ids = None
+            badge_awarded_counts = "1"
+        
+        # Determine overall completion:
+        # Check each awarding quest and mark the badge complete if any task is complete.
+        is_complete = False
+        # Also, we can aggregate completions; here we take the maximum completions
+        # across the tasks (or you can return a list if needed).
+        user_completions_total = 0
+        if awarding_quests and current_user.is_authenticated:
+            completions_list = []
+            for quest in awarding_quests:
+                user_quest = UserQuest.query.filter_by(user_id=current_user.id, quest_id=quest.id).first()
+                completions = user_quest.completions if user_quest else 0
+                completions_list.append(completions)
+                # If the user’s completions for any quest reach the threshold (badge_awarded), flag it.
+                if completions >= quest.badge_awarded:
+                    is_complete = True
+            user_completions_total = max(completions_list) if completions_list else 0
+        else:
+            user_completions_total = 0
+        
         badges_data.append({
             'id': badge.id,
             'name': badge.name,
             'description': badge.description,
             'image': url_for('static', filename='images/badge_images/' + badge.image) if badge.image else None,
             'category': badge.category,
-            'task_name': awarding_quest.title if awarding_quest else None,
-            'task_id': awarding_quest.id if awarding_quest else None,
-            'badge_awarded_count': awarding_quest.badge_awarded if awarding_quest else 1,
-            'user_completions': user_completions_value
+            'task_names': task_names,
+            'task_ids': task_ids,
+            'badge_awarded_counts': badge_awarded_counts,
+            'is_complete': is_complete,
+            'user_completions': user_completions_total
         })
-
+    
     return jsonify(badges=badges_data)
-
 
 
 @badges_bp.route('/badges/manage_badges', methods=['GET', 'POST'])

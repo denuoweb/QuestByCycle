@@ -202,7 +202,7 @@ def _prepare_user_data(game_id, profile, user_quests):
         all_badges = Badge.query.all()
 
     earned_badges_set = set(profile.badges)
-    all_badges = enhance_badges_with_task_info(all_badges, game_id)
+    all_badges = enhance_badges_with_task_info(all_badges, game_id, current_user.id)
     earned_badges = enhance_badges_with_task_info(list(earned_badges_set), game_id)
 
     user_games_list = db.session.query(Game, user_games.c.joined_at).join(

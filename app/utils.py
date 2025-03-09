@@ -326,7 +326,7 @@ def check_and_award_badges(user_id, quest_id, game_id):
     """
     Check if a badge should be awarded for a quest and award it.
     For quests that award a badge, if the user’s completion count
-    reaches or exceeds the quest’s completion limit, only the badge-award
+    reaches or exceeds the quest’s badge_awarded value, only the badge-award
     message is created (suppressing a generic "completed a quest" message).
     Also, this function handles awarding any category-based badges.
     """
@@ -350,9 +350,13 @@ def check_and_award_badges(user_id, quest_id, game_id):
                     f" earned the badge "
                     f"<a href='javascript:void(0);' onclick='openBadgeModal(this)' "
                     f"data-badge-id='{quest.badge.id}' "
+                    f"data-badge-name='{quest.badge.name}' "
+                    f"data-badge-description='{quest.badge.description}' "
+                    f"data-badge-image='{quest.badge.image}' "
                     f"data-task-name='{quest.title}' "
                     f"data-badge-awarded-count='{quest.badge_awarded}' "  # Use quest.badge_awarded from the Quest model
-                    f"data-task-id='{quest.id}'>{quest.badge.name}</a> for completing quest "
+                    f"data-task-id='{quest.id}' "
+                    f"data-user-completions='{user_quest.completions}'>{quest.badge.name}</a> for completing quest "
                     f"<a href='javascript:void(0);' onclick='openQuestDetailModal({quest.id})'>{quest.title}</a>"
                 ),
                 user_id=user_id,
@@ -382,9 +386,13 @@ def check_and_award_badges(user_id, quest_id, game_id):
                         f" earned the badge "
                         f"<a href='javascript:void(0);' onclick='openBadgeModal(this)' "
                         f"data-badge-id='{badge.id}' "
-                        f"data-task-name='{quest.title}' "
-                        f"data-badge-awarded-count='1' "  # Constant value for category badges
-                        f"data-task-id='{quest.id}'>{badge.name}</a> for completing all quests in category '{quest.category}'"
+                        f"data-badge-name='{badge.name}' "
+                        f"data-badge-description='{badge.description}' "
+                        f"data-badge-image='{badge.image}' "
+                        f"data-task-name='{quest.title}' "  # For category badges, you may choose to display a representative task name.
+                        f"data-badge-awarded-count='1' "  # Constant value for category badges.
+                        f"data-task-id='{quest.id}' "
+                        f"data-user-completions='{user_quest.completions}'>{badge.name}</a> for completing all quests in category '{quest.category}'"
                     ),
                     user_id=user_id,
                     game_id=game_id
@@ -723,20 +731,36 @@ def get_game_badges(game_id):
     return badges
 
 
-def enhance_badges_with_task_info(badges, game_id=None):
+def enhance_badges_with_task_info(badges, game_id=None, user_id=None):
     enhanced_badges = []
     for badge in badges:
-        awarding_quest = None
+        # Filter awarding quests for this badge for the current game (if provided)
         if game_id:
-            awarding_quest = next((quest for quest in badge.quests if quest.game_id == game_id), None)
+            awarding_quests = [quest for quest in badge.quests if quest.game_id == game_id]
         else:
-            awarding_quest = badge.quests[0] if badge.quests else None
+            awarding_quests = badge.quests
 
-        task_name = awarding_quest.title if awarding_quest else None
-        task_id = awarding_quest.id if awarding_quest else None
-        badge_awarded_count = awarding_quest.badge_awarded if awarding_quest else 1
-
-        print(f"DEBUG: Enhancing badge: {badge.name}, awarding_quest: {awarding_quest}, badge_awarded_count: {badge_awarded_count}")
+        if awarding_quests:
+            task_names = ", ".join(quest.title for quest in awarding_quests)
+            task_ids = ", ".join(str(quest.id) for quest in awarding_quests)
+            badge_awarded_counts = ", ".join(str(quest.badge_awarded) for quest in awarding_quests)
+        else:
+            task_names = ""
+            task_ids = ""
+            badge_awarded_counts = "1"
+        
+        # Compute the user's completions and a flag for award status.
+        user_completions_total = 0
+        is_complete = False
+        if awarding_quests and user_id:
+            completions_list = []
+            for quest in awarding_quests:
+                user_quest = UserQuest.query.filter_by(user_id=user_id, quest_id=quest.id).first()
+                completions = user_quest.completions if user_quest else 0
+                completions_list.append(completions)
+                if completions >= quest.badge_awarded:
+                    is_complete = True
+            user_completions_total = max(completions_list) if completions_list else 0
 
         enhanced_badges.append({
             'id': badge.id,
@@ -744,8 +768,10 @@ def enhance_badges_with_task_info(badges, game_id=None):
             'description': badge.description,
             'image': badge.image,
             'category': badge.category,
-            'task_name': task_name,
-            'task_id': task_id,
-            'badge_awarded_count': badge_awarded_count,
+            'task_names': task_names,
+            'task_ids': task_ids,
+            'badge_awarded_counts': badge_awarded_counts,
+            'user_completions': user_completions_total,
+            'is_complete': is_complete
         })
     return enhanced_badges

@@ -428,7 +428,7 @@ class PlayerMessageBoardMessage(db.Model):
 class ShoutBoardMessage(db.Model):
     """Model representing a message on the shout board."""
     id = db.Column(db.Integer, primary_key=True)
-    message = db.Column(db.String(500), nullable=False)
+    message = db.Column(db.String(2000), nullable=False)
     user_id = db.Column(
         db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'),
         nullable=False

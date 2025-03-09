@@ -197,15 +197,15 @@
                     {% set user_completions = profile.user_quests | selectattr('quest.id', 'equalto', badge.task_id) | list | first %}
                     <div class="badge-item"
                         data-badge-id="{{ badge.id }}"
-                        data-earned="{{ 'true' if earned else 'false' }}"
-                        data-task-name="{{ badge.task_name }}"
-                        data-badge-awarded-count="{{ badge.badge_awarded_count }}"
-                        data-task-id="{{ badge.task_id }}"
-                        data-user-completions="{{ user_completions.completions if user_completions else 0 }}"
+                        data-earned="{{ 'true' if badge.is_complete else 'false' }}"
+                        data-task-name="{{ badge.task_names }}"
+                        data-badge-awarded-count="{{ badge.badge_awarded_counts }}"
+                        data-task-id="{{ badge.task_ids }}"
+                        data-user-completions="{{ badge.user_completions }}"
                         onclick="openBadgeModal(this);">
                         <img src="{{ url_for('static', filename='images/badge_images/' ~ (badge.image or 'default_badge.png')) }}"
                             alt="{{ badge.name }}"
-                            class="badge-img {{ 'badge-earned' if earned else 'badge-not-earned' }}"
+                            class="badge-img {{ 'badge-earned' if badge.is_complete else 'badge-not-earned' }}"
                             title="{{ badge.name }}: {{ badge.description }}">
                         <div class="badge-name">{{ badge.name }}</div>
                     </div>
@@ -216,16 +216,15 @@
                         {% set user_completions = profile.user_quests | selectattr('quest.id', 'equalto', badge.task_id) | list | first %}
                         <div class="badge-item"
                             data-badge-id="{{ badge.id }}"
-                            data-earned="{{ 'true' if earned else 'false' }}"
-                            data-task-name="{{ badge.task_name }}"
-                            data-badge-awarded-count="{{ badge.badge_awarded_count }}"
-                            data-task-id="{{ badge.task_id }}"
-                            data-user-completions="{{ user_completions.completions if user_completions else 0 }}"
+                            data-earned="{{ 'true' if badge.is_complete else 'false' }}"
+                            data-task-name="{{ badge.task_names }}"
+                            data-badge-awarded-count="{{ badge.badge_awarded_counts }}"
+                            data-task-id="{{ badge.task_ids }}"
+                            data-user-completions="{{ badge.user_completions }}"
                             onclick="openBadgeModal(this);">
                             <img src="{{ url_for('static', filename='images/badge_images/' ~ (badge.image or 'default_badge.png')) }}"
                                 alt="{{ badge.name }}"
-                                oncontextmenu="return false;"
-                                class="badge-img {{ 'badge-earned' if earned else 'badge-not-earned' }}"
+                                class="badge-img {{ 'badge-earned' if badge.is_complete else 'badge-not-earned' }}"
                                 title="{{ badge.name }}: {{ badge.description }}">
                             <div class="badge-name">{{ badge.name }}</div>
                         </div>
