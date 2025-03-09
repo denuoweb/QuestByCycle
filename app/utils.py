@@ -1,4 +1,4 @@
-from flask import flash, current_app, jsonify, request
+from flask import flash, current_app, jsonify, request, url_for
 from .models import db, Quest, Badge, Game, UserQuest, User, ShoutBoardMessage, QuestSubmission, UserIP
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
@@ -388,7 +388,7 @@ def check_and_award_badges(user_id, quest_id, game_id):
                         f"data-badge-id='{badge.id}' "
                         f"data-badge-name='{badge.name}' "
                         f"data-badge-description='{badge.description}' "
-                        f"data-badge-image='{badge.image}' "
+                        f"data-badge-image='{url_for('static', filename='images/badge_images/' + badge.image)}' "
                         f"data-task-name='{quest.title}' "  # For category badges, you may choose to display a representative task name.
                         f"data-badge-awarded-count='1' "  # Constant value for category badges.
                         f"data-task-id='{quest.id}' "
