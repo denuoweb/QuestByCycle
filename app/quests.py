@@ -918,14 +918,14 @@ def delete_submission(submission_id):
     ).first()
 
     if user_quest:
+        quest = Quest.query.get(submission.quest_id)
         user_quest.completions = max(user_quest.completions - 1, 0)
         if user_quest.completions == 0:
             user_quest.points_awarded = 0
         else:
-            quest = Quest.query.get(submission.quest_id)
             user_quest.points_awarded = max(user_quest.points_awarded - quest.points, 0)
 
-        check_and_revoke_badges(submission.user_id)
+        check_and_revoke_badges(submission.user_id, game_id=quest.game_id)
         db.session.commit()
 
     db.session.delete(submission)
