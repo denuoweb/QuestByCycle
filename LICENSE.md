@@ -22,7 +22,7 @@ For individuals or entities wishing to incorporate "Quest by Cycle" into commerc
 - Includes support and updates as per the terms negotiated in the license agreement.
 
 ### Obtaining a Commercial License:
-- To inquire about obtaining a commercial license, please contact Denuo Web, LLC at [info@questbycycle.info](mailto:info@questbycycle.info) for more details on pricing and terms.
+- To inquire about obtaining a commercial license, please contact Denuo Web, LLC at [info@questbycycle.org](mailto:info@questbycycle.org) for more details on pricing and terms.
 
 ## Choice of License
 
@@ -31,6 +31,6 @@ The choice of license depends on your use case:
 - If you intend to use "Quest by Cycle" for proprietary applications, you are required to obtain a commercial license.
 
 ## Questions?
-If you have any questions about which license is right for you, please contact us at [info@questbycycle.info](mailto:info@questbycycle.info).
+If you have any questions about which license is right for you, please contact us at [info@questbycycle.org](mailto:info@questbycycle.org).
 
 Please see the individual license files for more detailed information about each type of license.
