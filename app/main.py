@@ -467,6 +467,7 @@ def user_profile(user_id):
             'bike_picture': user.bike_picture,
             'bike_description': user.bike_description,
             'upload_to_socials': user.upload_to_socials,
+            'upload_to_mastodon': user.upload_to_mastodon,
             'show_carbon_game': user.show_carbon_game,
             'badges': [{'id': badge.id, 'name': badge.name, 'description': badge.description,
                         'category': badge.category, 'image': badge.image} for badge in badges]
@@ -535,6 +536,7 @@ def edit_profile(user_id):
             user.riding_preferences = request.form.getlist('riding_preferences')
             user.ride_description = profile_form.ride_description.data
             user.upload_to_socials = profile_form.upload_to_socials.data
+            user.upload_to_mastodon = profile_form.upload_to_mastodon.data
             user.show_carbon_game = profile_form.show_carbon_game.data
 
             db.session.commit()
@@ -606,6 +608,7 @@ def update_profile():
     current_user.ride_description = sanitize_html(request.form.get('ride_description', current_user.ride_description))
     current_user.bike_description = sanitize_html(request.form.get('bike_description', current_user.bike_description))
     current_user.upload_to_socials = 'upload_to_socials' in request.form
+    current_user.upload_to_mastodon = 'upload_to_mastodon' in request.form
     current_user.show_carbon_game = 'show_carbon_game' in request.form
 
     if 'bike_picture' in request.files:

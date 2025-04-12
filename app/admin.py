@@ -220,6 +220,8 @@ def update_user(user_id):
         current_app.logger.error(f"Error updating user: {e}")
         flash('An error occurred while updating the user.', 'error')
     return redirect(url_for('admin.user_management'))
+
+
 @admin_bp.route('/edit_user/<int:user_id>', methods=['GET', 'POST'])
 @login_required
 @require_super_admin
@@ -261,6 +263,7 @@ def edit_user(user_id):
             user.bike_picture = request.form.get('bike_picture')
             user.bike_description = request.form.get('bike_description')
             user.upload_to_socials = 'upload_to_socials' in request.form
+            user.upload_to_mastodon = 'upload_to_mastodon' in request.form
             user.show_carbon_game = 'show_carbon_game' in request.form
             user.onboarded = 'onboarded' in request.form
 

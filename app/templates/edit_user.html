@@ -96,7 +96,10 @@
             <label for="upload_to_socials">Upload to Socials:</label>
             <input type="checkbox" id="upload_to_socials" name="upload_to_socials" {% if user.upload_to_socials %}checked{% endif %}>
         </div>
-
+        <div class="form-group">
+            <label for="upload_to_mastodon">Upload to Socials:</label>
+            <input type="checkbox" id="upload_to_mastodon" name="upload_to_mastodon" {% if user.upload_to_mastodon %}checked{% endif %}>
+        </div>
         <div class="form-group">
             <label for="show_carbon_game">Show Carbon Reduction Game:</label>
             <input type="checkbox" id="show_carbon_game" name="show_carbon_game" {% if user.show_carbon_game %}checked{% endif %}>

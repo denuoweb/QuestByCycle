@@ -172,7 +172,11 @@ function showUserProfileModal(userId) {
                                             </div>
                                             <div class="form-check form-switch mb-3">
                                                 <input class="form-check-input" type="checkbox" id="uploadToSocials" name="upload_to_socials" ${data.user.upload_to_socials ? 'checked' : ''}>
-                                                <label class="form-check-label" for="uploadToSocials">Allow uploads to social media?</label>
+                                                <label class="form-check-label" for="uploadToSocials">Cross post to game's social media?</label>
+                                            </div>
+                                            <div class="form-check form-switch mb-3">
+                                                <input class="form-check-input" type="checkbox" id="uploadToMastodon" name="upload_to_mastodon" ${data.user.upload_to_mastodon ? 'checked' : ''}>
+                                                <label class="form-check-label" for="uploadToMastodon">Cross post to your federation server?</label>
                                             </div>
                                             <div class="d-flex justify-content-between">
                                                 <button type="button" class="btn btn-success" onclick="saveProfile(${userId})"><i class="bi bi-save me-2"></i>Save Profile</button>
