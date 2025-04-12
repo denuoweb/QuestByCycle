@@ -24,24 +24,79 @@
             {% endwith %}
         </div>
         <div id="modal-flash-messages">
-            </div>
-        <div class="introduction text-center mb-5">
-            <p class="font-weight-bold">Ready to transform your bike rides into a thrilling adventure that benefits the
-                planet? Join the QuestByCycle community! Pedal your way to a greener world as you tackle exciting challenges,
-                earn points that combat carbon emissions, and discover hidden gems in your city. Connect with fellow cycling
-                enthusiasts, compete for top spots on the leaderboard, and make a real difference – all while having a blast
-                on two wheels.</p>
-            <p class="h5 font-weight-bold">This is your Quest by Cycle journey!</p>
         </div>
+        <div class="row mb-5 align-items-center">
+            <!-- Right Column: Fancy Earth Day Event Card (50% width) -->
+            <div class="col-md-6">
+                <div class="card p-4 shadow-sm" style="background: linear-gradient(135deg, #ffffff, #f1ff28); border: 2px solid #ddd; border-radius: 15px;">
+                    <!-- Title Section becomes clickable to open the login modal -->
+                    <h3 class="card-title text-center mb-1" style="font-family: 'Gill Sans'; font-size: 2rem">
+                        <a href="javascript:void(0)" onclick="openLoginModalWithGame({gameId: 1});" style="font-size: 3rem; text-decoration: none; color: inherit;">
+                            Earth Day Every Day Game
+                        </a>
+                    </h3>
+                    <h5 class="text-center" style="font-family: 'Georgia', serif; font-size: 1.4rem;">Launch Celebration and Bike Ride</h5>
+                    <p class="text-center mb-2" style="font-size: 1.2rem; font-style: italic;">Free and open to all!</p>
+                    
+                    <hr style="border-top: 1px dashed #070707;">
+
+                    <!-- Ride Highlights -->
+                    <p class="font-italic text-center mb-1" style="font-size: 1rem;">
+                        100% Safe &amp; Legal Ride
+                    </p>
+                    <p class="font-weight-bold text-center mb-2" style="font-size: 1.5rem;">
+                        Sunday, April 20, 2025
+                    </p>
+                    <p class="text-center mb-4" style="font-size: 1rem;">
+                        Family-Friendly Ride
+                    </p>
+
+                    <hr style="border-top: 1px dashed #070707;">
+
+                    <!-- Times & Locations -->
+                    <h5 class="text-center font-weight-bold mb-2" style="font-size: 1.5rem;">Join at one of these locations:</h5>
+                    <ol class="mb-4" style="list-style-type: none; padding-left: 0; font-size: 1.25rem;">
+                        Pick-up stops along the route (5 miles)
+                        <p>
+                            <li>1:30 PM - Klink Cycles</li>
+                            <li>2:00 PM - South Eugene High School</li>
+                            <li>2:15 PM - UO EMU</li>
+                        </p>
+                    </ol>
+                    <p class="text-center font-weight-bold mb-4" style="font-size: 1.5rem;">
+                        Final Stop: River Play Discovery Park<br>
+                        <span class="font-weight-normal">with performance by Meadow Rue</span>
+                    </p>
+                    
+                    <hr style="border-top: 1px dashed #070707;">
+
+                    <!-- Additional Links -->
+                    <p class="text-center mb-1" style="font-size: 0.95rem;">
+                        <strong>Map of Ride:</strong>&nbsp;
+                        <a href="https://ridewithgps.com/routes/50069540" target="_blank" style="color: #004085;">
+                            https://ridewithgps.com/routes/50069540
+                        </a>
+                    </p>
+                </div>
+            </div>
+            <!-- Left Column: Description Text (50% width) -->
+            <div class="col-md-6">
+                <div class="introduction text-center">
+                    <p class="h5 font-weight-bold" style="font-size: 1.2rem;">This is your Quest by Cycle journey!</p>
+                    <p class="font-weight-bold" style="font-size: 1.1rem;">
+                        Ready to transform your bike rides into a thrilling adventure that benefits the planet? 
+                        Join the QuestByCycle community! Pedal your way to a greener world as you tackle exciting challenges, 
+                        earn points that combat carbon emissions, and discover hidden gems in your city. Connect with fellow 
+                        cycling enthusiasts, compete for top spots on the leaderboard, and make a real difference – 
+                        all while having a blast on two wheels.
+                    </p>
+                </div>
+            </div>
+        </div> 
     {% endif %}
     <div class="row">
         {% if not current_user.is_authenticated %}
             <div class="col-12">
-                <h4 class="text-center">Tutorial Video</h4>
-                <div class="ratio ratio-16x9 mb-4">
-                    <video class="w-100" src="{{ url_for('static', filename='videos/welcomeQuestByCycle.mp4') }}"
-                           autoplay loop controls></video>
-                </div>
                 <h4 class="text-center">Promotional Video</h4>
                 <div class="ratio ratio-16x9 mb-4">
                     <iframe src="https://www.youtube.com/embed/ABh1KtKRxm0?si=U6PxTipd5r5Z2QUl&autoplay=0&rel=0"
