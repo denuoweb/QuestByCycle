@@ -55,3 +55,11 @@ function resetModalContent() {
     document.querySelectorAll('[id^="verifyQuestForm-"]').forEach(form => form.remove());
     document.body.classList.remove('body-no-scroll');
 }
+
+
+function switchToRegisterModal() {
+    // Close the login modal using your existing function
+    closeModal('loginModal');
+    // Open the register modal using your existing function
+    openModal('registerModal');
+}
