@@ -18,7 +18,6 @@ from flask_sqlalchemy import SQLAlchemy  # pylint: disable=import-error
 from flask_login import UserMixin  # pylint: disable=import-error
 from werkzeug.security import generate_password_hash, check_password_hash  # pylint: disable=import-error
 from sqlalchemy.exc import IntegrityError  # pylint: disable=import-error
-from app.auth import generate_activitypub_keys
 
 db = SQLAlchemy()
 
