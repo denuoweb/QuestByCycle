@@ -321,98 +321,114 @@ def getLastRelevantCompletionTime(user_id, quest_id):
 
     return last_relevant_completion.timestamp if last_relevant_completion else None
 
-
 def check_and_award_badges(user_id, quest_id, game_id):
     """
-    Check if a badge should be awarded for a quest and award it.
-    For quests that award a badge, if the user’s completion count
-    reaches or exceeds the quest’s badge_awarded value, only the badge-award
-    message is created (suppressing a generic "completed a quest" message).
-    Also, this function handles awarding any category-based badges.
+    Award badges for a quest:
+      - For quest-specific badges: Award if the user’s completions for the quest 
+        reach or exceed quest.badge_awarded.
+      - For category badges: Award if the user has at least one completion on 
+        every quest in that category for the specified game.
+    All awards and associated shoutboard messages are tied to the given game_id.
     """
-    print(f"Checking and awarding badges for user_id={user_id}, quest_id={quest_id}")
+    print(f"Checking and awarding badges for user_id={user_id}, quest_id={quest_id}, game_id={game_id}")
     user = User.query.get(user_id)
     quest = Quest.query.get(quest_id)
     user_quest = UserQuest.query.filter_by(user_id=user_id, quest_id=quest_id).first()
-
     if not user_quest:
         print("No UserQuest found.")
         return
 
-    print(f"UserQuest found: completions={user_quest.completions}, quest completion limit={quest.completion_limit}")
+    print(f"UserQuest: completions={user_quest.completions}, quest completion limit={quest.completion_limit}")
 
     # --- Quest-Specific Badge Awarding ---
     if quest.badge and user_quest.completions >= quest.badge_awarded:
-        if quest.badge not in user.badges:
+        # Check for an existing award message for this quest badge in this game.
+        existing_award = ShoutBoardMessage.query.filter_by(
+            user_id=user_id,
+            game_id=game_id
+        ).filter(ShoutBoardMessage.message.contains(f"data-badge-id='{quest.badge.id}'")).first()
+        if not existing_award:
+            # Award the quest-specific badge.
             user.badges.append(quest.badge)
-            db.session.add(ShoutBoardMessage(
-                message=(
-                    f" earned the badge "
-                    f"<a href='javascript:void(0);' onclick='openBadgeModal(this)' "
-                    f"data-badge-id='{quest.badge.id}' "
-                    f"data-badge-name='{quest.badge.name}' "
-                    f"data-badge-description='{quest.badge.description}' "
-                    f"data-badge-image='{quest.badge.image}' "
-                    f"data-task-name='{quest.title}' "
-                    f"data-badge-awarded-count='{quest.badge_awarded}' "  # Use quest.badge_awarded from the Quest model
-                    f"data-task-id='{quest.id}' "
-                    f"data-user-completions='{user_quest.completions}'>{quest.badge.name}</a> for completing quest "
-                    f"<a href='javascript:void(0);' onclick='openQuestDetailModal({quest.id})'>{quest.title}</a>"
-                ),
-                user_id=user_id,
-                game_id=game_id
-            ))
+            msg = (
+                f" earned the badge "
+                f"<a href='javascript:void(0);' onclick='openBadgeModal(this)' "
+                f"data-badge-id='{quest.badge.id}' "
+                f"data-badge-name='{quest.badge.name}' "
+                f"data-badge-description='{quest.badge.description}' "
+                f"data-badge-image='{quest.badge.image}' "
+                f"data-task-name='{quest.title}' "
+                f"data-badge-awarded-count='{quest.badge_awarded}' "  # Quest-specific threshold.
+                f"data-task-id='{quest.id}' "
+                f"data-user-completions='{user_quest.completions}'>{quest.badge.name}</a> for completing quest "
+                f"<a href='javascript:void(0);' onclick='openQuestDetailModal({quest.id})'>{quest.title}</a>"
+            )
+            sbm = ShoutBoardMessage(message=msg, user_id=user_id, game_id=game_id)
+            db.session.add(sbm)
             db.session.commit()
-            print(f"Badge '{quest.badge.name}' awarded to user '{user.display_name}' for quest '{quest.title}'")
+            print(f"Quest badge '{quest.badge.name}' awarded for quest '{quest.title}' in game {game_id}")
         else:
-            print("Badge already awarded; no duplicate message generated.")
+            print("Quest-specific badge already awarded in this game; no duplicate message generated.")
     else:
-        print("No badge awarded or quest has no badge; generic completion message suppressed.")
+        print("No quest-specific badge awarded (insufficient completions or no badge attached).")
 
     # --- Category-Based Badge Awarding ---
-    if quest.category and quest.game_id:
-        category_badges = Badge.query.filter_by(category=quest.category).all()
-        category_quests = Quest.query.filter_by(category=quest.category, game_id=quest.game_id).all()
-        completed_quests = {
+    if quest.category and game_id:
+        # Get all quests in the category for the specified game.
+        category_quests = Quest.query.filter_by(category=quest.category, game_id=game_id).all()
+        if not category_quests:
+            print(f"No quests found in category '{quest.category}' for game {game_id}")
+            return
+        # Determine which of those quests the user has completed at least once.
+        completed_quests = [
             ut.quest for ut in user.user_quests
-            if ut.completions >= ut.quest.completion_limit and ut.quest.category == quest.category
-        }
-
-        for badge in category_badges:
-            if badge not in user.badges and set(category_quests) == completed_quests:
-                user.badges.append(badge)
-                db.session.add(ShoutBoardMessage(
-                    message=(
+            if ut.quest.category == quest.category and ut.quest.game_id == game_id and ut.completions >= 1
+        ]
+        print(f"Category '{quest.category}' in game {game_id}: total quests={len(category_quests)}, user completed={len(completed_quests)}")
+        # Only award if the user has at least one completion for every quest.
+        if len(completed_quests) == len(category_quests):
+            # Retrieve all badges for this category.
+            category_badges = Badge.query.filter_by(category=quest.category).all()
+            for badge in category_badges:
+                # Check for an existing award message for this category badge in this game.
+                existing_award = ShoutBoardMessage.query.filter_by(
+                    user_id=user_id,
+                    game_id=game_id
+                ).filter(ShoutBoardMessage.message.contains(f"data-badge-id='{badge.id}'")).first()
+                if not existing_award:
+                    user.badges.append(badge)
+                    msg = (
                         f" earned the badge "
                         f"<a href='javascript:void(0);' onclick='openBadgeModal(this)' "
                         f"data-badge-id='{badge.id}' "
                         f"data-badge-name='{badge.name}' "
                         f"data-badge-description='{badge.description}' "
                         f"data-badge-image='{url_for('static', filename='images/badge_images/' + badge.image)}' "
-                        f"data-task-name='{quest.title}' "  # For category badges, you may choose to display a representative task name.
-                        f"data-badge-awarded-count='1' "  # Constant value for category badges.
+                        f"data-task-name='{quest.title}' "  # Representative task name.
+                        f"data-badge-awarded-count='1' "  # Category badge threshold is 1 per quest.
                         f"data-task-id='{quest.id}' "
-                        f"data-user-completions='{user_quest.completions}'>{badge.name}</a> for completing all quests in category '{quest.category}'"
-                    ),
-                    user_id=user_id,
-                    game_id=game_id
-                ))
-                db.session.commit()
-                print(f"Badge '{badge.name}' awarded for completing all quests in category '{quest.category}' within game ID {quest.game_id}")
-            else:
-                print(f"User already has badge '{badge.name}', not awarded again")
+                        f"data-user-completed='{len(completed_quests)}' "  # How many tasks completed.
+                        f"data-total-tasks='{len(category_quests)}'>{badge.name}</a> for completing all quests in category '{quest.category}'"
+                    )
+                    sbm = ShoutBoardMessage(message=msg, user_id=user_id, game_id=game_id)
+                    db.session.add(sbm)
+                    db.session.commit()
+                    print(f"Category badge '{badge.name}' awarded for category '{quest.category}' in game {game_id}")
+                else:
+                    print(f"Category badge '{badge.name}' already awarded in game {game_id}.")
+        else:
+            print(f"Category badge not awarded: {len(completed_quests)} out of {len(category_quests)} quests completed in category '{quest.category}' for game {game_id}.")
 
 
 def check_and_revoke_badges(user_id, game_id=None):
     """
-    Check if any badges awarded to the user should be revoked because
-    the required quest completions are no longer met. When revoking a badge,
-    delete the original awarded message associated with the badge instead of
-    creating a new revocation message.
-    
-    Args:
-        user_id (int): The ID of the user.
-        game_id (int, optional): The game ID to associate with the revocation.
+    Revoke badges awarded to the user if the tasks in the specified game no longer meet 
+    the required conditions.
+      - Quest-specific badges are revoked if the user’s completions for any awarding quest 
+        fall below quest.badge_awarded.
+      - Category badges are revoked if the user has not completed at least one of every quest 
+        in that badge’s category for the specified game.
+    When revoking a badge, its associated shoutboard award message is deleted.
     """
     user = User.query.get(user_id)
     if not user:
@@ -420,86 +436,97 @@ def check_and_revoke_badges(user_id, game_id=None):
         return
 
     badges_to_remove = []
-    
-    # Check each badge and determine if it should be revoked.
     for badge in user.badges:
-        all_quests_completed = True
-        for quest in badge.quests:
-            user_quest = UserQuest.query.filter_by(user_id=user_id, quest_id=quest.id).first()
-            # Using quest.badge_awarded as the threshold for completion.
-            if not user_quest or user_quest.completions < quest.badge_awarded:
-                all_quests_completed = False
-                break
+        if badge.category:
+            # Category badge: restrict to quests in this category for the current game.
+            current_category_quests = Quest.query.filter_by(category=badge.category, game_id=game_id).all()
+            completed_quests = {
+                ut.quest for ut in user.user_quests
+                if ut.quest.category == badge.category and ut.quest.game_id == game_id and ut.completions >= 1
+            }
+            if set(current_category_quests) != set(completed_quests):
+                print(f"Category badge '{badge.name}' will be revoked in game {game_id}: "
+                      f"completed {len(completed_quests)} vs total {len(current_category_quests)}.")
+                badges_to_remove.append(badge)
+        else:
+            # Quest-specific badge: revoke if for any awarding quest the user's completions are below threshold.
+            all_met = True
+            for quest in badge.quests:
+                user_quest = UserQuest.query.filter_by(user_id=user_id, quest_id=quest.id).first()
+                if not user_quest or user_quest.completions < quest.badge_awarded:
+                    all_met = False
+                    break
+            if not all_met:
+                print(f"Quest-specific badge '{badge.name}' will be revoked.")
+                badges_to_remove.append(badge)
 
-        if not all_quests_completed:
-            badges_to_remove.append(badge)
-
-    # Process each badge that needs to be revoked.
     for badge in badges_to_remove:
         user.badges.remove(badge)
         print(f"Revoking badge '{badge.name}' from user '{user.username}'")
-
-        # Retrieve all shoutboard messages for this user and game.
-        messages = ShoutBoardMessage.query.filter_by(
-            user_id=user_id,
-            game_id=game_id if game_id is not None else 0
-        ).all()
-
-        found_message = None
-        # Look for the message containing the specific badge identifier.
+        # Delete any associated shoutboard award message in the specified game.
+        messages = ShoutBoardMessage.query.filter_by(user_id=user_id, game_id=game_id).all()
         for message in messages:
             if f"data-badge-id='{badge.id}'" in message.message:
-                found_message = message
-                break
+                db.session.delete(message)
+                print(f"Deleted award message for badge '{badge.name}' (ID: {message.id})")
+        db.session.commit()
 
-        if found_message:
-            db.session.delete(found_message)
-            print(f"Deleted awarded message for badge '{badge.name}' (message ID: {found_message.id})")
+
+def enhance_badges_with_task_info(badges, game_id=None, user_id=None):
+    """
+    Enhance each badge with aggregated task information from its awarding quests.
+    If a game_id is provided, only quests in that game are considered.
+    If user_id is provided, the function computes the maximum completions among those quests 
+    and a flag indicating if any quest’s threshold is met.
+    Returns a list of dictionaries with:
+      - id, name, description, image, category,
+      - task_names: comma‑separated quest titles,
+      - task_ids: comma‑separated quest IDs,
+      - badge_awarded_counts: comma‑separated thresholds,
+      - user_completions: maximum completions among awarding quests,
+      - is_complete: True if any quest’s threshold is met.
+    """
+    enhanced_badges = []
+    for badge in badges:
+        if game_id:
+            awarding_quests = [quest for quest in badge.quests if quest.game_id == game_id]
         else:
-            print(f"No awarded message found for badge '{badge.name}', nothing to delete.")
+            awarding_quests = badge.quests
 
-    db.session.commit()
+        if awarding_quests:
+            task_names = ", ".join(quest.title for quest in awarding_quests)
+            task_ids = ", ".join(str(quest.id) for quest in awarding_quests)
+            badge_awarded_counts = ", ".join(str(quest.badge_awarded) for quest in awarding_quests)
+        else:
+            task_names = ""
+            task_ids = ""
+            badge_awarded_counts = "1"
 
+        user_completions_total = 0
+        is_complete = False
+        if awarding_quests and user_id:
+            completions_list = []
+            for quest in awarding_quests:
+                user_quest = UserQuest.query.filter_by(user_id=user_id, quest_id=quest.id).first()
+                completions = user_quest.completions if user_quest else 0
+                completions_list.append(completions)
+                if completions >= quest.badge_awarded:
+                    is_complete = True
+            user_completions_total = max(completions_list) if completions_list else 0
 
-def load_credentials():
-    creds = None
-    creds_file = os.path.join(current_app.root_path, '..', 'credentials.json')
-    creds_file = os.path.abspath(creds_file)
-    current_app.logger.error(f'Looking for credentials.json at: {creds_file}')
-    if os.path.exists(creds_file):
-        creds = Credentials.from_authorized_user_file(creds_file, SCOPES)
-        if creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-            # Save the refreshed credentials
-            with open(creds_file, 'w') as token_file:
-                token_file.write(creds.to_json())
-    else:
-        current_app.logger.error('Credentials not found. Please run the authorization script.')
-        return None
-    return creds
-
-
-def save_credentials(creds):
-    """Helper function to save refreshed credentials."""
-    creds_file = os.path.join(current_app.root_path, '..', 'credentials.json')
-    with open(creds_file, 'w') as token_file:
-        token_file.write(creds.to_json())
-
-
-def refresh_credentials(creds):
-    if creds:
-        current_app.logger.info(f"Current token expiry: {creds.expiry}")
-    if creds and creds.expired and creds.refresh_token:
-        current_app.logger.info("Token expired. Refreshing token...")
-        creds.refresh(Request())
-        save_credentials(creds)
-        current_app.logger.info(f"New token expiry: {creds.expiry}")
-    return creds
-
-
-def generate_oauth2_string(username, access_token):
-    auth_string = f'user={username}\1auth=Bearer {access_token}\1\1'
-    return base64.b64encode(auth_string.encode('utf-8')).decode('utf-8')
+        enhanced_badges.append({
+            'id': badge.id,
+            'name': badge.name,
+            'description': badge.description,
+            'image': badge.image,
+            'category': badge.category,
+            'task_names': task_names,
+            'task_ids': task_ids,
+            'badge_awarded_counts': badge_awarded_counts,
+            'user_completions': user_completions_total,
+            'is_complete': is_complete
+        })
+    return enhanced_badges
 
 
 def send_email(to, subject, html_content):
@@ -537,7 +564,7 @@ def send_email(to, subject, html_content):
             smtp_conn = smtplib.SMTP_SSL(mail_server, mail_port)
         else:
             smtp_conn = smtplib.SMTP(mail_server, mail_port)
-
+        
         smtp_conn.ehlo()
 
         if use_tls:
@@ -745,49 +772,3 @@ def get_game_badges(game_id):
 
     print(f"get_game_badges returning {len(badges)} badges")  # Log number of badges returned
     return badges
-
-
-def enhance_badges_with_task_info(badges, game_id=None, user_id=None):
-    enhanced_badges = []
-    for badge in badges:
-        # Filter awarding quests for this badge for the current game (if provided)
-        if game_id:
-            awarding_quests = [quest for quest in badge.quests if quest.game_id == game_id]
-        else:
-            awarding_quests = badge.quests
-
-        if awarding_quests:
-            task_names = ", ".join(quest.title for quest in awarding_quests)
-            task_ids = ", ".join(str(quest.id) for quest in awarding_quests)
-            badge_awarded_counts = ", ".join(str(quest.badge_awarded) for quest in awarding_quests)
-        else:
-            task_names = ""
-            task_ids = ""
-            badge_awarded_counts = "1"
-        
-        # Compute the user's completions and a flag for award status.
-        user_completions_total = 0
-        is_complete = False
-        if awarding_quests and user_id:
-            completions_list = []
-            for quest in awarding_quests:
-                user_quest = UserQuest.query.filter_by(user_id=user_id, quest_id=quest.id).first()
-                completions = user_quest.completions if user_quest else 0
-                completions_list.append(completions)
-                if completions >= quest.badge_awarded:
-                    is_complete = True
-            user_completions_total = max(completions_list) if completions_list else 0
-
-        enhanced_badges.append({
-            'id': badge.id,
-            'name': badge.name,
-            'description': badge.description,
-            'image': badge.image,
-            'category': badge.category,
-            'task_names': task_names,
-            'task_ids': task_ids,
-            'badge_awarded_counts': badge_awarded_counts,
-            'user_completions': user_completions_total,
-            'is_complete': is_complete
-        })
-    return enhanced_badges
