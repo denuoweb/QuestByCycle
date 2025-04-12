@@ -19,7 +19,7 @@ werkzeug = "3.0.6"
 email-validator = "1.2.1"
 sqlalchemy = "2.0.22"
 psycopg2-binary = "2.9.9"
-gunicorn = "22.0.0"
+gunicorn = "23.0.0"
 qrcode = {extras = ["pil"], version = "7.4.2"}
 tweepy = "4.14.0"
 pyjwt = "2.8.0"
