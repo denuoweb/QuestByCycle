@@ -5,6 +5,7 @@ SQLALCHEMY_ECHO = false
 BADGE_IMAGE_DIR = "badge_images"
 CAROUSEL_IMAGES_DIR = "carousel_images"
 TASKCSV = "csv"
+LOCAL_DOMAIN = ""
 
 [encryption]
 DEFAULT_SUPER_ADMIN_PASSWORD = ""
@@ -26,13 +27,13 @@ SQLALCHEMY_DATABASE_URI = "postgresql://username:password@localhost/databasename
 DEBUG = true
 
 [mail]
-MAIL_SERVER = "smtp.gmail.com"
-MAIL_PORT = 587
+MAIL_SERVER = "localhost"
+MAIL_PORT = 2525
 MAIL_USE_TLS = true
 MAIL_USE_SSL = false
 MAIL_USERNAME = ""
 MAIL_PASSWORD = ""
-MAIL_DEFAULT_SENDER = ""
+MAIL_DEFAULT_SENDER = "info@questbycycle.org"
 
 [social]
 twitter_username = ""
