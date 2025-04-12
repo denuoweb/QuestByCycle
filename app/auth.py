@@ -183,7 +183,7 @@ def login():
                         game_id=request.args.get('game_id'),
                         quest_id=request.args.get('quest_id'))
             )
-        elif (current_app.config.get('MAIL_USERNAME') and
+        elif (current_app.config['MAIL_SERVER'] and
               not user.email_verified):
             flash('Please verify your email before logging in.', 'warning')
             error_response = render_template(
@@ -337,7 +337,7 @@ def register():
             quest_id=request.args.get('quest_id'),
             next=request.args.get('next')
         )
-    if current_app.config.get('MAIL_USERNAME'):
+    if current_app.config['MAIL_SERVER']:
         _send_verification_email(user)
     else:
         if not _auto_verify_and_login(user):

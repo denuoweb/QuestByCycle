@@ -503,43 +503,59 @@ def generate_oauth2_string(username, access_token):
 
 
 def send_email(to, subject, html_content):
-    creds = load_credentials()
-    if not creds:
-        current_app.logger.error('Failed to load credentials.')
-        return False
+    """
+    Send an email using the Postfix server configuration defined in the Flask
+    application configuration. The function reads MAIL_SERVER, MAIL_PORT,
+    MAIL_USE_TLS, MAIL_USE_SSL, MAIL_USERNAME, MAIL_PASSWORD and MAIL_DEFAULT_SENDER
+    to determine how to connect and authenticate (if necessary).
 
-    # Ensure credentials are valid and refresh them if necessary
-    creds = refresh_credentials(creds)
-    if not creds or not creds.valid:
-        current_app.logger.error('Invalid or expired credentials.')
-        return False
+    Args:
+        to (str): The recipient email address.
+        subject (str): The email subject.
+        html_content (str): The HTML content of the email.
 
-    access_token = creds.token
-    auth_string = generate_oauth2_string(current_app.config['MAIL_USERNAME'], access_token)
-
-    # Create the email message
+    Returns:
+        bool: True if the email was sent successfully; otherwise, False.
+    """
+    # Create the email message.
     msg = MIMEText(html_content, 'html')
     msg['Subject'] = subject
     msg['From'] = current_app.config['MAIL_DEFAULT_SENDER']
     msg['To'] = to
 
     try:
-        # Connect to Gmail SMTP server
-        smtp_server = smtplib.SMTP('smtp.gmail.com', 587)
-        smtp_server.ehlo()
-        smtp_server.starttls()
-        smtp_server.ehlo()
+        # Fetch email server configuration from Flask config.
+        mail_server = current_app.config.get('MAIL_SERVER')
+        mail_port = current_app.config.get('MAIL_PORT')
+        use_tls = current_app.config.get('MAIL_USE_TLS', False)
+        use_ssl = current_app.config.get('MAIL_USE_SSL', False)
+        mail_username = current_app.config.get('MAIL_USERNAME')
+        mail_password = current_app.config.get('MAIL_PASSWORD')
 
-        # Authenticate using OAuth2
-        smtp_server.docmd('AUTH', 'XOAUTH2 ' + auth_string)
+        # Establish the appropriate SMTP connection.
+        if use_ssl:
+            smtp_conn = smtplib.SMTP_SSL(mail_server, mail_port)
+        else:
+            smtp_conn = smtplib.SMTP(mail_server, mail_port)
 
-        # Send the email
-        smtp_server.sendmail(msg['From'], [to], msg.as_string())
-        smtp_server.quit()
-        current_app.logger.info('Email sent successfully.')
+        smtp_conn.ehlo()
+
+        if use_tls:
+            smtp_conn.starttls()
+            smtp_conn.ehlo()
+
+        # If username and password are specified, authenticate.
+        if mail_username and mail_password:
+            smtp_conn.login(mail_username, mail_password)
+
+        # Send the email.
+        smtp_conn.sendmail(msg['From'], [to], msg.as_string())
+        smtp_conn.quit()
+        current_app.logger.info('Email sent successfully to %s.', to)
         return True
+
     except Exception as e:
-        current_app.logger.error(f'Failed to send email: {e}')
+        current_app.logger.error('Failed to send email: %s', e)
         return False
 
 

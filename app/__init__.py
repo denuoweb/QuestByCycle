@@ -82,6 +82,11 @@ def create_app():
     app.config['SESSION_COOKIE_DOMAIN'] = app.config['encryption']['SESSION_COOKIE_DOMAIN']
     app.config['SESSION_REFRESH_EACH_REQUEST'] = app.config['encryption']['SESSION_REFRESH_EACH_REQUEST']
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=app.config['encryption']['REMEMBER_COOKIE_DURATION_DAYS'])
+    app.config['MAIL_SERVER'] = app.config['mail']['MAIL_SERVER']
+    app.config['MAIL_PORT'] = app.config['mail']['MAIL_PORT']
+    app.config['MAIL_USE_SSL'] = app.config['mail']['MAIL_USE_SSL']
+    app.config['MAIL_USE_TLS'] = app.config['mail']['MAIL_USE_TLS']
+    app.config['MAIL_PASSWORD'] = app.config['mail']['MAIL_PASSWORD']
     app.config['MAIL_USERNAME'] = app.config['mail']['MAIL_USERNAME']
     app.config['MAIL_DEFAULT_SENDER'] = app.config['mail']['MAIL_DEFAULT_SENDER']
 
