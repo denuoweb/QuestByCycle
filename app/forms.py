@@ -72,6 +72,10 @@ class RegistrationForm(FlaskForm):
                 "You must agree to the terms of service, license agreement, and privacy policy to register."
             )
 
+class MastodonLoginForm(FlaskForm):
+    """Form for logging in via Mastodon OAuth."""
+    instance = StringField("Mastodon Instance Domain", validators=[DataRequired()])
+    submit = SubmitField("Login with Mastodon")
 
 class LoginForm(FlaskForm):
     """User login form."""
@@ -268,6 +272,7 @@ class ProfileForm(FlaskForm):
         validators=[Optional(), Length(max=500)],
     )
     upload_to_socials = BooleanField("Upload Activities to Social Media", default=True)
+    upload_to_mastodon = BooleanField("Upload Activities to Social Media", default=True)
     show_carbon_game = BooleanField("Show Carbon Reduction Game", default=True)
     riding_preferences = SelectMultipleField(
         "Riding Preferences",

@@ -21,10 +21,9 @@
                         <span style="color: red;">[{{ error }}]</span>
                     {% endfor %}
                 </div>
-                <!-- Updated inline-flex container for a compact, square checkbox -->
+                <!-- Inline-flex container for a compact Remember Me checkbox -->
                 <div class="form-group">
                     <div class="d-inline-flex align-items-center" style="gap: 0.5rem;">
-
                         {{ login_form.remember_me(class="form-check-input", style="width: auto;") }}
                         <label class="form-check-label" for="{{ login_form.remember_me.id }}">Remember Me</label>
                     </div>
@@ -32,7 +31,17 @@
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">Login</button>
                 </div>
+                <div class="modal-footer">
+                    <a href="{{ url_for('auth.mastodon_login') }}" class="btn btn-secondary">
+                        Login with Mastodon
+                    </a>
+                </div>
             </form>
+            <!-- New Register Prompt Section -->
+            <div class="mt-3 text-center">
+                <span>Don't have an account?</span>
+                <button type="button" class="btn btn-link" onclick="switchToRegisterModal()">Register</button>
+            </div>
         </div>
     </div>
 </div>

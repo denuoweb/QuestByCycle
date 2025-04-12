@@ -4,19 +4,23 @@ Authentication module for handling login, registration, and related routes.
 """
 
 from datetime import datetime
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlencode
 
 from flask import (Blueprint, render_template, request, redirect, url_for, flash,
-                   current_app)
+                   current_app, session)
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from pytz import utc
+
 import bleach
+import rsa
+import uuid
+import requests
 
 from app.models import db, User, Game
 from app.forms import (LoginForm, RegistrationForm, ForgotPasswordForm,
-                       ResetPasswordForm, UpdatePasswordForm)
+                       ResetPasswordForm, UpdatePasswordForm, MastodonLoginForm)
 from app.utils import send_email, generate_tutorial_game, log_user_ip
 
 # Initialize the blueprint.
@@ -86,15 +90,17 @@ def _send_verification_email(user):
     """
     token = user.generate_verification_token()
     verify_url = url_for(
-        'auth.verify_email', token=token, _external=True,
+        'auth.verify_email',
+        token=token,
+        _external=True,
+        game_id=request.args.get('game_id'),  # Include the game_id parameter
         quest_id=request.args.get('quest_id'),
         next=request.args.get('next')
     )
     html = render_template('verify_email.html', verify_url=verify_url)
     subject = "QuestByCycle verify email"
     send_email(user.email, subject, html)
-    flash('A verification email has been sent to you. '
-          'Please check your inbox.', 'info')
+    flash('A verification email has been sent to you. Please check your inbox.', 'info')
 
 
 def _auto_verify_and_login(user):
@@ -117,16 +123,19 @@ def _auto_verify_and_login(user):
 def _join_game_if_provided(user):
     """
     Join the game if a game_id is provided in the request.
+    Additionally, set the user's selected_game_id to that game.
     """
     game_id = request.args.get('game_id')
     if game_id:
         game = Game.query.get(game_id)
-        if game and game not in user.participated_games:
-            user.participated_games.append(game)
+        if game:
+            # If not already joined, add the game to the user's participated games.
+            if game not in user.participated_games:
+                user.participated_games.append(game)
+            # Set the user's selected game to this game.
+            user.selected_game_id = game.id
             try:
                 db.session.commit()
-                flash(f'You have successfully joined the game: {game.title}',
-                      'success')
             except SQLAlchemyError as exc:
                 db.session.rollback()
                 current_app.logger.error(f'Failed to join game: {exc}')
@@ -147,6 +156,150 @@ def _ensure_tutorial_game(user):
             except SQLAlchemyError as exc:
                 db.session.rollback()
                 current_app.logger.error(f'Failed to join tutorial game: {exc}')
+
+
+@auth_bp.route('/login/mastodon', methods=['GET', 'POST'])
+def mastodon_login():
+    """
+    Display and process the Mastodon login form.
+    The user provides the instance domain, and the route dynamically registers
+    the OAuth application with that instance.
+    """
+    form = MastodonLoginForm()
+    if form.validate_on_submit():
+        instance = form.instance.data.strip().lower()
+        redirect_uri = url_for('auth.mastodon_callback', _external=True)
+        state = uuid.uuid4().hex
+        session['mastodon_state'] = state
+        session['mastodon_instance'] = instance
+        # Dynamic app registration with Mastodon
+        app_registration_url = f"https://{instance}/api/v1/apps"
+        data = {
+            "client_name": "QuestByCycle",
+            "redirect_uris": redirect_uri,
+            "scopes": "read write follow",
+            "website": request.host_url.rstrip('/')
+        }
+        try:
+            response = requests.post(app_registration_url, data=data)
+            response.raise_for_status()
+            app_data = response.json()
+        except Exception as e:
+            flash(f"Error registering app with Mastodon instance: {e}", "danger")
+            return redirect(url_for('auth.login'))
+        session['mastodon_client_id'] = app_data.get("client_id")
+        session['mastodon_client_secret'] = app_data.get("client_secret")
+        auth_url = f"https://{instance}/oauth/authorize"
+        params = {
+            "response_type": "code",
+            "client_id": session['mastodon_client_id'],
+            "redirect_uri": redirect_uri,
+            "scope": "read write follow",
+            "state": state
+        }
+        auth_redirect_url = f"{auth_url}?{urlencode(params)}"
+        return redirect(auth_redirect_url)
+    return render_template('mastodon_login.html', form=form)
+
+
+@auth_bp.route('/mastodon/callback')
+def mastodon_callback():
+    """
+    Handle the OAuth callback from Mastodon.
+    This route verifies the state, exchanges the code for an access token,
+    and retrieves the Mastodon account details.
+    """
+    code = request.args.get('code')
+    state = request.args.get('state')
+    if not state or state != session.get('mastodon_state'):
+        flash("State mismatch. Authentication failed.", "danger")
+        return redirect(url_for('auth.login'))
+    instance = session.get('mastodon_instance')
+    client_id = session.get('mastodon_client_id')
+    client_secret = session.get('mastodon_client_secret')
+    redirect_uri = url_for('auth.mastodon_callback', _external=True)
+    token_url = f"https://{instance}/oauth/token"
+    data = {
+        "grant_type": "authorization_code",
+        "code": code,
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "redirect_uri": redirect_uri,
+        "scope": "read write follow"
+    }
+    try:
+        token_response = requests.post(token_url, data=data)
+        token_response.raise_for_status()
+        token_data = token_response.json()
+    except Exception as e:
+        flash(f"Error obtaining access token: {e}", "danger")
+        return redirect(url_for('auth.login'))
+    access_token = token_data.get("access_token")
+    if not access_token:
+        flash("Access token not found in response.", "danger")
+        return redirect(url_for('auth.login'))
+    # Get Mastodon account details.
+    verify_url = f"https://{instance}/api/v1/accounts/verify_credentials"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    try:
+        verify_response = requests.get(verify_url, headers=headers)
+        verify_response.raise_for_status()
+        mastodon_user = verify_response.json()
+    except Exception as e:
+        flash(f"Error verifying Mastodon credentials: {e}", "danger")
+        return redirect(url_for('auth.login'))
+    mastodon_id = str(mastodon_user.get("id"))
+    mastodon_username = mastodon_user.get("username")
+    display_name = mastodon_user.get("display_name") or mastodon_username
+    mastodon_actor_url = mastodon_user.get("url")
+    # Look up an existing user by Mastodon ID and instance.
+    user = User.query.filter_by(mastodon_id=mastodon_id, mastodon_instance=instance).first()
+    if user:
+        user.mastodon_access_token = access_token
+        user.activitypub_id = mastodon_actor_url  # <-- Use Mastodon actor URL
+        db.session.commit()
+        login_user(user)
+        flash("Logged in via Mastodon. Your federated identity is managed by your Mastodon account.", "success")
+    else:
+        # If a logged-in user wishes to link their Mastodon account:
+        if current_user.is_authenticated:
+            current_user.mastodon_id = mastodon_id
+            current_user.mastodon_username = mastodon_username
+            current_user.mastodon_instance = instance
+            current_user.mastodon_access_token = access_token
+            current_user.activitypub_id = mastodon_actor_url  # <-- Use Mastodon actor URL
+            db.session.commit()
+            flash("Mastodon account linked successfully. You will federate via your Mastodon account.", "success")
+        else:
+            # Otherwise, create a new user using Mastodon data.
+            username = mastodon_username
+            new_user = User(
+                username=username,
+                email=f"{username}@{instance}",  # Placeholder email
+                license_agreed=True,
+                email_verified=True,
+                display_name=display_name,
+                mastodon_id=mastodon_id,
+                mastodon_username=mastodon_username,
+                mastodon_instance=instance,
+                mastodon_access_token=access_token,
+                activitypub_id=mastodon_actor_url  # <-- Use Mastodon actor URL
+            )
+            new_user.set_password(uuid.uuid4().hex)  # Random password for OAuth-only accounts
+            db.session.add(new_user)
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                flash(f"Error creating user account: {e}", "danger")
+                return redirect(url_for('auth.login'))
+            login_user(new_user)
+            flash("Account created and logged in via Mastodon. You will federate using your Mastodon identity.", "success")
+    
+    # Ensure a current tutorial game exists
+    generate_tutorial_game()
+    
+    return redirect(url_for('main.index'))
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -326,8 +479,7 @@ def register():
         db.session.commit()
     except SQLAlchemyError as exc:
         db.session.rollback()
-        flash('Registration failed due to an unexpected error. '
-              'Please try again.', 'error')
+        flash('Registration failed due to an unexpected error. Please try again.', 'error')
         current_app.logger.error(f'Failed to register user: {exc}')
         return render_template(
             'register.html',
@@ -337,6 +489,8 @@ def register():
             quest_id=request.args.get('quest_id'),
             next=request.args.get('next')
         )
+    # Create a local ActivityPub actor (for users without Mastodon)
+    create_activitypub_actor(user)
     if current_app.config['MAIL_SERVER']:
         _send_verification_email(user)
     else:
@@ -508,3 +662,30 @@ def delete_account():
         current_app.logger.error(f"Error deleting user: {exc}")
         flash('An error occurred while deleting your account.', 'error')
         return redirect(url_for('main.index'))
+
+
+def generate_activitypub_keys():
+    """
+    Generate a new RSA key pair for ActivityPub signing.
+    Returns a tuple (public_key_pem, private_key_pem).
+    """
+    (pubkey, privkey) = rsa.newkeys(2048)
+    public_pem = pubkey.save_pkcs1().decode('utf-8')
+    private_pem = privkey.save_pkcs1().decode('utf-8')
+    return public_pem, private_pem
+
+
+def create_activitypub_actor(user):
+    """
+    Create a local ActivityPub actor for a user if they do not already have one.
+    For local registrations only: this will generate a key pair and a local actor URL.
+    (For Mastodon-linked accounts, activitypub_id is set to the Mastodon account URL.)
+    """
+    if not user.activitypub_id:
+        public_key, private_key = generate_activitypub_keys()
+        # Construct the actor URL using QuestByCycle’s domain and the user's username.
+        actor_url = url_for('profile.view_user', username=user.username, _external=True)
+        user.activitypub_id = actor_url
+        user.public_key = public_key
+        user.private_key = private_key
+        db.session.commit()

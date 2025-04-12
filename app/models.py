@@ -18,6 +18,7 @@ from flask_sqlalchemy import SQLAlchemy  # pylint: disable=import-error
 from flask_login import UserMixin  # pylint: disable=import-error
 from werkzeug.security import generate_password_hash, check_password_hash  # pylint: disable=import-error
 from sqlalchemy.exc import IntegrityError  # pylint: disable=import-error
+from app.auth import generate_activitypub_keys
 
 db = SQLAlchemy()
 
@@ -125,10 +126,38 @@ class User(UserMixin, db.Model):
     bike_picture = db.Column(db.String(200), nullable=True)
     bike_description = db.Column(db.String(500), nullable=True)
     upload_to_socials = db.Column(db.Boolean, default=True)
+    upload_to_mastodon = db.Column(db.Boolean, default=True)
     show_carbon_game = db.Column(db.Boolean, default=True)
     onboarded = db.Column(db.Boolean, default=False, nullable=True)
     selected_game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=True)
 
+    # Fields for linking a Mastodon account
+    mastodon_id = db.Column(db.String(64), nullable=True)
+    mastodon_username = db.Column(db.String(64), nullable=True)
+    mastodon_instance = db.Column(db.String(128), nullable=True)
+    mastodon_access_token = db.Column(db.String(512), nullable=True)
+    
+    # Fields for the local ActivityPub actor (native QuestByCycle account)
+    activitypub_id = db.Column(db.String(256), nullable=True)
+    public_key = db.Column(db.Text, nullable=True)
+    private_key = db.Column(db.Text, nullable=True)
+
+    def ensure_activitypub_actor(self):
+        """
+        Ensure that the user has a local ActivityPub actor record.
+        For Mastodon users, if they are linked, activitypub_id should already be set to their
+        Mastodon actor URL.
+        """
+        if not self.activitypub_id:
+            # For local users, generate keys and create a local actor URL.
+            public_key, private_key = generate_activitypub_keys()
+            local_domain = current_app.config.get("LOCAL_DOMAIN", "questbycycle.org")
+            actor_url = f"https://{local_domain}/users/{self.username}"
+            self.activitypub_id = actor_url
+            self.public_key = public_key
+            self.private_key = private_key
+            db.session.commit()
+    
     def generate_verification_token(self, expiration=320000):
         """Generate a JWT token for email verification."""
         token = jwt.encode(
