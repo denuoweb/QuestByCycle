@@ -17,7 +17,12 @@
                                 <div class="card-header {% if tier == 'Gold' %}bg-warning text-dark{% elif tier == 'Silver' %}bg-secondary text-white{% elif tier == 'Bronze' %}bg-danger text-white{% else %}bg-primary text-white{% endif %} text-center">
                                     <h3 class="card-title font-weight-bold">{{ sponsor.name }}</h3>
                                 </div>
-                                <img class="card-img-top" src="{{ url_for('static', filename=sponsor.logo) }}" alt="{{ sponsor.name }} logo">
+                                {% if sponsor.logo %}
+                                    <img class="card-img-top" src="{{ url_for('static', filename=sponsor.logo) }}" alt="{{ sponsor.name }} logo">
+                                {% else %}
+                                    <!-- Optionally render a default image if a sponsor logo is missing -->
+                                    <img class="card-img-top" src="{{ url_for('static', filename='images/default_logo.png') }}" alt="Default logo">
+                                {% endif %}
                                 <div class="card-body bg-light">
                                     <p class="card-text">{{ sponsor.description | safe }}</p>
                                     {% if sponsor.website %}
