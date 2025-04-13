@@ -261,7 +261,7 @@
     <div id="flash-messages"></div>
 
     <div class="card">
-        <h1>Upload a Photo to Complete "{{ quest.title }}"</h1>
+        <h1>Upload a Photo to Complete the Quest: "{{ quest.title }}"</h1>
         <form id="submitPhotoForm" method="post" enctype="multipart/form-data" action="{{ url_for('quests.submit_photo', quest_id=quest.id) }}">
             {{ form.csrf_token }}
             <input type="file" name="photo" accept="image/*" capture="camera" required>
