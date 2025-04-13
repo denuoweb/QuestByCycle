@@ -1,14 +1,12 @@
 <div id="sponsorsModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h5 class="modal-title" id="sponsorsModalLabel">Sponsors</h5>
+            <h5 class="modal-title" id="sponsorsModalLabel">Game Sponsors</h5>
             <button type="button" class="btn-close" aria-label="Close" onclick="closeModal('sponsorsModal')"></button>
         </div>
         <div class="modal-body">
             <input type="hidden" class="game-id" value="">
-            {% if current_user.is_admin %}
-                <a href="{{ url_for('admin.manage_sponsors', game_id=game.id) }}" class="btn btn-primary">Manage Sponsors</a>
-            {% endif %}
+
             <div class="d-flex flex-column align-items-center">
                 {% for tier in ['Gold', 'Silver', 'Bronze', 'Other'] %}
                     {% for sponsor in game.sponsors if sponsor.tier == tier %}
@@ -34,6 +32,24 @@
                     {% endfor %}
                 {% endfor %}
             </div>
+
+            <!-- Permanent Platform Sponsors Section -->
+            <div class="platform-sponsors text-center mb-4">
+                <h4>Platform Sponsors</h4>
+                <div class="d-flex flex-row justify-content-center align-items-center">
+                    <a href="https://climaterevolutions.org" target="_blank" class="mx-2">
+                        <img src="{{ url_for('static', filename='images/climate-revolutions-logo.png') }}" alt="Climate Revolutions by Bike Logo" class="footer-logo">
+                    </a>
+                    <a href="https://www.350eugene.org/" target="_blank" class="mx-2">
+                        <img src="{{ url_for('static', filename='images/350EUG-logo.png') }}" alt="350Eugene Logo" class="footer-logo">
+                    </a>
+                </div>
+            </div>
+
+            {% if current_user.is_admin %}
+                <a href="{{ url_for('admin.manage_sponsors', game_id=game.id) }}" class="btn btn-primary">Manage Sponsors</a>
+            {% endif %}
+
         </div>
     </div>
 </div>
