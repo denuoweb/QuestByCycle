@@ -12,10 +12,16 @@
         </div>
         
         <div class="modal-body">
-            <!-- Description Section -->
-            <div class="box-container description-box">
-                <h4 class="box-title">Description</h4>
-                <p id="modalQuestDescription" class="text-muted text-center"></p>
+            <div class="top-content">
+                <div class="user-quest-data">
+                    <!-- Elements like verification button and form will be dynamically appended here -->
+                </div>
+        
+                <!-- Description Section -->
+                <div class="box-container description-box">
+                    <h4 class="box-title">Description</h4>
+                    <p id="modalQuestDescription" class="text-muted text-center"></p>
+                </div>
             </div>
 
             <!-- Quest Details Grid -->
@@ -61,9 +67,6 @@
                 <p id="modalQuestTips" class="text-primary"></p>
             </div>
 
-            <div class="user-quest-data">
-                <!-- Elements like verification button and form will be dynamically appended here -->
-            </div>
         </div>
         <div class="modal-footer">
             <strong><h4 class="text-center text-success">Quest Entries</h4></strong>
@@ -84,6 +87,42 @@
 </script>
 
 <style>
+    /* Flex container for the two main columns */
+    .top-content {
+        display: flex;
+        flex-direction: row;  /* Ensures horizontal alignment */
+        flex-wrap: nowrap;    /* Prevents wrapping when there is sufficient space */
+        width: 100%;
+        gap: 20px;            /* Optional: Adds space between the columns */
+    }
+
+    /* Apply a fixed width to direct children ensuring they take up 50% of the container */
+    .top-content > .user-quest-data,
+    .top-content > .box-container.description-box {
+        width: 50%;
+        box-sizing: border-box;  /* Ensures padding/margin is included in the width */
+    }
+
+    /* Optional: Adjust padding to create visual separation if needed */
+    .top-content > .user-quest-data {
+        padding-right: 10px;
+    }
+    .top-content > .box-container.description-box {
+        padding-left: 10px;
+    }
+
+    /* Fallback for smaller screens: stack columns vertically */
+    @media (max-width: 600px) {
+        .top-content {
+            flex-direction: column;
+        }
+        .top-content > .user-quest-data,
+        .top-content > .box-container.description-box {
+            width: 100%;
+            padding: 0; /* Or adjust as needed */
+        }
+    }
+
     .hidden {
         display: none !important; /* Ensure it overrides any other style */
     }
