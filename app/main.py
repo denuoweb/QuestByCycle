@@ -668,7 +668,7 @@ def contact():
     if form.validate_on_submit():
         message = sanitize_html(form.message.data)
         subject = "New Contact Form Submission"
-        recipient = "jaron.rosenau@gmail.com"
+        recipient = "jaron.rosenau+QbCFeedback@gmail.com"
 
         user_info = None
         if current_user.is_authenticated:
