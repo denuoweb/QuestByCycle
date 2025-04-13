@@ -233,28 +233,28 @@
                               </li>
                           </ul>
                       </li>
-                      <li class="nav-item">
-                          <a class="nav-link" href="javascript:void(0)" onclick="showUserProfileModal('{{ current_user.id }}')">
-                              <i class="fas fa-user me-1"></i> Profile
-                          </a>
-                      </li>
                       {% if selected_game_id %}
-                          <li class="nav-item">
-                              <a class="nav-link" href="javascript:void(0)" id="leaderboardNavbarLink" data-game-id="{{ selected_game_id }}">
-                                  <i class="fas fa-trophy me-1"></i> Leaderboard
-                              </a>
-                          </li>
                           <li class="nav-item">
                               <a class="nav-link" href="javascript:void(0)" onclick="showGameInfoModal('{{ selected_game_id }}')">
                                   <i class="fas fa-book me-1"></i> Game Info
                               </a>
                           </li>
                           <li class="nav-item">
-                              <a class="nav-link" href="javascript:void(0)" onclick="openModal('sponsorsModal', '{{ selected_game_id }}')">
-                                  <i class="fas fa-handshake me-1"></i> Sponsors
+                              <a class="nav-link" href="javascript:void(0)" id="leaderboardNavbarLink" data-game-id="{{ selected_game_id }}">
+                                  <i class="fas fa-trophy me-1"></i> Leaderboard
+                              </a>
+                          </li>
+                          <li class="nav-item">
+                              <a class="nav-link" href="javascript:void(0)" onclick="openModal('contactModal', '{{ selected_game_id }}')">
+                                  <i class="fas fa-comment-dots me-1"></i> Feedback
                               </a>
                           </li>
                       {% endif %}
+                      <li class="nav-item">
+                          <a class="nav-link" href="javascript:void(0)" onclick="showUserProfileModal('{{ current_user.id }}')">
+                              <i class="fas fa-user me-1"></i> Profile
+                          </a>
+                      </li>
                   {% endif %}
                   {% if in_admin_dashboard %}
                   <li class="nav-item">
@@ -264,7 +264,7 @@
                   {% if current_user.is_admin %}
                       <li class="nav-item">
                           <a class="nav-link" href="{{ url_for('admin.admin_dashboard', selected_game_id=selected_game_id) }}">
-                              <i class="fas fa-user-shield me-1"></i> Admin Dashboard
+                              <i class="fas fa-user-shield me-1"></i> Admin
                           </a>
                       </li>
                   {% endif %}
@@ -295,6 +295,13 @@
 
 <footer class="footer">
   <div class="footer-section text">
+    <div class="footer-section logos">
+      <p>
+        <a class="social-link" href="javascript:void(0)" onclick="openModal('sponsorsModal', '{{ selected_game_id }}')">
+            <i class="fas fa-handshake me-1"></i>Game Sponsors
+        </a>
+      </p>
+    </div>
     <strong>Supporting cycling initiatives for a greener planet.</strong>
     <p>Enjoy the full experience by installing our app.</p>
     <button id="install" hidden class="btn btn-primary">Install App</button>
@@ -314,30 +321,23 @@
     </div>
   </div>
   <div class="footer-content">
-    <div class="footer-section logos">
-      <p>Sponsored by</p>
-      <a href="https://climaterevolutions.org" target="_blank">
-        <img src="{{ url_for('static', filename='images/climate-revolutions-logo.png') }}" alt="Climate Revolutions by Bike Logo" class="footer-logo">
-      </a>
-      <a href="https://www.350eugene.org/" target="_blank">
-        <img src="{{ url_for('static', filename='images/350EUG-logo.png') }}" alt="350Eugene Logo" class="footer-logo">
-      </a>
-    </div>
     <div class="footer-section links">
       <a href="javascript:void(0)" onclick="openModal('privacyModal')">Privacy Policy</a>
       <a href="javascript:void(0)" onclick="openModal('termsModal')">Terms of Service</a>
       <a href="javascript:void(0)" onclick="openModal('licenseModal')">License Agreement</a>
     </div>
     <div class="footer-section social">
-      <a href="{{ selected_game.twitter_url if selected_game else 'https://twitter.com/QuestByCycle' }}" target="_blank" class="social-link">
-        <i class="fab fa-twitter"></i>
-      </a>
-      <a href="{{ selected_game.facebook_url if selected_game else 'https://facebook.com/QuestByCycle' }}" target="_blank" class="social-link">
-        <i class="fab fa-facebook-f"></i>
-      </a>
-      <a href="{{ selected_game.instagram_url if selected_game else 'https://instagram.com/QuestByCycle' }}" target="_blank" class="social-link">
-        <i class="fab fa-instagram"></i>
-      </a>
+      <p>
+        <a href="{{ selected_game.twitter_url if selected_game else 'https://twitter.com/QuestByCycle' }}" target="_blank" class="social-link">
+          <i class="fab fa-twitter"></i>
+        </a>
+        <a href="{{ selected_game.facebook_url if selected_game else 'https://facebook.com/QuestByCycle' }}" target="_blank" class="social-link">
+          <i class="fab fa-facebook-f"></i>
+        </a>
+        <a href="{{ selected_game.instagram_url if selected_game else 'https://instagram.com/QuestByCycle' }}" target="_blank" class="social-link">
+          <i class="fab fa-instagram"></i>
+        </a>
+      </p>
     </div>
   </div>
   <div class="footer-section legal">
