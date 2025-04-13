@@ -18,7 +18,7 @@ from flask_login import login_required, current_user
 
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.models import db, Game, Quest, UserQuest, user_games
+from app.models import db, Game, Quest, UserQuest, user_games, User
 from app.forms import GameForm
 from app.utils import save_leaderboard_image, generate_smoggy_images, allowed_file
 
@@ -237,17 +237,25 @@ def register_game(game_id):
 def delete_game(game_id):
     """
     Delete a game. Only administrators are allowed to delete games.
+    Prior to deletion, ensure that users referencing the game have their selected_game_id set to NULL.
     """
     if not current_user.is_admin:
         flash('Access denied: Only administrators can delete games.', 'danger')
         return redirect(url_for('main.index'))
 
     game = Game.query.get_or_404(game_id)
+    
     try:
-        # Assuming quests are properly cascaded in model definitions
+        # Find all users that reference this game
+        users_with_game = User.query.filter_by(selected_game_id=game.id).all()
+        for user in users_with_game:
+            user.selected_game_id = None  # Disassociate the game
+
+        # Now delete the game after removing references
         db.session.delete(game)
         db.session.commit()
         flash('Game deleted successfully!', 'success')
+
     except SQLAlchemyError as error:
         db.session.rollback()
         flash(f'An error occurred while deleting the game: {error}', 'error')
