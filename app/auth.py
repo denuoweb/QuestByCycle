@@ -87,21 +87,38 @@ def _generate_username(email):
 
 def _send_verification_email(user):
     """
-    Send a verification email to the user.
+    Send a verification email to the user, including context parameters
+    (game_id, quest_id, next) so that they are passed along in the verification link.
     """
+    # Generate the token for email verification
     token = user.generate_verification_token()
+
+    # Try to extract game context from the query parameters;
+    # if not found there, try form data.
+    game_id = request.args.get('game_id') or request.form.get('game_id')
+    quest_id = request.args.get('quest_id') or request.form.get('quest_id')
+    next_info = request.args.get('next') or request.form.get('next')
+
+    # Build the verification URL with the context parameters included
     verify_url = url_for(
         'auth.verify_email',
         token=token,
         _external=True,
-        game_id=request.args.get('game_id'),  # Include the game_id parameter
-        quest_id=request.args.get('quest_id'),
-        next=request.args.get('next')
+        game_id=game_id,
+        quest_id=quest_id,
+        next=next_info
     )
+
+    # Render the email content with the verification URL
     html = render_template('verify_email.html', verify_url=verify_url)
     subject = "QuestByCycle verify email"
+
+    # Send the email
     send_email(user.email, subject, html)
+
+    # Optionally, flash a message to inform the user that a verification email has been sent
     flash('A verification email has been sent to you. Please check your inbox.', 'info')
+
 
 
 def _auto_verify_and_login(user):
