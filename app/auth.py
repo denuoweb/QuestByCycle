@@ -483,8 +483,12 @@ def logout():
 def register():
     """
     Handle user registration.
+    
+    If a game_id is provided in the request, the new user will be joined to that game
+    as their current selected game. Otherwise, the user is joined to the default tutorial game.
     """
     register_form = RegistrationForm()
+    # On GET or if the form is not validated, render the registration template with the context.
     if not register_form.validate_on_submit():
         return render_template(
             'register.html',
@@ -508,8 +512,7 @@ def register():
     email = sanitize_html(register_form.email.data or "").lower()
     existing_user = User.query.filter_by(email=email).first()
     if existing_user:
-        flash('Email already registered. Please use a different email.',
-              'warning')
+        flash('Email already registered. Please use a different email.', 'warning')
         return redirect(
             url_for('auth.register',
                     game_id=request.args.get('game_id'),
@@ -548,6 +551,11 @@ def register():
         )
     # Create a local ActivityPub actor (for users without Mastodon)
     create_activitypub_actor(user)
+    
+    # Determine if a game_id was provided during registration.
+    # Try to get it from query parameters first, and then from form data.
+    game_id = request.args.get('game_id') or request.form.get('game_id')
+    
     if current_app.config['MAIL_SERVER']:
         _send_verification_email(user)
     else:
@@ -560,9 +568,15 @@ def register():
                 quest_id=request.args.get('quest_id'),
                 next=request.args.get('next')
             )
-        _join_game_if_provided(user)
-        generate_tutorial_game()
-        _ensure_tutorial_game(user)
+        # If a game id was provided, join that game.
+        if game_id:
+            _join_game_if_provided(user)
+        else:
+            # If no game id was provided, join the default tutorial game.
+            generate_tutorial_game()
+            _ensure_tutorial_game(user)
+    
+    # Process redirection after registration.
     next_page = request.args.get('next')
     quest_id = request.args.get('quest_id')
     if next_page:
@@ -615,11 +629,14 @@ def update_password():
             flash('Current password is incorrect.', 'danger')
     return render_template('update_password.html', form=form)
 
-
 @auth_bp.route('/verify_email/<token>')
 def verify_email(token):
     """
-    Verify the user's email using the provided token.
+    Verify the user's email using the provided token and join the user to the appropriate game.
+    
+    If a game_id is provided in the verification URL, the user will join that game and it will
+    become their selected game. Otherwise, if no game_id is provided, the user will be joined to
+    the default tutorial game (if they aren't already joined to any game).
     """
     user = User.verify_verification_token(token)
     if not user:
@@ -628,23 +645,49 @@ def verify_email(token):
     if user.email_verified:
         flash('Your email has already been verified. Please log in.', 'info')
         return redirect(url_for('auth.login'))
+    
+    # Mark the email as verified
     user.email_verified = True
     db.session.commit()
+    
+    # Log the user in
     login_user(user)
-    generate_tutorial_game()
-    if not user.participated_games:
-        tutorial_game = Game.query.filter_by(is_tutorial=True).first()
-        if tutorial_game:
-            user.participated_games.append(tutorial_game)
-            db.session.commit()
+    
+    # Determine if a game_id was provided in the verification request
     game_id = request.args.get('game_id')
     if game_id:
-        game = Game.query.get(game_id)
-        if game and game not in user.participated_games:
-            user.participated_games.append(game)
-            db.session.commit()
-            flash(f'You have successfully joined the game: {game.title}',
-                  'success')
+        try:
+            game_id_int = int(game_id)
+        except ValueError:
+            current_app.logger.error("Invalid game_id provided in verification: %s", game_id)
+            game_id_int = None
+
+        if game_id_int:
+            game = Game.query.get(game_id_int)
+            if game and game not in user.participated_games:
+                user.participated_games.append(game)
+                user.selected_game_id = game.id
+                try:
+                    db.session.commit()
+                except Exception as exc:
+                    db.session.rollback()
+                    current_app.logger.error("Failed to join game during verification: %s", exc)
+                else:
+                    flash(f'You have successfully joined the game: {game.title}', 'success')
+    else:
+        # No game_id provided; if the user hasn't joined any game, join the tutorial game.
+        if not user.participated_games:
+            tutorial_game = Game.query.filter_by(is_tutorial=True).first()
+            if tutorial_game:
+                user.participated_games.append(tutorial_game)
+                user.selected_game_id = tutorial_game.id
+                try:
+                    db.session.commit()
+                except Exception as exc:
+                    db.session.rollback()
+                    current_app.logger.error("Failed to join tutorial game during verification: %s", exc)
+    
+    # Handle quest and next parameters for further redirection.
     quest_id = request.args.get('quest_id')
     next_page = request.args.get('next')
     if quest_id:
@@ -653,10 +696,9 @@ def verify_email(token):
         parsed_url = urlparse(next_page)
         if not parsed_url.netloc and not parsed_url.scheme:
             return redirect(next_page)
-    flash('Your email has been verified and you have been logged in.',
-          'success')
+    
+    flash('Your email has been verified and you have been logged in.', 'success')
     return redirect(url_for('main.index'))
-
 
 @auth_bp.route('/privacy_policy')
 def privacy_policy():
