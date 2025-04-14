@@ -31,7 +31,7 @@
                 <div class="card p-4 shadow-sm" style="background: linear-gradient(135deg, #ffffff, #f1ff28); border: 2px solid #ddd; border-radius: 15px;">
                     <!-- Title Section becomes clickable to open the login modal -->
                     <h3 class="card-title text-center mb-1" style="font-family: 'Gill Sans'; font-size: 2rem">
-                        <a href="javascript:void(0)" onclick="openLoginModalWithGame({gameId: 1});" style="font-size: 3rem; text-decoration: none; color: inherit;">
+                        <a href="javascript:void(0)" onclick="openLoginModalWithGame({gameId: 17});" style="font-size: 3rem; text-decoration: none; color: inherit;">
                             Earth Day Every Day Game
                         </a>
                     </h3>
@@ -499,7 +499,90 @@
         // Attach event listeners to both search input and category dropdown
         document.getElementById('questSearchInput').addEventListener('input', filterQuests);
         document.getElementById('questCategoryDropdown').addEventListener('change', filterQuests);
-    </script>    
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Create a URLSearchParams object from the query string.
+            const params = new URLSearchParams(window.location.search);
+            // Check if the 'show_login' parameter is set to "1"
+            if (params.get('show_login') === "1") {
+                // Extract additional parameters.
+                const gameId = params.get('game_id') || null;
+                const questId = params.get('quest_id') || null;
+                const nextVal = params.get('next') || null;
+                
+                console.log("DEBUG: show_login flag is set; opening login modal.");
+                console.log("DEBUG: Parameters received: gameId =", gameId, "questId =", questId, "next =", nextVal);
+                
+                // Call the function to open the modal.
+                openLoginModalWithGame({ gameId: gameId, questId: questId, next: nextVal });
+            }
+        });
+    </script>
+    <script>
+        // In your inline <script> block (e.g. near the bottom of index.html)
+            document.addEventListener("DOMContentLoaded", function () {
+            // Define the base URL for login using Flask's URL generator.
+            const baseLoginUrl = "{{ url_for('auth.login') }}";
+
+            function openLoginModalWithGame(options) {
+                const loginModal = document.getElementById('loginModal');
+                const loginForm = document.getElementById('loginForm');
+
+                // Update the hidden inputs with the provided options.
+                if (options.gameId !== undefined) {
+                    const gameInput = document.getElementById('loginGameId');
+                    if (gameInput) {
+                        gameInput.value = options.gameId;
+                    }
+                }
+                if (options.questId !== undefined) {
+                    const questInput = document.getElementById('loginQuestId');
+                    if (questInput) {
+                        questInput.value = options.questId;
+                    }
+                }
+                if (options.next !== undefined) {
+                    const nextInput = document.getElementById('loginNext');
+                    if (nextInput) {
+                        nextInput.value = options.next;
+                    }
+                }
+
+                // Optionally, update the form action with query parameters (if you want it to be visible in the URL)
+                const params = [];
+                if (options.gameId) params.push("game_id=" + encodeURIComponent(options.gameId));
+                if (options.questId) params.push("quest_id=" + encodeURIComponent(options.questId));
+                if (options.next) params.push("next=" + encodeURIComponent(options.next));
+                const newActionUrl = baseLoginUrl + (params.length ? "?" + params.join("&") : "");
+                loginForm.setAttribute('action', newActionUrl);
+
+                // Open the login modal
+                openModal("loginModal");
+            }
+
+            // Expose the function globally if needed.
+            window.openLoginModalWithGame = openLoginModalWithGame;
+        });
+
+    </script>
+    <script>
+        function registerFromLogin() {
+            // Get the login form hidden fields.
+            const gameId = document.getElementById('loginGameId')?.value || "";
+            const questId = document.getElementById('loginQuestId')?.value || "";
+            const nextVal = document.getElementById('loginNext')?.value || "";
+
+            console.log("DEBUG: registerFromLogin called with:", { gameId, questId, next: nextVal });
+
+            // Pass the values to the switchToRegisterModal function (which updates register modal hidden fields)
+            switchToRegisterModal({
+                gameId: gameId,
+                questId: questId,
+                next: nextVal
+            });
+        }
+    </script>
     <style>
         .bold-item {
             font-weight: bold;

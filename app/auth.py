@@ -12,6 +12,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from pytz import utc
+from urllib.parse import urlparse, urljoin
 
 import bleach
 import rsa
@@ -124,9 +125,22 @@ def _join_game_if_provided(user):
     """
     Join the game if a game_id is provided in the request.
     Additionally, set the user's selected_game_id to that game.
+    Checks both request.args and request.form.
     """
+    # Try to get game_id from query parameters
     game_id = request.args.get('game_id')
+    # If not found, try to get it from form data (this applies to POST requests)
+    if not game_id:
+        game_id = request.form.get('game_id')
+    
     if game_id:
+        try:
+            # Ensure game_id is treated as an integer
+            game_id = int(game_id)
+        except ValueError:
+            current_app.logger.error("Invalid game_id provided: %s", game_id)
+            return
+
         game = Game.query.get(game_id)
         if game:
             # If not already joined, add the game to the user's participated games.
@@ -136,9 +150,11 @@ def _join_game_if_provided(user):
             user.selected_game_id = game.id
             try:
                 db.session.commit()
-            except SQLAlchemyError as exc:
+                current_app.logger.debug("User %s joined game %s", user.id, game.id)
+            except Exception as exc:
                 db.session.rollback()
-                current_app.logger.error(f'Failed to join game: {exc}')
+                current_app.logger.error("Failed to join game: %s", exc)
+
 
 
 def _ensure_tutorial_game(user):
@@ -302,64 +318,90 @@ def mastodon_callback():
     return redirect(url_for('main.index'))
 
 
+def is_safe_url(target):
+    """
+    Ensure the target URL is safe for redirection by checking that it is relative
+    or belongs to the same server.
+    """
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return (test_url.scheme in ('http', 'https')) and (ref_url.netloc == test_url.netloc)
+
+
+
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
-# pylint: disable=too-many-branches, too-many-return-statements, broad-except
 def login():
     """
-    Handle user login requests.
+    Handle user login requests using a login modal.
+    On GET requests or on form validation failures, always redirect to the index page 
+    with show_login=1 (plus any query parameters) so that the login modal can be triggered.
+    
+    Detailed debugging prints are added below.
     """
+    print("DEBUG: Entered login function.")
+    game_id = request.args.get('game_id')
+    quest_id = request.args.get('quest_id')
+    next_page = request.args.get('next')
+    print("DEBUG: Query parameters - game_id:", game_id, "quest_id:", quest_id, "next:", next_page)
+
+    # If the user is already authenticated, redirect immediately.
+    if current_user.is_authenticated:
+        print("DEBUG: User is already authenticated. current_user =", current_user)
+        if next_page and is_safe_url(next_page):
+            print("DEBUG: Redirecting authenticated user to safe next_page:", next_page)
+            return redirect(next_page)
+        print("DEBUG: No safe next_page provided. Redirecting authenticated user to main.index.")
+        return redirect(url_for('main.index'))
+
+    # For GET requests, do not render a login page.
+    if request.method == 'GET':
+        print("DEBUG: GET request received; redirecting to main.index with show_login=1 to trigger modal.")
+        return redirect(url_for('main.index', show_login=1, game_id=game_id, quest_id=quest_id, next=next_page))
+
+    # For POST requests, process the submitted form.
     login_form = LoginForm()
+    # If form validation fails, redirect back to main.index to show the modal.
     if not login_form.validate_on_submit():
-        return render_template(
-            'login.html',
-            login_form=login_form,
-            game_id=request.args.get('game_id'),
-            quest_id=request.args.get('quest_id')
-        )
+        print("DEBUG: POST submission did not pass validation; redirecting to main.index with show_login=1.")
+        return redirect(url_for('main.index', show_login=1, game_id=game_id, quest_id=quest_id, next=next_page))
+
+    # Extract and sanitize credentials.
     email = sanitize_html(login_form.email.data or "").lower()
     password = login_form.password.data
-    error_response = None
+    print("DEBUG: Submitted email:", email, "Password length:", len(password) if password else 0)
 
+    error_occurred = False
     if not email or not password:
+        print("DEBUG: Missing email or password.")
         flash('Please enter both email and password.')
-        error_response = redirect(
-            url_for('auth.login',
-                    game_id=request.args.get('game_id'),
-                    quest_id=request.args.get('quest_id'))
-        )
+        error_occurred = True
     else:
         user = User.query.filter_by(email=email).first()
+        print("DEBUG: Queried user:", user)
         if user is None:
+            print("DEBUG: No user found with the provided email.")
             flash('Invalid email or password.')
-            error_response = redirect(
-                url_for('auth.login',
-                        game_id=request.args.get('game_id'),
-                        quest_id=request.args.get('quest_id'))
-            )
-        elif (current_app.config['MAIL_SERVER'] and
-              not user.email_verified):
+            error_occurred = True
+        elif current_app.config.get('MAIL_SERVER') and not user.email_verified:
+            print("DEBUG: User email is not verified for email:", email)
             flash('Please verify your email before logging in.', 'warning')
-            error_response = render_template(
-                'login.html',
-                login_form=login_form,
-                show_resend=True,
-                email=email,
-                game_id=request.args.get('game_id'),
-                quest_id=request.args.get('quest_id')
-            )
+            error_occurred = True
         elif not user.check_password(password):
+            print("DEBUG: Password check failed for email:", email)
             flash('Invalid email or password.')
-            error_response = redirect(
-                url_for('auth.login',
-                        game_id=request.args.get('game_id'),
-                        quest_id=request.args.get('quest_id'))
-            )
+            error_occurred = True
 
-    if error_response is not None:
-        return error_response
+    # If any error occurred, redirect to index with parameters so modal reopens.
+    if error_occurred:
+        print("DEBUG: Login errors encountered; redirecting to main.index with show_login=1.")
+        return redirect(url_for('main.index', show_login=1, game_id=game_id, quest_id=quest_id, next=next_page))
 
     try:
+        # Proceed to log the user in.
+        print("DEBUG: Attempting to log in the user...")
         login_user(user, remember=login_form.remember_me.data)
+        print("DEBUG: User logged in successfully:", user)
         log_user_ip(user)
         generate_tutorial_game()
         _join_game_if_provided(user)
@@ -368,27 +410,25 @@ def login():
             if tutorial_game:
                 user.participated_games.append(tutorial_game)
                 db.session.commit()
-        quest_id = request.args.get('quest_id')
-        next_page = request.args.get('next')
-        if next_page:
-            parsed_url = urlparse(next_page)
-            if not parsed_url.netloc and not parsed_url.scheme:
-                return redirect(next_page)
+                print("DEBUG: Added tutorial game to user's participated games.")
+
+        # After successful login, perform redirection based on next_page, admin status, or quest_id.
+        if next_page and is_safe_url(next_page):
+            print("DEBUG: Redirecting user to safe next_page:", next_page)
+            return redirect(next_page)
         if user.is_admin:
+            print("DEBUG: User is admin; redirecting to admin dashboard.")
             return redirect(url_for('admin.admin_dashboard'))
         if quest_id:
+            print("DEBUG: quest_id provided; redirecting to quest submission page for quest_id:", quest_id)
             return redirect(url_for('quests.submit_photo', quest_id=quest_id))
+        print("DEBUG: No additional redirection conditions; redirecting to main.index.")
         return redirect(url_for('main.index'))
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:
+        print("DEBUG: Exception occurred during login process:", exc)
         current_app.logger.error(f'Login error: {exc}')
-        flash('An unexpected error occurred during login. '
-              'Please try again later.', 'error')
-        return redirect(
-            url_for('auth.login',
-                    game_id=request.args.get('game_id'),
-                    quest_id=request.args.get('quest_id'))
-        )
-
+        flash('An unexpected error occurred during login. Please try again later.', 'error')
+        return redirect(url_for('main.index', show_login=1, game_id=game_id, quest_id=quest_id, next=next_page))
 
 @auth_bp.route('/resend_verification_email', methods=['POST'])
 def resend_verification_email():

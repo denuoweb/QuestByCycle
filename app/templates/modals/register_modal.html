@@ -7,6 +7,12 @@
         <div class="modal-body">
             <form method="post" action="{{ url_for('auth.register', game_id=request.args.get('game_id'), quest_id=request.args.get('quest_id'), next=request.args.get('next')) }}">
                 {{ register_form.hidden_tag() }}
+                
+                <!-- Hidden fields to preserve context -->
+                <input type="hidden" id="gameIdField" name="game_id" value="">
+                <input type="hidden" id="questIdField" name="quest_id" value="">
+                <input type="hidden" id="nextField" name="next" value="">
+                
                 <div class="form-group">
                     {{ register_form.email.label }}
                     {{ register_form.email(class="form-control") }}

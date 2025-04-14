@@ -98,7 +98,7 @@ function openLoginModalWithGame(options) {
     const loginForm = loginModal.querySelector('form');
     
     // Optionally, update the form action itself if needed:
-    const baseLoginUrl = "{{ url_for('auth.login') }}";
+    const baseLoginUrl = "";
     // Create a query string using the passed options.
     const params = [];
     if (options.gameId) {
@@ -117,21 +117,24 @@ function openLoginModalWithGame(options) {
 }
 
 function switchToRegisterModal(options = {}) {
-    // Update hidden fields on the register modal if they exist.
     if (options.gameId !== undefined) {
         const gameField = document.getElementById('gameIdField');
-        if (gameField) gameField.value = options.gameId;
+        if (gameField) {
+            gameField.value = options.gameId;
+        }
     }
     if (options.questId !== undefined) {
         const questField = document.getElementById('questIdField');
-        if (questField) questField.value = options.questId;
+        if (questField) {
+            questField.value = options.questId;
+        }
     }
     if (options.next !== undefined) {
         const nextField = document.getElementById('nextField');
-        if (nextField) nextField.value = options.next;
+        if (nextField) {
+            nextField.value = options.next;
+        }
     }
-    
-    // Close the login modal and open the register modal.
     closeModal('loginModal');
     openModal('registerModal');
 }

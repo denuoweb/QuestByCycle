@@ -296,6 +296,8 @@ def index(game_id, quest_id, user_id):
                            completions=UserQuest.query.filter(UserQuest.completions > 0).order_by(UserQuest.completed_at.desc()).all(),
                            custom_games=Game.query.filter(Game.custom_game_code.isnot(None), Game.is_public.is_(True)).all(),
                            selected_game_id=game_id or 0,
+                           selected_quest_id=quest_id,
+                           next=request.args.get('next'),
                            selected_game=game,
                            quest_id=quest_id,
                            start_onboarding=start_onboarding,

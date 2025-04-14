@@ -370,10 +370,20 @@ def join_custom_game():
 @login_required
 def generate_qr_for_game(game_id):
     """
-    Generate a QR code for a game login URL and return an HTML page displaying it.
+    Generate a QR code for a game login URL that includes a "next" parameter
+    to redirect the user to the main index page with the appropriate game context.
     """
+    # Retrieve the game object or return a 404 if not found
     game = Game.query.get_or_404(game_id)
-    login_url = url_for('auth.login', game_id=game_id, _external=True)
+    
+    # Create the URL for the main index page with the desired game_id
+    next_url = url_for('main.index', game_id=game_id, _external=True)
+    
+    # Build the login URL with a "next" parameter. This ensures that after login,
+    # the user is redirected to the intended game page.
+    login_url = url_for('auth.login', next=next_url, _external=True)
+    
+    # Generate the QR code using the login_url
     qr_code = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -383,38 +393,38 @@ def generate_qr_for_game(game_id):
     qr_code.add_data(login_url)
     qr_code.make(fit=True)
     img = qr_code.make_image(fill_color="white", back_color="black")
+    
+    # Save the generated image to a buffer
     img_buffer = BytesIO()
     img.save(img_buffer, format="PNG")
     img_data = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
-
+    
+    # Build the HTML content displaying the QR code
     html_content = (
-        f"<!DOCTYPE html>\n"
-        f"<html lang='en'>\n"
-        f"<head>\n"
-        f"    <meta charset='UTF-8'>\n"
+        "<!DOCTYPE html>\n"
+        "<html lang='en'>\n"
+        "<head>\n"
+        "    <meta charset='UTF-8'>\n"
         f"    <title>QR Code for {game.title}</title>\n"
-        f"    <style>\n"
-        f"        body {{ text-align: center; padding: 20px; font-family: Arial, sans-serif; }}\n"
-        f"        .qrcodeHeader img {{ max-width: 100%; height: auto; }}\n"
-        f"        h1, h2 {{ margin: 10px 0; }}\n"
-        f"        img {{ margin-top: 20px; }}\n"
-        f"        @media print {{\n"
-        f"            .no-print {{ display: none; }}\n"
-        f"        }}\n"
-        f"    </style>\n"
-        f"</head>\n"
-        f"<body>\n"
-        f"    <div class='qrcodeHeader'>\n"
-        f"        <img src='{url_for('static', filename='images/welcomeQuestByCycle.webp')}' "
-        f"alt='Welcome'>\n"
-        f"    </div>\n"
-        f"    <h1>Join the Game!</h1>\n"
+        "    <style>\n"
+        "        body { text-align: center; padding: 20px; font-family: Arial, sans-serif; }\n"
+        "        .qrcodeHeader img { max-width: 100%; height: auto; }\n"
+        "        h1, h2 { margin: 10px 0; }\n"
+        "        img { margin-top: 20px; }\n"
+        "        @media print { .no-print { display: none; } }\n"
+        "    </style>\n"
+        "</head>\n"
+        "<body>\n"
+        "    <div class='qrcodeHeader'>\n"
+        f"        <img src='{url_for('static', filename='images/welcomeQuestByCycle.webp')}' alt='Welcome'>\n"
+        "    </div>\n"
+        "    <h1>Join the Game!</h1>\n"
         f"    <h2>Scan to join '{game.title}'!</h2>\n"
         f"    <img src='data:image/png;base64,{img_data}' alt='QR Code'>\n"
-        f"</body>\n"
-        f"</html>\n"
+        "</body>\n"
+        "</html>\n"
     )
-
+    
     response = make_response(html_content)
     response.headers['Content-Type'] = 'text/html'
     return response
