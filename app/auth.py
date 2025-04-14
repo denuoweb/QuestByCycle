@@ -629,14 +629,17 @@ def update_password():
             flash('Current password is incorrect.', 'danger')
     return render_template('update_password.html', form=form)
 
+
 @auth_bp.route('/verify_email/<token>')
 def verify_email(token):
     """
-    Verify the user's email using the provided token and join the user to the appropriate game.
+    Verify the user's email using the provided token.
     
-    If a game_id is provided in the verification URL, the user will join that game and it will
-    become their selected game. Otherwise, if no game_id is provided, the user will be joined to
-    the default tutorial game (if they aren't already joined to any game).
+    This route checks for context parameters in the verification URL:
+      - If a game_id is provided (either directly or inferred from the 'next' parameter),
+        the user will be joined to that game and that game becomes the user's selected game.
+      - Otherwise, if no game_id is provided and the user has not joined any game,
+        the user is added to the default tutorial game.
     """
     user = User.verify_verification_token(token)
     if not user:
@@ -646,15 +649,27 @@ def verify_email(token):
         flash('Your email has already been verified. Please log in.', 'info')
         return redirect(url_for('auth.login'))
     
-    # Mark the email as verified
+    # Mark the email as verified.
     user.email_verified = True
     db.session.commit()
     
-    # Log the user in
+    # Log the user in.
     login_user(user)
     
-    # Determine if a game_id was provided in the verification request
-    game_id = request.args.get('game_id')
+    # At this point, try to extract game context.
+    # First, try to get game_id from the query or form data.
+    game_id = request.args.get('game_id') or request.form.get('game_id')
+    
+    # If no game_id is provided but a "next" parameter is available, try to extract the game id from its path.
+    next_page = request.args.get('next') or request.form.get('next')
+    if not game_id and next_page:
+        parsed_next = urlparse(next_page)
+        # Assuming the next URL is in the format https://questbycycle.org/17 (i.e. game id in the path)
+        potential_id = parsed_next.path.strip('/')
+        if potential_id.isdigit():
+            game_id = potential_id
+
+    # If we have a game id, attempt to join the user to that game.
     if game_id:
         try:
             game_id_int = int(game_id)
@@ -675,7 +690,8 @@ def verify_email(token):
                 else:
                     flash(f'You have successfully joined the game: {game.title}', 'success')
     else:
-        # No game_id provided; if the user hasn't joined any game, join the tutorial game.
+        # If no game context is provided and the user hasn't joined any game,
+        # join them to the default tutorial game.
         if not user.participated_games:
             tutorial_game = Game.query.filter_by(is_tutorial=True).first()
             if tutorial_game:
@@ -689,7 +705,6 @@ def verify_email(token):
     
     # Handle quest and next parameters for further redirection.
     quest_id = request.args.get('quest_id')
-    next_page = request.args.get('next')
     if quest_id:
         return redirect(url_for('quests.submit_photo', quest_id=quest_id))
     if next_page:
@@ -699,6 +714,7 @@ def verify_email(token):
     
     flash('Your email has been verified and you have been logged in.', 'success')
     return redirect(url_for('main.index'))
+
 
 @auth_bp.route('/privacy_policy')
 def privacy_policy():
