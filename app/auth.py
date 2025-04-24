@@ -629,47 +629,32 @@ def register():
     # Create a local ActivityPub actor (for users without Mastodon)
     create_activitypub_actor(user)
     
-    # Pull off the incoming game_id & quest_id up front
-    orig_game_id = request.args.get('game_id') or request.form.get('game_id')
-    orig_quest_id = request.args.get('quest_id')
+# Flask can cast query/form values directly to int for us
+    orig_game_id  = (request.args.get('game_id',  type=int)
+                   or request.form.get('game_id', type=int))
+    orig_quest_id = request.args.get('quest_id', type=int)
+    next_page     = request.args.get('next')
 
     if current_app.config['MAIL_SERVER']:
         _send_verification_email(user)
-        # we do NOT log them in here, so don't touch current_user
     else:
-        if not _auto_verify_and_login(user):
-            ...
-        # join or generate tutorial…
+        _auto_verify_and_login(user)
         if orig_game_id:
             _join_game_if_provided(user)
         else:
             generate_tutorial_game()
             _ensure_tutorial_game(user)
 
-    # Process redirection after registration:
-    next_page = request.args.get('next')
-    # Use the original game_id we captured, not current_user
-    game_id   = orig_game_id
-    quest_id  = orig_quest_id
-
-    # 1) If they handed us a safe next URL, go there first:
     if next_page and is_safe_url(next_page):
         return redirect(next_page)
+    if orig_quest_id:
+        return redirect(url_for('quests.submit_photo', quest_id=orig_quest_id))
 
-    # 2) Otherwise, if this was a quest flow, go to submit-photo:
-    if quest_id:
-        return redirect(url_for('quests.submit_photo', quest_id=quest_id))
-
-    # 3) Fallback: send them back into the tutorial/game index
-    #    but with show_login=0 so no modal pops up, and keep
-    #    quest_id & next in the querystring for any downstream logic.
-    return redirect(
-        url_for('main.index',
-                game_id=game_id,
-                quest_id=quest_id,
-                next=next_page,
-                show_login=0)
-    )
+    return redirect(url_for('main.index',
+                            game_id=orig_game_id,
+                            quest_id=orig_quest_id,
+                            next=next_page,
+                            show_login=0))
 
 
 @auth_bp.route('/forgot_password', methods=['GET', 'POST'])
