@@ -857,26 +857,25 @@ def license_agreement():
 def reset_password(token):
     """
     Handle password reset using a modal.
-    - GET: redirect to index with show_reset=1 and token to open the modal.
-    - POST: validate form (AJAX or normal), return JSON for AJAX or flash+redirect.
+    - GET: redirect to index with show_reset=1&token so the modal opens.
+    - POST: validate form, set new password, log the user in, return JSON with redirect.
     """
-    form = ResetPasswordForm()
+    form    = ResetPasswordForm()
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-    # Redirect all GETs to index so JS can pop open the modal
+    # Always funnel GETs back to index so your JS can pop open the modal
     if request.method == 'GET':
         return redirect(url_for('main.index', show_reset=1, token=token))
 
-    # POST: validate
+    # On POST, check form validation
     if not form.validate_on_submit():
-        # Show the first password error
         error = form.password.errors[0] if form.password.errors else 'Invalid input.'
         if is_ajax:
             return jsonify({'success': False, 'error': error}), 400
         flash(error, 'danger')
         return redirect(url_for('main.index', show_reset=1, token=token))
 
-    # Verify the token
+    # Verify token => find user
     user = User.verify_reset_token(token)
     if not user:
         msg = 'The reset link is invalid or has expired.'
@@ -885,16 +884,25 @@ def reset_password(token):
         flash(msg, 'danger')
         return redirect(url_for('main.index'))
 
-    # Everything’s valid: set the new password
+    # Set new password and commit
     user.set_password(form.password.data)
     db.session.commit()
 
-    success_msg = 'Your password has been reset. Please log in with your new credentials.'
-    if is_ajax:
-        return jsonify({'success': True, 'message': success_msg}), 200
+    # *** NEW: automatically log them in ***
+    login_user(user)
 
+    # Prepare success response
+    success_msg = 'Your password has been reset and you are now logged in.'
+    if is_ajax:
+        return jsonify({
+            'success': True,
+            'message': success_msg,
+            'redirect': url_for('main.index')
+        }), 200
+
+    # Fallback for non-AJAX: flash + redirect to index
     flash(success_msg, 'success')
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('main.index'))
 
 
 
