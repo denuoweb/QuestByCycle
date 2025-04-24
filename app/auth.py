@@ -87,38 +87,44 @@ def _generate_username(email):
 
 def _send_verification_email(user):
     """
-    Send a verification email to the user, including context parameters
-    (game_id, quest_id, next) so that they are passed along in the verification link.
+    Compose and send the “verify your e-mail” message.
+
+    Context rules
+    -------------
+    • game_id    forwarded only if truthy
+    • quest_id   forwarded only if truthy
+    • next       forwarded only if truthy
+    • show_join_custom=1 is added when *no* game_id is present, so that
+      the custom-join modal opens right after the user verifies.
     """
-    # Generate the token for email verification
+    # 1)  Generate a one-time token
     token = user.generate_verification_token()
 
-    # Try to extract game context from the query parameters;
-    # if not found there, try form data.
-    game_id = request.args.get('game_id') or request.form.get('game_id')
-    quest_id = request.args.get('quest_id') or request.form.get('quest_id')
-    next_info = request.args.get('next') or request.form.get('next')
+    # 2)  Collect potential context from query-string *or* form body
+    game_id   = (request.values.get('game_id')  or '').strip()
+    quest_id  = (request.values.get('quest_id') or '').strip()
+    next_info = (request.values.get('next')     or '').strip()
 
-    # Build the verification URL with the context parameters included
-    verify_url = url_for(
-        'auth.verify_email',
-        token=token,
-        _external=True,
-        game_id=game_id,
-        quest_id=quest_id,
-        next=next_info
-    )
+    # 3)  Build the URL parameters, skipping empty values
+    params = {'token': token}
+    if game_id:
+        params['game_id'] = game_id
+    else:
+        # If no game context, instruct front-end to show the picker
+        params['show_join_custom'] = 1
+    if quest_id:
+        params['quest_id'] = quest_id
+    if next_info:
+        params['next'] = next_info
 
-    # Render the email content with the verification URL
-    html = render_template('verify_email.html', verify_url=verify_url)
-    subject = "QuestByCycle verify email"
+    verify_url = url_for('auth.verify_email', _external=True, **params)
 
-    # Send the email
+    # 4)  Render and send the e-mail
+    html    = render_template('verify_email.html', verify_url=verify_url)
+    subject = "QuestByCycle - verify your email"
     send_email(user.email, subject, html)
 
-    # Optionally, flash a message to inform the user that a verification email has been sent
-    flash('A verification email has been sent to you. Please check your inbox.', 'info')
-
+    flash("A verification e-mail has been sent. Please check your inbox.", "info")
 
 
 def _auto_verify_and_login(user):
