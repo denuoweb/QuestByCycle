@@ -829,7 +829,10 @@ def verify_email(token):
             return redirect(next_page)
     
     flash('Your email has been verified and you have been logged in.', 'success')
-    return redirect(url_for('main.index'))
+    kwargs = { 'show_join_custom': 1 }
+    if user.selected_game_id:
+        kwargs['game_id'] = user.selected_game_id
+    return redirect(url_for('main.index', **kwargs))
 
 
 @auth_bp.route('/privacy_policy')
