@@ -10,6 +10,8 @@ cert.pem
 key.pem
 requirements.txt
 
+wsgi.py 
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
