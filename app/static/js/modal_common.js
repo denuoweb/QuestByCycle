@@ -58,11 +58,9 @@ function resetModalContent() {
 
 function updateModalHiddenFields(modalId, options) {
     // options is an object e.g., { gameId: 1, questId: 2, next: '/somepath' }
-    // Find the modal element.
     const modal = document.getElementById(modalId);
     if (!modal) return;
     
-    // Update hidden fields if they exist.
     if (options.gameId !== undefined) {
         const gameField = modal.querySelector('input[name="game_id"]');
         if (gameField) {
@@ -93,13 +91,18 @@ function openRegisterModalWithOptions(options) {
     openModal('registerModal');
 }
 
+/**
+ * Opens the login modal and updates its form action to point to the correct Flask endpoint,
+ * preserving any game/quest/next parameters.
+ */
 function openLoginModalWithGame(options) {
     const loginModal = document.getElementById('loginModal');
-    const loginForm = loginModal.querySelector('form');
-    
-    // Optionally, update the form action itself if needed:
-    const baseLoginUrl = "";
-    // Create a query string using the passed options.
+    const loginForm  = document.getElementById('loginForm');
+
+    // Base login URL from Flask
+    const baseLoginUrl = "{{ url_for('auth.login') }}";
+
+    // Build query string
     const params = [];
     if (options.gameId) {
         params.push("game_id=" + encodeURIComponent(options.gameId));
@@ -111,9 +114,10 @@ function openLoginModalWithGame(options) {
         params.push("next=" + encodeURIComponent(options.next));
     }
     const newActionUrl = baseLoginUrl + (params.length ? "?" + params.join("&") : "");
-    loginForm.setAttribute('action', newActionUrl);
 
-    openModal("loginModal");
+    // Update form action
+    loginForm.setAttribute('action', newActionUrl);
+    openModal('loginModal');
 }
 
 function switchToRegisterModal(options = {}) {
@@ -139,14 +143,13 @@ function switchToRegisterModal(options = {}) {
     openModal('registerModal');
 }
 
+// Call this to show the Forgot Password modal and pre-fill its email
 function openForgotPasswordModal() {
-    // Copy the email entered in the login modal
-    const loginEmailVal = document.getElementById('loginEmail')?.value || '';
+    const loginEmailVal   = document.getElementById('loginEmail')?.value || '';
     const forgotEmailInput = document.getElementById('forgotEmail');
     if (forgotEmailInput) {
         forgotEmailInput.value = loginEmailVal;
     }
-    // Reset any previous messages in the forgot-password modal
     const emailErr   = document.getElementById('forgotEmailError');
     const successDiv = document.getElementById('forgotSuccess');
     const btn        = document.getElementById('forgotButton');
