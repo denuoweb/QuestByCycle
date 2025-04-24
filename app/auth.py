@@ -683,8 +683,7 @@ def forgot_password():
 
             if user:
                 token     = user.generate_reset_token()
-                reset_url = url_for('auth.reset_password', token=token, _external=True)
-                html      = render_template('reset_password_email.html', reset_url=reset_url)
+                html      = render_template('reset_password_email.html', token=token)
                 send_email(user.email, "Password Reset Requested", html)
                 success_msg = 'A password reset email has been sent. Please check your inbox.'
 
