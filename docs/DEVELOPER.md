@@ -287,7 +287,6 @@ JavaScript files are located in `app/static/js` and include:
 - `generated_quest.js`
 - `highlight.min.js`
 - `index_management.js`
-- `join_custom_game_modal.js`
 - `jquery-3.6.0.min.js`
 - `katex.min.js`
 - `leaderboard_modal.js`

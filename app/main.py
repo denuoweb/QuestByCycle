@@ -116,10 +116,16 @@ def _select_game(game_id):
             return None, None
 
     game = Game.query.get(game_id)
-    # Ensure the user has joined the game
+    # Ensure the user has joined the game (auto-join if they requested it by URL)
     if game and current_user.is_authenticated:
         if game not in current_user.participated_games:
-            return redirect(url_for('main.index')), None
+            # auto-register the user for the requested game
+            stmt = user_games.insert().values(
+                user_id=current_user.id,
+                game_id=game.id
+            )
+            db.session.execute(stmt)
+            db.session.commit()
         if current_user.selected_game_id != game_id:
             current_user.selected_game_id = game_id
             db.session.commit()
@@ -242,12 +248,13 @@ def index(game_id, quest_id, user_id):
     """
     Render the main index page with game, quest, activity, badge, and profile data.
     """
-    login_form = LoginForm()
+    login_form    = LoginForm()
     register_form = RegistrationForm()
-    forgot_form = ForgotPasswordForm()
-    reset_form = ResetPasswordForm()
+    forgot_form   = ForgotPasswordForm()
+    reset_form    = ResetPasswordForm()
     start_onboarding = False
-    now = datetime.now(utc)
+    now_aware = datetime.now(utc)
+    now       = now_aware.replace(tzinfo=None)
 
     # Determine user_id based on authentication
     if user_id is None and current_user.is_authenticated:
@@ -258,8 +265,8 @@ def index(game_id, quest_id, user_id):
     # only redirect *once* (i.e. not when show_login is already in the URL)
     if (game is None or game_id is None) and request.args.get('show_login') != '1':
         demo = Game.query.filter_by(is_demo=True) \
-                            .order_by(Game.start_date.desc()) \
-                            .first()
+                         .order_by(Game.start_date.desc()) \
+                         .first()
         return redirect(url_for('main.index',
                                 game_id=demo.id,
                                 show_login=1))
@@ -267,29 +274,58 @@ def index(game_id, quest_id, user_id):
     # if we get here *and* game is still None, just render demo silently
     if game is None or game_id is None:
         demo = Game.query.filter_by(is_demo=True) \
-                            .order_by(Game.start_date.desc()) \
-                            .first()
+                         .order_by(Game.start_date.desc()) \
+                         .first()
         game, game_id = demo, demo.id
 
     # Load user-specific data if authenticated
-    profile = None
-    user_quests = []
-    total_points = None
-    all_badges = []
+    profile       = None
+    user_quests   = []
+    total_points  = None
+    all_badges    = []
     earned_badges = []
     if current_user.is_authenticated:
-        user_quests = UserQuest.query.filter_by(user_id=current_user.id).all()
-        total_points = sum(ut.points_awarded for ut in user_quests if ut.quest.game_id == game_id)
+        user_quests  = UserQuest.query.filter_by(user_id=current_user.id).all()
+        total_points = sum(ut.points_awarded
+                           for ut in user_quests
+                           if ut.quest.game_id == game_id)
         profile = User.query.get_or_404(user_id)
         if not profile.display_name:
             profile.display_name = profile.username
-        all_badges, earned_badges, user_games_list = _prepare_user_data(game_id, profile, user_quests)
+        all_badges, earned_badges, user_games_list = _prepare_user_data(
+            game_id, profile, user_quests
+        )
     else:
         user_games_list = []
 
-    quests, activities = _prepare_quests(game, user_id, user_quests, now)
-    carousel_images = _prepare_carousel_images(game_id)
-    categories = sorted({quest.category for quest in quests if quest.category})
+    quests, activities    = _prepare_quests(game, user_id, user_quests, now)
+    carousel_images       = _prepare_carousel_images(game_id)
+    categories            = sorted({q.category for q in quests if q.category})
+
+    # split custom games into open vs. closed
+    all_custom   = Game.query.filter(
+                       Game.custom_game_code.isnot(None),
+                       Game.is_public.is_(True)
+                   ).all()
+    open_games   = [
+        g for g in all_custom
+        if g.start_date <= now and (not g.end_date or g.end_date >= now)
+    ]
+    closed_games = [
+        g for g in all_custom
+        if g.end_date and g.end_date < now
+    ]
+
+    # the key bits:
+    has_joined      = (current_user.is_authenticated
+                       and game in current_user.participated_games)
+    explicit_game  = bool(request.args.get('game_id'))
+    suppress_custom = request.args.get('show_join_custom') == '0'
+
+    # *one* assignment, no stray "= False"
+    show_join_modal  = (not has_joined
+                        and not explicit_game
+                        and not suppress_custom)
 
     return render_template('index.html',
                            form=ShoutBoardForm(),
@@ -301,15 +337,33 @@ def index(game_id, quest_id, user_id):
                            activities=activities,
                            quests=quests,
                            categories=categories,
-                           game_participation={game.id: (game in (current_user.participated_games if current_user.is_authenticated else []))},
-                           selected_quest=Quest.query.get(quest_id) if quest_id else None,
-                           has_joined=(game in (current_user.participated_games if current_user.is_authenticated else [])) if game else False,
+                           show_join_modal=show_join_modal,
+                           game_participation={
+                             game.id: (game in
+                                       (current_user.participated_games
+                                        if current_user.is_authenticated
+                                        else []))
+                           },
+                           selected_quest=Quest.query.get(quest_id)
+                                          if quest_id else None,
+                           has_joined=has_joined,
                            profile=profile,
                            user_quests=user_quests,
                            carousel_images=carousel_images,
                            total_points=total_points,
-                           completions=UserQuest.query.filter(UserQuest.completions > 0).order_by(UserQuest.completed_at.desc()).all(),
-                           custom_games=Game.query.filter(Game.custom_game_code.isnot(None), Game.is_public.is_(True)).all(),
+                           completions=UserQuest.query.filter(
+                               UserQuest.completions > 0
+                           ).order_by(
+                               UserQuest.completed_at.desc()
+                           ).all(),
+                           open_games=open_games,
+                           closed_games=closed_games,
+                           demo_game=Game.query.filter_by(
+                               is_demo=True
+                           ).order_by(
+                               Game.start_date.desc()
+                           ).first(),
+                           now=now,
                            selected_game_id=game_id or 0,
                            selected_quest_id=quest_id,
                            next=request.args.get('next'),
@@ -320,7 +374,6 @@ def index(game_id, quest_id, user_id):
                            register_form=register_form,
                            forgot_form=forgot_form,
                            reset_form=reset_form)
-
 
 
 @main_bp.route('/mark-onboarding-complete', methods=['POST'])

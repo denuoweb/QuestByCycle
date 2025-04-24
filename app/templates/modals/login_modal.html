@@ -12,6 +12,9 @@
                 <input type="hidden" name="game_id" id="loginGameId" value="">
                 <input type="hidden" name="quest_id" id="loginQuestId" value="">
                 <input type="hidden" name="next" id="loginNext" value="">
+                <input type="hidden" name="show_join_custom" value="1" id="loginShowJoinCustom">
+                <input type="hidden" name="show_login"       value="1" id="loginShowLogin">
+                
                 <div class="form-group">
                     {{ login_form.email.label }}
                     {{ login_form.email(class="form-control", id="loginEmail") }}

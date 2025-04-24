@@ -91,40 +91,40 @@ function openRegisterModalWithOptions(options) {
     openModal('registerModal');
 }
 
-/**
- * Opens the login modal and updates its form action to point to the correct Flask endpoint,
- * preserving any game/quest/next parameters.
- */
-function openLoginModalWithGame(options) {
-    // 1) Grab the modal and form
+function handleGameSelection(selectElement) {
+    const selectedValue = selectElement.value;
+
+    // Open the "Join Custom Game" modal if selected
+    if (selectedValue === 'join_custom_game') {
+        openModal('joinCustomGameModal');
+    } else {
+        window.location.href = selectedValue;
+    }
+}
+
+function openLoginModalWithGame({ gameId, questId }) {
     const loginModal = document.getElementById('loginModal');
     const loginForm  = document.getElementById('loginForm');
   
-    // 2) Update the hidden inputs
-    if (options.gameId !== undefined) {
-      const fld = loginModal.querySelector('input[name="game_id"]');
-      if (fld) fld.value = options.gameId;
-    }
-    if (options.questId !== undefined) {
-      const fld = loginModal.querySelector('input[name="quest_id"]');
-      if (fld) fld.value = options.questId;
-    }
-    if (options.next !== undefined) {
-      const fld = loginModal.querySelector('input[name="next"]');
-      if (fld) fld.value = options.next;
-    }
-  
-    // 3) Rebuild the form action from its base (stripping any old query string)
+    // 1) Reset the action to bare "/auth/login"
     const baseAction = loginForm.getAttribute('action').split('?')[0];
-    const params     = [];
-    if (options.gameId)  params.push('game_id='  + encodeURIComponent(options.gameId));
-    if (options.questId) params.push('quest_id=' + encodeURIComponent(options.questId));
-    if (options.next)    params.push('next='     + encodeURIComponent(options.next));
-    loginForm.setAttribute('action', baseAction + (params.length ? '?' + params.join('&') : ''));
+    loginForm.setAttribute('action', baseAction);
   
-    // 4) Fire the modal
+    // 2) Fill the hidden inputs
+    loginModal.querySelector('input[name="game_id"]').value  = gameId;
+    loginModal.querySelector('input[name="quest_id"]').value = questId || '';
+  
+    // 3) Build the `next` URL so after a successful POST to /auth/login
+    //    Flask will redirect back to your index with show_join_custom=0.
+    const nextUrl = `/` +
+                    `?game_id=${encodeURIComponent(gameId)}` +
+                    `&show_join_custom=0`;
+    loginModal.querySelector('input[name="next"]').value = nextUrl;
+  
+    // 4) Finally show the modal
     openModal('loginModal');
   }
+  
   
 function registerFromLogin() {
     // 1) Grab the values from the login modal:

@@ -651,6 +651,7 @@ def register():
         return redirect(url_for('quests.submit_photo', quest_id=orig_quest_id))
 
     return redirect(url_for('main.index',
+                            show_join_custom=0,
                             game_id=orig_game_id,
                             quest_id=orig_quest_id,
                             next=next_page,

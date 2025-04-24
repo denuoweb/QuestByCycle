@@ -32,7 +32,6 @@ const APP_STATIC_RESOURCES = [
   "/static/js/generated_quest.js",
   "/static/js/highlight.min.js",
   "/static/js/index_management.js",
-  "/static/js/join_custom_game_modal.js",
   "/static/js/jquery-3.6.0.min.js",
   "/static/js/katex.min.js",
   "/static/js/leaderboard_modal.js",

@@ -339,13 +339,14 @@ def game_beyond(game_id):
 def join_custom_game():
     """
     Allow a user to join a custom game using a game code.
+    Never delete any existing participations—just add this game and select it.
     """
     game_code = sanitize_html(request.form.get('custom_game_code'))
     if not game_code:
         flash('Game code is required to join a custom game.', 'error')
         return redirect(url_for('main.index'))
 
-    game = Game.query.filter_by(custom_game_code=game_code).first()
+    game = Game.query.filter_by(custom_game_code=game_code, is_public=True).first()
     if not game:
         flash('Invalid game code. Please try again.', 'error')
         return redirect(url_for('main.index'))
@@ -354,16 +355,47 @@ def join_custom_game():
         flash('This game does not allow new participants.', 'error')
         return redirect(url_for('main.index'))
 
+    # if they’re already in it, bail out
     if game in current_user.participated_games:
-        flash('You are already registered for this game.', 'info')
-    else:
-        stmt = user_games.insert().values(user_id=current_user.id, game_id=game.id)
-        db.session.execute(stmt)
-        db.session.commit()
-        flash('You have successfully joined the custom game.', 'success')
+        flash(f'You are already registered for {game.title}.', 'info')
         return redirect(url_for('main.index', game_id=game.id))
 
-    return redirect(url_for('main.index'))
+    # add the new custom game
+    db.session.execute(
+        user_games.insert().values(user_id=current_user.id, game_id=game.id)
+    )
+
+    # make it their selected game
+    current_user.selected_game_id = game.id
+    db.session.commit()
+
+    flash(f'You’ve joined {game.title}!', 'success')
+    return redirect(url_for('main.index', game_id=game.id))
+
+
+@games_bp.route('/join_demo')
+@login_required
+def join_demo():
+    """
+    Join the latest demo game—never deleting any other games,
+    just add it and select it.
+    """
+    demo = Game.query.filter_by(is_demo=True) \
+                     .order_by(Game.start_date.desc()) \
+                     .first_or_404()
+
+    # add demo if not already joined
+    if demo not in current_user.participated_games:
+        db.session.execute(
+            user_games.insert().values(user_id=current_user.id, game_id=demo.id)
+        )
+
+    # select it
+    current_user.selected_game_id = demo.id
+    db.session.commit()
+
+    flash('You’ve been added to the demo game.', 'info')
+    return redirect(url_for('main.index', game_id=demo.id))
 
 
 @games_bp.route('/generate_qr_for_game/<int:game_id>')

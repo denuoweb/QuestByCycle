@@ -1,72 +1,140 @@
 <!-- Modal for Joining Custom Games -->
 <div class="modal" id="joinCustomGameModal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="joinCustomGameModalLabel">Join Custom Game</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" onclick="closeModal('joinCustomGameModal')"></button>
+      <div class="modal-header">
+        <h5 class="modal-title">Join a Game</h5>
+        <button type="button" class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+                onclick="closeModal('joinCustomGameModal')"></button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- OPEN CUSTOM GAMES -->
+        <div class="mb-4">
+            <h5>Open Games</h5>
+            {% if open_games %}
+            <ul class="list-group" id="customGameList">
+                {% for game in open_games %}
+                <li class="list-group-item d-flex justify-content-between align-items-center"
+                    data-game-code="{{ game.custom_game_code }}">
+                    {{ game.title }}
+                    <small class="text-muted">
+                        {{ game.start_date.strftime('%Y-%m-%d') }}
+                        –
+                        {{ game.end_date.strftime('%Y-%m-%d') if game.end_date else 'Ongoing' }}
+                    </small>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">There are no open custom games at this time.</p>
+            {% endif %}
         </div>
-        <div class="modal-body">
-            <form id="joinCustomGameForm" action="{{ url_for('games.join_custom_game') }}" method="post">
+
+        <hr>
+
+        <!-- DEMO GAME -->
+        <div class="mb-4">
+            <h5>Demo Game</h5>
+            {% if demo_game %}
+            <a href="{{ url_for('main.index', game_id=demo_game.id) }}"
+               class="list-group-item list-group-item-action">
+                {{ demo_game.title }}
+                <small class="text-muted">
+                    {{ demo_game.start_date.strftime('%Y-%m-%d') }}
+                    –
+                    {{ demo_game.end_date.strftime('%Y-%m-%d') if demo_game.end_date else 'Ongoing' }}
+                </small>
+            </a>
+            {% else %}
+            <li class="list-group-item text-muted">No demo game available.</li>
+            {% endif %}
+        </div>
+
+        <hr>
+
+        <!-- COMPLETED PAST GAMES -->
+        <div class="mb-4">
+            <h5 class="mb-2">Completed Past Games</h5>
+            {% if closed_games %}
+            <ul class="list-group">
+                {% for game in closed_games %}
+                <li class="list-group-item d-flex justify-content-between align-items-center text-muted">
+                    {{ game.title }}
+                    <small>
+                        {{ game.start_date.strftime('%Y-%m-%d') }}
+                        –
+                        {{ game.end_date.strftime('%Y-%m-%d') }}
+                    </small>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted">There are no closed custom games.</p>
+            {% endif %}
+        </div>
+
+        <hr>
+
+        <!-- JOIN BY CODE FORM -->
+        <div class="mt-4">
+            <h5 class="mb-3">Join by Code</h5>
+            <form id="joinCustomGameForm"
+                  action="{{ url_for('games.join_custom_game') }}"
+                  method="post">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" id="customGameCodeInput" name="custom_game_code" value=""/>
                 <div class="mb-3">
                     <label for="customGameCode" class="form-label">Enter Custom Game Code:</label>
-                    <input type="text" id="customGameCode" class="form-control" placeholder="Enter game code" required>
+                    <input type="text"
+                           id="customGameCode"
+                           name="custom_game_code"
+                           class="form-control"
+                           placeholder="ABC123"
+                           required>
                 </div>
-                <button type="submit" class="btn btn-primary w-100 mt-3">Join Custom Game</button>
+                <button type="submit" class="btn btn-primary w-100">
+                    Join Custom Game
+                </button>
             </form>
-            <div class="mt-4">
-                <h5>Available Custom Games</h5>
-                <ul class="list-group" id="customGameList">
-                    {% for game in custom_games %}
-                        {% if game.is_public %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center" data-game-code="{{ game.custom_game_code }}">
-                                {{ game.title }}
-                                <span class="badge bg-primary rounded-pill">{{ game.custom_game_code }}</span>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
-                </ul>
-            </div>
         </div>
+
+      </div>
     </div>
 </div>
 
 <style>
-    .modal-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
-    }
-    .modal-title {
-        font-weight: bold;
-    }
-    .modal-body {
-        padding: 2rem;
-    }
-    .form-group label {
-        font-weight: bold;
-    }
-    .list-group-item {
-        background-color: #f8f9fa;
-        cursor: pointer;
-    }
-    .list-group-item:hover {
-        background-color: #e9ecef;
-    }
-    .badge-pill {
-        font-size: 1rem;
-    }
+    .modal-header { background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; }
+    .modal-title  { font-weight: bold; }
+    .modal-body   { padding: 2rem; }
+    .list-group-item { background-color: #f8f9fa; cursor: pointer; }
+    .list-group-item:hover { background-color: #e9ecef; }
 </style>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('#customGameList .list-group-item').forEach(function (item) {
-            item.addEventListener('click', function () {
-                const gameCode = this.getAttribute('data-game-code');
-                if (confirm('Do you want to join?')) {
-                    document.getElementById('customGameCodeInput').value = gameCode;
-                    document.getElementById('joinCustomGameForm').submit();
-                }
-            });
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('#customGameList .list-group-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+            const code = this.getAttribute('data-game-code');
+            if (confirm('Do you want to join ‘' + this.textContent.trim() + '’?')) {
+                document.getElementById('customGameCodeInput').value = code;
+                document.getElementById('joinCustomGameForm').submit();
+            }
         });
     });
+
+    // Track whether the user just submitted the join‐by‐code form:
+    let joinedCustomGame = false;
+    document.getElementById('joinCustomGameForm')
+        .addEventListener('submit', () => { joinedCustomGame = true; });
+
+    // If they close without submitting, auto-join demo:
+    var modalEl = document.getElementById('joinCustomGameModal');
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        if (!joinedCustomGame) {
+            window.location.href = "{{ url_for('games.join_demo') }}";
+        }
+    });
+});
 </script>
