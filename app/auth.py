@@ -629,34 +629,28 @@ def register():
     # Create a local ActivityPub actor (for users without Mastodon)
     create_activitypub_actor(user)
     
-    # Determine if a game_id was provided during registration.
-    # Try to get it from query parameters first, and then from form data.
-    game_id = request.args.get('game_id') or request.form.get('game_id')
-    
+    # Pull off the incoming game_id & quest_id up front
+    orig_game_id = request.args.get('game_id') or request.form.get('game_id')
+    orig_quest_id = request.args.get('quest_id')
+
     if current_app.config['MAIL_SERVER']:
         _send_verification_email(user)
+        # we do NOT log them in here, so don't touch current_user
     else:
         if not _auto_verify_and_login(user):
-            return render_template(
-                'register.html',
-                title='Register',
-                form=register_form,
-                game_id=request.args.get('game_id'),
-                quest_id=request.args.get('quest_id'),
-                next=request.args.get('next')
-            )
-        # If a game id was provided, join that game.
-        if game_id:
+            ...
+        # join or generate tutorial…
+        if orig_game_id:
             _join_game_if_provided(user)
         else:
-            # If no game id was provided, join the default tutorial game.
             generate_tutorial_game()
             _ensure_tutorial_game(user)
-    
+
     # Process redirection after registration:
     next_page = request.args.get('next')
-    quest_id  = request.args.get('quest_id')
-    game_id   = current_user.selected_game_id
+    # Use the original game_id we captured, not current_user
+    game_id   = orig_game_id
+    quest_id  = orig_quest_id
 
     # 1) If they handed us a safe next URL, go there first:
     if next_page and is_safe_url(next_page):
