@@ -7,7 +7,7 @@ from datetime import datetime
 from urllib.parse import urlparse, urlencode
 
 from flask import (Blueprint, render_template, request, redirect, url_for, flash,
-                   current_app, session)
+                   current_app, session, jsonify)
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
@@ -345,107 +345,185 @@ def is_safe_url(target):
     return (test_url.scheme in ('http', 'https')) and (ref_url.netloc == test_url.netloc)
 
 
-
-
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """
     Handle user login requests using a login modal.
-    On GET requests or on form validation failures, always redirect to the index page 
-    with show_login=1 (plus any query parameters) so that the login modal can be triggered.
-    
-    Detailed debugging prints are added below.
+    Supports both normal and AJAX (XHR) submissions:
+      - On GET: redirect to index with show_login=1 to open the modal.
+      - On normal POST: flash messages and redirect as before.
+      - On AJAX POST: return JSON { success, error, show_forgot, forgot_url, redirect }.
     """
     print("DEBUG: Entered login function.")
-    game_id = request.args.get('game_id')
-    quest_id = request.args.get('quest_id')
+    game_id   = request.args.get('game_id')
+    quest_id  = request.args.get('quest_id')
     next_page = request.args.get('next')
-    print("DEBUG: Query parameters - game_id:", game_id, "quest_id:", quest_id, "next:", next_page)
+    print(f"DEBUG: Query parameters - game_id: {game_id}, quest_id: {quest_id}, next: {next_page}")
 
-    # If the user is already authenticated, redirect immediately.
+    # If the user is already authenticated, go straight to the next page or index.
     if current_user.is_authenticated:
-        print("DEBUG: User is already authenticated. current_user =", current_user)
         if next_page and is_safe_url(next_page):
-            print("DEBUG: Redirecting authenticated user to safe next_page:", next_page)
             return redirect(next_page)
-        print("DEBUG: No safe next_page provided. Redirecting authenticated user to main.index.")
         return redirect(url_for('main.index'))
 
-    # For GET requests, do not render a login page.
+    # For GET requests, trigger the modal via redirect.
     if request.method == 'GET':
-        print("DEBUG: GET request received; redirecting to main.index with show_login=1 to trigger modal.")
-        return redirect(url_for('main.index', show_login=1, game_id=game_id, quest_id=quest_id, next=next_page))
+        return redirect(
+            url_for('main.index',
+                    show_login=1,
+                    game_id=game_id,
+                    quest_id=quest_id,
+                    next=next_page)
+        )
 
-    # For POST requests, process the submitted form.
+    # At this point, we're handling a POST.
     login_form = LoginForm()
-    # If form validation fails, redirect back to main.index to show the modal.
+    is_ajax    = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    # If WTForms validation fails, respond accordingly.
     if not login_form.validate_on_submit():
-        print("DEBUG: POST submission did not pass validation; redirecting to main.index with show_login=1.")
-        return redirect(url_for('main.index', show_login=1, game_id=game_id, quest_id=quest_id, next=next_page))
+        msg = 'Please enter both email and password.'
+        if is_ajax:
+            return jsonify({
+                'success': False,
+                'error': msg,
+                'show_forgot': False
+            }), 400
+        flash(msg)
+        return redirect(
+            url_for('main.index',
+                    show_login=1,
+                    game_id=game_id,
+                    quest_id=quest_id,
+                    next=next_page)
+        )
 
     # Extract and sanitize credentials.
-    email = sanitize_html(login_form.email.data or "").lower()
-    password = login_form.password.data
-    print("DEBUG: Submitted email:", email, "Password length:", len(password) if password else 0)
+    email    = sanitize_html(login_form.email.data or "").lower()
+    password = login_form.password.data or ""
+    print(f"DEBUG: Submitted email: {email}, password length: {len(password)}")
 
-    error_occurred = False
+    # Validate presence of both fields.
     if not email or not password:
-        print("DEBUG: Missing email or password.")
-        flash('Please enter both email and password.')
-        error_occurred = True
-    else:
-        user = User.query.filter_by(email=email).first()
-        print("DEBUG: Queried user:", user)
-        if user is None:
-            print("DEBUG: No user found with the provided email.")
-            flash('Invalid email or password.')
-            error_occurred = True
-        elif current_app.config.get('MAIL_SERVER') and not user.email_verified:
-            print("DEBUG: User email is not verified for email:", email)
-            flash('Please verify your email before logging in.', 'warning')
-            error_occurred = True
-        elif not user.check_password(password):
-            print("DEBUG: Password check failed for email:", email)
-            flash('Invalid email or password.')
-            error_occurred = True
+        msg = 'Please enter both email and password.'
+        if is_ajax:
+            return jsonify({
+                'success': False,
+                'error': msg,
+                'show_forgot': False
+            }), 400
+        flash(msg)
+        return redirect(
+            url_for('main.index',
+                    show_login=1,
+                    game_id=game_id,
+                    quest_id=quest_id,
+                    next=next_page)
+        )
 
-    # If any error occurred, redirect to index with parameters so modal reopens.
-    if error_occurred:
-        print("DEBUG: Login errors encountered; redirecting to main.index with show_login=1.")
-        return redirect(url_for('main.index', show_login=1, game_id=game_id, quest_id=quest_id, next=next_page))
+    # Look up the user.
+    user = User.query.filter_by(email=email).first()
+    if user is None:
+        msg = 'Invalid email or password.'
+        payload = {
+            'success': False,
+            'error': msg,
+            'show_forgot': True,
+            'forgot_url': url_for('auth.forgot_password')
+        }
+        if is_ajax:
+            return jsonify(payload), 401
+        flash(msg)
+        return redirect(
+            url_for('main.index',
+                    show_login=1,
+                    game_id=game_id,
+                    quest_id=quest_id,
+                    next=next_page)
+        )
 
+    # Email verification check.
+    if current_app.config.get('MAIL_SERVER') and not user.email_verified:
+        msg = 'Please verify your email before logging in.'
+        if is_ajax:
+            return jsonify({
+                'success': False,
+                'error': msg,
+                'show_forgot': False
+            }), 403
+        flash(msg, 'warning')
+        return redirect(
+            url_for('main.index',
+                    show_login=1,
+                    game_id=game_id,
+                    quest_id=quest_id,
+                    next=next_page)
+        )
+
+    # Password check.
+    if not user.check_password(password):
+        msg = 'Invalid email or password.'
+        payload = {
+            'success': False,
+            'error': msg,
+            'show_forgot': True,
+            'forgot_url': url_for('auth.forgot_password')
+        }
+        if is_ajax:
+            return jsonify(payload), 401
+        flash(msg)
+        return redirect(
+            url_for('main.index',
+                    show_login=1,
+                    game_id=game_id,
+                    quest_id=quest_id,
+                    next=next_page)
+        )
+
+    # Everything checks out: log the user in.
     try:
-        # Proceed to log the user in.
-        print("DEBUG: Attempting to log in the user...")
         login_user(user, remember=login_form.remember_me.data)
-        print("DEBUG: User logged in successfully:", user)
         log_user_ip(user)
         generate_tutorial_game()
         _join_game_if_provided(user)
-        if not user.participated_games:
-            tutorial_game = Game.query.filter_by(is_tutorial=True).first()
-            if tutorial_game:
-                user.participated_games.append(tutorial_game)
-                db.session.commit()
-                print("DEBUG: Added tutorial game to user's participated games.")
 
-        # After successful login, perform redirection based on next_page, admin status, or quest_id.
+        # Determine post-login redirect.
         if next_page and is_safe_url(next_page):
-            print("DEBUG: Redirecting user to safe next_page:", next_page)
-            return redirect(next_page)
-        if user.is_admin:
-            print("DEBUG: User is admin; redirecting to admin dashboard.")
-            return redirect(url_for('admin.admin_dashboard'))
-        if quest_id:
-            print("DEBUG: quest_id provided; redirecting to quest submission page for quest_id:", quest_id)
-            return redirect(url_for('quests.submit_photo', quest_id=quest_id))
-        print("DEBUG: No additional redirection conditions; redirecting to main.index.")
-        return redirect(url_for('main.index'))
+            redirect_to = next_page
+        elif user.is_admin:
+            redirect_to = url_for('admin.admin_dashboard')
+        elif quest_id:
+            redirect_to = url_for('quests.submit_photo', quest_id=quest_id)
+        else:
+            redirect_to = url_for('main.index')
+
+        # Return JSON on AJAX, normal redirect otherwise.
+        if is_ajax:
+            return jsonify({
+                'success': True,
+                'redirect': redirect_to
+            }), 200
+
+        return redirect(redirect_to)
+
     except Exception as exc:
-        print("DEBUG: Exception occurred during login process:", exc)
         current_app.logger.error(f'Login error: {exc}')
-        flash('An unexpected error occurred during login. Please try again later.', 'error')
-        return redirect(url_for('main.index', show_login=1, game_id=game_id, quest_id=quest_id, next=next_page))
+        msg = 'An unexpected error occurred. Please try again later.'
+        if is_ajax:
+            return jsonify({
+                'success': False,
+                'error': msg,
+                'show_forgot': False
+            }), 500
+        flash(msg, 'error')
+        return redirect(
+            url_for('main.index',
+                    show_login=1,
+                    game_id=game_id,
+                    quest_id=quest_id,
+                    next=next_page)
+        )
+
 
 @auth_bp.route('/resend_verification_email', methods=['POST'])
 def resend_verification_email():
@@ -592,23 +670,60 @@ def register():
 def forgot_password():
     """
     Handle password reset requests.
+    - On normal GET: redirect to index with show_login=1 (if you like), but we won't need it.
+    - On normal POST: flash + redirect to login page.
+    - On AJAX POST: return JSON { success, message | error }.
     """
-    form = ForgotPasswordForm()
-    if form.validate_on_submit():
-        email = form.email.data
-        user = User.query.filter_by(email=email).first()
-        if user:
-            token = user.generate_reset_token()
-            reset_url = url_for('auth.reset_password', token=token, _external=True)
-            html = render_template('reset_password_email.html', reset_url=reset_url)
-            subject = "Password Reset Requested"
-            send_email(user.email, subject, html)
-            flash('A password reset email has been sent. Please check your inbox.',
-                  'info')
-        else:
-            flash('No account found with that email.', 'warning')
+    form    = ForgotPasswordForm()
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            email = form.email.data.strip().lower()
+            user  = User.query.filter_by(email=email).first()
+
+            if user:
+                token     = user.generate_reset_token()
+                reset_url = url_for('auth.reset_password', token=token, _external=True)
+                html      = render_template('reset_password_email.html', reset_url=reset_url)
+                send_email(user.email, "Password Reset Requested", html)
+                success_msg = 'A password reset email has been sent. Please check your inbox.'
+
+                if is_ajax:
+                    return jsonify({
+                        'success': True,
+                        'message': success_msg
+                    }), 200
+
+                flash(success_msg, 'info')
+            else:
+                error_msg = 'No account found with that email.'
+                if is_ajax:
+                    return jsonify({
+                        'success': False,
+                        'error': error_msg
+                    }), 404
+
+                flash(error_msg, 'warning')
+
+            # on normal POST, go back to login so they can try again or see the flash
+            return redirect(url_for('auth.login'))
+
+        # form validation failed (e.g. empty or invalid email)
+        field_errors = form.email.errors
+        error_msg    = field_errors[0] if field_errors else 'Invalid email.'
+        if is_ajax:
+            return jsonify({
+                'success': False,
+                'error': error_msg
+            }), 400
+
+        # re-render the old page if you still support it; or redirect
+        flash(error_msg, 'danger')
         return redirect(url_for('auth.login'))
-    return render_template('forgot_password.html', form=form)
+
+    # If someone GETs /forgot_password, just redirect to index so modal can open if desired.
+    return redirect(url_for('main.index', show_login=0))
 
 
 @auth_bp.route('/update_password', methods=['GET', 'POST'])
@@ -804,3 +919,14 @@ def create_activitypub_actor(user):
         user.public_key = public_key
         user.private_key = private_key
         db.session.commit()
+
+
+@auth_bp.route('/check_email', methods=['GET'])
+def check_email():
+    """
+    AJAX endpoint: given ?email=<address>, return JSON { exists: true|false }.
+    """
+    email = (request.args.get('email') or '').strip().lower()
+    # Query for existence of a user with that email
+    exists = User.query.filter_by(email=email).first() is not None
+    return jsonify({ 'exists': exists })

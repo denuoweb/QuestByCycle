@@ -14,10 +14,11 @@
                 <input type="hidden" name="next" id="loginNext" value="">
                 <div class="form-group">
                     {{ login_form.email.label }}
-                    {{ login_form.email(class="form-control") }}
+                    {{ login_form.email(class="form-control", id="loginEmail") }}
                     {% for error in login_form.email.errors %}
                         <span style="color: red;">[{{ error }}]</span>
                     {% endfor %}
+                    <div id="emailError" class="text-danger mt-1" style="display: none;"></div>
                 </div>
                 <div class="form-group">
                     {{ login_form.password.label }}
@@ -25,6 +26,8 @@
                     {% for error in login_form.password.errors %}
                         <span style="color: red;">[{{ error }}]</span>
                     {% endfor %}
+                    <div id="passwordError" class="text-danger mt-1" style="display: none;"></div>
+                    <div id="forgotContainer" class="mt-1"></div>
                 </div>
                 <div class="form-group">
                     <div class="d-inline-flex align-items-center" style="gap: 0.5rem;">
@@ -33,7 +36,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Login</button>
+                    <button type="submit" class="btn btn-primary" id="loginButton" disabled>Login</button>
                 </div>
                 <div class="modal-footer">
                     <a href="{{ url_for('auth.mastodon_login') }}" class="btn btn-secondary">
@@ -41,11 +44,115 @@
                     </a>
                 </div>
             </form>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                  const form        = document.getElementById('loginForm');
+                  const pwdErrorDiv = document.getElementById('passwordError');
+                  const forgotDiv   = document.getElementById('forgotContainer');
+                
+                  form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    pwdErrorDiv.style.display = 'none';
+                    forgotDiv.innerHTML       = '';
+                
+                    const data = new FormData(form);
+                
+                    fetch(form.getAttribute('action'), {
+                      method: 'POST',
+                      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                      body: data,
+                      credentials: 'same-origin'
+                    })
+                    .then(response => response
+                      .json()
+                      .then(payload => ({ status: response.status, payload }))
+                    )
+                    .then(({ status, payload }) => {
+                      if (payload.success) {
+                        // Successful login → redirect
+                        window.location.href = payload.redirect;
+                      } else {
+                        // Show inline error
+                        pwdErrorDiv.textContent   = payload.error;
+                        pwdErrorDiv.style.display = 'block';
+                
+                        // If server indicates we should offer "Forgot password?", wire it to open the modal
+                        if (payload.show_forgot) {
+                          const a = document.createElement('a');
+                          a.href        = 'javascript:void(0)';
+                          a.textContent = 'Forgot password?';
+                          a.className   = 'd-block mt-1';
+                          a.onclick     = openForgotPasswordModal;
+                          forgotDiv.appendChild(a);
+                        }
+                      }
+                    })
+                    .catch(err => {
+                      console.error('AJAX login error:', err);
+                      // Fallback to full-page submission on network/server error
+                      form.submit();
+                    });
+                  });
+                });
+            </script>                 
             <!-- Change the register button to call the new function -->
             <div class="mt-3 text-center">
                 <span>Don't have an account?</span>
                 <button type="button" class="btn btn-link" onclick="registerFromLogin()">Register</button>
             </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                  const emailInput   = document.getElementById('loginEmail');
+                  const loginButton  = document.getElementById('loginButton');
+                  const emailError   = document.getElementById('emailError');
+                  const checkUrlBase = "{{ url_for('auth.check_email') }}";
+                
+                  function resetState() {
+                    loginButton.disabled = true;
+                    emailError.style.display = 'none';
+                    emailError.textContent = '';
+                  }
+                
+                  // Initial state
+                  resetState();
+                
+                  emailInput.addEventListener('blur', () => {
+                    const email = emailInput.value.trim();
+                    if (!email) {
+                      // No email → keep disabled
+                      resetState();
+                      return;
+                    }
+                
+                    // Call our JSON endpoint
+                    fetch(`${checkUrlBase}?email=${encodeURIComponent(email)}`)
+                      .then(resp => resp.json())
+                      .then(data => {
+                        if (data.exists) {
+                          // Registered → allow login
+                          loginButton.disabled = false;
+                          emailError.style.display = 'none';
+                        } else {
+                          // Not registered → block login, show message
+                          loginButton.disabled = true;
+                          emailError.textContent = 'This email is not registered. Please register first.';
+                          emailError.style.display = 'block';
+                        }
+                      })
+                      .catch(err => {
+                        console.error('Error checking email existence:', err);
+                        // On error, let server handle it rather than blocking client
+                        loginButton.disabled = false;
+                        emailError.style.display = 'none';
+                      });
+                  });
+                
+                  // Optional: if user re-types into the email field, immediately block login again
+                  emailInput.addEventListener('input', () => {
+                    resetState();
+                  });
+                });
+            </script>                
         </div>
     </div>
 </div>

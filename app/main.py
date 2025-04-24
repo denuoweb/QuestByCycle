@@ -23,7 +23,7 @@ from app.models import (db, Game, User, Quest, Badge, UserQuest, QuestSubmission
                         QuestLike, ShoutBoardMessage, ShoutBoardLike, ProfileWallMessage,
                         user_games)
 from app.forms import (ProfileForm, ShoutBoardForm, ContactForm, BikeForm,
-                       LoginForm, RegistrationForm)
+                       LoginForm, RegistrationForm, ForgotPasswordForm)
 from app.utils import (save_profile_picture, save_bicycle_picture, send_email,
                        allowed_file, enhance_badges_with_task_info, get_game_badges)
 from .config import load_config
@@ -244,6 +244,7 @@ def index(game_id, quest_id, user_id):
     """
     login_form = LoginForm()
     register_form = RegistrationForm()
+    forgot_form   = ForgotPasswordForm()
     start_onboarding = False
     now = datetime.now(utc)
 
@@ -302,7 +303,9 @@ def index(game_id, quest_id, user_id):
                            quest_id=quest_id,
                            start_onboarding=start_onboarding,
                            login_form=login_form,
-                           register_form=register_form)
+                           register_form=register_form,
+                           forgot_form=forgot_form)
+
 
 
 @main_bp.route('/mark-onboarding-complete', methods=['POST'])

@@ -138,3 +138,21 @@ function switchToRegisterModal(options = {}) {
     closeModal('loginModal');
     openModal('registerModal');
 }
+
+function openForgotPasswordModal() {
+    // Copy the email entered in the login modal
+    const loginEmailVal = document.getElementById('loginEmail')?.value || '';
+    const forgotEmailInput = document.getElementById('forgotEmail');
+    if (forgotEmailInput) {
+        forgotEmailInput.value = loginEmailVal;
+    }
+    // Reset any previous messages in the forgot-password modal
+    const emailErr   = document.getElementById('forgotEmailError');
+    const successDiv = document.getElementById('forgotSuccess');
+    const btn        = document.getElementById('forgotButton');
+    if (emailErr)   emailErr.style.display = 'none';
+    if (successDiv) successDiv.style.display = 'none';
+    if (btn)        btn.disabled = false;
+
+    openModal('forgotPasswordModal');
+}
