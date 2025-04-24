@@ -158,3 +158,20 @@ function openForgotPasswordModal() {
 
     openModal('forgotPasswordModal');
 }
+
+// Opens the Reset-Password modal, injecting the token from the URL
+function openResetPasswordModal(token) {
+    const modal   = document.getElementById('resetPasswordModal');
+    const input   = document.getElementById('resetToken');
+    const form    = document.getElementById('resetForm');
+    // Set the form action to include the token in the URL
+    form.setAttribute('action', `/reset_password/${encodeURIComponent(token)}`);
+    // And also in the hidden field (in case you prefer to POST it)
+    input.value = token;
+    // Reset state
+    document.getElementById('resetError').style.display = 'none';
+    document.getElementById('resetSuccess').style.display = 'none';
+    document.getElementById('resetButton').disabled = false;
+    openModal('resetPasswordModal');
+  }
+  

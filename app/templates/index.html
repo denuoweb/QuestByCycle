@@ -364,6 +364,7 @@
     {% include 'modals/generate_AI_quest_modal.html' %}
     {% include 'modals/loading_modal.html' %}
     {% include 'modals/sponsors_modal.html' %}
+    {% include 'modals/reset_password_modal.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/3rd/fontawesome/all.min.css') }}">
     <script src="{{ url_for('static', filename='js/modal_common.js') }}"></script>
     <script src="{{ url_for('static', filename='js/badge_modal.js') }}"></script>
@@ -505,6 +506,11 @@
         document.addEventListener("DOMContentLoaded", function () {
             // Create a URLSearchParams object from the query string.
             const params = new URLSearchParams(window.location.search);
+
+            if (params.get('show_reset') === '1' && params.get('token')) {
+                openResetPasswordModal(params.get('token'));
+            }
+
             // Check if the 'show_login' parameter is set to "1"
             if (params.get('show_login') === "1") {
                 // Extract additional parameters.

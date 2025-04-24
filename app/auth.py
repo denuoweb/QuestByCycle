@@ -401,7 +401,6 @@ def login():
     # Extract and sanitize credentials.
     email    = sanitize_html(login_form.email.data or "").lower()
     password = login_form.password.data or ""
-    print(f"DEBUG: Submitted email: {email}, password length: {len(password)}")
 
     # Validate presence of both fields.
     if not email or not password:
@@ -858,20 +857,46 @@ def license_agreement():
 @auth_bp.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     """
-    Handle password reset using the provided token.
+    Handle password reset using a modal.
+    - GET: redirect to index with show_reset=1 and token to open the modal.
+    - POST: validate form (AJAX or normal), return JSON for AJAX or flash+redirect.
     """
+    form = ResetPasswordForm()
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    # Redirect all GETs to index so JS can pop open the modal
+    if request.method == 'GET':
+        return redirect(url_for('main.index', show_reset=1, token=token))
+
+    # POST: validate
+    if not form.validate_on_submit():
+        # Show the first password error
+        error = form.password.errors[0] if form.password.errors else 'Invalid input.'
+        if is_ajax:
+            return jsonify({'success': False, 'error': error}), 400
+        flash(error, 'danger')
+        return redirect(url_for('main.index', show_reset=1, token=token))
+
+    # Verify the token
     user = User.verify_reset_token(token)
     if not user:
-        flash('The reset link is invalid or has expired.', 'danger')
-        return redirect(url_for('auth.forgot_password'))
-    form = ResetPasswordForm()
-    if form.validate_on_submit():
-        user.set_password(form.password.data)
-        db.session.commit()
-        flash('Your password has been reset. Please log in with your new password.',
-              'success')
-        return redirect(url_for('auth.login'))
-    return render_template('reset_password.html', form=form)
+        msg = 'The reset link is invalid or has expired.'
+        if is_ajax:
+            return jsonify({'success': False, 'error': msg}), 400
+        flash(msg, 'danger')
+        return redirect(url_for('main.index'))
+
+    # Everything’s valid: set the new password
+    user.set_password(form.password.data)
+    db.session.commit()
+
+    success_msg = 'Your password has been reset. Please log in with your new credentials.'
+    if is_ajax:
+        return jsonify({'success': True, 'message': success_msg}), 200
+
+    flash(success_msg, 'success')
+    return redirect(url_for('auth.login'))
+
 
 
 @auth_bp.route('/delete_account', methods=['POST'])
