@@ -773,9 +773,6 @@ def verify_email(token):
     user.email_verified = True
     db.session.commit()
     
-    # Log the user in.
-    login_user(user)
-    
     # At this point, try to extract game context.
     # First, try to get game_id from the query or form data.
     game_id = request.args.get('game_id') or request.form.get('game_id')
