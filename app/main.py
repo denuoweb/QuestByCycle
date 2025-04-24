@@ -253,32 +253,49 @@ def index(game_id, quest_id, user_id):
     forgot_form = ForgotPasswordForm()
     reset_form = ResetPasswordForm()
     start_onboarding = False
+
     now_aware = datetime.now(utc)
     now = now_aware.replace(tzinfo=None)
-    
-    # Determine user_id based on authentication
+
     if user_id is None and current_user.is_authenticated:
         user_id = current_user.id
 
-    game, game_id = _select_game(game_id)
+    # Check if we should prompt custom-game join modal
+    show_join_custom = request.args.get('show_join_custom') == '1'
 
-    # only redirect *once* (i.e. not when show_login is already in the URL)
-    if (game is None or game_id is None) and request.args.get('show_login') != '1':
-        demo = Game.query.filter_by(is_demo=True) \
-                            .order_by(Game.start_date.desc()) \
-                            .first()
-        return redirect(url_for('main.index',
-                                game_id=demo.id,
-                                show_login=1))
+    # Load game context without auto-join when prompting custom-join
+    if show_join_custom:
+        demo = (Game.query
+                    .filter_by(is_demo=True)
+                    .order_by(Game.start_date.desc())
+                    .first())
+        game = demo
+        game_id = demo.id if demo else None
+    else:
+        game, game_id = _select_game(game_id)
 
-    # if we get here *and* game is still None, just render demo silently
+    # Redirect to login/modal only once (skip when custom-join is active)
+    if not show_join_custom and (game is None or game_id is None) and request.args.get('show_login') != '1':
+        demo = (Game.query
+                    .filter_by(is_demo=True)
+                    .order_by(Game.start_date.desc())
+                    .first())
+        return redirect(url_for('main.index', game_id=demo.id, show_login=1))
+
+    # If custom-join requested but no demo exists, bail with an error
+    if show_join_custom and (game is None or game_id is None):
+        flash("No demo game available for selection.", "error")
+        return redirect(url_for('main.index'))
+
+    # Fallback: ensure we have a demo for everyone else
     if game is None or game_id is None:
-        demo = Game.query.filter_by(is_demo=True) \
-                            .order_by(Game.start_date.desc()) \
-                            .first()
+        demo = (Game.query
+                    .filter_by(is_demo=True)
+                    .order_by(Game.start_date.desc())
+                    .first())
         game, game_id = demo, demo.id
 
-    # Load user-specific data if authenticated
+    # Load user-specific data
     profile = None
     user_quests = []
     total_points = None
@@ -294,78 +311,80 @@ def index(game_id, quest_id, user_id):
     else:
         user_games_list = []
 
+    # Prepare quests and activities
     quests, activities = _prepare_quests(game, user_id, user_quests, now)
     carousel_images = _prepare_carousel_images(game_id)
     categories = sorted({quest.category for quest in quests if quest.category})
 
-    # split custom games into open vs. closed, but exclude demos
+    # Custom vs closed games (exclude demos)
     all_custom = Game.query.filter(
         Game.custom_game_code.isnot(None),
         Game.is_public.is_(True),
         Game.is_demo.is_(False)
     ).all()
+    open_games = [g for g in all_custom if g.start_date <= now and (not g.end_date or g.end_date >= now)]
+    closed_games = [g for g in all_custom if g.end_date and g.end_date < now]
 
-    open_games = [
-        g for g in all_custom
-        if g.start_date <= now
-           and (not g.end_date or g.end_date >= now)
-    ]
-    closed_games = [
-        g for g in all_custom
-        if g.end_date and g.end_date < now
-    ]
+    # Ongoing demo for UI context
+    demo_game = (Game.query
+                    .filter(
+                        Game.is_demo.is_(True),
+                        Game.start_date <= now,
+                        (Game.end_date == None) | (Game.end_date >= now)
+                    )
+                    .order_by(Game.start_date.desc())
+                    .first())
 
-    # pick only an ongoing demo game
-    demo_game = Game.query \
-        .filter(
-            Game.is_demo.is_(True),
-            Game.start_date <= now,
-            (Game.end_date == None) | (Game.end_date >= now)
-        ) \
-        .order_by(Game.start_date.desc()) \
-        .first()
-
+    # Participation flags
     has_joined = (current_user.is_authenticated and game in current_user.participated_games)
     explicit_game = bool(request.args.get('game_id'))
     suppress_custom = request.args.get('show_join_custom') == '0'
-    show_join_modal  = (not has_joined and
-                        not explicit_game and
-                        not suppress_custom)
 
-    return render_template('index.html',
-                           form=ShoutBoardForm(),
-                           badges=earned_badges,
-                           all_badges=all_badges,
-                           games=user_games_list,
-                           game=game,
-                           user_games=user_games_list,
-                           activities=activities,
-                           quests=quests,
-                           categories=categories,
-                           show_join_modal=show_join_modal,
-                           game_participation={game.id: (game in (current_user.participated_games if current_user.is_authenticated else []))},
-                           selected_quest=Quest.query.get(quest_id) if quest_id else None,
-                           has_joined=has_joined,
-                           profile=profile,
-                           user_quests=user_quests,
-                           carousel_images=carousel_images,
-                           total_points=total_points,
-                           completions=UserQuest.query.filter(UserQuest.completions > 0).order_by(UserQuest.completed_at.desc()).all(),
-                           open_games=open_games,
-                           closed_games=closed_games,
-                           demo_game=demo_game,
-                           now=now,
-                           selected_game_id=game_id or 0,
-                           selected_quest_id=quest_id,
-                           next=request.args.get('next'),
-                           selected_game=game,
-                           quest_id=quest_id,
-                           start_onboarding=start_onboarding,
-                           login_form=login_form,
-                           register_form=register_form,
-                           forgot_form=forgot_form,
-                           reset_form=reset_form)
+    # Determine which modal to show
+    show_join_modal = (
+        not has_joined and
+        not explicit_game and
+        not suppress_custom and
+        not show_join_custom
+    )
 
+    # Render
+    return render_template(
+        'index.html',
+        form=ShoutBoardForm(),
+        badges=earned_badges,
+        all_badges=all_badges,
+        games=user_games_list,
+        game=game,
+        user_games=user_games_list,
+        activities=activities,
+        quests=quests,
+        categories=categories,
+        show_join_modal=show_join_modal,
+        show_join_custom=show_join_custom,
+        game_participation={game.id: (game in current_user.participated_games if current_user.is_authenticated else [])},
+        selected_quest=Quest.query.get(quest_id) if quest_id else None,
+        has_joined=has_joined,
+        profile=profile,
+        user_quests=user_quests,
+        carousel_images=carousel_images,
+        total_points=total_points,
+        completions=UserQuest.query.filter(UserQuest.completions > 0).order_by(UserQuest.completed_at.desc()).all(),
+        open_games=open_games,
+        closed_games=closed_games,
+        demo_game=demo_game,
+        now=now,
+        selected_game_id=game_id or 0,
+        selected_quest_id=quest_id,
+        next=request.args.get('next'),
+        selected_game=game,
+        quest_id=quest_id,
+        start_onboarding=start_onboarding,
+        login_form=login_form,
+        register_form=register_form,
+        forgot_form=forgot_form,
+        reset_form=reset_form
+    )
 
 
 

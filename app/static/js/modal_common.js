@@ -24,6 +24,9 @@ function closeModal(modalId) {
         if (openModals.length === 0) {
             document.body.classList.remove('body-no-scroll');
         }
+        
+        const ev = new CustomEvent('hidden.bs.modal', { bubbles: true });
+        modal.dispatchEvent(ev);
     }
 }
 

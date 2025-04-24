@@ -638,23 +638,31 @@ def register():
     if current_app.config['MAIL_SERVER']:
         _send_verification_email(user)
     else:
+        # Immediately verify & log in the user
         _auto_verify_and_login(user)
         if orig_game_id:
+            # If they came in with a game selected, join it
             _join_game_if_provided(user)
-        else:
-            generate_demo_game()
-            _ensure_demo_game(user)
+        # Otherwise: do NOT auto‐join the demo game;
+        # we'll prompt them to pick a custom game below
 
     if next_page and is_safe_url(next_page):
         return redirect(next_page)
     if orig_quest_id:
         return redirect(url_for('quests.submit_photo', quest_id=orig_quest_id))
 
+    # If they specified a game up‐front, go there as before…
+    if orig_game_id:
+        return redirect(url_for('main.index',
+                                show_join_custom=0,
+                                game_id=orig_game_id,
+                                quest_id=orig_quest_id,
+                                next=next_page,
+                                show_login=0))
+
+    # …otherwise, fire up the “Join Custom Game” modal immediately
     return redirect(url_for('main.index',
-                            show_join_custom=0,
-                            game_id=orig_game_id,
-                            quest_id=orig_quest_id,
-                            next=next_page,
+                            show_join_custom=1,
                             show_login=0))
 
 
@@ -797,7 +805,11 @@ def verify_email(token):
         # If no game context is provided and the user hasn't joined any game,
         # join them to the default demo game.
         if not user.participated_games:
-            demo_game = Game.query.filter_by(is_demo=True).first()
+            # pick the most recent demo game
+            demo_game = (Game.query
+                             .filter_by(is_demo=True)
+                             .order_by(Game.start_date.desc())
+                             .first())
             if demo_game:
                 user.participated_games.append(demo_game)
                 user.selected_game_id = demo_game.id

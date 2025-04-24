@@ -1,5 +1,5 @@
 <!-- Modal for Joining Custom Games -->
-<div class="modal" id="joinCustomGameModal">
+<div class="modal" id="joinCustomGameModal" data-has-joined="{{ 1 if has_joined else 0 }}">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Join a Game</h5>
@@ -125,6 +125,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Track whether the user just submitted the join‐by‐code form:
+    const hasJoined = document
+            .getElementById('joinCustomGameModal')
+            .dataset.hasJoined === "1";
+
+    /* Track whether the user explicitly joined something during this visit */
     let joinedCustomGame = false;
     document.getElementById('joinCustomGameForm')
         .addEventListener('submit', () => { joinedCustomGame = true; });
@@ -132,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // If they close without submitting, auto-join demo:
     var modalEl = document.getElementById('joinCustomGameModal');
     modalEl.addEventListener('hidden.bs.modal', function () {
-        if (!joinedCustomGame) {
+        if (!joinedCustomGame && !hasJoined) {
             window.location.href = "{{ url_for('games.join_demo') }}";
         }
     });
