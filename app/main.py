@@ -254,9 +254,22 @@ def index(game_id, quest_id, user_id):
         user_id = current_user.id
 
     game, game_id = _select_game(game_id)
+
+    # only redirect *once* (i.e. not when show_login is already in the URL)
+    if (game is None or game_id is None) and request.args.get('show_login') != '1':
+        tutorial = Game.query.filter_by(is_tutorial=True) \
+                            .order_by(Game.start_date.desc()) \
+                            .first()
+        return redirect(url_for('main.index',
+                                game_id=tutorial.id,
+                                show_login=1))
+
+    # if we get here *and* game is still None, just render tutorial silently
     if game is None or game_id is None:
-        # Redirect if game selection failed
-        return redirect(url_for('some_error_route'))
+        tutorial = Game.query.filter_by(is_tutorial=True) \
+                            .order_by(Game.start_date.desc()) \
+                            .first()
+        game, game_id = tutorial, tutorial.id
 
     # Load user-specific data if authenticated
     profile = None

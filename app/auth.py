@@ -653,16 +653,29 @@ def register():
             generate_tutorial_game()
             _ensure_tutorial_game(user)
     
-    # Process redirection after registration.
+    # Process redirection after registration:
     next_page = request.args.get('next')
-    quest_id = request.args.get('quest_id')
-    if next_page:
-        parsed_url = urlparse(next_page)
-        if not parsed_url.netloc and not parsed_url.scheme:
-            return redirect(next_page)
+    quest_id  = request.args.get('quest_id')
+    game_id   = current_user.selected_game_id
+
+    # 1) If they handed us a safe next URL, go there first:
+    if next_page and is_safe_url(next_page):
+        return redirect(next_page)
+
+    # 2) Otherwise, if this was a quest flow, go to submit-photo:
     if quest_id:
         return redirect(url_for('quests.submit_photo', quest_id=quest_id))
-    return redirect(url_for('main.index'))
+
+    # 3) Fallback: send them back into the tutorial/game index
+    #    but with show_login=0 so no modal pops up, and keep
+    #    quest_id & next in the querystring for any downstream logic.
+    return redirect(
+        url_for('main.index',
+                game_id=game_id,
+                quest_id=quest_id,
+                next=next_page,
+                show_login=0)
+    )
 
 
 @auth_bp.route('/forgot_password', methods=['GET', 'POST'])

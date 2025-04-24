@@ -96,30 +96,69 @@ function openRegisterModalWithOptions(options) {
  * preserving any game/quest/next parameters.
  */
 function openLoginModalWithGame(options) {
-    const loginForm = document.getElementById('loginForm');
-
-    // Extract the base action URL (without any query string)
-    const baseLoginUrl = loginForm.getAttribute('action').split('?')[0];
-
-    // Build query string
-    const params = [];
-    if (options.gameId) {
-        params.push("game_id=" + encodeURIComponent(options.gameId));
+    // 1) Grab the modal and form
+    const loginModal = document.getElementById('loginModal');
+    const loginForm  = document.getElementById('loginForm');
+  
+    // 2) Update the hidden inputs
+    if (options.gameId !== undefined) {
+      const fld = loginModal.querySelector('input[name="game_id"]');
+      if (fld) fld.value = options.gameId;
     }
-    if (options.questId) {
-        params.push("quest_id=" + encodeURIComponent(options.questId));
+    if (options.questId !== undefined) {
+      const fld = loginModal.querySelector('input[name="quest_id"]');
+      if (fld) fld.value = options.questId;
     }
-    if (options.next) {
-        params.push("next=" + encodeURIComponent(options.next));
+    if (options.next !== undefined) {
+      const fld = loginModal.querySelector('input[name="next"]');
+      if (fld) fld.value = options.next;
     }
-    const newActionUrl = baseLoginUrl + (params.length ? "?" + params.join("&") : "");
-
-    // Update form action and open modal
-    loginForm.setAttribute('action', newActionUrl);
+  
+    // 3) Rebuild the form action from its base (stripping any old query string)
+    const baseAction = loginForm.getAttribute('action').split('?')[0];
+    const params     = [];
+    if (options.gameId)  params.push('game_id='  + encodeURIComponent(options.gameId));
+    if (options.questId) params.push('quest_id=' + encodeURIComponent(options.questId));
+    if (options.next)    params.push('next='     + encodeURIComponent(options.next));
+    loginForm.setAttribute('action', baseAction + (params.length ? '?' + params.join('&') : ''));
+  
+    // 4) Fire the modal
     openModal('loginModal');
-}
+  }
+  
+function registerFromLogin() {
+    // 1) Grab the values from the login modal:
+    const emailVal = document.getElementById('loginEmail')?.value || '';
+    const gameId   = document.getElementById('loginGameId')?.value  || '';
+    const questId  = document.getElementById('loginQuestId')?.value || '';
+    const nextVal  = document.getElementById('loginNext')?.value    || '';
+  
+    // 2) Inject them into the Register modal:
+    document.getElementById('registerEmail').value    = emailVal;
+    document.getElementById('gameIdField').value      = gameId;
+    document.getElementById('questIdField').value     = questId;
+    document.getElementById('nextField').value        = nextVal;
+  
+    // 3) Switch modals:
+    closeModal('loginModal');
+    openModal('registerModal');
+  
+    // 4) (Optional) move focus into the password field:
+    document.querySelector('#registerModal input[type="password"]').focus();
+  }
 
 function switchToRegisterModal(options = {}) {
+    // 1) update the URL on the <form> itself:
+    const frm = document
+        .getElementById('registerModal')
+        .querySelector('form');
+    const base = frm.getAttribute('action').split('?')[0];
+    const qs = [];
+    if (options.gameId)  qs.push(`game_id=${encodeURIComponent(options.gameId)}`);
+    if (options.questId) qs.push(`quest_id=${encodeURIComponent(options.questId)}`);
+    if (options.next)    qs.push(`next=${encodeURIComponent(options.next)}`);
+    frm.setAttribute('action', base + (qs.length ? `?${qs.join('&')}` : ''));
+    
     if (options.gameId !== undefined) {
         const gameField = document.getElementById('gameIdField');
         if (gameField) {
