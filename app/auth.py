@@ -792,8 +792,6 @@ def verify_email(token):
                 except Exception as exc:
                     db.session.rollback()
                     current_app.logger.error("Failed to join game during verification: %s", exc)
-                else:
-                    flash(f'You have successfully joined the game: {game.title}', 'success')
     else:
         # If no game context is provided and the user hasn't joined any game,
         # join them to the default tutorial game.
