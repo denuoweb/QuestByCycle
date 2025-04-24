@@ -106,13 +106,13 @@ def _select_game(game_id):
             if joined_games:
                 game_id = joined_games[0].id
 
-    # If still None, select the latest tutorial game
+    # If still None, select the latest demo game
     if game_id is None:
-        default_tutorial_game = Game.query.filter_by(is_tutorial=True).order_by(Game.start_date.desc()).first()
-        if default_tutorial_game:
-            game_id = default_tutorial_game.id
+        default_demo_game = Game.query.filter_by(is_demo=True).order_by(Game.start_date.desc()).first()
+        if default_demo_game:
+            game_id = default_demo_game.id
         else:
-            flash("No tutorial game available", "error")
+            flash("No demo game available", "error")
             return None, None
 
     game = Game.query.get(game_id)
@@ -257,19 +257,19 @@ def index(game_id, quest_id, user_id):
 
     # only redirect *once* (i.e. not when show_login is already in the URL)
     if (game is None or game_id is None) and request.args.get('show_login') != '1':
-        tutorial = Game.query.filter_by(is_tutorial=True) \
+        demo = Game.query.filter_by(is_demo=True) \
                             .order_by(Game.start_date.desc()) \
                             .first()
         return redirect(url_for('main.index',
-                                game_id=tutorial.id,
+                                game_id=demo.id,
                                 show_login=1))
 
-    # if we get here *and* game is still None, just render tutorial silently
+    # if we get here *and* game is still None, just render demo silently
     if game is None or game_id is None:
-        tutorial = Game.query.filter_by(is_tutorial=True) \
+        demo = Game.query.filter_by(is_demo=True) \
                             .order_by(Game.start_date.desc()) \
                             .first()
-        game, game_id = tutorial, tutorial.id
+        game, game_id = demo, demo.id
 
     # Load user-specific data if authenticated
     profile = None

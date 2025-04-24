@@ -379,7 +379,7 @@ class Game(db.Model):
     custom_game_code = db.Column(db.String(20), unique=True, nullable=True)
     is_public = db.Column(db.Boolean, default=True)
     allow_joins = db.Column(db.Boolean, default=True)
-    is_tutorial = db.Column(db.Boolean, default=False)
+    is_demo = db.Column(db.Boolean, default=False)
 
     @staticmethod
     def generate_unique_code():

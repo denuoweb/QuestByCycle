@@ -586,17 +586,17 @@ def send_email(to, subject, html_content):
         return False
 
 
-def generate_tutorial_game():
+def generate_demo_game():
     current_quarter = (datetime.now().month - 1) // 3 + 1
     year = datetime.now().year
-    title = f"Tutorial Game - Q{current_quarter} {year}"
+    title = f"Demo Game - Q{current_quarter} {year}"
 
-    existing_game = Game.query.filter_by(is_tutorial=True, title=title).first()
+    existing_game = Game.query.filter_by(is_demo=True, title=title).first()
     if existing_game:
         return  # Just return, do nothing if the game already exists
 
     description = """
-    Welcome to the newest Tutorial Game! Embark on a quest to create a more sustainable future while enjoying everyday activities, having fun, and fostering teamwork in the real-life battle against climate change.
+    Welcome to the newest Demo Game! Embark on a quest to create a more sustainable future while enjoying everyday activities, having fun, and fostering teamwork in the real-life battle against climate change.
 
     Quest Instructions:
 
@@ -616,10 +616,10 @@ def generate_tutorial_game():
     else:
         end_date = datetime(year, 3 * current_quarter + 1, 1) - timedelta(seconds=1)
 
-    tutorial_game = Game(
+    demo_game = Game(
         title=title,
         description=description,
-        description2="Rules and guidelines for the tutorial game.",
+        description2="Rules and guidelines for the demo game.",
         start_date=start_date,
         end_date=end_date,
         game_goal=20000,
@@ -646,7 +646,7 @@ def generate_tutorial_game():
         """,
         beyond="Visit your local bike club!",
         admin_id=1,  # Assuming admin_id=1 is the system admin
-        is_tutorial=True,
+        is_demo=True,
         twitter_username=current_app.config['TWITTER_USERNAME'],
         twitter_api_key=current_app.config['TWITTER_API_KEY'],
         twitter_api_secret=current_app.config['TWITTER_API_SECRET'],
@@ -662,20 +662,20 @@ def generate_tutorial_game():
         allow_joins=True,
         leaderboard_image="leaderboard_image.png"  # Assuming the image is stored in the static folder
     )
-    db.session.add(tutorial_game)
+    db.session.add(demo_game)
     db.session.commit()
 
-    # Import quests and badges for the tutorial game
-    import_quests_and_badges_from_csv(tutorial_game.id, os.path.join(current_app.static_folder, 'defaultquests.csv'))
+    # Import quests and badges for the demo game
+    import_quests_and_badges_from_csv(demo_game.id, os.path.join(current_app.static_folder, 'defaultquests.csv'))
 
     # Add pinned message from admin
     try:
         admin_id = 1  # Assuming admin_id=1 is the system admin
-        print(f"Creating pinned message for game_id: {tutorial_game.id}")
+        print(f"Creating pinned message for game_id: {demo_game.id}")
         pinned_message = ShoutBoardMessage(
             message="Get on your Bicycle this Quarter!",
             user_id=admin_id,
-            game_id=tutorial_game.id,
+            game_id=demo_game.id,
             is_pinned=True,
             timestamp=datetime.now(utc)
         )
@@ -686,7 +686,7 @@ def generate_tutorial_game():
         print(f"Error creating pinned message: {e}")
         db.session.rollback()
 
-    return tutorial_game
+    return demo_game
 
 
 def import_quests_and_badges_from_csv(game_id, csv_path):

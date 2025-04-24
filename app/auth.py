@@ -22,7 +22,7 @@ import requests
 from app.models import db, User, Game
 from app.forms import (LoginForm, RegistrationForm, ForgotPasswordForm,
                        ResetPasswordForm, UpdatePasswordForm, MastodonLoginForm)
-from app.utils import send_email, generate_tutorial_game, log_user_ip
+from app.utils import send_email, generate_demo_game, log_user_ip
 
 # Initialize the blueprint.
 auth_bp = Blueprint('auth', __name__)
@@ -174,21 +174,21 @@ def _join_game_if_provided(user):
 
 
 
-def _ensure_tutorial_game(user):
+def _ensure_demo_game(user):
     """
-    Ensure the user is joined to a tutorial game if no games are participated.
+    Ensure the user is joined to a demo game if no games are participated.
     """
     if not user.participated_games:
-        tutorial_game = Game.query.filter_by(
-            is_tutorial=True
+        demo_game = Game.query.filter_by(
+            is_demo=True
         ).order_by(Game.start_date.desc()).first()
-        if tutorial_game:
-            user.participated_games.append(tutorial_game)
+        if demo_game:
+            user.participated_games.append(demo_game)
             try:
                 db.session.commit()
             except SQLAlchemyError as exc:
                 db.session.rollback()
-                current_app.logger.error(f'Failed to join tutorial game: {exc}')
+                current_app.logger.error(f'Failed to join demo game: {exc}')
 
 
 @auth_bp.route('/login/mastodon', methods=['GET', 'POST'])
@@ -329,8 +329,8 @@ def mastodon_callback():
             login_user(new_user)
             flash("Account created and logged in via Mastodon. You will federate using your Mastodon identity.", "success")
     
-    # Ensure a current tutorial game exists
-    generate_tutorial_game()
+    # Ensure a current demo game exists
+    generate_demo_game()
     
     return redirect(url_for('main.index'))
 
@@ -483,7 +483,7 @@ def login():
     try:
         login_user(user, remember=login_form.remember_me.data)
         log_user_ip(user)
-        generate_tutorial_game()
+        generate_demo_game()
         _join_game_if_provided(user)
 
         # Determine post-login redirect.
@@ -562,7 +562,7 @@ def register():
     Handle user registration.
     
     If a game_id is provided in the request, the new user will be joined to that game
-    as their current selected game. Otherwise, the user is joined to the default tutorial game.
+    as their current selected game. Otherwise, the user is joined to the default demo game.
     """
     register_form = RegistrationForm()
     # On GET or if the form is not validated, render the registration template with the context.
@@ -642,8 +642,8 @@ def register():
         if orig_game_id:
             _join_game_if_provided(user)
         else:
-            generate_tutorial_game()
-            _ensure_tutorial_game(user)
+            generate_demo_game()
+            _ensure_demo_game(user)
 
     if next_page and is_safe_url(next_page):
         return redirect(next_page)
@@ -744,7 +744,7 @@ def verify_email(token):
       - If a game_id is provided (either directly or inferred from the 'next' parameter),
         the user will be joined to that game and that game becomes the user's selected game.
       - Otherwise, if no game_id is provided and the user has not joined any game,
-        the user is added to the default tutorial game.
+        the user is added to the default demo game.
     """
     user = User.verify_verification_token(token)
     if not user:
@@ -794,17 +794,17 @@ def verify_email(token):
                     current_app.logger.error("Failed to join game during verification: %s", exc)
     else:
         # If no game context is provided and the user hasn't joined any game,
-        # join them to the default tutorial game.
+        # join them to the default demo game.
         if not user.participated_games:
-            tutorial_game = Game.query.filter_by(is_tutorial=True).first()
-            if tutorial_game:
-                user.participated_games.append(tutorial_game)
-                user.selected_game_id = tutorial_game.id
+            demo_game = Game.query.filter_by(is_demo=True).first()
+            if demo_game:
+                user.participated_games.append(demo_game)
+                user.selected_game_id = demo_game.id
                 try:
                     db.session.commit()
                 except Exception as exc:
                     db.session.rollback()
-                    current_app.logger.error("Failed to join tutorial game during verification: %s", exc)
+                    current_app.logger.error("Failed to join demo game during verification: %s", exc)
     
     # Handle quest and next parameters for further redirection.
     quest_id = request.args.get('quest_id')
