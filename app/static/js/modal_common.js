@@ -96,11 +96,10 @@ function openRegisterModalWithOptions(options) {
  * preserving any game/quest/next parameters.
  */
 function openLoginModalWithGame(options) {
-    const loginModal = document.getElementById('loginModal');
-    const loginForm  = document.getElementById('loginForm');
+    const loginForm = document.getElementById('loginForm');
 
-    // Base login URL from Flask
-    const baseLoginUrl = "{{ url_for('auth.login') }}";
+    // Extract the base action URL (without any query string)
+    const baseLoginUrl = loginForm.getAttribute('action').split('?')[0];
 
     // Build query string
     const params = [];
@@ -115,7 +114,7 @@ function openLoginModalWithGame(options) {
     }
     const newActionUrl = baseLoginUrl + (params.length ? "?" + params.join("&") : "");
 
-    // Update form action
+    // Update form action and open modal
     loginForm.setAttribute('action', newActionUrl);
     openModal('loginModal');
 }
