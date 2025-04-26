@@ -62,12 +62,11 @@ class Badge(db.Model):
 class UserQuest(db.Model):
     """Model representing a user's progress on a quest."""
     __tablename__ = 'user_quests'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True,
-                        nullable=False)
-    quest_id = db.Column(
-        db.Integer, db.ForeignKey('quest.id', ondelete='CASCADE'),
-        primary_key=True, nullable=False
+    id       = db.Column(db.Integer, primary_key=True)
+    user_id  = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    quest_id = db.Column(db.Integer, db.ForeignKey('quest.id'), nullable=False, index=True)
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'quest_id', name='uq_user_quest'),
     )
     completions = db.Column(db.Integer, default=0)
     points_awarded = db.Column(db.Integer, default=0)
@@ -118,9 +117,7 @@ class User(UserMixin, db.Model):
         'QuestSubmission', backref='submitter', lazy='dynamic',
         cascade='all, delete-orphan'
     )
-    riding_preferences = db.Column(
-        db.ARRAY(db.String), nullable=True
-    )
+    riding_preferences = db.Column(db.JSON, nullable=True)
     ride_description = db.Column(db.String(500), nullable=True)
     bike_picture = db.Column(db.String(200), nullable=True)
     bike_description = db.Column(db.String(500), nullable=True)

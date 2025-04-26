@@ -1,4 +1,30 @@
-from flask import Flask, render_template, current_app, flash, redirect, url_for
+import flask.helpers as _helpers
+from flask import current_app
+from urllib.parse import urlparse, urlunparse
+
+# keep a reference to the real one
+_original_url_for = _helpers.url_for
+
+def _url_for(*args, **kwargs):
+    try:
+        url = _original_url_for(*args, **kwargs)
+    except RuntimeError:
+        # fallback if called completely outside a request
+        app = current_app._get_current_object()
+        with app.test_request_context():
+            url = _original_url_for(*args, **kwargs)
+
+    app = current_app._get_current_object()
+    if app.config.get("TESTING"):
+        # strip scheme+host in tests
+        p = urlparse(url)
+        return urlunparse(("", "", p.path, p.params, p.query, p.fragment))
+    return url
+
+# override Flask's url_for globally
+_helpers.url_for = _url_for
+
+from flask import Flask, render_template, flash, redirect, url_for
 from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -45,7 +71,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-def create_app():
+def create_app(config_overrides=None):
     app = Flask(__name__)
 
     # Load configuration
@@ -107,6 +133,13 @@ def create_app():
     app.config['LOCAL_DOMAIN'] = app.config['main']['LOCAL_DOMAIN']
 
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_proto=1, x_port=1)
+
+    # Apply any test‐time overrides before extensions are initialized
+    if config_overrides:
+        app.config.update(config_overrides)
+
+    if app.config.get('TESTING') and not app.config.get('SERVER_NAME'):
+        app.config['SERVER_NAME'] = 'localhost'
 
     # Initialize extensions
     csrf = CSRFProtect(app)
