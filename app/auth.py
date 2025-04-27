@@ -424,7 +424,7 @@ def login():
     if current_app.config.get('MAIL_SERVER') and not user.email_verified:
         _send_verification_email(user)
 
-        msg = 'Please verify your email before logging in.'
+        msg = 'Please verify your email before logging in. A new email has been sent.'
         if is_ajax:
             return jsonify(success=False, error=msg, show_forgot=False), 403
         flash(msg, 'warning')
