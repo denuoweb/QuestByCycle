@@ -543,12 +543,13 @@ def register():
     # Auto-login & email verification
     create_activitypub_actor(user)
     _auto_verify_and_login(user)
-    if current_app.config.get('MAIL_SERVER'):
-        if custom_game_code:
-            # stash custom code into form for the email step
-            request.form = request.form.copy()
-            request.form['custom_game_code'] = custom_game_code
-        _send_verification_email(user)
+    ### Remove auto verify and login and resume below at some point
+    #if current_app.config.get('MAIL_SERVER'):
+    #    if custom_game_code:
+    #        # stash custom code into form for the email step
+    #        request.form = request.form.copy()
+    #        request.form['custom_game_code'] = custom_game_code
+    #    _send_verification_email(user)
 
     # If they came with a game_id, join it now
     if game_id:
