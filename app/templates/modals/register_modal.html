@@ -1,48 +1,84 @@
+<!-- modals/register_modal.html -->
 <div id="registerModal" class="modal">
     <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Register</h5>
-            <button type="button" class="btn-close" aria-label="Close" onclick="closeModal('registerModal')"></button>
-        </div>
-        <div class="modal-body">
-            <form method="post" action="{{ url_for('auth.register', game_id=request.args.get('game_id'), quest_id=request.args.get('quest_id'), next=request.args.get('next')) }}">
-                {{ register_form.hidden_tag() }}
-                
-                <!-- Hidden fields to preserve context -->
-                <input type="hidden" id="gameIdField" name="game_id" value="">
-                <input type="hidden" id="questIdField" name="quest_id" value="">
-                <input type="hidden" id="nextField" name="next" value="">
-                
-                <div class="form-group">
-                    {{ register_form.email.label }}
-                    {{ register_form.email(class="form-control", id="registerEmail") }}
-                </div>
-                <div class="form-group">
-                    {{ register_form.password.label }}
-                    {{ register_form.password(class="form-control") }}
-                </div>
-                <div class="form-group">
-                    {{ register_form.confirm_password.label }}
-                    {{ register_form.confirm_password(class="form-control") }}
-                </div>
-                <!-- Updated inline-flex container for license acceptance checkbox -->
-                <div class="form-group">
-                    <div class="d-inline-flex align-items-center" style="gap: 0.5rem;">
-                        {{ register_form.accept_license(class="form-check-input", style="width: auto;") }}
+      <div class="modal-header">
+        <h5 class="modal-title">Register</h5>
+        <button type="button"
+                class="btn-close"
+                aria-label="Close"
+                onclick="closeModal('registerModal')">
+        </button>
+      </div>
+  
+      <div class="modal-body">
+        <!-- 1) No query-string on the action -->
+        <form id="registerForm"
+              method="post"
+              action="{{ url_for('auth.register') }}">
+          {{ register_form.hidden_tag() }}
+  
+          <!-- 2) Four hidden fields for full context -->
+          <input type="hidden" name="game_id"
+                 id="registerGameId" value="">
+          <input type="hidden" name="quest_id"
+                 id="registerQuestId" value="">
+          <input type="hidden" name="next"
+                 id="registerNext" value="">
+          <input type="hidden" name="show_join_custom"
+                 id="registerShowJoinCustom" value="1">
+            <input type="hidden" name="custom_game_code"
+                 id="registerCustomGameCode" value="">
 
-                        <label class="form-check-label" for="{{ register_form.accept_license.id }}">
-                            {{ register_form.accept_license.label.text }}
-                        </label>
-                    </div>
-                    <div>
-                        <a href="javascript:void(0)" onclick="openModal('termsModal')">Terms of Service</a>, and 
-                        <a href="javascript:void(0)" onclick="openModal('privacyModal')">Privacy Policy</a>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Register</button>
-                </div>
-            </form>
-        </div>
+          <div class="form-group">
+            {{ register_form.email.label }}
+            {{ register_form.email(class="form-control", id="registerEmail") }}
+            {% for err in register_form.email.errors %}
+              <span style="color: red;">[{{ err }}]</span>
+            {% endfor %}
+          </div>
+  
+          <div class="form-group">
+            {{ register_form.password.label }}
+            {{ register_form.password(class="form-control") }}
+            {% for err in register_form.password.errors %}
+              <span style="color: red;">[{{ err }}]</span>
+            {% endfor %}
+          </div>
+  
+          <div class="form-group">
+            {{ register_form.confirm_password.label }}
+            {{ register_form.confirm_password(class="form-control") }}
+            {% for err in register_form.confirm_password.errors %}
+              <span style="color: red;">[{{ err }}]</span>
+            {% endfor %}
+          </div>
+  
+          <div class="form-group">
+            <div class="d-inline-flex align-items-center" style="gap: .5rem;">
+              {{ register_form.accept_license(class="form-check-input", style="width:auto;") }}
+              <label class="form-check-label"
+                     for="{{ register_form.accept_license.id }}">
+                {{ register_form.accept_license.label.text }}
+              </label>
+            </div>
+            {% for err in register_form.accept_license.errors %}
+              <div class="text-danger" style="margin-top: .25rem;">
+                [{{ err }}]
+              </div>
+            {% endfor %}
+            <div style="margin-top: .5rem;">
+              <a href="javascript:void(0)"
+                 onclick="openModal('termsModal')">Terms of Service</a>, and
+              <a href="javascript:void(0)"
+                 onclick="openModal('privacyModal')">Privacy Policy</a>
+            </div>
+          </div>
+  
+          <div class="form-group">
+            <button type="submit" class="btn btn-primary">Register</button>
+          </div>
+        </form>
+      </div>
     </div>
-</div>
+  </div>
+  

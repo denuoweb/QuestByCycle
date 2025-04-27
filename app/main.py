@@ -261,16 +261,23 @@ def index(game_id, quest_id, user_id):
         user_id = current_user.id
 
     # Check if we should prompt custom-game join modal
-    show_join_custom = request.args.get('show_join_custom') == '1'
+    show_login        = request.args.get('show_login') == '1'
+    show_join_custom  = request.args.get('show_join_custom') == '1'
 
+    if current_user.is_authenticated and not current_user.participated_games:
+        show_join_custom = True
+
+    if show_join_custom and not current_user.is_authenticated and not show_login:
+        return redirect(url_for(
+            'auth.login',
+            next=request.full_path,
+            show_join_custom=1
+        ))
+        
     # Load game context without auto-join when prompting custom-join
     if show_join_custom:
-        demo = (Game.query
-                    .filter_by(is_demo=True)
-                    .order_by(Game.start_date.desc())
-                    .first())
-        game = demo
-        game_id = demo.id if demo else None
+        game = None
+        game_id = None
     else:
         game, game_id = _select_game(game_id)
 
@@ -282,10 +289,6 @@ def index(game_id, quest_id, user_id):
                     .first())
         return redirect(url_for('main.index', game_id=demo.id, show_login=1))
 
-    # If custom-join requested but no demo exists, bail with an error
-    if show_join_custom and (game is None or game_id is None):
-        flash("No demo game available for selection.", "error")
-        return redirect(url_for('main.index'))
 
     # Fallback: ensure we have a demo for everyone else
     if game is None or game_id is None:

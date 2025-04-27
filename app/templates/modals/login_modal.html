@@ -1,161 +1,150 @@
 <!-- modals/login_modal.html -->
 <div id="loginModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Login</h5>
-            <button type="button" class="btn-close" aria-label="Close" onclick="closeModal('loginModal')"></button>
-        </div>
-        <div class="modal-body">
-            <form id="loginForm" action="{{ url_for('auth.login') }}" method="post">
-                {{ login_form.hidden_tag() }}
-                <!-- Hidden fields for game context; values will be updated via JavaScript -->
-                <input type="hidden" name="game_id" id="loginGameId" value="">
-                <input type="hidden" name="quest_id" id="loginQuestId" value="">
-                <input type="hidden" name="next" id="loginNext" value="">
-                <input type="hidden" name="show_join_custom" value="1" id="loginShowJoinCustom">
-                <input type="hidden" name="show_login"       value="1" id="loginShowLogin">
-                
-                <div class="form-group">
-                    {{ login_form.email.label }}
-                    {{ login_form.email(class="form-control", id="loginEmail") }}
-                    {% for error in login_form.email.errors %}
-                        <span style="color: red;">[{{ error }}]</span>
-                    {% endfor %}
-                    <div id="emailError" class="text-danger mt-1" style="display: none;"></div>
-                </div>
-                <div class="form-group">
-                    {{ login_form.password.label }}
-                    {{ login_form.password(class="form-control") }}
-                    {% for error in login_form.password.errors %}
-                        <span style="color: red;">[{{ error }}]</span>
-                    {% endfor %}
-                    <div id="passwordError" class="text-danger mt-1" style="display: none;"></div>
-                    <div id="forgotContainer" class="mt-1"></div>
-                </div>
-                <div class="form-group">
-                    <div class="d-inline-flex align-items-center" style="gap: 0.5rem;">
-                        {{ login_form.remember_me(class="form-check-input", style="width: auto;") }}
-                        <label class="form-check-label" for="{{ login_form.remember_me.id }}">Remember Me</label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary" id="loginButton" disabled>Login</button>
-                </div>
-                <div class="modal-footer">
-                    <a href="{{ url_for('auth.mastodon_login') }}" class="btn btn-secondary">
-                        Login with Mastodon
-                    </a>
-                </div>
-            </form>
-            <script>
-                document.addEventListener('DOMContentLoaded', () => {
-                  const form        = document.getElementById('loginForm');
-                  const pwdErrorDiv = document.getElementById('passwordError');
-                  const forgotDiv   = document.getElementById('forgotContainer');
-                
-                  form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    pwdErrorDiv.style.display = 'none';
-                    forgotDiv.innerHTML       = '';
-                
-                    const data = new FormData(form);
-                
-                    fetch(form.getAttribute('action'), {
-                      method: 'POST',
-                      headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                      body: data,
-                      credentials: 'same-origin'
-                    })
-                    .then(response => response
-                      .json()
-                      .then(payload => ({ status: response.status, payload }))
-                    )
-                    .then(({ status, payload }) => {
-                      if (payload.success) {
-                        // Successful login → redirect
-                        window.location.href = payload.redirect;
-                      } else {
-                        // Show inline error
-                        pwdErrorDiv.textContent   = payload.error;
-                        pwdErrorDiv.style.display = 'block';
-                
-                        // If server indicates we should offer "Forgot password?", wire it to open the modal
-                        if (payload.show_forgot) {
-                          const a = document.createElement('a');
-                          a.href        = 'javascript:void(0)';
-                          a.textContent = 'Forgot password?';
-                          a.className   = 'd-block mt-1';
-                          a.onclick     = openForgotPasswordModal;
-                          forgotDiv.appendChild(a);
-                        }
-                      }
-                    })
-                    .catch(err => {
-                      console.error('AJAX login error:', err);
-                      // Fallback to full-page submission on network/server error
-                      form.submit();
-                    });
-                  });
-                });
-            </script>                 
-            <!-- Change the register button to call the new function -->
-            <div class="mt-3 text-center">
-                <span>Don't have an account?</span>
-                <button type="button" class="btn btn-link" onclick="registerFromLogin()">Register</button>
-            </div>
-            <script>
-                document.addEventListener('DOMContentLoaded', () => {
-                  const emailInput   = document.getElementById('loginEmail');
-                  const loginButton  = document.getElementById('loginButton');
-                  const emailError   = document.getElementById('emailError');
-                  const checkUrlBase = "{{ url_for('auth.check_email') }}";
-                
-                  function resetState() {
-                    loginButton.disabled = true;
-                    emailError.style.display = 'none';
-                    emailError.textContent = '';
-                  }
-                
-                  // Initial state
-                  resetState();
-                
-                  emailInput.addEventListener('blur', () => {
-                    const email = emailInput.value.trim();
-                    if (!email) {
-                      // No email → keep disabled
-                      resetState();
-                      return;
-                    }
-                
-                    // Call our JSON endpoint
-                    fetch(`${checkUrlBase}?email=${encodeURIComponent(email)}`)
-                      .then(resp => resp.json())
-                      .then(data => {
-                        if (data.exists) {
-                          // Registered → allow login
-                          loginButton.disabled = false;
-                          emailError.style.display = 'none';
-                        } else {
-                          // Not registered → block login, show message
-                          loginButton.disabled = true;
-                          emailError.textContent = 'This email is not registered. Please register first.';
-                          emailError.style.display = 'block';
-                        }
-                      })
-                      .catch(err => {
-                        console.error('Error checking email existence:', err);
-                        // On error, let server handle it rather than blocking client
-                        loginButton.disabled = false;
-                        emailError.style.display = 'none';
-                      });
-                  });
-                
-                  // Optional: if user re-types into the email field, immediately block login again
-                  emailInput.addEventListener('input', () => {
-                    resetState();
-                  });
-                });
-            </script>                
-        </div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title">Login</h5>
+      <button type="button"
+              class="btn-close"
+              aria-label="Close"
+              onclick="closeModal('loginModal')">
+      </button>
     </div>
+
+    <div class="modal-body">
+      <!-- no query-string on action; JS will inject the context params -->
+      <form id="loginForm"
+            method="post"
+            action="{{ url_for('auth.login') }}">
+        {{ login_form.hidden_tag() }}
+
+        <!-- preserve context -->
+        <input type="hidden" name="game_id"           id="loginGameId"           value="">
+        <input type="hidden" name="quest_id"          id="loginQuestId"          value="">
+        <input type="hidden" name="next"              id="loginNext"             value="">
+        <input type="hidden" name="show_join_custom"  id="loginShowJoinCustom"   value="1">
+        <input type="hidden" name="show_login"        id="loginShowLogin"        value="1">
+
+        <div class="form-group">
+          {{ login_form.email.label }}
+          {{ login_form.email(class="form-control", id="loginEmail") }}
+          {% for err in login_form.email.errors %}
+            <span style="color: red;">[{{ err }}]</span>
+          {% endfor %}
+          <div id="emailError" class="text-danger mt-1" style="display: none;"></div>
+        </div>
+
+        <div class="form-group">
+          {{ login_form.password.label }}
+          {{ login_form.password(class="form-control") }}
+          {% for err in login_form.password.errors %}
+            <span style="color: red;">[{{ err }}]</span>
+          {% endfor %}
+          <div id="passwordError" class="text-danger mt-1" style="display: none;"></div>
+          <div id="forgotContainer" class="mt-1"></div>
+        </div>
+
+        <div class="form-group">
+          <div class="d-inline-flex align-items-center" style="gap: .5rem;">
+            {{ login_form.remember_me(class="form-check-input", style="width:auto;") }}
+            <label class="form-check-label" for="{{ login_form.remember_me.id }}">
+              Remember Me
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <button type="submit" class="btn btn-primary" id="loginButton" disabled>
+            Login
+          </button>
+        </div>
+
+        <div class="modal-footer">
+          <a href="{{ url_for('auth.mastodon_login') }}" class="btn btn-secondary">
+            Login with Mastodon
+          </a>
+        </div>
+      </form>
+
+      <div class="mt-3 text-center">
+        <span>Don't have an account?</span>
+        <button type="button" class="btn btn-link" onclick="registerFromLogin()">
+          Register
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form        = document.getElementById('loginForm');
+    const pwdError    = document.getElementById('passwordError');
+    const forgotDiv   = document.getElementById('forgotContainer');
+
+    // AJAX submit
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      pwdError.style.display = 'none';
+      forgotDiv.innerHTML   = '';
+
+      const data = new FormData(form);
+      fetch(form.action, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
+        body: data
+      })
+      .then(r => r.json().then(payload => ({ status: r.status, payload })))
+      .then(({ payload }) => {
+        if (payload.success) {
+          window.location.href = payload.redirect;
+        } else {
+          pwdError.textContent = payload.error;
+          pwdError.style.display = 'block';
+          if (payload.show_forgot) {
+            const a = document.createElement('a');
+            a.href      = 'javascript:void(0)';
+            a.textContent = 'Forgot password?';
+            a.className = 'd-block mt-1';
+            a.onclick   = openForgotPasswordModal;
+            forgotDiv.appendChild(a);
+          }
+        }
+      })
+      .catch(() => form.submit());
+    });
+
+    // email-exists check
+    const emailIn = document.getElementById('loginEmail');
+    const loginBtn = document.getElementById('loginButton');
+    const emailErr = document.getElementById('emailError');
+    const checkUrl = "{{ url_for('auth.check_email') }}";
+
+    function resetState() {
+      loginBtn.disabled = true;
+      emailErr.style.display = 'none';
+      emailErr.textContent = '';
+    }
+
+    resetState();
+
+    emailIn.addEventListener('blur', () => {
+      const email = emailIn.value.trim();
+      if (!email) return resetState();
+      fetch(`${checkUrl}?email=${encodeURIComponent(email)}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.exists) {
+            loginBtn.disabled = false;
+          } else {
+            loginBtn.disabled = true;
+            emailErr.textContent = 'This email is not registered. Please register first.';
+            emailErr.style.display = 'block';
+          }
+        })
+        .catch(() => loginBtn.disabled = false);
+    });
+
+    emailIn.addEventListener('input', resetState);
+  });
+</script>

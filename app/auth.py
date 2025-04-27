@@ -87,44 +87,31 @@ def _generate_username(email):
 
 def _send_verification_email(user):
     """
-    Compose and send the “verify your e-mail” message.
-
-    Context rules
-    -------------
-    • game_id    forwarded only if truthy
-    • quest_id   forwarded only if truthy
-    • next       forwarded only if truthy
-    • show_join_custom=1 is added when *no* game_id is present, so that
-      the custom-join modal opens right after the user verifies.
+    Compose and send the “verify your e-mail” message,
+    forwarding any game_id or custom_game_code through the token link.
     """
-    # 1)  Generate a one-time token
     token = user.generate_verification_token()
+    raw_gid = (request.values.get('game_id') or '').strip()
+    raw_code = (request.values.get('custom_game_code') or '').strip()
+    raw_next = (request.values.get('next') or '').strip()
 
-    # 2)  Collect potential context from query-string *or* form body
-    game_id   = (request.values.get('game_id')  or '').strip()
-    quest_id  = (request.values.get('quest_id') or '').strip()
-    next_info = (request.values.get('next')     or '').strip()
-
-    # 3)  Build the URL parameters, skipping empty values
     params = {'token': token}
-    if game_id:
-        params['game_id'] = game_id
+
+    if raw_gid:
+        params['game_id'] = raw_gid
+    elif raw_code:
+        params['custom_game_code'] = raw_code
     else:
-        # If no game context, instruct front-end to show the picker
+        # No explicit game → show the join_custom modal on landing
         params['show_join_custom'] = 1
-    if quest_id:
-        params['quest_id'] = quest_id
-    if next_info:
-        params['next'] = next_info
+
+    if raw_next:
+        params['next'] = raw_next
 
     verify_url = url_for('auth.verify_email', _external=True, **params)
-
-    # 4)  Render and send the e-mail
-    html    = render_template('verify_email.html', verify_url=verify_url)
-    subject = "QuestByCycle - verify your email"
+    html = render_template('verify_email.html', verify_url=verify_url)
+    subject = "QuestByCycle – verify your email"
     send_email(user.email, subject, html)
-
-    flash("A verification e-mail has been sent. Please check your inbox.", "info")
 
 
 def _auto_verify_and_login(user):
@@ -335,9 +322,6 @@ def mastodon_callback():
             login_user(new_user)
             flash("Account created and logged in via Mastodon. You will federate using your Mastodon identity.", "success")
     
-    # Ensure a current demo game exists
-    generate_demo_game()
-    
     return redirect(url_for('main.index'))
 
 
@@ -354,137 +338,80 @@ def is_safe_url(target):
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     """
-    Handle user login requests using a login modal.
-    Supports both normal and AJAX (XHR) submissions.
+    Handle user login.  Carries forward game_id, custom_game_code,
+    and show_join_custom so that after login we land in the right context.
     """
-    current_app.logger.debug("Entered login function.")
-    game_id   = request.args.get('game_id')
-    quest_id  = request.args.get('quest_id')
-    next_page = request.args.get('next')
-    current_app.logger.debug(f"Query parameters - game_id: {game_id}, quest_id: {quest_id}, next: {next_page}")
+    game_id = request.values.get('game_id')
+    quest_id = request.values.get('quest_id')
+    show_join = request.values.get('show_join_custom')
+    next_page = request.values.get('next')
 
-    # Already authenticated? short‐circuit
     if current_user.is_authenticated:
-        if next_page and is_safe_url(next_page):
-            return redirect(next_page)
-        return redirect(url_for('main.index', _external=True))
+        return redirect(next_page or url_for('main.index'))
 
-    # GET → open modal
+    # GET → redirect to index with modal flags
     if request.method == 'GET':
         return redirect(
             url_for('main.index',
                     show_login=1,
                     game_id=game_id,
                     quest_id=quest_id,
+                    show_join_custom=show_join,
                     next=next_page)
         )
 
-    # POST → authenticate
-    form    = LoginForm()
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-
+    form = LoginForm()
     if not form.validate_on_submit():
-        msg = 'Please enter both email and password.'
-        if is_ajax:
-            return jsonify(success=False, error=msg, show_forgot=False), 400
-        flash(msg)
-        return redirect(url_for('main.index',
-                                show_login=1,
-                                game_id=game_id,
-                                quest_id=quest_id,
-                                next=next_page))
+        flash('Please enter both email and password.', 'warning')
+        return redirect(
+            url_for('main.index',
+                    show_login=1,
+                    game_id=game_id,
+                    quest_id=quest_id,
+                    show_join_custom=show_join,
+                    next=next_page)
+        )
 
-    email    = sanitize_html(form.email.data or "").lower()
-    password = form.password.data or ""
-    if not email or not password:
-        msg = 'Please enter both email and password.'
-        if is_ajax:
-            return jsonify(success=False, error=msg, show_forgot=False), 400
-        flash(msg)
-        return redirect(url_for('main.index',
-                                show_login=1,
-                                game_id=game_id,
-                                quest_id=quest_id,
-                                next=next_page))
-
-    user = User.query.filter_by(email=email).first()
-    if user is None:
-        msg = 'Invalid email or password.'
-        payload = dict(success=False, error=msg, show_forgot=True,
-                       forgot_url=url_for('auth.forgot_password'))
-        if is_ajax:
-            return jsonify(payload), 401
-        flash(msg)
-        return redirect(url_for('main.index',
-                                show_login=1,
-                                game_id=game_id,
-                                quest_id=quest_id,
-                                next=next_page))
+    # Authenticate user...
+    user = User.query.filter_by(email=form.email.data.lower()).first()
+    if not user or not user.check_password(form.password.data):
+        flash('Invalid email or password.', 'danger')
+        return redirect(
+            url_for('main.index',
+                    show_login=1,
+                    game_id=game_id,
+                    quest_id=quest_id,
+                    show_join_custom=show_join,
+                    next=next_page)
+        )
 
     if current_app.config.get('MAIL_SERVER') and not user.email_verified:
         _send_verification_email(user)
+        flash('Please verify your email. A new link has been sent.', 'warning')
+        return redirect(
+            url_for('main.index',
+                    show_login=1,
+                    game_id=game_id,
+                    quest_id=quest_id,
+                    show_join_custom=show_join,
+                    next=next_page)
+        )
 
-        msg = 'Please verify your email before logging in. A new email has been sent.'
-        if is_ajax:
-            return jsonify(success=False, error=msg, show_forgot=False), 403
-        flash(msg, 'warning')
-        return redirect(url_for('main.index',
-                                show_login=1,
-                                game_id=game_id,
-                                quest_id=quest_id,
-                                next=next_page))
+    # Success!
+    login_user(user, remember=form.remember_me.data)
+    log_user_ip(user)
 
-    if not user.check_password(password):
-        msg = 'Invalid email or password.'
-        payload = dict(success=False, error=msg, show_forgot=True,
-                       forgot_url=url_for('auth.forgot_password'))
-        if is_ajax:
-            return jsonify(payload), 401
-        flash(msg)
-        return redirect(url_for('main.index',
-                                show_login=1,
-                                game_id=game_id,
-                                quest_id=quest_id,
-                                next=next_page))
-
-    # Success path
-    try:
-        login_user(user, remember=form.remember_me.data)
-        log_user_ip(user)
-        generate_demo_game()
+    # If they clicked join via game_id, auto-join:
+    if game_id:
         _join_game_if_provided(user)
 
-        # Decide where to go
-        if next_page and is_safe_url(next_page):
-            # Safe 'next' parameter takes highest precedence
-            redirect_to = next_page
-        elif user.is_admin:
-            # Admins go to the dashboard — force an absolute URL so tests pass
-            redirect_to = url_for('admin.admin_dashboard', _external=True)
-        elif quest_id:
-            # Quests still use the hard-coded relative path (tests expect endswith ...)
-            redirect_to = f"/quests/submit_photo?quest_id={quest_id}"
-        else:
-            # Everyone else goes home — absolute URL
-            redirect_to = url_for('main.index', _external=True)
+    # Redirect back into the correct game context:
+    if next_page and _is_safe_url(next_page):
+        return redirect(next_page)
 
-        if is_ajax:
-            return jsonify(success=True, redirect=redirect_to), 200
-
-        return redirect(redirect_to)
-
-    except Exception as exc:
-        current_app.logger.error(f'Login error: {exc}')
-        msg = 'An unexpected error occurred. Please try again later.'
-        if is_ajax:
-            return jsonify(success=False, error=msg, show_forgot=False), 500
-        flash(msg, 'error')
-        return redirect(url_for('main.index',
-                                show_login=1,
-                                game_id=game_id,
-                                quest_id=quest_id,
-                                next=next_page,
-                                _external=True))
+    return redirect(url_for('main.index',
+                            game_id=game_id,
+                            show_join_custom=0))
 
 
 
@@ -521,76 +448,62 @@ def logout():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    """
-    Handle user registration via a modal on the main index page.
-    GET   → redirect to index with show_register=1 to open the modal
-    POST  → if invalid, redirect back into that modal with a flash
-             if valid, run the normal registration logic and redirect
-             (via absolute URLs) on success
-    """
     form = RegistrationForm()
-    game_id   = request.args.get('game_id')
-    quest_id  = request.args.get('quest_id')
-    next_page = request.args.get('next')
 
-    # --- GET opens the modal on index ---
+    # pull context from args OR form
+    game_id          = request.args.get('game_id')          or request.form.get('game_id')
+    custom_game_code = request.args.get('custom_game_code') or request.form.get('custom_game_code')
+    quest_id         = request.args.get('quest_id')         or request.form.get('quest_id')
+    next_page        = request.args.get('next')             or request.form.get('next')
+
+    # GET → open register modal
     if request.method == 'GET':
-        return redirect(
-            url_for('main.index',
-                    show_register=1,
-                    game_id=game_id,
-                    quest_id=quest_id,
-                    next=next_page,
-                    _external=True)
-        )
+        return redirect(url_for('main.index',
+                                show_register=1,
+                                game_id=game_id,
+                                custom_game_code=custom_game_code,
+                                quest_id=quest_id,
+                                next=next_page,
+                                _external=True))
 
-    # --- POST: validation failures redirect back into the modal ---
+    # POST validation errors → back to register modal
     if not form.validate_on_submit():
         flash('Please correct the errors in the registration form.', 'warning')
-        return redirect(
-            url_for('main.index',
-                    show_register=1,
-                    game_id=game_id,
-                    quest_id=quest_id,
-                    next=next_page,
-                    _external=True)
-        )
+        return redirect(url_for('main.index',
+                                show_register=1,
+                                game_id=game_id,
+                                custom_game_code=custom_game_code,
+                                quest_id=quest_id,
+                                next=next_page,
+                                _external=True))
 
     if not form.accept_license.data:
-        flash(
-            'You must agree to the terms of service, license agreement, '
-            'and privacy policy.',
-            'warning'
-        )
-        return redirect(
-            url_for('main.index',
-                    show_register=1,
-                    game_id=game_id,
-                    quest_id=quest_id,
-                    next=next_page,
-                    _external=True)
-        )
+        flash('You must agree to the terms of service, license agreement, and privacy policy.', 'warning')
+        return redirect(url_for('main.index',
+                                show_register=1,
+                                game_id=game_id,
+                                custom_game_code=custom_game_code,
+                                quest_id=quest_id,
+                                next=next_page,
+                                _external=True))
 
-    # --- Create the user ---
+    # Create user
     email = sanitize_html(form.email.data or "").lower()
     if User.query.filter_by(email=email).first():
         flash('Email already registered. Please use a different email.', 'warning')
-        # This one is a full route back to auth.register; we keep it relative
         return redirect(url_for('auth.register',
                                 game_id=game_id,
                                 quest_id=quest_id,
                                 next=next_page))
 
     username = _generate_username(email)
-    user = User(
-        username=username,
-        email=email,
-        license_agreed=True,
-        email_verified=False,
-        is_admin=False,
-        created_at=datetime.now(utc),
-        score=0
-    )
+    user = User(username=username,
+                email=email,
+                license_agreed=True,
+                email_verified=False,
+                is_admin=False,
+                created_at=datetime.now(utc),
+                score=0)
     user.set_password(form.password.data)
     db.session.add(user)
     try:
@@ -598,54 +511,50 @@ def register():
     except SQLAlchemyError as exc:
         db.session.rollback()
         current_app.logger.error(f'Failed to register user: {exc}')
-        flash(
-            'Registration failed due to an unexpected error. Please try again.',
-            'error'
-        )
-        return redirect(
-            url_for('main.index',
-                    show_register=1,
-                    game_id=game_id,
-                    quest_id=quest_id,
-                    next=next_page,
-                    _external=True)
-        )
+        flash('Registration failed due to an unexpected error. Please try again.', 'error')
+        return redirect(url_for('main.index',
+                                show_register=1,
+                                game_id=game_id,
+                                custom_game_code=custom_game_code,
+                                quest_id=quest_id,
+                                next=next_page,
+                                _external=True))
 
-    # ActivityPub actor, verification email, etc.
+    # Auto-login & email verification
     create_activitypub_actor(user)
-    if 'MAIL_SERVER' in current_app.config:
+    _auto_verify_and_login(user)
+    if current_app.config.get('MAIL_SERVER'):
+        if custom_game_code:
+            # stash custom code into form for the email step
+            request.form = request.form.copy()
+            request.form['custom_game_code'] = custom_game_code
         _send_verification_email(user)
-    else:
-        _auto_verify_and_login(user)
-        if game_id:
-            _join_game_if_provided(user)
 
-    # --- Success: absolute redirects so tests that do url_for(...) pass cleanly ---
+    # If they came with a game_id, join it now
+    if game_id:
+        _join_game_if_provided(user)
+
+    # Success: redirect according to context
     if next_page and is_safe_url(next_page):
         return redirect(next_page)
 
     if quest_id:
-        return redirect(
-            url_for('quests.submit_photo', quest_id=quest_id, _external=True)
-        )
+        return redirect(url_for('quests.submit_photo',
+                                quest_id=quest_id,
+                                _external=True))
 
     if game_id:
-        return redirect(
-            url_for('main.index',
-                    show_join_custom=0,
-                    game_id=game_id,
-                    quest_id=quest_id,
-                    next=next_page,
-                    show_login=0,
-                    _external=True)
-        )
+        return redirect(url_for('main.index',
+                                show_join_custom=0,
+                                game_id=game_id,
+                                quest_id=quest_id,
+                                next=next_page,
+                                _external=True))
 
-    return redirect(
-        url_for('main.index',
-                show_join_custom=1,
-                show_login=0,
-                _external=True)
-    )
+    # No game specified → show join-custom modal
+    return redirect(url_for('main.index',
+                            show_join_custom=1,
+                            _external=True))
 
 
 
@@ -730,89 +639,41 @@ def update_password():
 @auth_bp.route('/verify_email/<token>')
 def verify_email(token):
     """
-    Verify the user's email using the provided token.
-    
-    This route checks for context parameters in the verification URL:
-      - If a game_id is provided (either directly or inferred from the 'next' parameter),
-        the user will be joined to that game and that game becomes the user's selected game.
-      - Otherwise, if no game_id is provided and the user has not joined any game,
-        the user is added to the default demo game.
+    Handle the click on the e-mail verification link.
+    Auto-join any game_id or custom_game_code, otherwise pop the picker.
     """
     user = User.verify_verification_token(token)
     if not user:
-        flash('The verification link is invalid or has expired.', 'danger')
-        return redirect(url_for('auth.login'))
-    if user.email_verified:
-        flash('Your email has already been verified. Please log in.', 'info')
-        return redirect(url_for('auth.login'))
-    
-    # Mark the email as verified.
+        flash('Invalid or expired link.', 'danger')
+        return redirect(url_for('main.index'))
+
     user.email_verified = True
     db.session.commit()
-    
-    # At this point, try to extract game context.
-    # First, try to get game_id from the query or form data.
-    game_id = request.args.get('game_id') or request.form.get('game_id')
-    
-    # If no game_id is provided but a "next" parameter is available, try to extract the game id from its path.
-    next_page = request.args.get('next') or request.form.get('next')
-    if not game_id and next_page:
-        parsed_next = urlparse(next_page)
-        # Assuming the next URL is in the format https://questbycycle.org/17 (i.e. game id in the path)
-        potential_id = parsed_next.path.strip('/')
-        if potential_id.isdigit():
-            game_id = potential_id
+    login_user(user)
 
-    # If we have a game id, attempt to join the user to that game.
-    if game_id:
-        try:
-            game_id_int = int(game_id)
-        except ValueError:
-            current_app.logger.error("Invalid game_id provided in verification: %s", game_id)
-            game_id_int = None
+    code = request.args.get('custom_game_code')
+    gid = request.args.get('game_id')
+    params = {}
 
-        if game_id_int:
-            game = Game.query.get(game_id_int)
-            if game and game not in user.participated_games:
-                user.participated_games.append(game)
-                user.selected_game_id = game.id
-                try:
-                    db.session.commit()
-                except Exception as exc:
-                    db.session.rollback()
-                    current_app.logger.error("Failed to join game during verification: %s", exc)
+    if code:
+        params['custom_game_code'] = code
+    elif gid and gid.isdigit():
+        params['game_id'] = gid
     else:
-        # If no game context is provided and the user hasn't joined any game,
-        # join them to the default demo game.
-        if not user.participated_games:
-            # pick the most recent demo game
-            demo_game = (Game.query
-                             .filter_by(is_demo=True)
-                             .order_by(Game.start_date.desc())
-                             .first())
-            if demo_game:
-                user.participated_games.append(demo_game)
-                user.selected_game_id = demo_game.id
-                try:
-                    db.session.commit()
-                except Exception as exc:
-                    db.session.rollback()
-                    current_app.logger.error("Failed to join demo game during verification: %s", exc)
-    
-    # Handle quest and next parameters for further redirection.
-    quest_id = request.args.get('quest_id')
-    if quest_id:
-        return redirect(url_for('quests.submit_photo', quest_id=quest_id))
-    if next_page:
-        parsed_url = urlparse(next_page)
-        if not parsed_url.netloc and not parsed_url.scheme:
-            return redirect(next_page)
-    
-    flash('Your email has been verified and you have been logged in.', 'success')
-    kwargs = { 'show_join_custom': 1 }
-    if user.selected_game_id:
-        kwargs['game_id'] = user.selected_game_id
-    return redirect(url_for('main.index', **kwargs))
+        # No forwarded game → show join picker:
+        params['show_join_custom'] = 1
+
+    return redirect(url_for('main.index', **params))
+
+
+def _is_safe_url(target):
+    """
+    Ensure that the URL is local to our server.
+    """
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return (test_url.scheme in ('http', 'https') and
+            ref_url.netloc == test_url.netloc)
 
 
 @auth_bp.route('/privacy_policy')

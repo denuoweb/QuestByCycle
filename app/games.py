@@ -334,42 +334,42 @@ def game_beyond(game_id):
     return render_template('beyond.html', game=game)
 
 
-@games_bp.route('/join_custom_game', methods=['POST'])
+@games_bp.route('/join_custom_game', methods=['GET', 'POST'])
 @login_required
 def join_custom_game():
     """
     Allow a user to join a custom game using a game code.
     Never delete any existing participations—just add this game and select it.
     """
-    game_code = sanitize_html(request.form.get('custom_game_code'))
+    raw_code = request.form.get('custom_game_code') or request.args.get('custom_game_code')
+    game_code = sanitize_html(raw_code or '').strip()
+
     if not game_code:
         flash('Game code is required to join a custom game.', 'error')
-        return redirect(url_for('main.index'))
+        # Re-open the modal so they can pick again:
+        return redirect(url_for('main.index', show_join_custom=1))
 
     game = Game.query.filter_by(custom_game_code=game_code, is_public=True).first()
     if not game:
         flash('Invalid game code. Please try again.', 'error')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.index', show_join_custom=1))
 
     if not game.allow_joins:
         flash('This game does not allow new participants.', 'error')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.index', show_join_custom=1))
 
-    # if they’re already in it, bail out
     if game in current_user.participated_games:
         flash(f'You are already registered for {game.title}.', 'info')
         return redirect(url_for('main.index', game_id=game.id))
 
-    # add the new custom game
+    # Register & select
     db.session.execute(
         user_games.insert().values(user_id=current_user.id, game_id=game.id)
     )
-
-    # make it their selected game
     current_user.selected_game_id = game.id
     db.session.commit()
 
-    flash(f'You’ve joined {game.title}!', 'success')
+    flash(f'You`ve joined {game.title}!', 'success')
     return redirect(url_for('main.index', game_id=game.id))
 
 

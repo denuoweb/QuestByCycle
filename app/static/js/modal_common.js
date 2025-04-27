@@ -89,10 +89,30 @@ function openLoginModalWithOptions(options) {
     openModal('loginModal');
 }
 
-function openRegisterModalWithOptions(options) {
-    updateModalHiddenFields('registerModal', options);
+function openRegisterModalWithOptions(options = {}) {
+    // 1) rewrite the <form> action so a full‐page POST carries the same ?game_id…etc
+    const form = document.getElementById('registerForm');
+    const base = form.getAttribute('action').split('?')[0];
+    const qs   = [];
+    if (options.gameId)      qs.push(`game_id=${encodeURIComponent(options.gameId)}`);
+    if (options.questId)     qs.push(`quest_id=${encodeURIComponent(options.questId)}`);
+    if (options.next)        qs.push(`next=${encodeURIComponent(options.next)}`);
+    if (options.showJoinCustom !== undefined) {
+      qs.push(`show_join_custom=${encodeURIComponent(options.showJoinCustom)}`);
+    }
+    form.setAttribute('action', base + (qs.length ? `?${qs.join('&')}` : ''));
+  
+    // 2) mirror into the hidden inputs
+    if (options.gameId       !== undefined) document.getElementById('registerGameId').value       = options.gameId;
+    if (options.questId      !== undefined) document.getElementById('registerQuestId').value      = options.questId;
+    if (options.next         !== undefined) document.getElementById('registerNext').value         = options.next;
+    if (options.showJoinCustom !== undefined) document.getElementById('registerShowJoinCustom').value = options.showJoinCustom;
+  
+    // 3) swap modals
+    closeModal('loginModal');
     openModal('registerModal');
-}
+  }
+  
 
 function handleGameSelection(selectElement) {
     const selectedValue = selectElement.value;
@@ -105,84 +125,70 @@ function handleGameSelection(selectElement) {
     }
 }
 
-function openLoginModalWithGame({ gameId, questId }) {
-    const loginModal = document.getElementById('loginModal');
-    const loginForm  = document.getElementById('loginForm');
+function openLoginModalWithGame({ gameId, questId = '' }) {
+    const loginForm       = document.getElementById('loginForm');
+    const loginGameId     = document.getElementById('loginGameId');
+    const loginQuestId    = document.getElementById('loginQuestId');
+    const loginNext       = document.getElementById('loginNext');
+    const loginShowJoin   = document.getElementById('loginShowJoinCustom');
+    // If you forward custom codes through login, add:
+    // const loginCustomCode = document.getElementById('loginCustomGameCode');
   
-    // 1) Reset the action to bare "/auth/login"
+    // 1) Build the “next” path so that after login we land back in game context
+    const nextPath = `/?game_id=${encodeURIComponent(gameId)}&show_join_custom=0`;
+  
+    // 2) Set the hidden inputs so registerFromLogin() can read them
+    loginGameId.value        = gameId;
+    loginQuestId.value       = questId;
+    loginShowJoin.value      = '0';
+    loginNext.value          = nextPath;
+    // loginCustomCode.value  = customCode; // if you need it
+  
+    // 3) Also embed them in the form’s action URL for non‐AJAX fallbacks
     const baseAction = loginForm.getAttribute('action').split('?')[0];
-    loginForm.setAttribute('action', baseAction);
+    const params     = new URLSearchParams({
+      game_id:         gameId,
+      quest_id:        questId,
+      show_join_custom: 0,
+      next:            nextPath
+    });
+    loginForm.setAttribute('action', `${baseAction}?${params.toString()}`);
   
-    // 2) Fill the hidden inputs
-    loginModal.querySelector('input[name="game_id"]').value  = gameId;
-    loginModal.querySelector('input[name="quest_id"]').value = questId || '';
-  
-    // 3) Build the `next` URL so after a successful POST to /auth/login
-    //    Flask will redirect back to your index with show_join_custom=0.
-    const nextUrl = `/` +
-                    `?game_id=${encodeURIComponent(gameId)}` +
-                    `&show_join_custom=0`;
-    loginModal.querySelector('input[name="next"]').value = nextUrl;
-  
-    // 4) Finally show the modal
+    // 4) Finally, show the modal
     openModal('loginModal');
   }
   
+  function registerFromLogin() {
+    // Read from login modal
+    const gameId    = document.getElementById('loginGameId').value    || '';
+    const questId   = document.getElementById('loginQuestId').value   || '';
+    const next      = document.getElementById('loginNext').value      || '';
+    const showJoin  = document.getElementById('loginShowJoinCustom').value || '';
+    const customCode = (document.getElementById('loginCustomGameCode') || {}).value || '';
   
-function registerFromLogin() {
-    // 1) Grab the values from the login modal:
-    const emailVal = document.getElementById('loginEmail')?.value || '';
-    const gameId   = document.getElementById('loginGameId')?.value  || '';
-    const questId  = document.getElementById('loginQuestId')?.value || '';
-    const nextVal  = document.getElementById('loginNext')?.value    || '';
+    // Mirror into register modal’s hidden inputs
+    document.getElementById('registerGameId').value         = gameId;
+    document.getElementById('registerQuestId').value        = questId;
+    document.getElementById('registerNext').value           = next;
+    document.getElementById('registerShowJoinCustom').value = showJoin;
+    document.getElementById('registerCustomGameCode').value = customCode;
   
-    // 2) Inject them into the Register modal:
-    document.getElementById('registerEmail').value    = emailVal;
-    document.getElementById('gameIdField').value      = gameId;
-    document.getElementById('questIdField').value     = questId;
-    document.getElementById('nextField').value        = nextVal;
+    // Rebuild registerForm action URL
+    const registerForm = document.getElementById('registerForm');
+    const baseAction   = registerForm.getAttribute('action').split('?')[0];
+    const params       = new URLSearchParams();
+    if (gameId)     params.set('game_id',         gameId);
+    if (questId)    params.set('quest_id',        questId);
+    if (next)       params.set('next',            next);
+    if (showJoin)   params.set('show_join_custom', showJoin);
+    if (customCode) params.set('custom_game_code', customCode);
   
-    // 3) Switch modals:
+    registerForm.setAttribute('action', `${baseAction}?${params.toString()}`);
+  
+    // Swap modals
     closeModal('loginModal');
     openModal('registerModal');
-  
-    // 4) (Optional) move focus into the password field:
-    document.querySelector('#registerModal input[type="password"]').focus();
   }
-
-function switchToRegisterModal(options = {}) {
-    // 1) update the URL on the <form> itself:
-    const frm = document
-        .getElementById('registerModal')
-        .querySelector('form');
-    const base = frm.getAttribute('action').split('?')[0];
-    const qs = [];
-    if (options.gameId)  qs.push(`game_id=${encodeURIComponent(options.gameId)}`);
-    if (options.questId) qs.push(`quest_id=${encodeURIComponent(options.questId)}`);
-    if (options.next)    qs.push(`next=${encodeURIComponent(options.next)}`);
-    frm.setAttribute('action', base + (qs.length ? `?${qs.join('&')}` : ''));
-    
-    if (options.gameId !== undefined) {
-        const gameField = document.getElementById('gameIdField');
-        if (gameField) {
-            gameField.value = options.gameId;
-        }
-    }
-    if (options.questId !== undefined) {
-        const questField = document.getElementById('questIdField');
-        if (questField) {
-            questField.value = options.questId;
-        }
-    }
-    if (options.next !== undefined) {
-        const nextField = document.getElementById('nextField');
-        if (nextField) {
-            nextField.value = options.next;
-        }
-    }
-    closeModal('loginModal');
-    openModal('registerModal');
-}
 
 // Call this to show the Forgot Password modal and pre-fill its email
 function openForgotPasswordModal() {
@@ -247,3 +253,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+// ────────────────────────────────────────────────────────────
+// Auto-open the “Join Custom Game” modal if show_join_custom=1
+// and there's no game_id in the URL.
+// ────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    // Debug: confirm this script runs
+    console.log('modal_common: checking show_join_custom…', window.location.search);
+    
+    const params     = new URLSearchParams(window.location.search);
+    const showJoin   = params.get('show_join_custom') === '1';
+    const hasGameId  = params.has('game_id');
+  
+    if (showJoin && !hasGameId) {
+      console.log('modal_common: opening joinCustomGameModal');
+      openModal('joinCustomGameModal');
+    }
+  });
+  

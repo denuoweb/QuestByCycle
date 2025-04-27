@@ -339,37 +339,6 @@
     <script type="module" src="{{ url_for('static', filename='js/shepherd_tour.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const flashMessagesContainer = document.getElementById('flash-messages-data');
-            const modalFlashContainer = document.getElementById('modal-flash-messages');
-            if (flashMessagesContainer && modalFlashContainer) {
-                modalFlashContainer.innerHTML = flashMessagesContainer.innerHTML;
-            }
-            function getQueryParam(param) {
-                const urlParams = new URLSearchParams(window.location.search);
-                return urlParams.get(param);
-            }
-
-            const questId = "{{ quest_id }}";
-            if (questId != 'None') {
-                openQuestDetailModal(questId);
-            }
-            function handleGameSelection(option) {
-                const selectedValue = option.value;
-                if (selectedValue === 'join_custom_game') {
-                    openModal('joinCustomGameModal');
-                } else {
-                    window.location.href = selectedValue;
-                }
-            }
-
-            const params = new URLSearchParams(window.location.search);
-                if (params.get('show_join_custom') === '1') {
-                openModal('joinCustomGameModal');
-                }
-        });
-    </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
             const quillEditorContainer = document.getElementById('quill-editor');
             if (quillEditorContainer) {
                 var quill = new Quill('#quill-editor', {
