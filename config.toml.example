@@ -8,10 +8,10 @@ TASKCSV = "csv"
 LOCAL_DOMAIN = ""
 
 [encryption]
-DEFAULT_SUPER_ADMIN_PASSWORD = ""
-DEFAULT_SUPER_ADMIN_USERNAME = ""
-DEFAULT_SUPER_ADMIN_EMAIL = ""
-SECRET_KEY = ""
+DEFAULT_SUPER_ADMIN_PASSWORD = "test"
+DEFAULT_SUPER_ADMIN_USERNAME = "test"
+DEFAULT_SUPER_ADMIN_EMAIL = "test@test.com"
+SECRET_KEY = "replace this key"
 SESSION_COOKIE_SECURE = true
 SESSION_COOKIE_NAME = "QuestsByCycles_Session"
 SESSION_COOKIE_SAMESITE = "Lax"
@@ -27,7 +27,7 @@ SQLALCHEMY_DATABASE_URI = "postgresql://username:password@localhost/databasename
 DEBUG = true
 
 [mail]
-MAIL_SERVER = "localhost"
+MAIL_SERVER = ""
 MAIL_PORT = 2525
 MAIL_USE_TLS = true
 MAIL_USE_SSL = false

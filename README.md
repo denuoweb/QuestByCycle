@@ -51,7 +51,24 @@ Now login with ```ssh USER@HOST```
 ```sudo certbot --nginx -d DOMAINNAME```
 
 ### Installation and Deployment
+1. Ensure Poetry uses Python 3.11
+```poetry env use /usr/bin/python3.11```
 
+2. Add Flask to your project
+```poetry add flask```
+
+3. (Optional) Add python-dotenv for .env support
+```poetry add python-dotenv```
+
+4. Install everything
+```poetry install```
+
+5. Run the server
+   Either:
+```poetry run flask --app wsgi:app --debug run```
+
+
+### Extra Installation and Deployment
 1. Create new user:
 
 ```sudo adduser --system --group --disabled-login APPUSER```
