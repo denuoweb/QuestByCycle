@@ -220,5 +220,30 @@ function openResetPasswordModal(token) {
   
     // Finally, open the modal
     openModal('resetPasswordModal');
-  }
-  
+}
+
+// --------------------------------------------------------
+// Auto-open reset-password modal if URL contains show_reset=1 & token
+// --------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+
+    // Only trigger if show_reset=1 and a token is present
+    if (params.get('show_reset') === '1') {
+        const token = params.get('token');
+        if (token) {
+            // Open the reset modal, injecting the token
+            openResetPasswordModal(token);
+
+            // Optional: strip query params so the modal
+            // does not re-open on reload / back-button.
+            history.replaceState(
+                null,
+                '',
+                window.location.pathname
+            );
+        } else {
+            console.warn('show_reset=1 present but no token in URL');
+        }
+    }
+});
