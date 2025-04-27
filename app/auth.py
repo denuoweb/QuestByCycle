@@ -351,12 +351,21 @@ def login():
 
     # GET → redirect to index with modal flags
     if request.method == 'GET':
+        # If no explicit game_id but next=/<n> points to a game, treat that as the game to join
+        if not game_id and next_page:
+            parsed = urlparse(next_page)
+            # same host and path is numeric
+            if parsed.netloc in (urlparse(request.host_url).netloc, '') \
+               and parsed.path.lstrip('/').isdigit():
+                game_id = parsed.path.lstrip('/')
+                show_join = 0
+
         return redirect(
             url_for('main.index',
                     show_login=1,
+                    show_join_custom=show_join,
                     game_id=game_id,
                     quest_id=quest_id,
-                    show_join_custom=show_join,
                     next=next_page)
         )
 
@@ -458,13 +467,24 @@ def register():
 
     # GET → open register modal
     if request.method == 'GET':
-        return redirect(url_for('main.index',
-                                show_register=1,
-                                game_id=game_id,
-                                custom_game_code=custom_game_code,
-                                quest_id=quest_id,
-                                next=next_page,
-                                _external=True))
+        # If the QR link carried next=/17, extract game_id=17
+        if not game_id and next_page:
+            parsed = urlparse(next_page)
+            if parsed.netloc in (urlparse(request.host_url).netloc, '') \
+               and parsed.path.lstrip('/').isdigit():
+                game_id = parsed.path.lstrip('/')
+                # bypass the "join custom" modal by default
+                custom_game_code = ''
+
+        return redirect(
+            url_for('main.index',
+                    show_register=1,
+                    game_id=game_id,
+                    custom_game_code=custom_game_code,
+                    quest_id=quest_id,
+                    next=next_page,
+                    _external=True)
+        )
 
     # POST validation errors → back to register modal
     if not form.validate_on_submit():
