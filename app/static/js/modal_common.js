@@ -272,3 +272,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
+// ─────────────────────────────────────────────────────────────────
+// Auto‐open the login modal for QR links like:
+//   ?show_login=1&next=https://questbycycle.org/17
+// and extract `17` as the gameId.
+// ─────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const params    = new URLSearchParams(window.location.search);
+  const showLogin = params.get('show_login') === '1';
+  if (!showLogin) return;
+
+  // 1. Try to read explicit game_id param
+  let gameId = params.get('game_id') || '';
+
+  // 2. If none, parse it out of `next` (e.g. /17)
+  if (!gameId) {
+    const rawNext = params.get('next');
+    if (rawNext) {
+      try {
+        const parsed = new URL(rawNext, window.location.origin);
+        const candidate = parsed.pathname.replace(/^\/+/, '');  // "17"
+        if (/^\d+$/.test(candidate)) {
+          gameId = candidate;
+        }
+      } catch (e) {
+        console.warn('Failed to parse next URL for gameId:', e);
+      }
+    }
+  }
+
+  // 3. And now open the login modal *exactly* as if they had clicked your
+  //    openLoginModalWithGame({ gameId: 17 }) link:
+  openLoginModalWithGame({ gameId, questId: '' });
+});
+
+// ─────────────────────────────────────────────────────────────────
+// If we loaded via /auth/login?next=https://…/NNN (or any ?next=…),
+// automatically pop the login modal and join game NNN on submit.
+// ─────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // We only want to do this for QR‐style links that don't go through index.
+  // Check if URL path starts with "/auth/login"
+  if (!window.location.pathname.startsWith('/auth/login')) {
+    return;
+  }
+
+  const params    = new URLSearchParams(window.location.search);
+  const rawNext   = params.get('next');
+  if (!rawNext) {
+    return;
+  }
+
+  let gameId = params.get('game_id') || '';
+
+  // If game_id not explicit, parse it from next’s path: e.g. "/17"
+  if (!gameId) {
+    try {
+      const parsed = new URL(rawNext, window.location.origin);
+      const candidate = parsed.pathname.replace(/^\/+/, ''); // “17”
+      if (/^\d+$/.test(candidate)) {
+        gameId = candidate;
+      }
+    } catch (e) {
+      console.warn('Could not parse next URL for gameId:', e);
+    }
+  }
+
+  if (!gameId) {
+    return;
+  }
+
+  // Now open the login modal just as if they clicked openLoginModalWithGame({gameId})
+  openLoginModalWithGame({ gameId, questId: '' });
+});
