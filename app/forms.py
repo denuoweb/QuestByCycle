@@ -392,11 +392,6 @@ class SponsorForm(FlaskForm):
     submit = SubmitField("Submit")
 
 
-class CarouselImportForm(FlaskForm):
-    """Form for importing carousel data."""
-    name = StringField("Name", validators=[DataRequired()])
-
-
 class PlayerMessageBoardForm(FlaskForm):
     """Form for player message board posts."""
     content = TextAreaField("Message", validators=[DataRequired(), Length(max=500)])
