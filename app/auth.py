@@ -687,16 +687,6 @@ def verify_email(token):
     return redirect(url_for('main.index', **params))
 
 
-def _is_safe_url(target):
-    """
-    Ensure that the URL is local to our server.
-    """
-    ref_url = urlparse(request.host_url)
-    test_url = urlparse(urljoin(request.host_url, target))
-    return (test_url.scheme in ('http', 'https') and
-            ref_url.netloc == test_url.netloc)
-
-
 @auth_bp.route('/privacy_policy')
 def privacy_policy():
     """
