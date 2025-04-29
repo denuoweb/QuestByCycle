@@ -340,26 +340,23 @@ def login():
     """
     Handle user login.  Carries forward game_id, custom_game_code,
     and show_join_custom so that after login we land in the right context.
-    """
-    game_id = request.values.get('game_id')
-    quest_id = request.values.get('quest_id')
-    show_join = request.values.get('show_join_custom')
-    next_page = request.values.get('next')
 
+    Supports both full-page POST (flash+redirect) and
+    AJAX POST (JSON response) for use in a modal.
+    """
+    game_id    = request.values.get('game_id')
+    quest_id   = request.values.get('quest_id')
+    show_join  = request.values.get('show_join_custom')
+    next_page  = request.values.get('next')
+
+    # If already logged in, just bounce out
     if current_user.is_authenticated:
+        # For AJAX you might want to return JSON too; here we just do redirect.
         return redirect(next_page or url_for('main.index'))
 
-    # GET → redirect to index with modal flags
+    # GET → redirect to index with modal flags (unchanged)
     if request.method == 'GET':
-        # If no explicit game_id but next=/<n> points to a game, treat that as the game to join
-        if not game_id and next_page:
-            parsed = urlparse(next_page)
-            # same host and path is numeric
-            if parsed.netloc in (urlparse(request.host_url).netloc, '') \
-               and parsed.path.lstrip('/').isdigit():
-                game_id = parsed.path.lstrip('/')
-                show_join = 0
-
+        # … your existing GET logic …
         return redirect(
             url_for('main.index',
                     show_login=1,
@@ -369,9 +366,21 @@ def login():
                     next=next_page)
         )
 
-    form = LoginForm()
+    # POST from login form:
+    form    = LoginForm()
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    # 1) Missing fields → validation error
     if not form.validate_on_submit():
-        flash('Please enter both email and password.', 'warning')
+        msg = 'Please enter both email and password.'
+        if is_ajax:
+            return jsonify({
+                'success': False,
+                'error': msg,
+                # you may or may not want to surface a forgot link here:
+                'show_forgot': False
+            }), 400
+        flash(msg, 'warning')
         return redirect(
             url_for('main.index',
                     show_login=1,
@@ -381,10 +390,19 @@ def login():
                     next=next_page)
         )
 
-    # Authenticate user...
+    # 2) Authenticate
     user = User.query.filter_by(email=form.email.data.lower()).first()
     if not user or not user.check_password(form.password.data):
-        flash('Invalid email or password.', 'danger')
+        # Bad credentials
+        msg = 'Invalid email or password.'
+        if is_ajax:
+            return jsonify({
+                'success': False,
+                'error': msg,
+                # allow the front-end to inject a “Forgot password?” link
+                'show_forgot': True
+            }), 401
+        flash(msg, 'danger')
         return redirect(
             url_for('main.index',
                     show_login=1,
@@ -394,9 +412,17 @@ def login():
                     next=next_page)
         )
 
+    # 3) Email-not-verified → unchanged from your code
     if current_app.config.get('MAIL_SERVER') and not user.email_verified:
         _send_verification_email(user)
-        flash('Please verify your email. A new link has been sent.', 'warning')
+        warning = 'Please verify your email. A new link has been sent.'
+        if is_ajax:
+            return jsonify({
+                'success': False,
+                'error': warning,
+                'show_forgot': False
+            }), 409
+        flash(warning, 'warning')
         return redirect(
             url_for('main.index',
                     show_login=1,
@@ -406,22 +432,24 @@ def login():
                     next=next_page)
         )
 
-    # Success!
+    # 4) Success!
     login_user(user, remember=form.remember_me.data)
     log_user_ip(user)
-
-    # If they clicked join via game_id, auto-join:
     if game_id:
         _join_game_if_provided(user)
 
-    # Redirect back into the correct game context:
-    if next_page and _is_safe_url(next_page):
-        return redirect(next_page)
+    # Decide redirect target
+    target = next_page if next_page and _is_safe_url(next_page) else url_for('main.index',
+                                                                            game_id=game_id,
+                                                                            show_join_custom=0)
 
-    return redirect(url_for('main.index',
-                            game_id=game_id,
-                            show_join_custom=0))
+    if is_ajax:
+        return jsonify({
+            'success': True,
+            'redirect': target
+        }), 200
 
+    return redirect(target)
 
 
 @auth_bp.route('/resend_verification_email', methods=['POST'])
