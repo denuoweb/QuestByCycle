@@ -325,14 +325,14 @@ def mastodon_callback():
     return redirect(url_for('main.index'))
 
 
-def is_safe_url(target):
+def _is_safe_url(target):
     """
-    Ensure the target URL is safe for redirection by checking that it is relative
-    or belongs to the same server.
+    Ensure that the URL is local to our server.
     """
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
-    return (test_url.scheme in ('http', 'https')) and (ref_url.netloc == test_url.netloc)
+    return (test_url.scheme in ('http', 'https') and
+            ref_url.netloc == test_url.netloc)
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -556,7 +556,7 @@ def register():
         _join_game_if_provided(user)
 
     # Success: redirect according to context
-    if next_page and is_safe_url(next_page):
+    if next_page and _is_safe_url(next_page):
         return redirect(next_page)
 
     if quest_id:
