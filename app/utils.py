@@ -5,8 +5,6 @@ from datetime import datetime, timedelta
 from PIL import Image
 from pytz import utc
 from email.mime.text import MIMEText
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
 
 import uuid
 import os
