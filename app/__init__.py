@@ -208,7 +208,11 @@ def create_app(config_overrides=None):
 
     @app.errorhandler(Exception)
     def handle_exception(e):
-        # Log the error details
+        # If it’s an HTTPException (abort(401), 404, etc.), return it directly
+        if isinstance(e, HTTPException):
+            return e
+
+        # Otherwise log, flash, and redirect
         logger.error(f"Unhandled Exception: {e}")
 
         # Flash a user-friendly message
