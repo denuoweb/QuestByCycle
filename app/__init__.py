@@ -28,6 +28,7 @@ from flask import Flask, render_template, flash, redirect, url_for
 from flask_login import LoginManager, current_user
 from flask_migrate import Migrate
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.exceptions import HTTPException
 from app.auth import auth_bp
 from app.admin import admin_bp, create_super_admin
 from app.main import main_bp
@@ -35,6 +36,8 @@ from app.games import games_bp
 from app.quests import quests_bp
 from app.badges import badges_bp
 from app.profile import profile_bp
+from app.webfinger import webfinger_bp
+from app.activitypub_utils import ap_bp
 from app.ai import ai_bp
 from app.models import db
 from .config import load_config
@@ -70,6 +73,8 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+csrf = CSRFProtect()
 
 def create_app(config_overrides=None):
     app = Flask(__name__)
@@ -142,7 +147,6 @@ def create_app(config_overrides=None):
         app.config['SERVER_NAME'] = 'localhost'
 
     # Initialize extensions
-    csrf = CSRFProtect(app)
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
@@ -162,7 +166,12 @@ def create_app(config_overrides=None):
     app.register_blueprint(quests_bp, url_prefix='/quests')
     app.register_blueprint(badges_bp, url_prefix='/badges')
     app.register_blueprint(profile_bp, url_prefix='/profile')
+    app.register_blueprint(ap_bp, url_prefix='/users')
+    app.register_blueprint(webfinger_bp)
     app.register_blueprint(main_bp)
+
+    # Exempt ActivityPub blueprint from CSRF
+    csrf.exempt(ap_bp)
 
     # Setup login manager
     login_manager.login_view = 'auth.login'
@@ -214,11 +223,7 @@ def create_app(config_overrides=None):
 
         # Otherwise log, flash, and redirect
         logger.error(f"Unhandled Exception: {e}")
-
-        # Flash a user-friendly message
         flash('An unexpected error occurred. Please try again later.', 'error')
-
-        # Redirect to a safe page (e.g., home or login)
         return redirect(url_for('main.index'))
 
     return app
