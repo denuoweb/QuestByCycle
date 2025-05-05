@@ -1,9 +1,11 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from flask_login import current_user, login_required
 from .models import db, ProfileWallMessage, User
 from .main import user_profile
 from sqlalchemy.exc import IntegrityError
 from app.activitypub_utils import sign_activitypub_request
+from urllib.parse import urlparse
+from threading import Thread
 
 import bleach
 import json
@@ -46,6 +48,20 @@ ALLOWED_ATTRIBUTES = {
 }
 
 
+def _deliver_follow_activity(actor_url, activity, sender):
+    """
+    Background thread: fetch target’s actor doc and POST the activity.
+    """
+    try:
+        doc = requests.get(actor_url, timeout=5, verify=False).json()
+        inbox = doc.get("inbox")
+        if inbox:
+            hdrs = sign_activitypub_request(sender, 'POST', inbox, json.dumps(activity))
+            requests.post(inbox, json=activity, headers=hdrs, timeout=5, verify=False)
+    except Exception as e:
+        current_app.logger.error("Failed to deliver ActivityPub activity to %s: %s", actor_url, e)
+
+
 @profile_bp.route('/<int:user_id>/messages', methods=['POST'])
 @login_required
 def post_profile_message(user_id):
@@ -73,7 +89,9 @@ def post_profile_message(user_id):
             type='profile_message',
             payload={
                 'profile_message_id': message.id,
-                'from_user': current_user.id
+                'from_user_id':       current_user.id,
+                'from_user_name':     current_user.display_name or current_user.username,
+                'content':            message.content
             }
         )
         db.session.add(notif)
@@ -144,8 +162,10 @@ def post_reply(user_id, message_id):
             user_id=fid,
             type='profile_reply',
             payload={
-                'reply_id': reply.id,
-                'from_user': current_user.id
+                'reply_id':       reply.id,
+                'from_user_id':   current_user.id,
+                'from_user_name': current_user.display_name or current_user.username,
+                'content':        reply.content
             }
         )
         db.session.add(notif)
@@ -193,26 +213,45 @@ def edit_message(user_id, message_id):
 def follow_user(username):
     target = User.query.filter_by(username=username).first_or_404()
 
-    # ensure both parties have a local ActivityPub actor & keys
+    # 0) no self-follow
+    if target.id == current_user.id:
+        return jsonify(error="You can't follow yourself"), 400
+
+    # 1) already following?
+    if target in current_user.following:
+        return jsonify(success=True, message="Already following"), 200
+
+    # ensure both actors exist locally (and persist their keys)
     current_user.ensure_activitypub_actor()
     target.ensure_activitypub_actor()
     db.session.commit()
 
-    # 1. locally record “following”
+    # 2) record the follow in the DB
     current_user.following.append(target)
-    # 2. send a Follow activity to their inbox
+    db.session.commit()
+
+    # 3) prepare the Follow activity
     activity = {
       "@context": "https://www.w3.org/ns/activitystreams",
-      "type": "Follow",
-      "actor": current_user.activitypub_id,
-      "object": target.activitypub_id
+      "type":      "Follow",
+      "actor":     current_user.activitypub_id,
+      "object":    target.activitypub_id
     }
-    actor = requests.get(target.activitypub_id, verify=False).json()
-    inbox_url = actor["inbox"]
-    hdrs = sign_activitypub_request(current_user, 'POST', inbox_url, json.dumps(activity))
-    requests.post(inbox_url, json=activity, headers=hdrs, verify=False)
-    db.session.commit()
-    return jsonify(success=True)
+
+    # 4) if the target is remote, fire off delivery in a daemon thread
+    local_host  = urlparse(current_user.activitypub_id).netloc
+    target_host = urlparse(target.activitypub_id).netloc
+
+    if target_host != local_host:
+        Thread(
+            target=_deliver_follow_activity,
+            args=(target.activitypub_id, activity, current_user),
+            daemon=True
+        ).start()
+    else:
+        current_app.logger.debug("Skipping HTTP delivery for local actor %s", username)
+
+    return jsonify(success=True, message="Now following"), 200
 
 
 @profile_bp.route('/<string:username>/unfollow', methods=['POST'])
@@ -220,28 +259,46 @@ def follow_user(username):
 def unfollow_user(username):
     target = User.query.filter_by(username=username).first_or_404()
 
-    # ensure both parties have a local ActivityPub actor & keys
+    # 0) no self-unfollow
+    if target.id == current_user.id:
+        return jsonify(error="Invalid operation"), 400
+
+    # 1) if you weren’t following, no-op
+    if target not in current_user.following:
+        return jsonify(success=True, message="Already not following"), 200
+
+    # ensure actors
     current_user.ensure_activitypub_actor()
     target.ensure_activitypub_actor()
     db.session.commit()
 
-    # 1. locally remove
+    # 2) remove from local DB
     current_user.following.remove(target)
-    # 2. send an Undo on their Follow inbox
-    follow_id = f"{current_user.activitypub_id}#follows/{target.username}"
+    db.session.commit()
+
+    # 3) prepare the Undo(Follow) activity
     activity = {
       "@context": "https://www.w3.org/ns/activitystreams",
-      "type": "Undo",
-      "actor": current_user.activitypub_id,
+      "type":      "Undo",
+      "actor":     current_user.activitypub_id,
       "object": {
-        "type": "Follow",
+        "type":  "Follow",
         "actor": current_user.activitypub_id,
         "object": target.activitypub_id
       }
     }
-    actor = requests.get(target.activitypub_id, verify=False).json()
-    inbox_url = actor["inbox"]
-    hdrs = sign_activitypub_request(current_user, 'POST', inbox_url, json.dumps(activity))
-    requests.post(inbox_url, json=activity, headers=hdrs, verify=False)
-    db.session.commit()
-    return jsonify(success=True)
+
+    # 4) deliver in background if remote
+    local_host  = urlparse(current_user.activitypub_id).netloc
+    target_host = urlparse(target.activitypub_id).netloc
+
+    if target_host != local_host:
+        Thread(
+            target=_deliver_follow_activity,
+            args=(target.activitypub_id, activity, current_user),
+            daemon=True
+        ).start()
+    else:
+        current_app.logger.debug("Skipping HTTP delivery for local actor %s", username)
+
+    return jsonify(success=True, message="Unfollowed"), 200

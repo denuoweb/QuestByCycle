@@ -1074,3 +1074,17 @@ def get_game_title(game_id):
         ), 403
 
     return jsonify({"title": game.title})
+
+
+@quests_bp.route('/submissions/<int:submission_id>')
+@login_required
+def get_submission(submission_id):
+    sub = QuestSubmission.query.get_or_404(submission_id)
+    return jsonify({
+        'url':           sub.image_url,
+        'comment':       sub.comment,
+        'user_id':       sub.user_id,
+        'twitter_url':   sub.twitter_url,
+        'fb_url':        sub.fb_url,
+        'instagram_url': sub.instagram_url
+    })

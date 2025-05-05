@@ -487,5 +487,64 @@
     }
   });
 </script>
+<script>
+  function renderNotification(n) {
+    let text, onclick;
+
+    switch(n.type) {
+      case 'follow':
+        text = `Now following ${n.payload.from_user_name}`;
+        onclick = `showUserProfileModal(${n.payload.from_user_id}); return false;`;
+        break;
+
+      case 'submission':
+        text = `${n.payload.actor_name} submitted a new “${n.payload.quest_name}” quest`;
+        onclick = `
+          fetch('/quests/submissions/${n.payload.submission_id}')
+            .then(r=>r.json())
+            .then(img=>showSubmissionDetail(img));
+          return false;
+        `;
+        break;
+
+      case 'profile_message':
+        text = `${n.payload.from_user_name} says “${n.payload.content}”`;
+        onclick = `showUserProfileModal(${n.payload.from_user_id}); return false;`;
+        break;
+
+      case 'profile_reply':
+        text = `${n.payload.from_user_name} replied “${n.payload.content}”`;
+        onclick = `showUserProfileModal(${n.payload.from_user_id}); return false;`;
+        break;
+
+      default:
+        text = n.payload.summary || JSON.stringify(n.payload);
+        onclick = `location.href='/notifications/';`;
+    }
+
+    const cls = n.is_read ? '' : 'fw-bold';
+    return `<a href="#" class="dropdown-item ${cls}" onclick="${onclick}">${text}</a>`;
+  }
+
+  document.getElementById('notifBell')
+    .addEventListener('show.bs.dropdown', async () => {
+      const resp  = await fetch('{{ url_for("notifications.list_notifications") }}');
+      const notes = await resp.json();
+      const menu  = document.getElementById('notifMenu');
+
+      if (!notes.length) {
+        menu.innerHTML = '<li class="dropdown-item text-center text-muted">No notifications</li>';
+      } else {
+        menu.innerHTML = notes.map(n => `
+          <li>
+            ${renderNotification(n)}<br>
+            <small class="text-muted">${new Date(n.when).toLocaleString()}</small>
+          </li>
+        `).join('');
+      }
+    });
+</script>
+
+
 </body>
 </html>

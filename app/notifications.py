@@ -29,6 +29,7 @@ def unread_count():
     n = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
     return jsonify(count=n)
 
+
 @notifications_bp.route('/recent')
 @login_required
 def list_notifications():

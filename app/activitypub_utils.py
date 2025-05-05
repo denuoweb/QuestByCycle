@@ -162,27 +162,28 @@ def view_user(username):
 @ap_bp.route('/<username>/inbox', methods=['POST'])
 def inbox(username):
     """
-    ActivityPub inbox endpoint: handle incoming activities.
-    Auto-accept follows, record notifications, and handle Likes.
+    ActivityPub inbox: auto-accept follows (remote), record notifications,
+    handle Likes, skip double-notifying for local Create activities.
     """
-    user = User.query.filter_by(username=username).first_or_404()
-
-    # 1. Parse incoming JSON-LD
+    user       = User.query.filter_by(username=username).first_or_404()
     activity   = request.get_json(force=True, silent=True) or {}
     typ        = activity.get('type')
     actor_uri  = activity.get('actor', '')
     actor_host = urlparse(actor_uri).netloc
     our_host   = request.host
 
-    # 2. Only verify signatures on *remote* actors
+    # 1) verify only remote actors
     if actor_host != our_host:
         verify_http_signature(user, request.headers, request.get_data())
     else:
-        current_app.logger.debug("Skipping HTTP-Signature check for local actor %s", actor_uri)
+        current_app.logger.debug("Skipping signature check for local actor %s", actor_uri)
 
-    # 3. Handle Follow
+    # 2) look up the sending User (if any)
+    sender = User.query.filter_by(activitypub_id=actor_uri).first()
+
+    # 3) handle Follow
     if typ == 'Follow':
-        # --- auto-accept ---
+        # auto-accept
         accept = {
             '@context': AS_CONTEXT,
             'type':     'Accept',
@@ -196,52 +197,60 @@ def inbox(username):
         except Exception as e:
             current_app.logger.error("Auto-accept failed for %s: %s", inbox_url, e)
 
-        # --- record follower locally ---
-        sender = User.query.filter_by(activitypub_id=actor_uri).first()
+        # record them as a follower locally
         if sender and sender not in user.followers:
             user.followers.append(sender)
 
-        # --- notify once ---
-        db.session.add(Notification(
-            user_id = user.id,
-            type    = 'follow',
-            payload = {'actor': actor_uri}
-        ))
-        db.session.commit()
-        return '', 202
+        # notify YOU that someone just followed you
+        if sender:
+            name = sender.display_name or sender.username
+            db.session.add(Notification(
+                user_id = user.id,
+                type    = 'follow',
+                payload = {
+                    'from_user_id':   sender.id,
+                    'from_user_name': name
+                }
+            ))
+            db.session.commit()
 
-    # 4. Handle remote Create (only remote posts get here)
-    if typ == 'Create':
-        obj = activity.get('object', {})
-        db.session.add(Notification(
-            user_id = user.id,
-            type    = 'submission',
-            payload = {
-                'actor':     actor_uri,
-                'object_id': obj.get('id'),
-                'summary':   obj.get('content')
-            }
-        ))
-        db.session.commit()
-        return '', 202
+        return ('', 202)
 
-    # 5. Handle Like
-    if typ == 'Like':
-        obj = activity.get('object', {})
-        uri = obj.get('id','')
-        sender = User.query.filter_by(activitypub_id=actor_uri).first()
-        if sender and '/submissions/' in uri:
+    # 4) handle remote Create
+    if typ == 'Create' and actor_host != our_host:
+        # only remote Creates—local ones were already notified in post_activitypub_create_activity()
+        obj     = activity.get('object', {})
+        summary = obj.get('content','').strip()
+        if sender:
+            db.session.add(Notification(
+                user_id = user.id,
+                type    = 'submission',
+                payload = {
+                    'actor_id':      sender.id,
+                    'actor_name':    sender.display_name or sender.username,
+                    'object_id':     obj.get('id'),
+                    'summary':       summary
+                }
+            ))
+            db.session.commit()
+        return ('', 202)
+
+    # 5) handle Like
+    if typ == 'Like' and sender:
+        obj_id = activity.get('object',{}).get('id','')
+        if '/submissions/' in obj_id:
             try:
-                quest_id = int(uri.rsplit('/',1)[0].split('/')[-1])
+                # extract quest_id from URL
+                quest_id = int(obj_id.rsplit('/',1)[0].split('/')[-1])
                 if not QuestLike.query.filter_by(user_id=sender.id, quest_id=quest_id).first():
                     db.session.add(QuestLike(user_id=sender.id, quest_id=quest_id))
                     db.session.commit()
             except ValueError:
                 pass
-        return '', 202
+        return ('', 202)
 
-    # TODO: Announce, Undo, etc.
-    return '', 202
+    # TODO: handle Announce, Undo, etc.
+    return ('', 202)
 
 
 @ap_bp.route('/<username>/outbox', methods=['GET'])
@@ -304,18 +313,18 @@ def post_activitypub_create_activity(submission, user, quest):
     """
     Build, store, deliver—and notify local followers of—an ActivityPub Create activity.
     """
-    # 1. Construct the object
+    # 1) build the Submission object
     submission_object = {
-        'id':         f"{user.activitypub_id}/submissions/{submission.id}",
-        'type':       'Image',
+        'id':           f"{user.activitypub_id}/submissions/{submission.id}",
+        'type':         'Image',
         'attributedTo': user.activitypub_id,
-        'content':    f"Submission for quest '{quest.title}'",
-        'mediaType':  'image/jpeg',
-        'url':        submission.image_url,
-        'published':  submission.timestamp.isoformat()
+        'content':      f"Submission for quest “{quest.title}”",
+        'mediaType':    'image/jpeg',
+        'url':          submission.image_url,
+        'published':    submission.timestamp.isoformat()
     }
 
-    # 2. Build the Create activity
+    # 2) build the Create activity
     activity = {
         '@context': AS_CONTEXT,
         'id':        f"{user.activitypub_id}/activities/{submission.id}",
@@ -329,7 +338,7 @@ def post_activitypub_create_activity(submission, user, quest):
         ]
     }
 
-    # 3. Persist to local outbox store
+    # 3) persist to our outbox
     stored = ActivityStore(
         user_id   = user.id,
         json      = activity,
@@ -338,20 +347,23 @@ def post_activitypub_create_activity(submission, user, quest):
     db.session.add(stored)
     db.session.commit()
 
-    # 4. Record a Notification for each local follower
+    # 4) notify EACH local follower
+    actor_name = user.display_name or user.username
     for follower in user.followers:
         db.session.add(Notification(
             user_id = follower.id,
             type    = 'submission',
             payload = {
-                'actor':     user.activitypub_id,
-                'object_id': submission_object['id'],
-                'summary':   submission_object['content']
+                'actor_id':      user.id,
+                'actor_name':    actor_name,
+                'quest_id':      quest.id,
+                'quest_name':    quest.title,
+                'submission_id': submission.id
             }
         ))
     db.session.commit()
 
-    # 5. Deliver outwards to remote recipients
+    # 5) fan out to remote inboxes
     deliver_activity(activity, user)
 
     return activity
