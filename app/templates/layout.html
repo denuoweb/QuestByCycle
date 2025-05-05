@@ -469,24 +469,30 @@
   });
 </script>
 <script>
-  document.getElementById('notifBell').addEventListener('show.bs.dropdown', async () => {
-    let resp = await fetch('{{ url_for("notifications.list_notifications") }}');
-    let notes = await resp.json();
-    let menu = document.getElementById('notifMenu');
-    if (notes.length === 0) {
-      menu.innerHTML = '<li class="dropdown-item text-center text-muted">No notifications</li>';
-    } else {
-      menu.innerHTML = notes.map(n => `
-        <li>
-          <a class="dropdown-item ${n.is_read ? '' : 'fw-bold'}" href="/notifications/">
-            [${n.type}] ${n.payload.summary || JSON.stringify(n.payload)}
-            <br><small class="text-muted">${new Date(n.when).toLocaleString()}</small>
-          </a>
-        </li>
-      `).join('');
-    }
-  });
-</script>
+  document.getElementById('notifBell')
+    .addEventListener('show.bs.dropdown', async () => {
+      const resp  = await fetch('{{ url_for("notifications.list_notifications") }}');
+      const notes = await resp.json();
+      const menu  = document.getElementById('notifMenu');
+  
+      if (!notes.length) {
+        menu.innerHTML = '<li class="dropdown-item text-center text-muted">No notifications</li>';
+      } else {
+        menu.innerHTML = notes.map(n => `
+          <li>
+            <a class="dropdown-item ${n.is_read ? '' : 'fw-bold'}" href="/notifications/">
+              [${n.type}] ${n.payload.summary || JSON.stringify(n.payload)}
+              <br><small class="text-muted">${new Date(n.when).toLocaleString()}</small>
+            </a>
+          </li>
+        `).join('');
+      }
+  
+      // **new**: clear the badge since we've marked everything read
+      const badge = document.querySelector('#notifBellToggle .badge');
+      if (badge) badge.remove();
+    });
+  </script>
 <script>
   function renderNotification(n) {
     let text, onclick;

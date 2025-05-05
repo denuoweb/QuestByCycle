@@ -33,10 +33,25 @@ def unread_count():
 @notifications_bp.route('/recent')
 @login_required
 def list_notifications():
+    # 1) mark *all* unread notifications as read
+    Notification.query.\
+        filter_by(user_id=current_user.id, is_read=False).\
+        update({'is_read': True})
+    db.session.commit()
+
+    # 2) now fetch the 10 most recent (they’ll all be read)
     notes = (Notification.query
              .filter_by(user_id=current_user.id)
              .order_by(Notification.timestamp.desc())
-             .limit(20))
+             .limit(10)
+             .all())
+
+    # auto-mark any unread as read
+    unread = [n for n in notes if not n.is_read]
+    for n in unread:
+        n.is_read = True
+    if unread:
+        db.session.commit()
     return jsonify([
         {
           'id':    n.id,
