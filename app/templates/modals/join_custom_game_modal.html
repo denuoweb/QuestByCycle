@@ -38,14 +38,14 @@
         <div class="mb-4">
             <h5>Demo Game</h5>
             {% if demo_game %}
-            <a href="{{ url_for('main.index', game_id=demo_game.id) }}"
-               class="list-group-item list-group-item-action">
-                {{ demo_game.title }}
-                <small class="text-muted">
-                    {{ demo_game.start_date.strftime('%Y-%m-%d') }}
-                    –
-                    {{ demo_game.end_date.strftime('%Y-%m-%d') if demo_game.end_date else 'Ongoing' }}
-                </small>
+            <a href="{{ url_for('games.join_demo') }}"
+                class="list-group-item list-group-item-action">
+                    {{ demo_game.title }}
+                    <small class="text-muted">
+                        {{ demo_game.start_date.strftime('%Y-%m-%d') }}
+                        –
+                        {{ demo_game.end_date.strftime('%Y-%m-%d') if demo_game.end_date else 'Ongoing' }}
+                    </small>
             </a>
             {% else %}
             <li class="list-group-item text-muted">No demo game available.</li>
