@@ -9,6 +9,8 @@ shout board interactions, leaderboard data, and contact submissions.
 import io
 import logging
 import os
+import json
+from typing import Any, List, Union
 from datetime import datetime, timedelta
 
 from flask import (Blueprint, jsonify, render_template, request, redirect,
@@ -598,6 +600,30 @@ def user_profile(user_id):
     return jsonify(response_data)
 
 
+def _coerce_to_list(raw: Any) -> List[str]:
+    """
+    Turn anything—string, list, tuple, JSON literal—into a Python list of strings.
+    """
+    # Already good
+    if isinstance(raw, (list, tuple)):
+        return list(raw)
+
+    # A JSON‐encoded list
+    if isinstance(raw, str):
+        try:
+            loaded = json.loads(raw)
+            if isinstance(loaded, list):
+                return loaded
+        except json.JSONDecodeError:
+            pass
+
+        # Fallback: maybe comma-separated?
+        return [item.strip() for item in raw.split(',') if item.strip()]
+
+    # Nothing else
+    return []
+
+
 @main_bp.route('/profile/<int:user_id>/edit', methods=['POST'])
 @login_required
 def edit_profile(user_id):
@@ -608,37 +634,39 @@ def edit_profile(user_id):
         logger.warning('Unauthorized access attempt by user %s', current_user.id)
         return jsonify({'error': 'Unauthorized access'}), 403
 
-    profile_form = ProfileForm()
+    form = ProfileForm()
     user = User.query.get_or_404(user_id)
 
-    if profile_form.validate_on_submit():
-        try:
-            profile_picture = request.files.get('profile_picture')
-            if profile_picture and hasattr(profile_picture, 'filename'):
-                user.profile_picture = save_profile_picture(profile_picture, user.profile_picture)
-                logger.debug('Updated profile picture: %s', user.profile_picture)
+    if not form.validate_on_submit():
+        # Collect WTForms errors and return them
+        errors = {f: e for f, e in form.errors.items()}
+        logger.debug('Form validation failed: %s', errors)
+        return jsonify({'error': 'Invalid form submission', 'details': errors}), 400
 
-            user.display_name = profile_form.display_name.data
-            user.age_group = profile_form.age_group.data
-            user.interests = profile_form.interests.data
-            user.riding_preferences = request.form.getlist('riding_preferences')
-            user.ride_description = profile_form.ride_description.data
-            user.upload_to_socials = profile_form.upload_to_socials.data
-            user.upload_to_mastodon = profile_form.upload_to_mastodon.data
-            user.show_carbon_game = profile_form.show_carbon_game.data
+    try:
+        # — profile picture logic unchanged —
+        pic = request.files.get('profile_picture')
+        if pic and pic.filename:
+            user.profile_picture = save_profile_picture(pic, user.profile_picture)
+            logger.debug('Updated profile picture: %s', user.profile_picture)
 
-            db.session.commit()
-            logger.debug('Profile updated successfully in the database.')
-            return jsonify({'success': True})
-        except Exception as exc:
-            db.session.rollback()
-            logger.error('Exception occurred: %s', exc)
-            return jsonify({'error': f'Failed to update profile: {str(exc)}'}), 500
+        user.display_name = form.display_name.data
+        user.age_group = form.age_group.data
+        user.interests = form.interests.data or []
+        user.riding_preferences = _coerce_to_list(form.riding_preferences.data)
+        user.ride_description = form.ride_description.data
+        user.upload_to_socials = form.upload_to_socials.data
+        user.upload_to_mastodon = form.upload_to_mastodon.data
+        user.show_carbon_game = form.show_carbon_game.data
 
-    for field, errors in profile_form.errors.items():
-        for error in errors:
-            logger.debug('Error in the %s field - %s', field, error)
-    return jsonify({'error': 'Invalid form submission'}), 400
+        db.session.commit()
+        logger.debug('Profile updated successfully in the database.')
+        return jsonify({'success': True}), 200
+
+    except Exception as exc:
+        db.session.rollback()
+        logger.error('Exception occurred: %s', exc)
+        return jsonify({'error': f'Failed to update profile: {exc}'}), 500
 
 
 @main_bp.route('/profile/<int:user_id>/edit-bike', methods=['POST'])
@@ -675,38 +703,6 @@ def edit_bike(user_id):
         for error in errors:
             logger.debug('Error in the %s field - %s', field, error)
     return jsonify({'error': 'Invalid form submission'}), 400
-
-
-@main_bp.route('/update_profile', methods=['POST'])
-@login_required
-def update_profile():
-    """
-    Update a user's profile and bike details.
-    """
-    if 'profile_picture' in request.files:
-        file = request.files['profile_picture']
-        if file:
-            old_filename = current_user.profile_picture
-            current_user.profile_picture = save_profile_picture(file, old_filename)
-
-    current_user.display_name = sanitize_html(request.form.get('display_name', current_user.display_name))
-    current_user.age_group = sanitize_html(request.form.get('age_group', current_user.age_group))
-    current_user.interests = sanitize_html(request.form.get('interests', current_user.interests))
-    current_user.riding_preferences = request.form.getlist('riding_preferences')
-    current_user.ride_description = sanitize_html(request.form.get('ride_description', current_user.ride_description))
-    current_user.bike_description = sanitize_html(request.form.get('bike_description', current_user.bike_description))
-    current_user.upload_to_socials = 'upload_to_socials' in request.form
-    current_user.upload_to_mastodon = 'upload_to_mastodon' in request.form
-    current_user.show_carbon_game = 'show_carbon_game' in request.form
-
-    if 'bike_picture' in request.files:
-        bike_picture_file = request.files['bike_picture']
-        if bike_picture_file and allowed_file(bike_picture_file.filename):
-            bike_filename = save_profile_picture(bike_picture_file)
-            current_user.bike_picture = bike_filename
-
-    db.session.commit()
-    return jsonify(success=True)
 
 
 @main_bp.route('/like_quest/<int:quest_id>', methods=['POST'])
