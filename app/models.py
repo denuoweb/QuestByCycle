@@ -18,7 +18,7 @@ from flask_sqlalchemy import SQLAlchemy  # pylint: disable=import-error
 from flask_login import UserMixin  # pylint: disable=import-error
 from werkzeug.security import generate_password_hash, check_password_hash  # pylint: disable=import-error
 from sqlalchemy.exc import IntegrityError  # pylint: disable=import-error
-
+from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 db = SQLAlchemy()
 
 
@@ -117,7 +117,7 @@ class User(UserMixin, db.Model):
         'QuestSubmission', backref='submitter', lazy='dynamic',
         cascade='all, delete-orphan'
     )
-    riding_preferences = db.Column(db.JSON, nullable=True)
+    riding_preferences = db.Column(ARRAY(TEXT), nullable=True, default=list)
     ride_description = db.Column(db.String(500), nullable=True)
     bike_picture = db.Column(db.String(200), nullable=True)
     bike_description = db.Column(db.String(500), nullable=True)
@@ -145,6 +145,7 @@ class User(UserMixin, db.Model):
         Mastodon actor URL.
         """
         if not self.activitypub_id:
+            from app.activitypub_utils import generate_activitypub_keys
             # For local users, generate keys and create a local actor URL.
             public_key, private_key = generate_activitypub_keys()
             local_domain = current_app.config.get("LOCAL_DOMAIN", "questbycycle.org")
@@ -272,6 +273,13 @@ class UserIP(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.now)
 
     user = db.relationship('User', backref='ip_addresses')
+
+
+class ActivityStore(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    json = db.Column(db.JSON, nullable=False)
+    published = db.Column(db.DateTime, nullable=False)
 
 
 class Quest(db.Model):
