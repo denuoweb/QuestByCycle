@@ -83,6 +83,7 @@ function showUserProfileModal(userId) {
                     <div class="header-content position-relative z-index-1">
                         <h1 class="display-4 text-white font-weight-bold">${data.user.display_name || data.user.username}'s Profile</h1>
                     </div>
+                    <button id="followBtn" class="btn btn-outline-light ms-2"></button>
                     <div class="header-decorative-elements position-absolute w-100 h-100 top-0 start-0">
                         <div class="decorative-circle"></div>
                         <div class="decorative-triangle"></div>
@@ -308,6 +309,32 @@ function showUserProfileModal(userId) {
                     </div>
                 </div>
             `;
+
+            let isFollowing = data.current_user_following;
+            const btn = document.getElementById('followBtn');
+            btn.textContent = isFollowing ? 'Unfollow' : 'Follow';
+
+            btn.onclick = async () => {
+            // grab the CSRF token from the meta tag
+            const csrfToken = document
+                .querySelector('meta[name="csrf-token"]')
+                .getAttribute('content');
+
+            const url = `/profile/${data.user.username}/${ isFollowing ? 'unfollow':'follow' }`;
+            await fetch(url, {
+                method: 'POST',
+                credentials: 'same-origin',    // ensure cookies (including the session cookie) get sent
+                headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken     // Flask-WTF will look for this header
+                }
+            });
+
+            // flip the button state
+            isFollowing = !isFollowing;
+            btn.textContent = isFollowing ? 'Unfollow' : 'Follow';
+            };
+      
             initializeQuill();  // Initialize Quill for all profiles
             openModal('userProfileModal');
         })

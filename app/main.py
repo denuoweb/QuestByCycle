@@ -429,6 +429,19 @@ def shout_board(game_id):
         )
         db.session.add(shout_message)
         db.session.commit()
+
+        # --- notify your followers ---
+        from app.models import Notification
+        follower_ids = [rel.follower_id for rel in current_user.followers]
+        for fid in follower_ids:
+            notif = Notification(
+                user_id=fid,
+                type='shout',
+                payload={'shout_id': shout_message.id, 'from_user': current_user.id}
+            )
+            db.session.add(notif)
+        db.session.commit()
+
         flash('Your message has been posted!', 'success')
         return redirect(url_for('main.index', game_id=game_id))
     logger.debug("Form Errors: %s", form.errors)
@@ -597,6 +610,13 @@ def user_profile(user_id):
         ],
         'riding_preferences_choices': riding_preferences_choices
     }
+
+    # Add a flag for whether the current_user follows this profile
+    response_data['current_user_following'] = (
+        current_user.is_authenticated and
+        User.query.get(user_id) in current_user.following
+    )
+
     return jsonify(response_data)
 
 

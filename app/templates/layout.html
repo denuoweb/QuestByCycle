@@ -202,85 +202,106 @@
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
               {% if current_user.is_authenticated %}
-                  {% if not in_admin_dashboard %}
-                      <!-- Non-admin navigation options -->
-                      <li class="nav-item dropdown">
-                          <a class="nav-link dropdown-toggle" href="#" id="gameDropdownButton" role="button"
-                              data-bs-toggle="dropdown" aria-expanded="false">
-                              <i class="fas fa-gamepad me-1"></i>
-                              {% if selected_game %}
-                                  {{ selected_game.title }}
-                              {% else %}
-                                  Select a Game
-                              {% endif %}
-                          </a>
-                          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="gameDropdownButton">
-                              {% for gameObj, joined_at in user_games|sort(reverse=True, attribute='joined_at') %}
-                                  <li>
-                                      <a class="dropdown-item d-flex flex-column text-center"
-                                          href="{{ url_for('main.index', game_id=gameObj.id) }}">
-                                          <i class="fas fa-gamepad me-1"></i>
-                                          <span class="game-title">{{ gameObj.title }}</span>
-                                          <small class="text-muted">Joined on: {{ joined_at.strftime('%m-%d-%Y') if joined_at else 'N/A' }}</small>
-                                      </a>
-                                  </li>
-                              {% endfor %}
-                              <li><hr class="dropdown-divider"></li>
-                              <li>
-                                  <a class="dropdown-item bold-item text-center" href="#" onclick="handleGameSelection({ value: 'join_custom_game' })">
-                                      <i class="fas fa-plus-circle me-1"></i> Join Custom Game
-                                  </a>
-                              </li>
-                          </ul>
-                      </li>
-                      {% if selected_game_id %}
-                          <li class="nav-item">
-                              <a class="nav-link" href="javascript:void(0)" onclick="showGameInfoModal('{{ selected_game_id }}')">
-                                  <i class="fas fa-book me-1"></i> Game Info
-                              </a>
-                          </li>
-                          <li class="nav-item">
-                              <a class="nav-link" href="javascript:void(0)" id="leaderboardNavbarLink" data-game-id="{{ selected_game_id }}">
-                                  <i class="fas fa-trophy me-1"></i> Leaderboard
-                              </a>
-                          </li>
-                          <li class="nav-item">
-                              <a class="nav-link" href="javascript:void(0)" onclick="openModal('contactModal', '{{ selected_game_id }}')">
-                                  <i class="fas fa-comment-dots me-1"></i> Feedback
-                              </a>
-                          </li>
-                      {% endif %}
-                      <li class="nav-item">
-                          <a class="nav-link" href="javascript:void(0)" onclick="showUserProfileModal('{{ current_user.id }}')">
-                              <i class="fas fa-user me-1"></i> Profile
-                          </a>
-                      </li>
-                  {% endif %}
-                  {% if in_admin_dashboard %}
-                  <li class="nav-item">
-                      <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+                <!-- Notification bell -->
+                <li class="nav-item dropdown" id="notifBell">
+                  <a
+                    class="nav-link dropdown-toggle position-relative"
+                    href="#"
+                    id="notifBellToggle"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <i class="fas fa-bell"></i>
+                    {% if current_user.unread_notifications_count > 0 %}
+                      <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
+                        {{ current_user.unread_notifications_count }}
+                      </span>
+                    {% endif %}
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notifBellToggle" id="notifMenu">
+                    <li class="dropdown-item text-center text-muted">Loading…</li>
+                  </ul>
+                </li>
+                {% if not in_admin_dashboard %}
+                    <!-- Non-admin navigation options -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="gameDropdownButton" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-gamepad me-1"></i>
+                            {% if selected_game %}
+                                {{ selected_game.title }}
+                            {% else %}
+                                Select a Game
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="gameDropdownButton">
+                            {% for gameObj, joined_at in user_games|sort(reverse=True, attribute='joined_at') %}
+                                <li>
+                                    <a class="dropdown-item d-flex flex-column text-center"
+                                        href="{{ url_for('main.index', game_id=gameObj.id) }}">
+                                        <i class="fas fa-gamepad me-1"></i>
+                                        <span class="game-title">{{ gameObj.title }}</span>
+                                        <small class="text-muted">Joined on: {{ joined_at.strftime('%m-%d-%Y') if joined_at else 'N/A' }}</small>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item bold-item text-center" href="#" onclick="handleGameSelection({ value: 'join_custom_game' })">
+                                    <i class="fas fa-plus-circle me-1"></i> Join Custom Game
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% if selected_game_id %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="javascript:void(0)" onclick="showGameInfoModal('{{ selected_game_id }}')">
+                                <i class="fas fa-book me-1"></i> Game Info
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="javascript:void(0)" id="leaderboardNavbarLink" data-game-id="{{ selected_game_id }}">
+                                <i class="fas fa-trophy me-1"></i> Leaderboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="javascript:void(0)" onclick="openModal('contactModal', '{{ selected_game_id }}')">
+                                <i class="fas fa-comment-dots me-1"></i> Feedback
+                            </a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="javascript:void(0)" onclick="showUserProfileModal('{{ current_user.id }}')">
+                            <i class="fas fa-user me-1"></i> Profile
+                        </a>
+                    </li>
+                {% endif %}
+                {% if in_admin_dashboard %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
 
-                  {% endif %}
-                  {% if current_user.is_admin %}
-                      <li class="nav-item">
-                          <a class="nav-link" href="{{ url_for('admin.admin_dashboard', selected_game_id=selected_game_id) }}">
-                              <i class="fas fa-user-shield me-1"></i> Admin
-                          </a>
-                      </li>
-                  {% endif %}
-                  <li class="nav-item">
-                      <a class="nav-link" href="{{ url_for('auth.logout') }}">
-                          <i class="fas fa-sign-out-alt me-1"></i> Logout
-                      </a>
-                  </li>
+                {% endif %}
+                {% if current_user.is_admin %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin.admin_dashboard', selected_game_id=selected_game_id) }}">
+                            <i class="fas fa-user-shield me-1"></i> Admin
+                        </a>
+                    </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('auth.logout') }}">
+                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                    </a>
+                </li>
               {% else %}
-                  <!-- For non-authenticated users -->
-                  <li class="nav-item">
-                      <a href="javascript:void(0)" class="btn btn-secondary btn-lg" onclick="openModal('loginModal')">Login</a>
-                  </li>
-                  <li class="nav-item">
-                      <a href="javascript:void(0)" class="btn btn-primary btn-lg" onclick="openModal('registerModal')">Register Today!</a>
-                  </li>
+                <!-- For non-authenticated users -->
+                <li class="nav-item">
+                    <a href="javascript:void(0)" class="btn btn-secondary btn-lg" onclick="openModal('loginModal')">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a href="javascript:void(0)" class="btn btn-primary btn-lg" onclick="openModal('registerModal')">Register Today!</a>
+                </li>
               {% endif %}
           </ul>
       </div>
@@ -444,6 +465,25 @@
       });
     } else {
       console.error('Leaderboard link element not found.');
+    }
+  });
+</script>
+<script>
+  document.getElementById('notifBell').addEventListener('show.bs.dropdown', async () => {
+    let resp = await fetch('{{ url_for("notifications.list_notifications") }}');
+    let notes = await resp.json();
+    let menu = document.getElementById('notifMenu');
+    if (notes.length === 0) {
+      menu.innerHTML = '<li class="dropdown-item text-center text-muted">No notifications</li>';
+    } else {
+      menu.innerHTML = notes.map(n => `
+        <li>
+          <a class="dropdown-item ${n.is_read ? '' : 'fw-bold'}" href="/notifications/">
+            [${n.type}] ${n.payload.summary || JSON.stringify(n.payload)}
+            <br><small class="text-muted">${new Date(n.when).toLocaleString()}</small>
+          </a>
+        </li>
+      `).join('');
     }
   });
 </script>

@@ -1,8 +1,3 @@
-"""
-This module defines the database models for the application using SQLAlchemy.
-It includes models for User, Badge, Quest, Game, and related entities.
-"""
-
 # pylint: disable=too-few-public-methods, import-error, useless-super-delegation, broad-except
 
 import random
@@ -19,31 +14,33 @@ from flask_login import UserMixin  # pylint: disable=import-error
 from werkzeug.security import generate_password_hash, check_password_hash  # pylint: disable=import-error
 from sqlalchemy.exc import IntegrityError  # pylint: disable=import-error
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT
+
 db = SQLAlchemy()
 
 
 # -----------------------------------------------------------------------------
 # Association Tables
 # -----------------------------------------------------------------------------
-user_badges = db.Table(
-    'user_badges',
+user_badges = db.Table('user_badges',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('badge_id', db.Integer, db.ForeignKey('badge.id'), primary_key=True)
 )
 
-user_games = db.Table(
-    'user_games',
+user_games = db.Table('user_games',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('game_id', db.Integer, db.ForeignKey('game.id'), primary_key=True),
     db.Column('joined_at', db.DateTime, default=datetime.now(utc))
 )
 
-game_participants = db.Table(
-    'game_participants',
+game_participants = db.Table('game_participants',
     db.Column('game_id', db.Integer, db.ForeignKey('game.id'), primary_key=True),
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
 )
 
+followers = db.Table('followers',
+    db.Column('follower_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('followee_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+)
 
 # -----------------------------------------------------------------------------
 # Models
@@ -137,6 +134,14 @@ class User(UserMixin, db.Model):
     activitypub_id = db.Column(db.String(256), nullable=True)
     public_key = db.Column(db.Text, nullable=True)
     private_key = db.Column(db.Text, nullable=True)
+
+    following = db.relationship(
+      'User', secondary=followers,
+      primaryjoin=(followers.c.follower_id==id),
+      secondaryjoin=(followers.c.followee_id==id),
+      backref='followers'
+    )
+    notifications = db.relationship('Notification', back_populates='user')
 
     def ensure_activitypub_actor(self):
         """
@@ -263,6 +268,26 @@ class User(UserMixin, db.Model):
             .scalar() or 0
         )
         return total_score
+
+
+    @property
+    def unread_notifications_count(self):
+        # import here to avoid circular self-import at module load time
+        from app.models import Notification
+        return Notification.query.filter_by(
+            user_id=self.id,
+            is_read=False
+        ).count()
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    type = db.Column(db.String, nullable=False)  # e.g. 'follow', 'submission'
+    payload = db.Column(db.JSON, nullable=False)     # the raw activity or summary
+    is_read = db.Column(db.Boolean, default=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', back_populates='notifications')
 
 
 class UserIP(db.Model):

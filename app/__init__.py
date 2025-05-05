@@ -37,6 +37,7 @@ from app.quests import quests_bp
 from app.badges import badges_bp
 from app.profile import profile_bp
 from app.webfinger import webfinger_bp
+from app.notifications import notifications_bp
 from app.activitypub_utils import ap_bp
 from app.ai import ai_bp
 from app.models import db
@@ -167,6 +168,7 @@ def create_app(config_overrides=None):
     app.register_blueprint(badges_bp, url_prefix='/badges')
     app.register_blueprint(profile_bp, url_prefix='/profile')
     app.register_blueprint(ap_bp, url_prefix='/users')
+    app.register_blueprint(notifications_bp, url_prefix='/notifications')
     app.register_blueprint(webfinger_bp)
     app.register_blueprint(main_bp)
 

@@ -328,7 +328,7 @@ def submit_quest(quest_id):
             ut.points_awarded for ut in UserQuest.query.filter_by(user_id=current_user.id)
         )
 
-        # Create and simulate delivery of an ActivityPub Create activity.
+        # Create and deliver ActivityPub Create activity.
         activity = None
         if image_url:
             activity = post_activitypub_create_activity(new_submission, current_user, quest)
@@ -847,7 +847,7 @@ def submit_photo(quest_id):
         update_user_score(current_user.id)
         check_and_award_badges(current_user.id, quest_id, quest.game_id)
 
-        # --- Create and simulate delivery of a local ActivityPub Create activity ---
+        # --- Create delivery of a local ActivityPub Create activity ---
         activity = post_activitypub_create_activity(new_submission, current_user, quest)
 
         emit_status("Submission complete!", sid)
