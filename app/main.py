@@ -263,10 +263,13 @@ def index(game_id, quest_id, user_id):
         user_id = current_user.id
 
     # Check if we should prompt custom-game join modal
-    show_login        = request.args.get('show_login') == '1'
-    show_join_custom  = request.args.get('show_join_custom') == '1'
-
-    if current_user.is_authenticated and not current_user.participated_games:
+    show_login       = request.args.get('show_login') == '1'
+    show_join_custom = request.args.get('show_join_custom') == '1'
+    # But if the user explicitly requested a game via ?game_id=…, don't override
+    explicit_game    = bool(request.args.get('game_id'))
+    if current_user.is_authenticated \
+       and not current_user.participated_games \
+       and not explicit_game:
         show_join_custom = True
 
     if show_join_custom and not current_user.is_authenticated and not show_login:
