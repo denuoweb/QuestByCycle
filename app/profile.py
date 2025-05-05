@@ -89,9 +89,10 @@ def post_profile_message(user_id):
             type='profile_message',
             payload={
                 'profile_message_id': message.id,
-                'from_user_id':       current_user.id,
-                'from_user_name':     current_user.display_name or current_user.username,
-                'content':            message.content
+                'from_user_id': current_user.id,
+                'from_user_name': current_user.display_name or current_user.username,
+                'profile_user_id': user_id,
+                'content': message.content
             }
         )
         db.session.add(notif)
@@ -162,10 +163,11 @@ def post_reply(user_id, message_id):
             user_id=fid,
             type='profile_reply',
             payload={
-                'reply_id':       reply.id,
-                'from_user_id':   current_user.id,
+                'reply_id': reply.id,
+                'from_user_id': current_user.id,
                 'from_user_name': current_user.display_name or current_user.username,
-                'content':        reply.content
+                'profile_user_id': user_id,
+                'content': reply.content
             }
         )
         db.session.add(notif)
