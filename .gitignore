@@ -6,8 +6,11 @@ app/static/images/
 app/static/images/carousel_images
 app/static/carousel_images/
 
-cert.pem
-key.pem
+tests/cert.pem
+tests/key.pem
+tests/rsa_key.pem
+tests/actor_priv.pem
+
 requirements.txt
 
 wsgi.py 
