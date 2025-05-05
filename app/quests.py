@@ -42,6 +42,7 @@ from app.utils import (
     save_submission_image,
     update_user_score,
 )
+from app.activitypub_utils import post_activitypub_create_activity
 from .models import db, Badge, Game, Quest, QuestSubmission, User, UserQuest
 
 quests_bp = Blueprint("quests", __name__, template_folder="templates")
@@ -739,58 +740,6 @@ def post_to_mastodon_status(image_path, status_text, user):
     except Exception as e:
         print(f"[post_to_mastodon_status] Error posting status to Mastodon: {e}")
         return None
-
-# Add a helper function to create a local ActivityPub Create activity.
-def post_activitypub_create_activity(submission, user, quest):
-    """
-    Create and (simulate) deliver an ActivityPub Create activity for a quest submission.
-    This constructs a JSON-LD Create activity that wraps the submission object.
-    
-    For Mastodon-linked users, user.activitypub_id is set to their Mastodon actor URL.
-    
-    Args:
-        submission (QuestSubmission): The quest submission record.
-        user (User): The submitting user.
-        quest (Quest): The quest associated with the submission.
-    
-    Returns:
-        dict: The constructed ActivityPub activity.
-    """
-    # Build the object representing the quest submission.
-    submission_object = {
-        "id": f"{user.activitypub_id}/submissions/{submission.id}",
-        "type": "Image",  # Change this if your submission has text content instead
-        "attributedTo": user.activitypub_id,
-        "content": f"Submission for quest '{quest.title}'",
-        "mediaType": "image/jpeg",  # Adjust based on the actual file type if needed
-        "url": submission.image_url,
-        "published": submission.timestamp.isoformat()
-    }
-    
-    # Build the Create activity.
-    activity = {
-        "@context": "https://www.w3.org/ns/activitystreams",
-        "type": "Create",
-        "id": f"{user.activitypub_id}/activities/{submission.id}",
-        "actor": user.activitypub_id,
-        "object": submission_object,
-        "published": submission.timestamp.isoformat(),
-        "to": [
-            "https://www.w3.org/ns/activitystreams#Public",
-            f"{user.activitypub_id}/followers"
-        ]
-    }
-    
-    # In a production system, you would deliver this activity to the inboxes
-    # of each recipient (for example, by POSTing it to their inbox endpoint).
-    # Here, we simply print the JSON for debugging.
-    print("[post_activitypub_create_activity] Constructed ActivityPub Create activity:")
-    print(json.dumps(activity, indent=2))
-    
-    # Optionally: deliver the activity to recipients.
-    # deliver_activity(activity)
-    
-    return activity
 
 
 @quests_bp.route("/submit_photo/<int:quest_id>", methods=["GET", "POST"])

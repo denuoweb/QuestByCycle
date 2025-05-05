@@ -136,23 +136,3 @@ def edit_message(user_id, message_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
-
-
-@profile_bp.route('/<username>')
-def view_user(username):
-    """
-    Public view of a user's profile.
-    
-    This endpoint is used to build a local ActivityPub actor URL for non‑Mastodon users.
-    For now, it simply returns a JSON representation of the user's public profile.
-    You can change it to render an HTML template if you prefer.
-    """
-    user = User.query.filter_by(username=username).first_or_404()
-    profile_data = {
-        "id": user.id,
-        "username": user.username,
-        "display_name": user.display_name or user.username,
-        "activitypub_id": user.activitypub_id,
-        "email": user.email  # You might want to hide email in production.
-    }
-    return jsonify(profile_data)

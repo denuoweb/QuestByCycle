@@ -15,7 +15,6 @@ from pytz import utc
 from urllib.parse import urlparse, urljoin
 
 import bleach
-import rsa
 import uuid
 import requests
 
@@ -23,6 +22,7 @@ from app.models import db, User, Game
 from app.forms import (LoginForm, RegistrationForm, ForgotPasswordForm,
                        ResetPasswordForm, UpdatePasswordForm, MastodonLoginForm)
 from app.utils import send_email, generate_demo_game, log_user_ip
+from app.activitypub_utils import generate_activitypub_keys, create_activitypub_actor
 
 # Initialize the blueprint.
 auth_bp = Blueprint('auth', __name__)
@@ -810,33 +810,6 @@ def delete_account():
         current_app.logger.error(f"Error deleting user: {exc}")
         flash('An error occurred while deleting your account.', 'error')
         return redirect(url_for('main.index'))
-
-
-def generate_activitypub_keys():
-    """
-    Generate a new RSA key pair for ActivityPub signing.
-    Returns a tuple (public_key_pem, private_key_pem).
-    """
-    (pubkey, privkey) = rsa.newkeys(2048)
-    public_pem = pubkey.save_pkcs1().decode('utf-8')
-    private_pem = privkey.save_pkcs1().decode('utf-8')
-    return public_pem, private_pem
-
-
-def create_activitypub_actor(user):
-    """
-    Create a local ActivityPub actor for a user if they do not already have one.
-    For local registrations only: this will generate a key pair and a local actor URL.
-    (For Mastodon-linked accounts, activitypub_id is set to the Mastodon account URL.)
-    """
-    if not user.activitypub_id:
-        public_key, private_key = generate_activitypub_keys()
-        # Construct the actor URL using QuestByCycle’s domain and the user's username.
-        actor_url = url_for('profile.view_user', username=user.username, _external=True)
-        user.activitypub_id = actor_url
-        user.public_key = public_key
-        user.private_key = private_key
-        db.session.commit()
 
 
 @auth_bp.route('/check_email', methods=['GET'])
