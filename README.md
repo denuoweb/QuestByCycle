@@ -63,9 +63,24 @@ Now login with ```ssh USER@HOST```
 4. Install everything
 ```poetry install```
 
+5. Enable HTTPS locally
+``` openssl req -nodes -x509 -newkey rsa:4096 \```
+```  -keyout tests/key.pem \```
+```  -out tests/cert.pem \```
+```  -days 365 \```
+```  -subj "/CN=localhost" \```
+```  -addext "subjectAltName = DNS:localhost,IP:127.0.0.1"```
+
 5. Run the server
    Either:
-```poetry run flask --app wsgi:app --debug run```
+```poetry run flask \```
+```  --app wsgi:app \```
+```  --debug \```
+```  run \```
+```  --cert=tests/cert.pem \```
+```  --key=tests/key.pem \```
+```  --host=127.0.0.1 \```
+```  --port=5000```
 
 
 ### Extra Installation and Deployment
