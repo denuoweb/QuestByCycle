@@ -192,66 +192,52 @@
             </div>
         {% endif %}
     </div>
-    {% if current_user.is_authenticated and all_badges %}
-        <div class="col-12">
-            {# Create a list of earned badge IDs #}
-            {% set earned_badge_ids = profile.badges | map(attribute='id') | list %}
-            {# Create separate lists for earned and unearned badges #}
-            {% set earned_badges = [] %}
-            {% set unearned_badges = [] %}
-            {% for badge in all_badges %}
-                {% if badge.id in earned_badge_ids %}
-                    {% set _ = earned_badges.append(badge) %}
-                {% else %}
-                    {% set _ = unearned_badges.append(badge) %}
-                {% endif %}
-            {% endfor %}
-            <div class="badge-bar-container">
-                <h2>Available Badges</h2>
-                <div class="badge-bar">
-                    {# Example for earned badges (assuming similar structure) #}
-                    {% for badge in earned_badges %}
-                    {% set earned = true %} {# Ensure 'earned' is true for earned badges section #}
-                    {% set user_completions = profile.user_quests | selectattr('quest.id', 'equalto', badge.task_id) | list | first %}
-                    <div class="badge-item"
-                        data-badge-id="{{ badge.id }}"
-                        data-earned="{{ 'true' if badge.is_complete else 'false' }}"
-                        data-task-name="{{ badge.task_names }}"
-                        data-badge-awarded-count="{{ badge.badge_awarded_counts }}"
-                        data-task-id="{{ badge.task_ids }}"
-                        data-user-completions="{{ badge.user_completions }}"
-                        onclick="openBadgeModal(this);">
-                        <img src="{{ url_for('static', filename='images/badge_images/' ~ (badge.image or 'default_badge.png')) }}"
-                            alt="{{ badge.name }}"
-                            class="badge-img {{ 'badge-earned' if badge.is_complete else 'badge-not-earned' }}"
-                            title="{{ badge.name }}: {{ badge.description }}">
-                        <div class="badge-name">{{ badge.name }}</div>
-                    </div>
-                    {% endfor %}
-                    {# Display unearned badges after earned badges #}
-                    {% for badge in unearned_badges %}
-                        {% set earned = false %}
-                        {% set user_completions = profile.user_quests | selectattr('quest.id', 'equalto', badge.task_id) | list | first %}
-                        <div class="badge-item"
-                            data-badge-id="{{ badge.id }}"
-                            data-earned="{{ 'true' if badge.is_complete else 'false' }}"
-                            data-task-name="{{ badge.task_names }}"
-                            data-badge-awarded-count="{{ badge.badge_awarded_counts }}"
-                            data-task-id="{{ badge.task_ids }}"
-                            data-user-completions="{{ badge.user_completions }}"
-                            onclick="openBadgeModal(this);">
-                            <img src="{{ url_for('static', filename='images/badge_images/' ~ (badge.image or 'default_badge.png')) }}"
-                                alt="{{ badge.name }}"
-                                class="badge-img {{ 'badge-earned' if badge.is_complete else 'badge-not-earned' }}"
-                                title="{{ badge.name }}: {{ badge.description }}">
-                            <div class="badge-name">{{ badge.name }}</div>
-                        </div>
-                    {% endfor %}
+
+    {% if current_user.is_authenticated %}
+        <div class="badge-bar-container">
+        <h2>Available Badges</h2>
+            <div class="badge-bar">
+                {% for badge in earned_badges %}
+                <div class="badge-item"
+                    data-badge-id="{{ badge.id }}"
+                    data-task-name="{{ badge.task_names }}"
+                    data-task-id="{{ badge.task_ids }}"
+                    data-badge-awarded-count="{{ badge.badge_awarded_counts }}"
+                    data-user-completions="{{ badge.user_completions }}"
+                    data-badge-name="{{ badge.name }}"
+                    data-badge-description="{{ badge.description }}"
+                    data-badge-image="{{ url_for('static', filename='images/badge_images/' ~ badge.image) }}"
+                    onclick="openBadgeModal(this);">
+                <img loading="lazy"
+                    src="{{ url_for('static', filename='images/badge_images/' ~ badge.image) }}"
+                    alt="{{ badge.name }}"
+                    class="badge-img badge-earned"
+                    title="{{ badge.name }}: {{ badge.description }}">
+                <div class="badge-name">{{ badge.name }}</div>
                 </div>
+                {% endfor %}
+        
+                {% for badge in unearned_badges %}
+                <div class="badge-item"
+                    data-badge-id="{{ badge.id }}"
+                    data-task-name="{{ badge.task_names }}"
+                    data-task-id="{{ badge.task_ids }}"
+                    data-badge-awarded-count="{{ badge.badge_awarded_counts }}"
+                    data-user-completions="{{ badge.user_completions }}"
+                    data-badge-name="{{ badge.name }}"
+                    data-badge-description="{{ badge.description }}"
+                    data-badge-image="{{ url_for('static', filename='images/badge_images/' ~ badge.image) }}"
+                    onclick="openBadgeModal(this);">
+                <img loading="lazy"
+                    src="{{ url_for('static', filename='images/badge_images/' ~ badge.image) }}"
+                    alt="{{ badge.name }}"
+                    class="badge-img badge-not-earned"
+                    title="{{ badge.name }}: {{ badge.description }}">
+                <div class="badge-name">{{ badge.name }}</div>
+                </div>
+                {% endfor %}
             </div>
         </div>
-    {% endif %}
-    {% if current_user.is_authenticated %}
         {% if has_joined %}
             <div class="game-item">
                 <h2>Available Quests</h2>

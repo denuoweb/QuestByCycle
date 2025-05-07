@@ -5,22 +5,16 @@ This module defines the main blueprint for the Flask application.
 It contains routes for the index page, profile management, image resizing,
 shout board interactions, leaderboard data, and contact submissions.
 """
-
-import io
-import logging
-import os
-import json
-from typing import Any, List, Union
-from datetime import datetime, timedelta
-
 from flask import (Blueprint, jsonify, render_template, request, redirect,
                    url_for, flash, current_app, send_file)
 from flask_login import current_user, login_required
 from flask_wtf.csrf import generate_csrf
+from sqlalchemy import func
+from sqlalchemy.orm import joinedload
+from typing import Any, List
+from datetime import datetime, timedelta
 from PIL import Image, ExifTags
 from pytz import utc
-import bleach
-
 from app.models import (db, Game, User, Quest, Badge, UserQuest, QuestSubmission,
                         QuestLike, ShoutBoardMessage, ShoutBoardLike, ProfileWallMessage,
                         user_games)
@@ -29,6 +23,12 @@ from app.forms import (ProfileForm, ShoutBoardForm, ContactForm, BikeForm,
 from app.utils import (save_profile_picture, save_bicycle_picture, send_email,
                        allowed_file, enhance_badges_with_task_info, get_game_badges)
 from .config import load_config
+
+import bleach
+import io
+import logging
+import os
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -199,23 +199,61 @@ def _prepare_quests(game, user_id, user_quests, now):
     return quests, activities
 
 
-def _prepare_user_data(game_id, profile, user_quests):
-    """
-    Prepare badge information and user game list.
-    Returns a tuple (all_badges, earned_badges, user_games_list).
-    """
-    if game_id:
-        all_badges = get_game_badges(game_id)
-    else:
-        all_badges = Badge.query.all()
+def _prepare_user_data(game_id, profile):
+    # 1. Bulk-load all game badges and their quests in one go
+    badges = (
+        Badge.query
+             .options(joinedload(Badge.quests))   # eager-load the quests relationship
+             .join(Quest)
+             .filter(Quest.game_id == game_id, Quest.badge_id.isnot(None))
+             .distinct()
+             .all()
+    )
 
-    earned_badges_set = set(profile.badges)
-    all_badges = enhance_badges_with_task_info(all_badges, game_id, current_user.id)
-    earned_badges = enhance_badges_with_task_info(list(earned_badges_set), game_id)
+    # 2. Build a map of user's completions, in one query
+    completions = (
+        db.session.query(
+            UserQuest.quest_id,
+            func.max(UserQuest.completions).label('completions')
+        )
+        .filter(UserQuest.user_id == profile.id)
+        .group_by(UserQuest.quest_id)
+        .all()
+    )
+    user_completions_map = {q_id: c for q_id, c in completions}
 
-    user_games_list = db.session.query(Game, user_games.c.joined_at).join(
-        user_games, user_games.c.game_id == Game.id).filter(user_games.c.user_id == current_user.id).all()
-    return all_badges, earned_badges, user_games_list
+    # 3. Enhance badges in-memory
+    enhanced_badges = []
+    for badge in badges:
+        # Only keep quests for this game
+        awarding = [q for q in badge.quests if q.game_id == game_id]
+        task_names            = ", ".join(q.title for q in awarding)
+        task_ids              = ", ".join(str(q.id) for q in awarding)
+        badge_awarded_counts  = ", ".join(str(q.badge_awarded) for q in awarding)
+
+        # Look up the user's max completions for any of those quests
+        user_counts = [user_completions_map.get(q.id, 0) for q in awarding]
+        is_complete = any(c >= q.badge_awarded for q, c in zip(awarding, user_counts))
+        max_completion = max(user_counts, default=0)
+
+        enhanced_badges.append({
+            'id':                    badge.id,
+            'name':                  badge.name,
+            'description':           badge.description,
+            'image':                 badge.image,
+            'category':              badge.category,
+            'task_names':            task_names,
+            'task_ids':              task_ids,
+            'badge_awarded_counts':  badge_awarded_counts,
+            'user_completions':      max_completion,
+            'is_complete':           is_complete
+        })
+
+    # 4. Split earned / unearned here, once
+    earned = [b for b in enhanced_badges if b['is_complete']]
+    unearned = [b for b in enhanced_badges if not b['is_complete']]
+
+    return earned, unearned
 
 
 def _prepare_carousel_images(game_id):
@@ -265,11 +303,10 @@ def index(game_id, quest_id, user_id):
     # Check if we should prompt custom-game join modal
     show_login       = request.args.get('show_login') == '1'
     show_join_custom = request.args.get('show_join_custom') == '1'
-    # But if the user explicitly requested a game via ?game_id=…, don't override
     explicit_game    = bool(request.args.get('game_id'))
     if current_user.is_authenticated \
-       and not current_user.participated_games \
-       and not explicit_game:
+        and not current_user.participated_games \
+        and not explicit_game:
         show_join_custom = True
 
     if show_join_custom and not current_user.is_authenticated and not show_login:
@@ -278,7 +315,7 @@ def index(game_id, quest_id, user_id):
             next=request.full_path,
             show_join_custom=1
         ))
-        
+
     # Load game context without auto-join when prompting custom-join
     if show_join_custom:
         game = None
@@ -286,7 +323,7 @@ def index(game_id, quest_id, user_id):
     else:
         game, game_id = _select_game(game_id)
 
-    # Redirect to login/modal only once (skip when custom-join is active)
+    # Redirect to login/modal only once
     if not show_join_custom and (game is None or game_id is None) and request.args.get('show_login') != '1':
         demo = (Game.query
                     .filter_by(is_demo=True)
@@ -294,8 +331,6 @@ def index(game_id, quest_id, user_id):
                     .first())
         return redirect(url_for('main.index', game_id=demo.id, show_login=1))
 
-
-    # Fallback: ensure we have a demo for everyone else
     if game is None or game_id is None:
         demo = (Game.query
                     .filter_by(is_demo=True)
@@ -307,15 +342,20 @@ def index(game_id, quest_id, user_id):
     profile = None
     user_quests = []
     total_points = None
-    all_badges = []
-    earned_badges = []
     if current_user.is_authenticated:
         user_quests = UserQuest.query.filter_by(user_id=current_user.id).all()
         total_points = sum(ut.points_awarded for ut in user_quests if ut.quest.game_id == game_id)
         profile = User.query.get_or_404(user_id)
         if not profile.display_name:
             profile.display_name = profile.username
-        all_badges, earned_badges, user_games_list = _prepare_user_data(game_id, profile, user_quests)
+
+        # Compute the list of games the user has joined
+        user_games_list = (
+            db.session.query(Game, user_games.c.joined_at)
+                        .join(user_games, user_games.c.game_id == Game.id)
+                        .filter(user_games.c.user_id == current_user.id)
+                        .all()
+        )
     else:
         user_games_list = []
 
@@ -347,8 +387,6 @@ def index(game_id, quest_id, user_id):
     has_joined = (current_user.is_authenticated and game in current_user.participated_games)
     explicit_game = bool(request.args.get('game_id'))
     suppress_custom = request.args.get('show_join_custom') == '0'
-
-    # Determine which modal to show
     show_join_modal = (
         not has_joined and
         not explicit_game and
@@ -356,12 +394,19 @@ def index(game_id, quest_id, user_id):
         not show_join_custom
     )
 
+    # Prepare badge lists
+    if current_user.is_authenticated:
+        earned_badges, unearned_badges = _prepare_user_data(game_id, profile)
+    else:
+        earned_badges, unearned_badges = [], []
+
     # Render
     return render_template(
         'index.html',
         form=ShoutBoardForm(),
         badges=earned_badges,
-        all_badges=all_badges,
+        earned_badges=earned_badges,
+        unearned_badges=unearned_badges,
         games=user_games_list,
         game=game,
         user_games=user_games_list,
@@ -393,7 +438,6 @@ def index(game_id, quest_id, user_id):
         forgot_form=forgot_form,
         reset_form=reset_form
     )
-
 
 
 @main_bp.route('/mark-onboarding-complete', methods=['POST'])
