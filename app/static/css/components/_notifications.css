@@ -9,7 +9,7 @@
 @media (min-width: 1400px) and (max-width: 1745px) {
     #notifMenu {
       /* Move the menu right */
-      transform: translateX(150px) !important;
+      transform: translateX(225px) !important;
       /* Make sure any prior Popper translate is overridden */
       left: auto !important;
       right: 0 !important;
