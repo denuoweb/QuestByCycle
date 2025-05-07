@@ -214,19 +214,31 @@
                     id="notifBellToggle"
                     role="button"
                     data-bs-toggle="dropdown"
+                    data-bs-boundary="viewport"
+                    data-bs-flip="true"
+                    data-bs-display="dynamic"
                     aria-expanded="false"
                   >
                     <i class="fas fa-bell"></i>
                     {% if current_user.unread_notifications_count > 0 %}
-                      <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle">
+                      <span
+                        class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
+                      >
                         {{ current_user.unread_notifications_count }}
                       </span>
                     {% endif %}
                   </a>
-                  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="notifBellToggle" id="notifMenu">
+                
+                  <ul
+                    class="dropdown-menu dropdown-menu-end"
+                    aria-labelledby="notifBellToggle"
+                    id="notifMenu"
+                    data-url="{{ url_for('notifications.list_notifications') }}"
+                  >
                     <li class="dropdown-item text-center text-muted">Loading…</li>
                   </ul>
                 </li>
+                
                 {% if not in_admin_dashboard %}
                     <!-- Non-admin navigation options -->
                     <li class="nav-item dropdown">
