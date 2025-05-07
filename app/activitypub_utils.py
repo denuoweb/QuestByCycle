@@ -32,6 +32,54 @@ AS_CONTEXT = [
 ]
 
 
+def discover_remote_inbox(actor_uri):
+    """
+    Given an actor URI (e.g. https://example.org/users/alice),
+    perform WebFinger + actor fetch and return the declared inbox URL.
+    Cache it on your Actor/ForeignActor model so you never repeat discovery.
+    """
+    from app.models import ForeignActor, db  # your model for remote actors
+
+    # If we already have it cached, return it
+    fa = ForeignActor.query.filter_by(actor_uri=actor_uri).first()
+    if fa and fa.inbox_url:
+        return fa.inbox_url
+
+    # 1) WebFinger
+    parsed = urlparse(actor_uri)
+    webfinger_url = f"{parsed.scheme}://{parsed.netloc}/.well-known/webfinger"
+    params = {'resource': f"acct:{parsed.path.strip('/')}"}
+    wf = requests.get(webfinger_url, params=params, timeout=5)
+    wf.raise_for_status()
+    data = wf.json()
+    # find the link rel="self" with type application/activity+json
+    self_link = next(
+        link for link in data.get('links', [])
+        if link.get('rel') == 'self'
+           and link.get('type') == 'application/activity+json'
+    )
+    canonical_actor = self_link['href']
+
+    # 2) Actor document GET
+    resp = requests.get(canonical_actor, timeout=5)
+    resp.raise_for_status()
+    actor_doc = resp.json()
+
+    # 3) Extract inbox URL
+    inbox = actor_doc.get('inbox') \
+         or actor_doc.get('endpoints', {}).get('inbox')
+    if not inbox:
+        raise ValueError("Remote actor did not declare an inbox endpoint")
+
+    # Save to DB
+    if not fa:
+        fa = ForeignActor(actor_uri=actor_uri, canonical_uri=canonical_actor)
+    fa.inbox_url = inbox
+    db.session.add(fa)
+    db.session.commit()
+    return inbox
+
+
 def sign_activitypub_request(actor, method, url, body):
     """
     Sign an HTTP request using the actor's private key (HTTP Signature draft).
@@ -158,13 +206,15 @@ def view_user(username):
     }
     return jsonify(actor), 200, {"Content-Type": "application/activity+json"}
 
-
 @ap_bp.route('/<username>/inbox', methods=['POST'])
 def inbox(username):
     """
     ActivityPub inbox: auto-accept follows (remote), record notifications,
     handle Likes, skip double-notifying for local Create activities.
+    Uses ActivityPub discovery (WebFinger + actor document) to fetch and
+    cache the remote actor’s declared inbox URL, preventing any SSRF.
     """
+    # 0) Load our local user
     user       = User.query.filter_by(username=username).first_or_404()
     activity   = request.get_json(force=True, silent=True) or {}
     typ        = activity.get('type')
@@ -172,36 +222,56 @@ def inbox(username):
     actor_host = urlparse(actor_uri).netloc
     our_host   = request.host
 
-    # 1) verify only remote actors
-    if actor_host != our_host:
+    # 1) Verify signature on remote requests only
+    if actor_host and actor_host != our_host:
         verify_http_signature(user, request.headers, request.get_data())
     else:
-        current_app.logger.debug("Skipping signature check for local actor %s", actor_uri)
+        current_app.logger.debug(
+            "Skipping signature check for local actor %s", actor_uri
+        )
 
-    # 2) look up the sending User (if any)
+    # 2) Look up the sending User (if any)
     sender = User.query.filter_by(activitypub_id=actor_uri).first()
 
-    # 3) handle Follow
+    # 3) Handle Follow → auto-accept via discovered inbox URL
     if typ == 'Follow':
-        # auto-accept
         accept = {
             '@context': AS_CONTEXT,
             'type':     'Accept',
             'actor':    user.activitypub_id,
             'object':   activity
         }
-        inbox_url = actor_uri.rstrip('/') + '/inbox'
-        hdrs = sign_activitypub_request(user, 'POST', inbox_url, json.dumps(accept))
-        try:
-            requests.post(inbox_url, json=accept, headers=hdrs, timeout=5, verify=False)
-        except Exception as e:
-            current_app.logger.error("Auto-accept failed for %s: %s", inbox_url, e)
 
-        # record them as a follower locally
+        try:
+            # Perform WebFinger + actor document fetch (cached)
+            remote_inbox = discover_remote_inbox(actor_uri)
+
+            # Sign against the discovered inbox URL
+            hdrs = sign_activitypub_request(
+                user,
+                'POST',
+                remote_inbox,
+                json.dumps(accept)
+            )
+
+            # POST back to the declared inbox; SSL verification enabled
+            requests.post(
+                remote_inbox,
+                json=accept,
+                headers=hdrs,
+                timeout=5,
+                verify=True
+            )
+        except Exception as e:
+            current_app.logger.error(
+                "Auto-accept failed for %s: %s", actor_uri, e
+            )
+
+        # Record them as a follower locally
         if sender and sender not in user.followers:
             user.followers.append(sender)
 
-        # notify YOU that someone just followed you
+        # Create a local notification for the follow
         if sender:
             name = sender.display_name or sender.username
             db.session.add(Notification(
@@ -216,11 +286,10 @@ def inbox(username):
 
         return ('', 202)
 
-    # 4) handle remote Create
+    # 4) Handle remote Create activities
     if typ == 'Create' and actor_host != our_host:
-        # only remote Creates—local ones were already notified in post_activitypub_create_activity()
-        obj     = activity.get('object', {})
-        summary = obj.get('content','').strip()
+        obj     = activity.get('object', {}) or {}
+        summary = obj.get('content', '').strip()
         if sender:
             db.session.add(Notification(
                 user_id = user.id,
@@ -235,15 +304,21 @@ def inbox(username):
             db.session.commit()
         return ('', 202)
 
-    # 5) handle Like
+    # 5) Handle Like activities
     if typ == 'Like' and sender:
-        obj_id = activity.get('object',{}).get('id','')
+        obj_id = activity.get('object', {}).get('id', '')
         if '/submissions/' in obj_id:
             try:
-                # extract quest_id from URL
-                quest_id = int(obj_id.rsplit('/',1)[0].split('/')[-1])
-                if not QuestLike.query.filter_by(user_id=sender.id, quest_id=quest_id).first():
-                    db.session.add(QuestLike(user_id=sender.id, quest_id=quest_id))
+                # Extract quest_id from the URL path
+                quest_id = int(obj_id.rsplit('/', 1)[0].split('/')[-1])
+                if not QuestLike.query.filter_by(
+                    user_id=sender.id,
+                    quest_id=quest_id
+                ).first():
+                    db.session.add(QuestLike(
+                        user_id=sender.id,
+                        quest_id=quest_id
+                    ))
                     db.session.commit()
             except ValueError:
                 pass
