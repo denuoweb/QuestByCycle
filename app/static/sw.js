@@ -15,7 +15,7 @@ const APP_STATIC_RESOURCES = [
   "/static/css/bootstrap.min.css.map",
   "/static/css/highlight.min.js",
   "/static/css/katex.min.css",
-  "/static/css/main1.css",
+  "/static/css/main.css",
   "/static/css/quill.snow.css",
   "/static/css/quill.snow.css.map",
   "/static/css/3rd/fontawesome/all.min.css",
