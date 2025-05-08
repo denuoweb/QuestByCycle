@@ -1,0 +1,15 @@
+// Mixin for mobile-first media queries
+@mixin respond($breakpoint) {
+    @media (min-width: $breakpoint) {
+      @content;
+    }
+  }
+  
+  // Mixin for CSS transitions (adds vendor prefix)
+  @mixin transition($properties...) {
+    -webkit-transition: $properties;
+    transition: $properties;
+  }
+  
+  // Example: @include transition(all 0.3s ease-in-out);
+  

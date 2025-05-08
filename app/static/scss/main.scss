@@ -1,0 +1,26 @@
+// main.scss - Import all SCSS partials in the proper order
+@use 'sass:math';
+
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+@import 'abstracts/functions';
+
+@import 'base/reset';
+@import 'base/typography';
+
+@import 'layout/header';
+@import 'layout/footer';
+@import 'layout/grid';
+
+@import 'components/navbar';
+@import 'components/buttons';
+@import 'components/forms';
+@import 'components/modals';
+@import 'components/badges';
+
+@import 'pages/game';
+@import 'pages/profile';
+@import 'pages/quest';
+
+@import 'utils/animations';
+@import 'utils/responsive';

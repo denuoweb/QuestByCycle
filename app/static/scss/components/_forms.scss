@@ -1,0 +1,26 @@
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: $border-radius;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: $primary-color;
+  box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
+}
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+button[type="submit"] {
+  @extend .btn;
+}

@@ -1,0 +1,13 @@
+.badge {
+    display: inline-block;
+    padding: 0.25em 0.5em;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    background-color: $primary-color;
+    border-radius: $border-radius;
+  }
+  .badge-secondary {
+    background-color: $secondary-color;
+  }
+  

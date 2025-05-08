@@ -1,0 +1,51 @@
+/* Mobile-first media queries (min-width breakpoints) */
+@media (min-width: 576px) {
+    .container {
+      max-width: 540px;
+    }
+  }
+  @media (min-width: 768px) {
+    .container {
+      max-width: 720px;
+    }
+    .navbar-menu {
+      display: block;
+    }
+    .navbar-toggle {
+      display: none;
+    }
+    .navbar li {
+      display: inline-block;
+      margin: 0 0 0 1rem;
+    }
+    .profile-header {
+      flex-direction: row;
+      align-items: center;
+    }
+    .profile-avatar {
+      margin-right: 1rem;
+      margin-bottom: 0;
+      width: 150px;
+      height: 150px;
+    }
+  }
+  @media (min-width: 992px) {
+    .container {
+      max-width: 960px;
+    }
+    .quest-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .quest-item {
+      flex: 0 0 48%;
+      margin-bottom: 0;
+    }
+  }
+  @media (min-width: 1200px) {
+    .container {
+      max-width: 1140px;
+    }
+  }
+  

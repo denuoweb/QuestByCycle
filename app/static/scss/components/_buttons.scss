@@ -1,0 +1,26 @@
+.btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: $border-radius;
+    cursor: pointer;
+    background-color: $primary-color;
+    color: #fff;
+    @include transition(background-color 0.3s ease);
+  }
+  .btn:hover {
+    background-color: darken($primary-color, 10%);
+  }
+  .btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba($primary-color, 0.3);
+  }
+  .btn-secondary {
+    background-color: $secondary-color;
+    color: #fff;
+  }
+  .btn-secondary:hover {
+    background-color: darken($secondary-color, 10%);
+  }
+  

@@ -153,8 +153,8 @@
   </style>
 
   <!-- Load non-critical CSS asynchronously -->
-  <link rel="preload" href="{{ url_for('static', filename='css/main1.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/main1.css') }}"></noscript>
+  <link rel="preload" href="{{ url_for('static', filename='css/main.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"></noscript>
 
   <link rel="preload" href="{{ url_for('static', filename='css/components/_notifications.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/components/_notifications.css') }}"></noscript>
