@@ -39,119 +39,6 @@
 
   <title>{% block title %}{% endblock %} - QuestByCycle</title>
 
-  <!-- Inline Critical CSS -->
-  <style>
-    body {
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      margin: 0;
-      font-family: 'Arial', sans-serif;
-      padding: 0;
-      background-color: #f0f0f0;
-      color: #333;
-    }
-
-    .content-wrap {
-      flex: 1;
-      background: url('/static/images/header-bg.jpg') stretch;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 95%;
-      margin: auto;
-      background-color: #D0E6B5;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-      overflow: hidden;
-      transition: transform 0.3s ease-in-out, box-shadow 0.3s ease;
-    }
-
-    .flash-message {
-      width: 50%;
-      margin: 20px auto;
-      padding: 15px;
-      border-radius: 5px;
-      text-align: center;
-      font-size: 1em;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      transition: opacity 0.3s ease-in-out;
-    }
-
-    .flash-success {
-      background-color: #a8d5a3;
-      color: #3c763d;
-      border: 1px solid #96c48b;
-    }
-
-    .carousel-inner {
-      height: 300px;
-      max-width: 400px;
-      width: 80%;
-      overflow: hidden;
-      position: relative;
-      margin: auto;
-      display: block;
-    }
-
-    .footer {
-      background-color: #2C3E50;
-      color: #ffffff;
-      font-family: Arial, sans-serif;
-      padding: 20px 50px;
-      box-sizing: border-box;
-      width: 100%;
-    }
-
-    .footer-content {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .footer-section.logos {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .footer-section.logos p {
-      margin-right: 10px;
-    }
-
-    .footer-section {
-      flex: 1;
-      padding: 10px;
-      min-width: 300px;
-    }
-
-    .footer-section.links {
-      margin-bottom: 20px;
-    }
-
-    .footer-section.legal {
-      margin-top: 20px;
-    }
-
-    .footer-logo {
-      height: auto;
-      width: 100px;
-    }
-
-    .social-link {
-      margin: 0 10px;
-      font-size: 24px;
-      color: #ffe07a;
-    }
-
-    .social-link:hover {
-      color: #bfc2b1;
-    }
-  </style>
-
   <!-- Load non-critical CSS asynchronously -->
   <link rel="preload" href="{{ url_for('static', filename='css/main.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"></noscript>
@@ -339,6 +226,19 @@
         </a>
       </p>
     </div>
+    <div class="footer-section social">
+      <p>
+        <a href="{{ selected_game.twitter_url if selected_game else 'https://twitter.com/QuestByCycle' }}" target="_blank" class="social-link">
+          <i class="fab fa-twitter"></i>
+        </a>
+        <a href="{{ selected_game.facebook_url if selected_game else 'https://facebook.com/QuestByCycle' }}" target="_blank" class="social-link">
+          <i class="fab fa-facebook-f"></i>
+        </a>
+        <a href="{{ selected_game.instagram_url if selected_game else 'https://instagram.com/QuestByCycle' }}" target="_blank" class="social-link">
+          <i class="fab fa-instagram"></i>
+        </a>
+      </p>
+    </div>
     <strong>Supporting cycling initiatives for a greener planet.</strong>
     <p>Enjoy the full experience by installing our app.</p>
     <button id="install" hidden class="btn btn-primary">Install App</button>
@@ -362,19 +262,6 @@
       <a href="javascript:void(0)" onclick="openModal('privacyModal')">Privacy Policy</a>
       <a href="javascript:void(0)" onclick="openModal('termsModal')">Terms of Service</a>
       <a href="javascript:void(0)" onclick="openModal('licenseModal')">License Agreement</a>
-    </div>
-    <div class="footer-section social">
-      <p>
-        <a href="{{ selected_game.twitter_url if selected_game else 'https://twitter.com/QuestByCycle' }}" target="_blank" class="social-link">
-          <i class="fab fa-twitter"></i>
-        </a>
-        <a href="{{ selected_game.facebook_url if selected_game else 'https://facebook.com/QuestByCycle' }}" target="_blank" class="social-link">
-          <i class="fab fa-facebook-f"></i>
-        </a>
-        <a href="{{ selected_game.instagram_url if selected_game else 'https://instagram.com/QuestByCycle' }}" target="_blank" class="social-link">
-          <i class="fab fa-instagram"></i>
-        </a>
-      </p>
     </div>
   </div>
   <div class="footer-section legal">
