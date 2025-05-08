@@ -470,13 +470,17 @@ function fetchSubmissions(questId) {
                 const submission = submissions[0];
                 const submissionImage = document.getElementById('submissionImage');
                 const submissionComment = document.getElementById('submissionComment');
-                const submissionProfileLink = document.getElementById('submissionProfileLink');
-                const downloadLink = document.getElementById('downloadLink');
+                const submitterLink     = document.getElementById('submitterProfileLink');
+                const submitterAvatar   = document.getElementById('submitterProfileImage');
+                const submitterCaption  = document.getElementById('submitterProfileCaption');
+                                const downloadLink = document.getElementById('downloadLink');
 
                 submissionImage.src = submission.image_url || 'image/placeholdersubmission.png';
                 submissionComment.textContent = submission.comment || 'No comment provided.';
-                submissionProfileLink.href = `/user/profile/${submission.user_id}`;
-                downloadLink.href = submission.image_url || '#';
+                submitterLink.href    = `/profile/${submission.user_id}`;
+                submitterAvatar.src   = submission.user_avatar_url || '/static/images/default_profile.png';
+                submitterCaption.textContent = submission.username || `User ${submission.user_id}`;
+                                downloadLink.href = submission.image_url || '#';
                 downloadLink.download = `SubmissionImage-${submission.user_id}`;
 
                 if (submission.twitter_url && submission.twitter_url.trim() !== '') {
