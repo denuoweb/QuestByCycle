@@ -71,7 +71,11 @@ Now login with ```ssh USER@HOST```
 ```  -subj "/CN=localhost" \```
 ```  -addext "subjectAltName = DNS:localhost,IP:127.0.0.1"```
 
-5. Run the server
+6. Build CSS
+
+sass app/static/scss/main.scss app/static/css/main.css --no-source-map --style=compressed
+
+7. Run the server
    Either:
 ```poetry run flask \```
 ```  --app wsgi:app \```
