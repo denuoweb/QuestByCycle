@@ -520,27 +520,27 @@ def import_quests(game_id):
 
 
 @quests_bp.route("/quest/<int:quest_id>/submissions")
-def get_quest_submissions(quest_id):
-    """
-    Get all submissions for a specific quest.
-
-    Args:
-        quest_id (int): The ID of the quest.
-    """
-    submissions = QuestSubmission.query.filter_by(quest_id=quest_id).all()
-    submissions_data = [
-        {
-            "id": sub.id,
-            "image_url": sub.image_url,
-            "comment": sub.comment,
-            "timestamp": sub.timestamp.strftime("%Y-%m-%d %H:%M"),
-            "user_id": sub.user_id,
-            "twitter_url": sub.twitter_url,
-            "fb_url": sub.fb_url,
-            "instagram_url": sub.instagram_url,
-        }
-        for sub in submissions
-    ]
+@login_required
+def get_quest_submissions(quest_id):  
+    submissions = QuestSubmission.query.filter_by(quest_id=quest_id).all()  
+    submissions_data = [  
+        {  
+            "id": sub.id,  
+            "image_url": sub.image_url,  
+            "comment": sub.comment,  
+            "timestamp": sub.timestamp.strftime("%Y-%m-%d %H:%M"),  
+            "user_id": sub.user_id,  
+            "user_display_name": User.query.get(sub.user_id).display_name or User.query.get(sub.user_id).username,  
+            "user_username": User.query.get(sub.user_id).username,  
+            "twitter_url": sub.twitter_url,  
+            "fb_url": sub.fb_url,  
+            "instagram_url": sub.instagram_url,  
+            # Add the user's profile picture with proper URL formatting  
+            "user_profile_picture": url_for('static', filename=User.query.get(sub.user_id).profile_picture)   
+                                    if User.query.get(sub.user_id).profile_picture else url_for('static', filename="images/default_profile.png")  
+        }  
+        for sub in submissions  
+    ]  
     return jsonify(submissions_data)
 
 
@@ -986,6 +986,11 @@ def get_all_submissions():
             "user_id": submission.user_id,
             "user_display_name": submission.user.display_name or submission.user.username,
             "user_username": submission.user.username,
+            "user_profile_picture": (
+                url_for('static', filename=submission.user.profile_picture)
+                if submission.user.profile_picture
+                else url_for('static', filename="images/default_profile.png")
+            ),
             "image_url": submission.image_url,
             "comment": submission.comment,
             "timestamp": submission.timestamp.strftime("%Y-%m-%d %H:%M"),
@@ -1080,11 +1085,23 @@ def get_game_title(game_id):
 @login_required
 def get_submission(submission_id):
     sub = QuestSubmission.query.get_or_404(submission_id)
+    user = User.query.get(sub.user_id)
+
+    # build the public URL for their profile pic (or use the default)
+    if user.profile_picture:
+        pic_url = url_for('static', filename=user.profile_picture)
+    else:
+        pic_url = url_for('static', filename='images/default_profile.png')
+
+    display_name = user.display_name or user.username
+
     return jsonify({
-        'url':           sub.image_url,
-        'comment':       sub.comment,
-        'user_id':       sub.user_id,
-        'twitter_url':   sub.twitter_url,
-        'fb_url':        sub.fb_url,
-        'instagram_url': sub.instagram_url
+        'url':                  sub.image_url,
+        'comment':              sub.comment,
+        'user_id':              sub.user_id,
+        'user_profile_picture': pic_url,
+        'user_display_name':    display_name,
+        'twitter_url':          sub.twitter_url,
+        'fb_url':               sub.fb_url,
+        'instagram_url':        sub.instagram_url
     })

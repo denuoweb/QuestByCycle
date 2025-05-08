@@ -87,18 +87,19 @@ function displayAllSubmissions(submissions, isAdmin) {
         card.appendChild(info);
 
         // Make the card clickable to show the submission detail modal
-        card.addEventListener('click', function() {
-            showSubmissionDetail({
-                url: submission.image_url,
-                comment: submission.comment,
-                user_id: submission.user_id,
-                user_display_name: submission.user_display_name || submission.user_username,
-                twitter_url: submission.twitter_url,
-                fb_url: submission.fb_url,
-                instagram_url: submission.instagram_url,
-                verification_type: 'image'  // Assuming you're using 'image', adjust as needed
-            });
-            openModal('submissionDetailModal');  // Ensure the detail modal is opened on top
+        card.addEventListener('click', function() {  
+            showSubmissionDetail({  
+                url: submission.image_url,  
+                comment: submission.comment,  
+                user_id: submission.user_id,  
+                user_display_name: submission.user_display_name || submission.user_username,  
+                user_profile_picture: submission.user_profile_picture,
+                twitter_url: submission.twitter_url,  
+                fb_url: submission.fb_url,  
+                instagram_url: submission.instagram_url,  
+                verification_type: 'image'  
+            });  
+            openModal('submissionDetailModal');  
         });
 
         container.appendChild(card);

@@ -470,12 +470,12 @@ function fetchSubmissions(questId) {
                 const submission = submissions[0];
                 const submissionImage = document.getElementById('submissionImage');
                 const submissionComment = document.getElementById('submissionComment');
-                const submissionUserLink = document.getElementById('submissionUserLink');
+                const submissionProfileLink = document.getElementById('submissionProfileLink');
                 const downloadLink = document.getElementById('downloadLink');
 
                 submissionImage.src = submission.image_url || 'image/placeholdersubmission.png';
                 submissionComment.textContent = submission.comment || 'No comment provided.';
-                submissionUserLink.href = `/user/profile/${submission.user_id}`;
+                submissionProfileLink.href = `/user/profile/${submission.user_id}`;
                 downloadLink.href = submission.image_url || '#';
                 downloadLink.download = `SubmissionImage-${submission.user_id}`;
 
