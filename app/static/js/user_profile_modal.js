@@ -20,7 +20,7 @@ function initializeQuill() {
 
     const form = document.getElementById('messageForm');
     form.onsubmit = function (event) {
-        event.preventDefault();  // Prevent the default form submission
+        event.preventDefault();
         const messageContent = document.querySelector('input[name=content]');
         messageContent.value = quill.root.innerHTML;
         postMessage(form);
@@ -45,7 +45,7 @@ function postMessage(form) {
                 alert(`Error: ${data.error}`);
             } else {
                 alert('Message posted successfully.');
-                showUserProfileModal(form.dataset.userid);  // Reload profile details to reflect changes
+                showUserProfileModal(form.dataset.userid);
             }
         })
         .catch(error => {
@@ -315,7 +315,6 @@ function showUserProfileModal(userId) {
             btn.textContent = isFollowing ? 'Unfollow' : 'Follow';
 
             btn.onclick = async () => {
-            // grab the CSRF token from the meta tag
             const csrfToken = document
                 .querySelector('meta[name="csrf-token"]')
                 .getAttribute('content');
@@ -323,19 +322,18 @@ function showUserProfileModal(userId) {
             const url = `/profile/${data.user.username}/${ isFollowing ? 'unfollow':'follow' }`;
             await fetch(url, {
                 method: 'POST',
-                credentials: 'same-origin',    // ensure cookies (including the session cookie) get sent
+                credentials: 'same-origin',
                 headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken     // Flask-WTF will look for this header
+                'X-CSRFToken': csrfToken 
                 }
             });
 
-            // flip the button state
             isFollowing = !isFollowing;
             btn.textContent = isFollowing ? 'Unfollow' : 'Follow';
             };
       
-            initializeQuill();  // Initialize Quill for all profiles
+            initializeQuill();
             openModal('userProfileModal');
         })
         .catch(error => {
@@ -368,11 +366,9 @@ function toggleProfileEditMode() {
     const editDiv = document.getElementById('profileEditMode');
   
     if (viewDiv.classList.contains('d-none')) {
-      // Currently in edit mode – switch back to view mode.
       viewDiv.classList.remove('d-none');
       editDiv.classList.add('d-none');
     } else {
-      // Switch to edit mode.
       viewDiv.classList.add('d-none');
       editDiv.classList.remove('d-none');
     }
@@ -383,13 +379,11 @@ function saveProfile(userId) {
     const form = document.getElementById('editProfileForm');
     const formData = new FormData(form);
 
-    // Append profile picture to FormData if it exists
     const profilePictureInput = document.getElementById('profilePictureInput');
     if (profilePictureInput.files.length > 0) {
         formData.append('profile_picture', profilePictureInput.files[0]);
     }
 
-    // Collect riding preferences from checkboxes
     const ridingPreferences = [];
     form.querySelectorAll('input[name="riding_preferences"]:checked').forEach((checkbox) => {
         ridingPreferences.push(checkbox.value);
@@ -398,12 +392,6 @@ function saveProfile(userId) {
     formData.delete('riding_preferences');
     ridingPreferences.forEach((preference) => {
         formData.append('riding_preferences', preference);
-    });
-
-    // Debug: Print form data to the console
-    console.log('Form data before submission:');
-    formData.forEach((value, key) => {
-        console.log(`${key}: ${value}`);
     });
 
     fetch(`/profile/${userId}/edit`, {
@@ -419,9 +407,8 @@ function saveProfile(userId) {
             console.error('Server error:', data.error);
             alert(`Error: ${data.error}`);
         } else {
-            console.log('Profile updated successfully:', data);
             alert('Profile updated successfully.');
-            showUserProfileModal(userId);  // Reload profile details to reflect changes
+            showUserProfileModal(userId);
         }
     })
     .catch(error => {
@@ -435,19 +422,12 @@ function saveBike(userId) {
     const form = document.getElementById('editBikeForm');
     const formData = new FormData(form);
 
-    // Append bicycle picture to FormData if it exists
     const bikePictureInput = document.getElementById('bikePicture');
     if (bikePictureInput.files.length > 0) {
         formData.append('bike_picture', bikePictureInput.files[0]);
     }
 
-    // Debug: Print form data to the console
-    console.log('Form data before submission:');
-    formData.forEach((value, key) => {
-        console.log(`${key}: ${value}`);
-    });
-
-    fetch(`/profile/${userId}/edit-bike`, { // Ensure the correct endpoint handles bike information
+    fetch(`/profile/${userId}/edit-bike`, {
         method: 'POST',
         headers: {
             'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
@@ -460,9 +440,8 @@ function saveBike(userId) {
                 console.error('Server error:', data.error);
                 alert(`Error: ${data.error}`);
             } else {
-                console.log('Bike details updated successfully:', data);
                 alert('Bike details updated successfully.');
-                showUserProfileModal(userId);  // Reload profile details to reflect changes
+                showUserProfileModal(userId);
             }
         })
         .catch(error => {
@@ -471,7 +450,7 @@ function saveBike(userId) {
         });
 }
 function buildMessageTree(messages, parentId, isCurrentUser, currentUserId, profileUserId, depth) {
-    if (depth > 3) return '';  // Limit replies to a depth of 3
+    if (depth > 3) return '';
 
     const nestedMessages = messages.filter(message => message.parent_id === parentId)
         .map(message => {
@@ -537,7 +516,7 @@ function postReply(profileUserId, messageId) {
                 alert(`Error: ${data.error}`);
             } else {
                 alert('Reply posted successfully.');
-                showUserProfileModal(profileUserId);  // Reload profile details to reflect changes
+                showUserProfileModal(profileUserId);
             }
         })
         .catch(error => {
@@ -558,7 +537,7 @@ function deleteSubmission(submissionId, context, userId) {
             if (data.success) {
                 alert('Submission deleted successfully.');
                 if (context === 'profileSubmissions') {
-                    showUserProfileModal(userId);  // Reload profile submissions
+                    showUserProfileModal(userId);
                 }
             } else {
                 throw new Error(data.message);
@@ -571,14 +550,9 @@ function deleteSubmission(submissionId, context, userId) {
 }
 
 function deleteAccount() {
-    console.log('deleteAccount called');  // Debugging: Log function call
-
     if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-        console.log('Account deletion cancelled by the user.');  // Debugging: Log cancellation
-        return;  // Exit if the user does not confirm
+        return;
     }
-
-    console.log('User confirmed account deletion. Proceeding with deletion request.');  // Debugging: Log confirmation
 
     fetch(`/auth/delete_account`, {
         method: 'POST',
@@ -588,10 +562,8 @@ function deleteAccount() {
         }
     })
     .then(response => {
-        console.log('Received response from server:', response);  // Debugging: Log response
 
         if (response.redirected) {
-            console.log('Redirecting to:', response.url);  // Debugging: Log redirection
             window.location.href = response.url;
         } else {
             return response.json();
@@ -599,19 +571,17 @@ function deleteAccount() {
     })
     .then(data => {
         if (data) {
-            console.log('Parsed response data:', data);  // Debugging: Log parsed data
             if (data.error) {
                 console.error(`Error received from server: ${data.error}`);  // Debugging: Log server error
                 alert(`Error: ${data.error}`);
             } else {
-                console.log('Account deletion successful. Redirecting to homepage.');  // Debugging: Log success
                 alert('Your account has been successfully deleted.');
-                window.location.href = '/';  // Redirect to the homepage or any other page after deletion
+                window.location.href = '/';
             }
         }
     })
     .catch(error => {
-        console.error('Error deleting account:', error);  // Debugging: Log fetch error
+        console.error('Error deleting account:', error);
         alert('Failed to delete account. Please try again.');
     });
 }
@@ -670,17 +640,17 @@ function deleteMessage(messageId, userId) {
             'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Message deleted successfully.');
-                showUserProfileModal(userId);  // Reload profile messages to reflect changes
-            } else {
-                throw new Error(data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting message:', error);
-            alert('Error during deletion: ' + error.message);
-        });
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Message deleted successfully.');
+            showUserProfileModal(userId);
+        } else {
+            throw new Error(data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting message:', error);
+        alert('Error during deletion: ' + error.message);
+    });
 }
