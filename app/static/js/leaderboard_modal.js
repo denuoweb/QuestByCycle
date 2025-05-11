@@ -5,9 +5,6 @@ function showLeaderboardModal(selectedGameId) {
         alert('Leaderboard modal content element not found. Please ensure the page has loaded completely and the correct ID is used.');
         return;
     }
-
-    console.log(`Fetching leaderboard data for game ID: ${selectedGameId}`);
-
     fetch('/leaderboard_partial?game_id=' + selectedGameId)
         .then(response => {
             if (!response.ok) {

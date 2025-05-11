@@ -1,8 +1,6 @@
-// Quest detail modal management functions
 function openQuestDetailModal(questId) {
     resetModalContent();
 
-    // Show flash messages in the modal
     const flashMessagesContainer = document.getElementById('flash-messages-data');
     const modalFlashContainer = document.getElementById('modal-flash-messages');
     if (flashMessagesContainer && modalFlashContainer) {
@@ -20,7 +18,6 @@ function openQuestDetailModal(questId) {
             ensureDynamicElementsExistAndPopulate(data.quest, data.userCompletion.completions, data.nextEligibleTime, data.canVerify);
 
             fetchSubmissions(questId);
-            //lazyLoadImages(); // Ensure lazy loading is initialized after populating the content
             openModal('questDetailModal');
         })
         .catch(error => {
@@ -35,9 +32,9 @@ function lazyLoadImages() {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 const img = entry.target;
-                img.src = img.getAttribute('data-src');  // Load image by replacing 'data-src' with 'src'
+                img.src = img.getAttribute('data-src');
                 img.classList.remove('lazyload');
-                observer.unobserve(img);  // Stop observing once the image is loaded
+                observer.unobserve(img);
             }
         });
     });
@@ -63,7 +60,6 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
         'modalCountdown': document.getElementById('modalCountdown')
     };
 
-    // Ensure all required elements exist
     for (let key in elements) {
         if (!elements[key]) {
             console.error(`Error: Missing element ${key}`);
@@ -71,7 +67,6 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
         }
     }
 
-    // Update text content for elements
     elements['modalQuestTitle'].innerText = `${quest.title}${completeText}`;
     elements['modalQuestDescription'].innerHTML = quest.description;
     elements['modalQuestTips'].innerHTML = quest.tips || 'No tips available';
@@ -80,7 +75,6 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
     
     const completionText = quest.completion_limit > 1 ? `${quest.completion_limit} times` : `${quest.completion_limit} time`;
     elements['modalQuestCompletionLimit'].innerText = `${completionText} ${quest.frequency}`;
-
 
     const completionTextAward = quest.badge_awarded > 1 ? `${quest.badge_awarded} times` : `${quest.badge_awarded} time`;
     if (quest.badge_awarded != null) {
@@ -126,12 +120,11 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
 }
 
 function ensureDynamicElementsExistAndPopulate(quest, userCompletionCount, nextEligibleTime, canVerify) {
-    const parentElement = document.querySelector('.user-quest-data'); // Target the parent element correctly.
+    const parentElement = document.querySelector('.user-quest-data');
 
-    // Define IDs and initial values for dynamic elements.
     const dynamicElements = [
         { id: 'modalQuestCompletions', value: `${userCompletionCount || 0}` },
-        { id: 'modalCountdown', value: "" } // Will be updated based on conditions
+        { id: 'modalCountdown', value: "" }
     ];
 
     dynamicElements.forEach(elem => {
@@ -144,7 +137,6 @@ function ensureDynamicElementsExistAndPopulate(quest, userCompletionCount, nextE
         element.innerText = elem.value;
     });
 
-    // Update the countdown only if necessary.
     updateCountdownElement(document.getElementById('modalCountdown'), nextEligibleTime, canVerify);
 }
 
@@ -171,11 +163,9 @@ function formatTimeDiff(ms) {
     return `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
 
-// Quest detail modal verification functions
 const userToken = localStorage.getItem('userToken');
 const currentUserId = localStorage.getItem('current_user_id');
 
-// Function to manage the dynamic creation and adjustment of the verification form
 function manageVerificationSection(questId, canVerify, verificationType, nextEligibleTime) {
     const userQuestData = document.querySelector('.user-quest-data');
     userQuestData.innerHTML = '';
@@ -184,28 +174,21 @@ function manageVerificationSection(questId, canVerify, verificationType, nextEli
         const verifyForm = document.createElement('div');
         verifyForm.id = `verifyQuestForm-${questId}`;
         verifyForm.className = 'verify-quest-form';
-        verifyForm.style.display = 'block'; // Show by default
+        verifyForm.style.display = 'block';
 
-        // Ensure verificationType is correctly passed and utilized
         const formHTML = getVerificationFormHTML(verificationType.trim().toLowerCase());
         verifyForm.innerHTML = formHTML;
         userQuestData.appendChild(verifyForm);
 
         setupSubmissionForm(questId);
     }
-
-    console.log("Next Eligible Time:", nextEligibleTime);
-    console.log("Can Verify:", canVerify);
-    console.log("Countdown Element:", document.getElementById('modalCountdown'));
 }
 
 function getVerificationFormHTML(verificationType) {
     let formHTML = '<form enctype="multipart/form-data" class="epic-form">';
 
-    // Insert the centered header for verifying the quest
     formHTML += '<h2 style="text-align: center;">Verify Your Quest</h2>';
 
-    // Explicitly handle each case
     switch (verificationType) {
         case 'photo':
             formHTML += `
@@ -243,14 +226,11 @@ function getVerificationFormHTML(verificationType) {
             break;
         case 'qr_code':
             formHTML += `<p class="epic-message">Find and scan the QR code. No submission required here.</p>`;
-            // No button is added for QR code case
             break;
         case 'pause':
             formHTML += `<p class="epic-message">Quest is currently paused.</p>`;
-            // No button is added for pause case
             break;
         default:
-            // Handle cases where no verification is needed or provide a default case
             formHTML += '<p class="epic-message">Submission Requirements not set correctly.</p>';
             break;
     }
@@ -259,13 +239,11 @@ function getVerificationFormHTML(verificationType) {
     return formHTML;
 }
 
-// Toggle the display of the verification form
 function toggleVerificationForm(questId) {
     const verifyForm = document.getElementById(`verifyQuestForm-${questId}`);
     verifyForm.style.display = verifyForm.style.display === 'none' ? 'block' : 'none';
 }
 
-// Setup submission form with event listener
 function setupSubmissionForm(questId) {
     const submissionForm = document.getElementById(`verifyQuestForm-${questId}`);
     if (submissionForm) {
@@ -278,13 +256,12 @@ function setupSubmissionForm(questId) {
     }
 }
 
-// Define verifyQuest function to handle verification form toggling
 function verifyQuest(questId) {
     const verifyForm = document.getElementById(`verifyQuestForm-${questId}`);
     if (verifyForm.style.display === 'none' || verifyForm.style.display === '') {
-        verifyForm.style.display = 'block';  // Show the form
+        verifyForm.style.display = 'block';
     } else {
-        verifyForm.style.display = 'none';  // Hide the form
+        verifyForm.style.display = 'none';
     }
 }
 
@@ -303,11 +280,11 @@ function setTwitterLink(url) {
     const twitterLink = document.getElementById('twitterLink');
     if (twitterLink) {
         if (url) {
-            twitterLink.href = url;  // Set the href attribute with the received Twitter URL
-            twitterLink.textContent = 'Link to Twitter';  // Optional: Update button text if necessary
+            twitterLink.href = url;
+            twitterLink.textContent = 'Link to Twitter';
         } else {
-            twitterLink.href = '#';  // Reset or provide a fallback URL
-            twitterLink.textContent = 'Link Unavailable';  // Handle cases where the URL isn't available
+            twitterLink.href = '#';
+            twitterLink.textContent = 'Link Unavailable';
         }
     }
 }
@@ -327,11 +304,11 @@ function setFacebookLink(url) {
     const facebookLink = document.getElementById('facebookLink');
     if (facebookLink) {
         if (url) {
-            facebookLink.href = url;  // Set the href attribute with the received FB URL
-            facebookLink.textContent = 'Link to Facebook';  // Optional: Update button text if necessary
+            facebookLink.href = url;
+            facebookLink.textContent = 'Link to Facebook';
         } else {
-            facebookLink.href = '#';  // Reset or provide a fallback URL
-            facebookLink.textContent = 'Link Unavailable';  // Handle cases where the URL isn't available
+            facebookLink.href = '#';
+            facebookLink.textContent = 'Link Unavailable';
         }
     }
 }
@@ -351,16 +328,15 @@ function setInstagramLink(url) {
     const instagramLink = document.getElementById('instagramLink');
     if (instagramLink) {
         if (url) {
-            instagramLink.href = url;  // Set the href attribute with the received Instagram URL
-            instagramLink.textContent = 'Link to Instagram';  // Optional: Update button text if necessary
+            instagramLink.href = url;
+            instagramLink.textContent = 'Link to Instagram';
         } else {
-            instagramLink.href = '#';  // Reset or provide a fallback URL
-            instagramLink.textContent = 'Link Unavailable';  // Handle cases where the URL isn't available
+            instagramLink.href = '#';
+            instagramLink.textContent = 'Link Unavailable';
         }
     }
 }
 
-// Handle Quest Submissions with streamlined logic
 let isSubmitting = false;
 
 function submitQuestDetails(event, questId) {
@@ -370,12 +346,12 @@ function submitQuestDetails(event, questId) {
 
     const form = event.target;
     const formData = new FormData(form);
-    formData.append('user_id', currentUserId); // Add user_id to form data
-    formData.append('sid', socket.id); // Add sid to form data
+    formData.append('user_id', currentUserId);
+    formData.append('sid', socket.id);
 
     console.debug('Submitting form with data:', formData);
 
-    showLoadingModal(); // Show the loading modal
+    showLoadingModal();
 
     fetch(`/quests/quest/${questId}/submit`, {
         method: 'POST',
@@ -386,10 +362,9 @@ function submitQuestDetails(event, questId) {
         }
     })
     .then(response => {
-        hideLoadingModal(); // Hide the loading modal upon receiving the response
+        hideLoadingModal();
         if (!response.ok) {
             if (response.status === 403) {
-                // Handle the specific case where the game is out of date
                 return response.json().then(data => {
                     if (data.message === 'This quest cannot be completed outside of the game dates') {
                         throw new Error('The game has ended and you can no longer submit quests. Join a new game in the game dropdown menu.');
@@ -430,7 +405,7 @@ function submitQuestDetails(event, questId) {
         form.reset();
     })
     .catch(error => {
-        hideLoadingModal(); // Ensure the loading modal is hidden on error
+        hideLoadingModal();
         console.error("Submission error:", error);
         if (error.message === 'The game has ended and you can no longer submit quests. Join a new game in the game dropdown menu.') {
             alert('The game has ended, and you can no longer submit quests for this game. Join a new game in the game dropdown menu.');
@@ -443,15 +418,14 @@ function submitQuestDetails(event, questId) {
     });
 }
 
-// Fetch and Display Submissions
 function fetchSubmissions(questId) {
     fetch(`/quests/quest/${questId}/submissions`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${userToken}`, // Assuming Bearer token is used
+                'Authorization': `Bearer ${userToken}`,
                 'Content-Type': 'application/json'
             },
-            credentials: 'include' // For cookies, this might be necessary
+            credentials: 'include'
         })
         .then(response => {
             if (!response.ok) {
@@ -529,7 +503,6 @@ function fetchSubmissions(questId) {
         });
 }
 
-// Function to check if a URL is a valid image URL
 function isValidImageUrl(url) {
     if (!url) {
         console.error(`Invalid URL detected: ${url}`);
@@ -537,18 +510,14 @@ function isValidImageUrl(url) {
     }
     try {
         if (url.startsWith("/")) {
-            // Allow relative paths that start with '/'
             return true;
         }
         const parsedUrl = new URL(url);
-        // Check the URL scheme to make sure it's HTTP or HTTPS only
         if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
-            // Allow only URLs ending in common image extensions (e.g., .jpg, .png, etc.)
             const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
             return allowedExtensions.some(ext => parsedUrl.pathname.toLowerCase().endsWith(ext));
         }
     } catch (e) {
-        // If the URL constructor throws, the URL is invalid
         console.error(`Invalid URL detected: ${url}`);
         return false;
     }
@@ -557,14 +526,12 @@ function isValidImageUrl(url) {
 
 function distributeImages(images) {
     const board = document.getElementById('submissionBoard');
-    board.innerHTML = ''; // Clear existing content
+    board.innerHTML = '';
 
-    // Get and validate the fallback URL from the DOM
     let fallbackUrl = document.getElementById('questDetailModal').getAttribute('data-placeholder-url');
     if (!fallbackUrl) {
         console.warn("No fallback URL provided in data-placeholder-url attribute.");
-        // Set a default fallback image URL if none is provided
-        fallbackUrl = '/static/images/default-placeholder.webp'; // Update to a valid placeholder image path if available
+        fallbackUrl = '/static/images/default-placeholder.webp';
     }
 
     const validFallbackUrl = isValidImageUrl(fallbackUrl) ? fallbackUrl : '';
@@ -577,19 +544,14 @@ function distributeImages(images) {
         
         let finalImageUrl = '';
         if (isValidImageUrl(image.url)) {
-            finalImageUrl = image.url;  // Assign the validated URL directly
+            finalImageUrl = image.url;
         } else if (validFallbackUrl) {
-            // Use the validated fallback URL if image.url is invalid
             finalImageUrl = validFallbackUrl;
         }
 
-        // Log the image URL being used
-        console.log(`Using image URL: ${finalImageUrl}`);
         img.src = finalImageUrl;
-
         img.alt = "Loaded Image";
 
-        // Set onerror to use the fallback URL if the image fails to load
         img.onerror = () => {
             console.warn(`Image failed to load, using fallback: ${validFallbackUrl}`);
             if (validFallbackUrl) {
@@ -598,10 +560,9 @@ function distributeImages(images) {
         };
 
         img.onclick = () => {
-            console.log("Image clicked:", finalImageUrl);
             showSubmissionDetail(image);
         };
-        img.style.margin = '10px'; // Add some margin between images if needed
-        board.appendChild(img); // Append directly to the board
+        img.style.margin = '10px';
+        board.appendChild(img);
     });
 }

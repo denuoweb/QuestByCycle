@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', function() {
     navigator.serviceWorker
       .register("static/sw.js")
       .then(function(registration) {
-        console.log('ServiceWorker registered:', registration);
         registration.addEventListener('updatefound', function() {
           var newWorker = registration.installing;
           newWorker.addEventListener('statechange', function() {
@@ -23,7 +22,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
 
     navigator.serviceWorker.addEventListener('message', function(event) {
-      console.log('SW message event:', event);
       if (event.data.type === 'UPDATE_AVAILABLE') {
         if (confirm('A new version is available. Reload to update?')) {
           window.location.reload();
@@ -51,13 +49,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // ----------------------------------------------------------------
   if (isSafari) {
     manualInstall.hidden = false;
-    console.log('Safari detected: showing manual instructions.');
   } else {
     manualInstall.hidden = true;
   }
 
   window.addEventListener('beforeinstallprompt', function(e) {
-    console.log('beforeinstallprompt fired:', e);
     e.preventDefault();
     deferredPrompt = e;
     installButton.hidden = false;
@@ -66,7 +62,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (!deferredPrompt) return;
       deferredPrompt.prompt();
       deferredPrompt.userChoice.then(function(choice) {
-        console.log('User install choice:', choice.outcome);
         deferredPrompt = null;
         installButton.hidden = true;
       });
@@ -79,14 +74,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   window.addEventListener('appinstalled', function() {
-    console.log('PWA installed.');
     installButton.hidden = true;
     manualInstall.hidden = true;
   });
 
   if (navigator.getInstalledRelatedApps) {
     navigator.getInstalledRelatedApps().then(function(apps) {
-      console.log('Related apps:', apps);
       if (apps.length) installButton.hidden = true;
     });
   }
