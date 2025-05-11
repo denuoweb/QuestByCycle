@@ -126,9 +126,9 @@ def delete_message(user_id, message_id):
         db.session.delete(message)
         db.session.commit()
         return jsonify({'success': True}), 200
-    except IntegrityError as e:
+    except IntegrityError:
         db.session.rollback()
-        return jsonify({'error': str(e.orig)}), 500
+        return
 
 
 @profile_bp.route('/<int:user_id>/messages/<int:message_id>/reply', methods=['POST'])
