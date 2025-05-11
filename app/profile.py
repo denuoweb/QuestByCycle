@@ -1,3 +1,6 @@
+import bleach
+import json
+import requests
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import current_user, login_required
 from .models import db, ProfileWallMessage, User
@@ -6,10 +9,6 @@ from sqlalchemy.exc import IntegrityError
 from app.activitypub_utils import sign_activitypub_request
 from urllib.parse import urlparse
 from threading import Thread
-
-import bleach
-import json
-import requests
 
 profile_bp = Blueprint('profile', __name__)
 

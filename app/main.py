@@ -5,6 +5,11 @@ This module defines the main blueprint for the Flask application.
 It contains routes for the index page, profile management, image resizing,
 shout board interactions, leaderboard data, and contact submissions.
 """
+import bleach
+import io
+import logging
+import os
+import json
 from flask import (Blueprint, jsonify, render_template, request, redirect,
                    url_for, flash, current_app, send_file)
 from flask_login import current_user, login_required
@@ -20,15 +25,8 @@ from app.models import (db, Game, User, Quest, Badge, UserQuest, QuestSubmission
                         user_games)
 from app.forms import (ProfileForm, ShoutBoardForm, ContactForm, BikeForm,
                        LoginForm, RegistrationForm, ForgotPasswordForm, ResetPasswordForm)
-from app.utils import (save_profile_picture, save_bicycle_picture, send_email,
-                       allowed_file, enhance_badges_with_task_info, get_game_badges)
+from app.utils import (save_profile_picture, save_bicycle_picture, send_email)
 from .config import load_config
-
-import bleach
-import io
-import logging
-import os
-import json
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)

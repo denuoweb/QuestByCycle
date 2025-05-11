@@ -2,12 +2,10 @@
 
 import random
 import string
-from datetime import datetime
-from time import time
-
 import jwt
 from pytz import utc
-
+from datetime import datetime
+from time import time
 from flask import current_app  # pylint: disable=import-error
 from flask_sqlalchemy import SQLAlchemy  # pylint: disable=import-error
 from flask_login import UserMixin  # pylint: disable=import-error
@@ -17,7 +15,6 @@ from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 from sqlalchemy import DateTime 
 
 db = SQLAlchemy()
-
 
 # -----------------------------------------------------------------------------
 # Association Tables

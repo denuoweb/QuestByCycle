@@ -1,13 +1,15 @@
+"""
+Badge related routes.
+"""
+import bleach
+import os
+import csv
 from flask import Blueprint, current_app, render_template, flash, redirect, url_for, jsonify, request
 from flask_login import login_required, current_user
 from .forms import BadgeForm
 from .utils import save_badge_image, allowed_file
 from .models import db, Quest, Badge, UserQuest, Game
 from werkzeug.utils import secure_filename
-
-import bleach
-import os
-import csv
 
 badges_bp = Blueprint('badges', __name__, template_folder='templates')
 

@@ -1,4 +1,11 @@
-from flask import Blueprint, jsonify, render_template, request, current_app, url_for
+"""
+Create quest with AI help related routes.
+"""
+import bleach
+import requests
+import string
+import re
+from flask import Blueprint, jsonify, render_template, request, current_app
 from flask_login import login_required
 from app.forms import QuestForm
 from app.utils import save_badge_image
@@ -7,12 +14,6 @@ from werkzeug.datastructures import MultiDict
 from openai import OpenAI
 from io import BytesIO
 from PIL import Image
-from werkzeug.utils import secure_filename
-
-import bleach
-import requests
-import string
-import re
 
 ai_bp = Blueprint('ai', __name__, template_folder='templates')
 

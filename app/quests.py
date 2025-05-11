@@ -8,13 +8,11 @@ submission handling, and related operations in the application.
 import base64
 import csv
 import os
-import json
+import bleach
+import qrcode
 import requests 
 from datetime import datetime, timezone
 from io import BytesIO
-
-import bleach
-import qrcode
 from flask import (
     Blueprint,
     current_app,
@@ -27,10 +25,8 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
-# Removed unused "emit" import from flask_socketio
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
-
 from app.forms import PhotoForm, QuestForm
 from app.social import post_to_social_media
 from app.utils import (

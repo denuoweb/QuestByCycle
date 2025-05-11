@@ -3,6 +3,9 @@
 Authentication module for handling login, registration, and related routes.
 """
 
+import bleach
+import uuid
+import requests
 from datetime import datetime
 from urllib.parse import urlparse, urlencode
 
@@ -13,18 +16,12 @@ from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from pytz import utc
 from urllib.parse import urlparse, urljoin
-
-import bleach
-import uuid
-import requests
-
 from app.models import db, User, Game
 from app.forms import (LoginForm, RegistrationForm, ForgotPasswordForm,
                        ResetPasswordForm, UpdatePasswordForm, MastodonLoginForm)
-from app.utils import send_email, generate_demo_game, log_user_ip
-from app.activitypub_utils import generate_activitypub_keys, create_activitypub_actor
+from app.utils import send_email, log_user_ip
+from app.activitypub_utils import create_activitypub_actor
 
-# Initialize the blueprint.
 auth_bp = Blueprint('auth', __name__)
 
 ALLOWED_TAGS = [

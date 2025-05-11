@@ -15,7 +15,6 @@ from app.forms import GameForm
 from app.utils import save_leaderboard_image, generate_smoggy_images, allowed_file
 from io import BytesIO
 
-
 ALLOWED_TAGS = [
     'a', 'b', 'i', 'u', 'em', 'strong', 'p', 'h1', 'h2', 'h3', 'h4', 'h5',
     'h6', 'blockquote', 'code', 'pre', 'br', 'div', 'span', 'ul', 'ol', 'li',

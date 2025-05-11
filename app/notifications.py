@@ -4,7 +4,6 @@ from app.models import Notification, db
 
 notifications_bp = Blueprint('notifications', __name__)
 
-
 @notifications_bp.route('/', methods=['GET'])
 @login_required
 def index():
