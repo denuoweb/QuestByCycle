@@ -276,15 +276,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // and there's no game_id in the URL.
 // ────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-    // Debug: confirm this script runs
-    console.log('modal_common: checking show_join_custom…', window.location.search);
-    
     const params     = new URLSearchParams(window.location.search);
     const showJoin   = params.get('show_join_custom') === '1';
     const hasGameId  = params.has('game_id');
   
     if (showJoin && !hasGameId) {
-      console.log('modal_common: opening joinCustomGameModal');
       openModal('joinCustomGameModal');
     }
   });
