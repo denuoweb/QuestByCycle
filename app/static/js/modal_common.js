@@ -1,33 +1,50 @@
-let topZIndex = 1050; // Start with a base z-index for the first modal
+let topZIndex = 3000;
 
-// Common modal management functions
 function openModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        topZIndex += 10; // Increment z-index for stacking
-        modal.style.zIndex = topZIndex; // Apply the new z-index to the modal
-        modal.style.display = 'block';
-        document.body.classList.add('body-no-scroll'); // Optional: prevent scrolling when modal is open
-    }
+  const modal = document.getElementById(modalId);
+  if (!modal) {
+    console.error(`Modal ${modalId} not found`);
+    return;
+  }
+
+  // hoist & reveal
+  document.body.appendChild(modal);
+  document.querySelector('.container')?.classList.add('modal-open');
+  modal.classList.add('active');
+  modal.style.display = 'flex';
+  topZIndex += 10;
+  modal.style.zIndex = topZIndex;
+
+  // backdrop, if any
+  const backdrop = modal.querySelector('.modal-backdrop');
+  if (backdrop) {
+    backdrop.style.display = 'block';
+    backdrop.style.zIndex   = topZIndex - 1;
+  } else {
+    console.warn('No .modal-backdrop found inside', modalId);
+  }
+
+  document.body.classList.add('body-no-scroll');
 }
 
 function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
 
-        // Decrement z-index to allow stacking of previous modals
-        topZIndex -= 10;
+  const backdrop = modal.querySelector('.modal-backdrop');
+  modal.style.display = 'none';
+  if (backdrop) backdrop.style.display = 'none';
 
-        // Restore scrolling if no modals are open
-        const openModals = document.querySelectorAll('.modal[style*="display: block"]');
-        if (openModals.length === 0) {
-            document.body.classList.remove('body-no-scroll');
-        }
-        
-        const ev = new CustomEvent('hidden.bs.modal', { bubbles: true });
-        modal.dispatchEvent(ev);
-    }
+  topZIndex = Math.max(1050, topZIndex - 10);
+
+  // if no modals still open…
+  if (!document.querySelector('.modal[style*="display: flex"]')) {
+    document.body.classList.remove('body-no-scroll');
+    document.querySelector('.container')?.classList.remove('modal-open');
+  }
+
+  // mimic bootstrap event
+  modal.dispatchEvent(new CustomEvent('hidden.bs.modal', { bubbles: true }));
 }
 
 // Reset all modal content and settings to the initial state
@@ -344,4 +361,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Now open the login modal just as if they clicked openLoginModalWithGame({gameId})
   openLoginModalWithGame({ gameId, questId: '' });
+});
+
+/**
+ * Generic loader: fetch a chunk of HTML, inject its first node,
+ * then `openModal(modalId)`.
+ */
+async function fetchAndShowModal(url, modalId) {
+  try {
+    const res = await fetch(url, { credentials: 'same-origin' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = await res.text();
+
+    // remove any old instance
+    const old = document.getElementById(modalId);
+    if (old) old.parentNode.removeChild(old);
+
+    // inject new
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html.trim();
+    const modalEl = tmp.firstElementChild;
+    if (!modalEl || modalEl.id !== modalId) {
+      console.warn(`Expected first element to be #${modalId}`, modalEl);
+    }
+    document.body.appendChild(modalEl);
+
+    openModal(modalId);
+  } catch (err) {
+    console.error(`Error loading ${modalId} from ${url}:`, err);
+    alert('Failed to load data. Please try again later.');
+  }
+}
+
+// wire up any [data-modal-url] triggers
+document.addEventListener('click', e => {
+  const button = e.target.closest('[data-modal-url]');
+  if (!button) return;
+  e.preventDefault();
+
+  const url      = button.getAttribute('data-modal-url');
+  const modalId  = button.getAttribute('data-modal-id');
+  if (!url || !modalId) {
+    console.error('data-modal-url or data-modal-id missing', button);
+    return;
+  }
+  fetchAndShowModal(url, modalId);
+});
+
+// on DOMContentLoaded, hoist *all* static .modal up under <body>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.modal').forEach(m => {
+    if (m.parentNode !== document.body) {
+      document.body.appendChild(m);
+    }
+  });
 });
