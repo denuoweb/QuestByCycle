@@ -170,7 +170,7 @@ def user_management(game_id=None):
 def user_details(user_id):
     user = User.query.get(user_id)
     if not user:
-        return jsonify({"error": "User not found"}), 404
+        return
 
     user_details = {
         'id': user.id,

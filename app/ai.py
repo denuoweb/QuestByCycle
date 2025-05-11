@@ -56,27 +56,15 @@ def sanitize_html(html_content):
 @ai_bp.route('/generate_quest', methods=['POST'])
 @login_required
 def generate_quest():
-    try:
-        data = request.get_json()
-        description = data.get('description', '')
-        game_id = data.get('game_id', '')
-        if not description:
-            return jsonify({"error": "Description is required"}), 400
-        if not game_id:
-            return jsonify({"error": "Game ID is required"}), 400
+    data = request.get_json()
+    description = data.get('description', '')
+    game_id = data.get('game_id', '')
 
-        quest_details, error_message = generate_quest_details(description)
+    quest_details, error_message = generate_quest_details(description)
 
-        if quest_details:
-            generated_quest_html = render_template('generated_quest.html', quest=quest_details, game_id=game_id)
-            return jsonify({"generated_quest_html": generated_quest_html})
-        else:
-            return jsonify({"error": error_message or "Failed to generate valid quest details"}), 500
-
-    except ValueError as ve:
-        return jsonify({'error': str(ve)}), 400
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
+    if quest_details:
+        generated_quest_html = render_template('generated_quest.html', quest=quest_details, game_id=game_id)
+        return jsonify({"generated_quest_html": generated_quest_html})
 
 
 @ai_bp.route('/create_quest', methods=['POST'])
@@ -146,7 +134,7 @@ def generate_badge_image():
     data = request.get_json()
     badge_description = data.get('badge_description', '')
     if not badge_description:
-        return jsonify({"error": "Badge description is required"}), 400
+        return
 
     sanitized_badge_description = sanitize_html(badge_description)
     badge_prompt = (

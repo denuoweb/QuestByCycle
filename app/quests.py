@@ -174,7 +174,7 @@ def add_quest(game_id):
             flash("Quest added successfully!", "success")
         except Exception as error:  # pylint: disable=broad-except
             db.session.rollback()
-            flash(f"An error occurred: {error}", "error")
+            flash(f"An error occured.", "error")
 
         return redirect(url_for("quests.manage_game_quests", game_id=game_id,
             in_admin_dashboard=True))
@@ -320,7 +320,7 @@ def submit_quest(quest_id):
         })
     except Exception as error:
         db.session.rollback()
-        return jsonify({"success": False, "message": str(error)})
+        return
 
 
 @quests_bp.route("/quest/<int:quest_id>/update", methods=["POST"])
@@ -364,7 +364,7 @@ def update_quest(quest_id):
         return jsonify({"success": True, "message": "Quest updated successfully"})
     except Exception as error:  # pylint: disable=broad-except
         db.session.rollback()
-        return jsonify({"success": False, "message": str(error)})
+        return
 
 
 @quests_bp.route("/quest/<int:quest_id>/delete", methods=["DELETE"])
@@ -388,7 +388,7 @@ def delete_quest(quest_id):
     except Exception as error:  # pylint: disable=broad-except
         db.session.rollback()
         current_app.logger.error(f"Failed to delete quest {quest_id}: {error}")
-        return jsonify({"success": False, "message": "Failed to delete quest"})
+        return
 
 
 @quests_bp.route("/game/<int:game_id>/quests", methods=["GET"])
@@ -825,25 +825,22 @@ def get_user_submissions():
     Retrieve submissions for the current user.
     """
     if not current_user.is_authenticated:
-        return jsonify({"error": "Unauthorized"}), 403
+        return
 
-    try:
-        submissions = QuestSubmission.query.filter_by(user_id=current_user.id).all()
-        submissions_data = [
-            {
-                "id": submission.id,
-                "image_url": submission.image_url,
-                "comment": submission.comment,
-                "user_id": submission.user_id,
-                "quest_id": submission.quest_id,
-                "twitter_url": submission.twitter_url,
-                "timestamp": submission.timestamp.isoformat(),
-            }
-            for submission in submissions
-        ]
-        return jsonify(submissions_data)
-    except Exception as error:  # pylint: disable=broad-except
-        return jsonify({"error": "Failed to fetch submissions"}), 500
+    submissions = QuestSubmission.query.filter_by(user_id=current_user.id).all()
+    submissions_data = [
+        {
+            "id": submission.id,
+            "image_url": submission.image_url,
+            "comment": submission.comment,
+            "user_id": submission.user_id,
+            "quest_id": submission.quest_id,
+            "twitter_url": submission.twitter_url,
+            "timestamp": submission.timestamp.isoformat(),
+        }
+        for submission in submissions
+    ]
+    return jsonify(submissions_data)
 
 
 @quests_bp.route("/quest/delete_submission/<int:submission_id>", methods=["DELETE"])
@@ -859,10 +856,10 @@ def delete_submission(submission_id):
 
     if not current_user.is_admin:
         if submission.user_id != current_user.id:
-            return jsonify({"error": "Unauthorized"}), 403
+            return
 
     if not submission:
-        return jsonify({"error": "Submission not found"}), 404
+        return
 
     user_quest = UserQuest.query.filter_by(
         user_id=submission.user_id, quest_id=submission.quest_id
@@ -895,7 +892,7 @@ def get_all_submissions():
     game_id = request.args.get("game_id", type=int)
 
     if game_id is None:
-        return jsonify({"error": "Game ID is required"}), 400
+        return
 
     submissions = (
         QuestSubmission.query.join(Quest, QuestSubmission.quest_id == Quest.id)
@@ -944,7 +941,7 @@ def quest_details(quest_id):
         quest_id (int): The ID of the quest.
     """
     if not current_user.is_authenticated:
-        return jsonify({"error": "Unauthorized"}), 403
+        return
 
     quest = Quest.query.get_or_404(quest_id)
     quest_data = {
@@ -985,9 +982,7 @@ def delete_all_quests(game_id):
         return jsonify({"success": True, "message": "All quests deleted successfully."}), 200
     except Exception as error:  # pylint: disable=broad-except
         db.session.rollback()
-        return jsonify(
-            {"success": False, "message": f"Failed to delete all quests: {str(error)}"}
-        ), 500
+        return
 
 
 @quests_bp.route("/game/<int:game_id>/get_title", methods=["GET"])
