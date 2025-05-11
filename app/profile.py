@@ -48,18 +48,22 @@ ALLOWED_ATTRIBUTES = {
 }
 
 
-def _deliver_follow_activity(actor_url, activity, sender):
-    """
-    Background thread: fetch target’s actor doc and POST the activity.
-    """
+def _deliver_follow_activity(actor_url, activity, sender_id):
+    """Background thread: fetch target’s actor doc and POST the activity."""
     try:
+        # re-load the user and ensure they have a keypair
+        sender = User.query.get(sender_id)
+        sender.ensure_activitypub_actor()
+
         doc = requests.get(actor_url, timeout=5, verify=False).json()
         inbox = doc.get("inbox")
         if inbox:
             hdrs = sign_activitypub_request(sender, 'POST', inbox, json.dumps(activity))
             requests.post(inbox, json=activity, headers=hdrs, timeout=5, verify=False)
     except Exception as e:
-        current_app.logger.error("Failed to deliver ActivityPub activity to %s: %s", actor_url, e)
+        current_app.logger.error(
+            "Failed to deliver ActivityPub activity to %s: %s", actor_url, e
+        )
 
 
 @profile_bp.route('/<int:user_id>/messages', methods=['POST'])
@@ -210,6 +214,16 @@ def edit_message(user_id, message_id):
         return jsonify({'error': str(e)}), 500
 
 
+def is_local_actor(actor_url):
+    host = urlparse(actor_url).netloc
+    locals = {
+        current_app.config['LOCAL_DOMAIN'],
+        '127.0.0.1:5000',
+        'localhost:5000',
+    }
+    return host in locals
+
+
 @profile_bp.route('/<string:username>/follow', methods=['POST'])
 @login_required
 def follow_user(username):
@@ -241,13 +255,10 @@ def follow_user(username):
     }
 
     # 4) if the target is remote, fire off delivery in a daemon thread
-    local_host  = urlparse(current_user.activitypub_id).netloc
-    target_host = urlparse(target.activitypub_id).netloc
-
-    if target_host != local_host:
+    if not is_local_actor(target.activitypub_id):
         Thread(
             target=_deliver_follow_activity,
-            args=(target.activitypub_id, activity, current_user),
+            args=(target.activitypub_id, activity, current_user.id),
             daemon=True
         ).start()
     else:
@@ -291,13 +302,10 @@ def unfollow_user(username):
     }
 
     # 4) deliver in background if remote
-    local_host  = urlparse(current_user.activitypub_id).netloc
-    target_host = urlparse(target.activitypub_id).netloc
-
-    if target_host != local_host:
+    if not is_local_actor(target.activitypub_id):
         Thread(
             target=_deliver_follow_activity,
-            args=(target.activitypub_id, activity, current_user),
+            args=(target.activitypub_id, activity, current_user.id),
             daemon=True
         ).start()
     else:
