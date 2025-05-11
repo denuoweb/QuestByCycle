@@ -172,7 +172,7 @@ def add_quest(game_id):
         try:
             db.session.commit()
             flash("Quest added successfully!", "success")
-        except Exception as error:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             db.session.rollback()
             flash(f"An error occured.", "error")
 
