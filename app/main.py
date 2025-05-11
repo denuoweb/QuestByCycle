@@ -88,9 +88,9 @@ def get_datetime(activity):
     Checks for either a 'timestamp' or 'completed_at' attribute.
     """
     if hasattr(activity, 'timestamp') and isinstance(activity.timestamp, datetime):
-        return activity.timestamp.replace(tzinfo=None) if activity.timestamp.tzinfo is not None else activity.timestamp
+        return activity.timestamp
     if hasattr(activity, 'completed_at') and isinstance(activity.completed_at, datetime):
-        return activity.completed_at.replace(tzinfo=None)
+        return activity.completed_at
     raise ValueError("Activity object does not contain valid timestamp information.")
 
 
@@ -294,8 +294,7 @@ def index(game_id, quest_id, user_id):
     reset_form = ResetPasswordForm()
     start_onboarding = False
 
-    now_aware = datetime.now(utc)
-    now = now_aware.replace(tzinfo=None)
+    now = datetime.now(utc)
 
     if user_id is None and current_user.is_authenticated:
         user_id = current_user.id

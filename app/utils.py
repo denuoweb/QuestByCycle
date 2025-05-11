@@ -238,7 +238,7 @@ def save_sponsor_logo(image_file, old_filename=None):
 
 
 def can_complete_quest(user_id, quest_id):
-    now = datetime.now()
+    now = datetime.now(utc)
     quest = Quest.query.get(quest_id)
     
     if not quest:
@@ -295,7 +295,7 @@ def can_complete_quest(user_id, quest_id):
 
 
 def getLastRelevantCompletionTime(user_id, quest_id):
-    now = datetime.now()
+    now = datetime.now(utc)
     quest = Quest.query.get(quest_id)
     
     if not quest:
@@ -587,8 +587,8 @@ def send_email(to, subject, html_content):
 
 
 def generate_demo_game():
-    current_quarter = (datetime.now().month - 1) // 3 + 1
-    year = datetime.now().year
+    current_quarter = (datetime.now(utc).month - 1) // 3 + 1
+    year = datetime.now(utc).year
     title = f"Demo Game - Q{current_quarter} {year}"
 
     existing_game = Game.query.filter_by(is_demo=True, title=title).first()

@@ -10,7 +10,7 @@ import csv
 import os
 import json
 import requests 
-from datetime import datetime
+from datetime import datetime, timezone
 from io import BytesIO
 
 import bleach
@@ -208,7 +208,7 @@ def submit_quest(quest_id):
     """
     quest = Quest.query.get_or_404(quest_id)
     game = Game.query.get_or_404(quest.game_id)
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
 
     # Check if the quest is within game dates.
     if game.start_date > now or now > game.end_date:
@@ -300,7 +300,7 @@ def submit_quest(quest_id):
             twitter_url=twitter_url,
             fb_url=fb_url,
             instagram_url=instagram_url,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
         )
         db.session.add(new_submission)
 
@@ -311,13 +311,13 @@ def submit_quest(quest_id):
                 quest_id=quest_id,
                 completions=1,
                 points_awarded=quest.points,
-                completed_at=datetime.now(),
+                completed_at=datetime.now(timezone.utc),
             )
             db.session.add(user_quest)
         else:
             user_quest.completions += 1
             user_quest.points_awarded += quest.points
-            user_quest.completed_at = datetime.now()
+            user_quest.completed_at = datetime.now(timezone.utc)
 
         emit_status("Finalizing submission...", sid)
         db.session.commit()
@@ -753,7 +753,7 @@ def submit_photo(quest_id):
     form = PhotoForm()
     quest = Quest.query.get_or_404(quest_id)
     game = Game.query.get_or_404(quest.game_id)
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
 
     if not quest.enabled:
         flash("This quest is not enabled.", "error")
@@ -823,7 +823,7 @@ def submit_photo(quest_id):
             twitter_url=twitter_url,
             fb_url=fb_url,
             instagram_url=instagram_url,
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
         )
         db.session.add(new_submission)
 
@@ -839,7 +839,7 @@ def submit_photo(quest_id):
         else:
             user_quest.completions += 1
             user_quest.points_awarded += quest.points
-            user_quest.completed_at = datetime.now()
+            user_quest.completed_at = datetime.now(timezone.utc)
 
         emit_status("Finalizing submission...", sid)
         db.session.commit()

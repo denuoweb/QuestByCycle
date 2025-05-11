@@ -14,6 +14,7 @@ from flask_login import UserMixin  # pylint: disable=import-error
 from werkzeug.security import generate_password_hash, check_password_hash  # pylint: disable=import-error
 from sqlalchemy.exc import IntegrityError  # pylint: disable=import-error
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT
+from sqlalchemy import DateTime 
 
 db = SQLAlchemy()
 
@@ -29,7 +30,7 @@ user_badges = db.Table('user_badges',
 user_games = db.Table('user_games',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('game_id', db.Integer, db.ForeignKey('game.id'), primary_key=True),
-    db.Column('joined_at', db.DateTime, default=datetime.now(utc))
+    db.Column('joined_at', db.DateTime(timezone=True), default=lambda: datetime.now(utc))
 )
 
 game_participants = db.Table('game_participants',
@@ -82,7 +83,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(512))
     is_admin = db.Column(db.Boolean, default=False)
     is_super_admin = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.now())
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(utc))
     license_agreed = db.Column(db.Boolean, nullable=False)
     user_quests = db.relationship(
         'UserQuest', backref='user', lazy='dynamic',
@@ -285,7 +286,7 @@ class Notification(db.Model):
     type = db.Column(db.String, nullable=False)  # e.g. 'follow', 'submission'
     payload = db.Column(db.JSON, nullable=False)     # the raw activity or summary
     is_read = db.Column(db.Boolean, default=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(utc))
 
     user = db.relationship('User', back_populates='notifications')
 
@@ -295,7 +296,7 @@ class UserIP(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ip_address = db.Column(db.String(45), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.now)
+    timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(utc))
 
     user = db.relationship('User', backref='ip_addresses')
 
@@ -304,7 +305,7 @@ class ActivityStore(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     json = db.Column(db.JSON, nullable=False)
-    published = db.Column(db.DateTime, nullable=False)
+    published = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(utc), nullable=False)
 
 
 class Quest(db.Model):
@@ -372,10 +373,14 @@ class Game(db.Model):
     description = db.Column(db.String(1000))
     description2 = db.Column(db.String(1000))
     start_date = db.Column(
-        db.DateTime, nullable=False, default=datetime.now()
+        DateTime(timezone=True),           # ← make it timezone-aware
+        nullable=False,
+        default=lambda: datetime.now(utc)   # ← callable default at runtime
     )
     end_date = db.Column(
-        db.DateTime, nullable=False, default=datetime.now()
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(utc)
     )
     admin_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     quests = db.relationship(
