@@ -28,9 +28,6 @@ signing_components = [
 ]
 signing_string = "\n".join(signing_components).encode("utf-8")
 
-print("CLIENT SIGNING STRING:")
-print(signing_string.decode())
-
 # 4. Sign with your RSA key
 signature = rsa.sign(signing_string, privkey, "SHA-256").hex()
 key_id = "https://localhost:5000/users/t12#main-key"
@@ -40,8 +37,6 @@ signature_header = (
     'headers="(request-target) host date",'
     f'signature="{signature}"'
 )
-
-print("CLIENT SIG (hex):", signature_header)
 
 # 5. Send the signed POST, but don’t follow redirects
 headers = {
@@ -62,8 +57,5 @@ resp = requests.post(
     cookies={}
 )
 
-print("→ Initial response status:", resp.status_code)
-print("→ Response headers:", resp.headers)
-print("→ Response body  :", resp.text)
 if resp.status_code != 202:
     raise SystemExit("Inbox POST did not return 202 Accepted")

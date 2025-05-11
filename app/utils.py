@@ -80,13 +80,10 @@ def save_leaderboard_image(image_file):
         if not os.path.exists(leaderboard_images_dir):
             os.makedirs(leaderboard_images_dir)
 
-        print(f"Saving file to {abs_path}")
         image_file.save(abs_path)
-        print(f"File saved successfully to {abs_path}")
         return rel_path
 
     except Exception as e:
-        print(f"Error saving leaderboard image: {e}")
         raise ValueError(f"Failed to save image: {str(e)}")
 
 def create_smog_effect(image, smog_level):
@@ -102,16 +99,13 @@ def generate_smoggy_images(image_path, game_id):
             smog_level = i / 9.0
             smoggy_image = create_smog_effect(original_image, smog_level)
             smoggy_image.save(os.path.join(current_app.root_path, f'static/images/leaderboard/smoggy_skyline_{game_id}_{i}.png'))
-            print(f"Smoggy image saved: smoggy_skyline_{game_id}_{i}.png")
     except Exception as e:
-        print(f"Error generating smoggy images: {e}")
         raise ValueError(f"Failed to generate smoggy images: {str(e)}")
 
 def update_user_score(user_id):
     try:
         user = User.query.get(user_id)
         if not user:
-            print(f"No user found with ID {user_id}")
             return False
 
         # Calculate the total points awarded to the user
@@ -122,11 +116,9 @@ def update_user_score(user_id):
 
         # Commit changes to the database
         db.session.commit()
-        print(f"Updated user score for user ID {user_id} to {user.score}")
         return True
     except Exception as e:
         db.session.rollback()  # Rollback in case of any exception
-        print(f"Failed to update score for user ID {user_id}: {e}")
         return False
 
 
@@ -157,7 +149,6 @@ def save_badge_image(image_file):
         return filename  # Return the correct relative path from 'static' directory
 
     except Exception as e:
-        print(f"Error saving badge image: {e}")
         raise ValueError(f"Failed to save image: {str(e)}")
 
 
@@ -242,12 +233,8 @@ def can_complete_quest(user_id, quest_id):
     quest = Quest.query.get(quest_id)
     
     if not quest:
-        print(f"No quest found for Quest ID: {quest_id}")
         return False, None  # Quest does not exist
     
-    print(f"Current time: {now}")
-    print(f"Quest found: {quest.title} with frequency {quest.frequency} and completion limit {quest.completion_limit}")
-
     # Determine the start of the relevant period based on frequency
     period_start_map = {
         'daily': timedelta(days=1),
@@ -255,16 +242,12 @@ def can_complete_quest(user_id, quest_id):
         'monthly': timedelta(days=30)  # Approximation for monthly
     }
     period_start = now - period_start_map.get(quest.frequency, timedelta(days=1))
-    print(f"Period start calculated as: {period_start}")
-
     # Count completions in the defined period
     completions_within_period = QuestSubmission.query.filter(
         QuestSubmission.user_id == user_id,
         QuestSubmission.quest_id == quest_id,
         QuestSubmission.timestamp >= period_start
     ).count()
-
-    print(f"Completions within period for user {user_id} on quest {quest_id}: {completions_within_period}")
 
     # Check if the user can verify the quest again
     can_verify = completions_within_period < quest.completion_limit
@@ -277,7 +260,6 @@ def can_complete_quest(user_id, quest_id):
         ).order_by(QuestSubmission.timestamp.asc()).first()
 
         if first_completion_in_period:
-            print(f"First Completion in the period found at: {first_completion_in_period.timestamp}")
             # Calculate when the user is eligible next, based on the first completion time
             increment_map = {
                 'daily': timedelta(days=1),
@@ -285,11 +267,6 @@ def can_complete_quest(user_id, quest_id):
                 'monthly': timedelta(days=30)
             }
             next_eligible_time = first_completion_in_period.timestamp + increment_map.get(quest.frequency, timedelta(days=1))
-            print(f"Next eligible time calculated as: {next_eligible_time}")
-        else:
-            print("No completions found within the period.")
-    else:
-        print("User can currently verify the quest.")
 
     return can_verify, next_eligible_time
 
@@ -330,15 +307,11 @@ def check_and_award_badges(user_id, quest_id, game_id):
         every quest in that category for the specified game.
     All awards and associated shoutboard messages are tied to the given game_id.
     """
-    print(f"Checking and awarding badges for user_id={user_id}, quest_id={quest_id}, game_id={game_id}")
     user = User.query.get(user_id)
     quest = Quest.query.get(quest_id)
     user_quest = UserQuest.query.filter_by(user_id=user_id, quest_id=quest_id).first()
     if not user_quest:
-        print("No UserQuest found.")
         return
-
-    print(f"UserQuest: completions={user_quest.completions}, quest completion limit={quest.completion_limit}")
 
     # --- Quest-Specific Badge Awarding ---
     if quest.badge and user_quest.completions >= quest.badge_awarded:
@@ -366,25 +339,18 @@ def check_and_award_badges(user_id, quest_id, game_id):
             sbm = ShoutBoardMessage(message=msg, user_id=user_id, game_id=game_id)
             db.session.add(sbm)
             db.session.commit()
-            print(f"Quest badge '{quest.badge.name}' awarded for quest '{quest.title}' in game {game_id}")
-        else:
-            print("Quest-specific badge already awarded in this game; no duplicate message generated.")
-    else:
-        print("No quest-specific badge awarded (insufficient completions or no badge attached).")
 
     # --- Category-Based Badge Awarding ---
     if quest.category and game_id:
         # Get all quests in the category for the specified game.
         category_quests = Quest.query.filter_by(category=quest.category, game_id=game_id).all()
         if not category_quests:
-            print(f"No quests found in category '{quest.category}' for game {game_id}")
             return
         # Determine which of those quests the user has completed at least once.
         completed_quests = [
             ut.quest for ut in user.user_quests
             if ut.quest.category == quest.category and ut.quest.game_id == game_id and ut.completions >= 1
         ]
-        print(f"Category '{quest.category}' in game {game_id}: total quests={len(category_quests)}, user completed={len(completed_quests)}")
         # Only award if the user has at least one completion for every quest.
         if len(completed_quests) == len(category_quests):
             # Retrieve all badges for this category.
@@ -413,11 +379,6 @@ def check_and_award_badges(user_id, quest_id, game_id):
                     sbm = ShoutBoardMessage(message=msg, user_id=user_id, game_id=game_id)
                     db.session.add(sbm)
                     db.session.commit()
-                    print(f"Category badge '{badge.name}' awarded for category '{quest.category}' in game {game_id}")
-                else:
-                    print(f"Category badge '{badge.name}' already awarded in game {game_id}.")
-        else:
-            print(f"Category badge not awarded: {len(completed_quests)} out of {len(category_quests)} quests completed in category '{quest.category}' for game {game_id}.")
 
 
 def check_and_revoke_badges(user_id, game_id=None):
@@ -432,7 +393,6 @@ def check_and_revoke_badges(user_id, game_id=None):
     """
     user = User.query.get(user_id)
     if not user:
-        print(f"No user found with ID {user_id}")
         return
 
     badges_to_remove = []
@@ -445,8 +405,6 @@ def check_and_revoke_badges(user_id, game_id=None):
                 if ut.quest.category == badge.category and ut.quest.game_id == game_id and ut.completions >= 1
             }
             if set(current_category_quests) != set(completed_quests):
-                print(f"Category badge '{badge.name}' will be revoked in game {game_id}: "
-                      f"completed {len(completed_quests)} vs total {len(current_category_quests)}.")
                 badges_to_remove.append(badge)
         else:
             # Quest-specific badge: revoke if for any awarding quest the user's completions are below threshold.
@@ -457,18 +415,15 @@ def check_and_revoke_badges(user_id, game_id=None):
                     all_met = False
                     break
             if not all_met:
-                print(f"Quest-specific badge '{badge.name}' will be revoked.")
                 badges_to_remove.append(badge)
 
     for badge in badges_to_remove:
         user.badges.remove(badge)
-        print(f"Revoking badge '{badge.name}' from user '{user.username}'")
         # Delete any associated shoutboard award message in the specified game.
         messages = ShoutBoardMessage.query.filter_by(user_id=user_id, game_id=game_id).all()
         for message in messages:
             if f"data-badge-id='{badge.id}'" in message.message:
                 db.session.delete(message)
-                print(f"Deleted award message for badge '{badge.name}' (ID: {message.id})")
         db.session.commit()
 
 
@@ -671,7 +626,6 @@ def generate_demo_game():
     # Add pinned message from admin
     try:
         admin_id = 1  # Assuming admin_id=1 is the system admin
-        print(f"Creating pinned message for game_id: {demo_game.id}")
         pinned_message = ShoutBoardMessage(
             message="Get on your Bicycle this Quarter!",
             user_id=admin_id,
@@ -681,23 +635,17 @@ def generate_demo_game():
         )
         db.session.add(pinned_message)
         db.session.commit()
-        print("Pinned message created successfully")
     except Exception as e:
-        print(f"Error creating pinned message: {e}")
         db.session.rollback()
 
     return demo_game
 
 
 def import_quests_and_badges_from_csv(game_id, csv_path):
-    print(f"Starting import for game_id: {game_id} from csv_path: {csv_path}")
-    
     try:
         with open(csv_path, mode='r', encoding='utf-8') as csv_file:
             data = csv.DictReader(csv_file)
             for row in data:
-                print(f"Processing row: {row}")
-
                 badge_name = sanitize_html(row['badge_name'])
                 badge_description = sanitize_html(row['badge_description'])
                 
@@ -709,10 +657,7 @@ def import_quests_and_badges_from_csv(game_id, csv_path):
                 
                 badge_image_path = os.path.join(current_app.static_folder, 'images', 'badge_images', badge_image_filename)
 
-                print(f"Badge details - Name: {badge_name}, Description: {badge_description}, Image Path: {badge_image_path}")
-
                 if not os.path.exists(badge_image_path):
-                    print(f"Badge image not found at {badge_image_path}, skipping badge creation")
                     continue
 
                 badge = Badge.query.filter_by(name=badge_name).first()
@@ -724,8 +669,6 @@ def import_quests_and_badges_from_csv(game_id, csv_path):
                     )
                     db.session.add(badge)
                     db.session.flush()
-                    print(f"Added new badge: {badge}")
-
                 quest = Quest(
                     category=sanitize_html(row['category']),
                     title=sanitize_html(row['title']),
@@ -740,12 +683,8 @@ def import_quests_and_badges_from_csv(game_id, csv_path):
                     game_id=game_id
                 )
                 db.session.add(quest)
-                print(f"Added new quest: {quest}")
-
             db.session.commit()
-            print("Import completed successfully")
     except Exception as e:
-        print(f"Error during import: {e}")
         db.session.rollback()
 
 
@@ -762,15 +701,11 @@ def log_user_ip(user):
 
 
 def get_game_badges(game_id):
-    print(f"get_game_badges called for game_id: {game_id}")  # Logging game_id
     game = Game.query.get(game_id)
     if not game:
-        print("Game not found in get_game_badges")  # Log if game is not found
         return []
 
     badges = Badge.query.join(Quest).filter(Quest.game_id == game_id, Quest.badge_id.isnot(None)).distinct().all()
-
-    print(f"get_game_badges returning {len(badges)} badges")  # Log number of badges returned
     return badges
 
 

@@ -89,21 +89,6 @@ def sanitize_html(html_content):
     )
 
 
-def emit_status(message, sid):
-    """
-    Emit a loading status to a specified session ID.
-
-    Args:
-        message (str): The status message.
-        sid (str): The session ID.
-    """
-    print(f"Emitting status: {message} to SID: {sid}")  # Debugging
-    # pylint: disable=import-outside-toplevel
-    from app import socketio
-
-    socketio.emit("loading_status", {"status": message}, room=sid)
-
-
 @quests_bp.route("/<int:game_id>/manage_quests", methods=["GET"])
 @login_required
 def manage_game_quests(game_id):
@@ -226,7 +211,6 @@ def submit_quest(quest_id):
 
     sid = request.form.get("sid")
     if not sid:
-        print("No session ID provided.")
         return jsonify({"success": False, "message": "No session ID provided"}), 400
 
     verification_type = quest.verification_type
@@ -254,12 +238,9 @@ def submit_quest(quest_id):
     if quest.verification_type == "Pause":
         return jsonify({"success": False, "message": "This quest is currently paused"}), 403
 
-    emit_status("Initializing submission process...", sid)
-
     try:
         image_url = None
         if image_file and image_file.filename:
-            emit_status("Saving submission image...", sid)
             image_url = save_submission_image(image_file)
             image_path = os.path.join(current_app.static_folder, image_url)
         else:
@@ -271,7 +252,6 @@ def submit_quest(quest_id):
         # Post to social media (Twitter, Facebook, Instagram) if enabled.
         twitter_url, fb_url, instagram_url = (None, None, None)
         if image_url and current_user.upload_to_socials:
-            emit_status("Posting to social media...", sid)
             twitter_url, fb_url, instagram_url = post_to_social_media(
                 image_url, image_path, status_text, game, sid
             )
@@ -279,17 +259,8 @@ def submit_quest(quest_id):
         # Hybrid cross-post: Post to Mastodon if the user is linked.
         mastodon_url = None
         if image_url and current_user.upload_to_mastodon and current_user.mastodon_access_token:
-            emit_status("Posting to Mastodon...", sid)
-            print("[submit_quest] Calling post_to_mastodon_status...")
             mastodon_url = post_to_mastodon_status(image_path, status_text, current_user)
-            if mastodon_url:
-                print(f"[submit_quest] Posted to Mastodon successfully: {mastodon_url}")
-            else:
-                print("[submit_quest] Failed to post to Mastodon.")
-        else:
-            print("[submit_quest] Mastodon post not attempted: missing image or Mastodon access token.")
 
-        emit_status("Saving submission details...", sid)
         new_submission = QuestSubmission(
             quest_id=quest_id,
             user_id=current_user.id,
@@ -319,7 +290,6 @@ def submit_quest(quest_id):
             user_quest.points_awarded += quest.points
             user_quest.completed_at = datetime.now(timezone.utc)
 
-        emit_status("Finalizing submission...", sid)
         db.session.commit()
 
         update_user_score(current_user.id)
@@ -333,7 +303,6 @@ def submit_quest(quest_id):
         if image_url:
             activity = post_activitypub_create_activity(new_submission, current_user, quest)
 
-        emit_status("Submission complete!", sid)
         from app import socketio
         socketio.emit("submission_complete", {"status": "Submission Complete"}, room=sid)
 
@@ -351,7 +320,6 @@ def submit_quest(quest_id):
         })
     except Exception as error:
         db.session.rollback()
-        emit_status("Submission failed.", sid)
         return jsonify({"success": False, "message": str(error)})
 
 
@@ -699,47 +667,29 @@ def post_to_mastodon_status(image_path, status_text, user):
     This function first uploads the image to the Mastodon media endpoint,
     then posts a status (with the media attached) to the Mastodon statuses endpoint.
     """
-    try:
-        instance = user.mastodon_instance  # e.g. "mastodon.social"
-        access_token = user.mastodon_access_token
-        # Debug prints
-        print(f"[post_to_mastodon_status] User's Mastodon instance: {instance}")
-        print(f"[post_to_mastodon_status] User's Mastodon access token: {access_token}")
-        print(f"[post_to_mastodon_status] image_path: {image_path}")
-        print(f"[post_to_mastodon_status] status_text: {status_text}")
-
-        # Step 1: Upload the media.
-        media_upload_url = f"https://{instance}/api/v1/media"
-        headers = {"Authorization": f"Bearer {access_token}"}
-        print(f"[post_to_mastodon_status] Uploading media to: {media_upload_url}")
-        with open(image_path, "rb") as image_file:
-            files = {"file": image_file}
-            media_response = requests.post(media_upload_url, headers=headers, files=files)
-        print(f"[post_to_mastodon_status] Mastodon media upload response status: {media_response.status_code}")
-        print(f"[post_to_mastodon_status] Mastodon media upload response text: {media_response.text}")
-        media_response.raise_for_status()
-        media_data = media_response.json()
-        media_id = media_data.get("id")
-        if not media_id:
-            print("[post_to_mastodon_status] Error: Mastodon media upload did not return an ID.")
-            return None
-
-        # Step 2: Post the status with the media attached.
-        statuses_url = f"https://{instance}/api/v1/statuses"
-        payload = {"status": status_text, "media_ids[]": media_id}
-        print(f"[post_to_mastodon_status] Posting status to: {statuses_url}")
-        print(f"[post_to_mastodon_status] Payload for status post: {payload}")
-        status_response = requests.post(statuses_url, headers=headers, data=payload)
-        print(f"[post_to_mastodon_status] Mastodon status post response status: {status_response.status_code}")
-        print(f"[post_to_mastodon_status] Mastodon status post response text: {status_response.text}")
-        status_response.raise_for_status()
-        status_data = status_response.json()
-        status_url = status_data.get("url")
-        print(f"[post_to_mastodon_status] Successfully posted status. Status URL: {status_url}")
-        return status_url
-    except Exception as e:
-        print(f"[post_to_mastodon_status] Error posting status to Mastodon: {e}")
+    instance = user.mastodon_instance  # e.g. "mastodon.social"
+    access_token = user.mastodon_access_token
+    # Debug prints
+    # Step 1: Upload the media.
+    media_upload_url = f"https://{instance}/api/v1/media"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    with open(image_path, "rb") as image_file:
+        files = {"file": image_file}
+        media_response = requests.post(media_upload_url, headers=headers, files=files)
+    media_response.raise_for_status()
+    media_data = media_response.json()
+    media_id = media_data.get("id")
+    if not media_id:
         return None
+
+    # Step 2: Post the status with the media attached.
+    statuses_url = f"https://{instance}/api/v1/statuses"
+    payload = {"status": status_text, "media_ids[]": media_id}
+    status_response = requests.post(statuses_url, headers=headers, data=payload)
+    status_response.raise_for_status()
+    status_data = status_response.json()
+    status_url = status_data.get("url")
+    return status_url
 
 
 @quests_bp.route("/submit_photo/<int:quest_id>", methods=["GET", "POST"])
@@ -773,28 +723,19 @@ def submit_photo(quest_id):
         if not sid:
             return jsonify({"success": False, "message": "No session ID provided"}), 400
 
-        emit_status("Initializing submission process...", sid)
-
         photo = request.files.get("photo")
         if not photo:
             return jsonify({"success": False, "message": "No photo detected, please try again."}), 400
 
-        emit_status("Saving submission image...", sid)
         image_url = save_submission_image(photo)
         image_path = os.path.join(current_app.static_folder, image_url)
         display_name = current_user.display_name or current_user.username
         status_text = f"{display_name} completed '{quest.title}'! #QuestByCycle"
 
         # Debug prints before posting to Mastodon:
-        print(f"[submit_photo] image_url: {image_url}")
-        print(f"[submit_photo] current_user.upload_to_socials: {current_user.upload_to_socials}")
-        print(f"[submit_photo] current_user.upload_to_mastodon: {current_user.upload_to_mastodon}")
-        print(f"[submit_photo] current_user.mastodon_access_token: {current_user.mastodon_access_token}")
-
         # Post to other social media if enabled.
         twitter_url, fb_url, instagram_url = (None, None, None)
         if image_url and current_user.upload_to_socials:
-            emit_status("Posting to social media...", sid)
             twitter_url, fb_url, instagram_url = post_to_social_media(
                 image_url, image_path, status_text, game, sid
             )
@@ -802,17 +743,8 @@ def submit_photo(quest_id):
         # Post to Mastodon if the user is linked.
         mastodon_url = None
         if image_url and current_user.upload_to_mastodon and current_user.mastodon_access_token:
-            emit_status("Posting to Mastodon...", sid)
-            print("[submit_photo] Calling post_to_mastodon_status...")
             mastodon_url = post_to_mastodon_status(image_path, status_text, current_user)
-            if mastodon_url:
-                print(f"[submit_photo] Posted to Mastodon successfully: {mastodon_url}")
-            else:
-                print("[submit_photo] Failed to post to Mastodon.")
-        else:
-            print("[submit_photo] Mastodon post not attempted: missing image_url, upload flag, or mastodon_access_token.")
 
-        emit_status("Saving submission details...", sid)
         new_submission = QuestSubmission(
             quest_id=quest_id,
             user_id=current_user.id,
@@ -841,16 +773,13 @@ def submit_photo(quest_id):
             user_quest.points_awarded += quest.points
             user_quest.completed_at = datetime.now(timezone.utc)
 
-        emit_status("Finalizing submission...", sid)
         db.session.commit()
 
         update_user_score(current_user.id)
         check_and_award_badges(current_user.id, quest_id, quest.game_id)
 
-        # --- Create delivery of a local ActivityPub Create activity ---
         activity = post_activitypub_create_activity(new_submission, current_user, quest)
 
-        emit_status("Submission complete!", sid)
         from app import socketio
         socketio.emit("submission_complete", {"status": "Submission Complete"}, room=sid)
         message = "Photo submitted successfully!"
@@ -859,7 +788,7 @@ def submit_photo(quest_id):
             "message": message,
             "redirect_url": url_for("main.index", game_id=game.id, quest_id=quest_id),
             "mastodon_url": mastodon_url,
-            "activity": activity  # returned for debugging purposes
+            "activity": activity
         }), 200
 
     return render_template("submit_photo.html", form=form, quest=quest, quest_id=quest_id)
@@ -914,7 +843,6 @@ def get_user_submissions():
         ]
         return jsonify(submissions_data)
     except Exception as error:  # pylint: disable=broad-except
-        print(f"Error fetching submissions: {error}")
         return jsonify({"error": "Failed to fetch submissions"}), 500
 
 

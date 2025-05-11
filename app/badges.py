@@ -170,12 +170,8 @@ def manage_badges():
 @badges_bp.route('/update/<int:badge_id>', methods=['POST'])
 @login_required
 def update_badge(badge_id):
-    print(f"Updating badge ID: {badge_id}")
-
     # Fetch the badge from the database or return 404 if not found
     badge = Badge.query.get_or_404(badge_id)
-    print(f"Retrieved Badge: {badge.name}")
-
     # Fetch unique categories from Quest model
     quest_categories = db.session.query(Quest.category).filter(Quest.category.isnot(None)).distinct().all()
 
@@ -184,14 +180,8 @@ def update_badge(badge_id):
 
     form = BadgeForm(category_choices=category_choices, formdata=request.form)
 
-    # Debug output for form data
-    print("Form Data Received:", request.form)
-    if request.files:
-        print("Files Received:", request.files)
-
     # Validate form submission
     if form.validate_on_submit():
-        print("Form validation successful.")
 
         # Update badge properties with sanitized inputs
         badge.name = sanitize_html(form.name.data)
@@ -207,16 +197,9 @@ def update_badge(badge_id):
             image_file = request.files['image']
             if image_file.filename != '':
                 badge.image = save_badge_image(image_file)
-                print(f"Image saved: {badge.image}")
-
         # Commit changes to the database
         db.session.commit()
-        print("Database commit successful.")
         return jsonify({'success': True, 'message': 'Badge updated successfully'})
-    else:
-        # Print form errors if validation fails
-        print("Form validation failed.")
-        print("Errors:", form.errors)
 
     return jsonify({'success': False, 'message': 'Invalid form data', 'errors': form.errors})
 
@@ -283,24 +266,11 @@ def bulk_upload():
         flash('Access denied: Only administrators can manage badges.', 'danger')
         return redirect(url_for('main.index'))
 
-    print("bulk_upload function started")
-
     csv_file = request.files.get('csv_file')
     image_files = request.files.getlist('image_files')
 
-    if csv_file:
-        print(f"Received CSV file: {csv_file.filename}")
-    else:
-        print("No CSV file received")
-
-    if image_files:
-        print(f"Number of image files received: {len(image_files)}")
-    else:
-        print("No image files received")
-
     if not csv_file or not allowed_file(csv_file.filename):
         flash('Invalid or missing CSV file.', 'danger')
-        print("Invalid or missing CSV file")
         return redirect(url_for('badges.manage_badges'))
 
     # Save images to a dictionary
@@ -311,8 +281,6 @@ def bulk_upload():
             image_path = os.path.join(current_app.root_path, 'static', 'images', 'badge_images', filename)
             image_file.save(image_path)
             image_dict[filename] = filename
-            print(f"Saved image: {filename} to {image_path}")
-
     # Process CSV
     try:
         csv_data = csv_file.read().decode('utf-8').splitlines()
@@ -320,19 +288,14 @@ def bulk_upload():
         # Try with tab delimiter
         csv_reader = csv.DictReader(csv_data, delimiter='\t')
         headers = csv_reader.fieldnames
-        print(f"CSV Headers with tab delimiter: {headers}")
-
         if headers is None or len(headers) == 1:
             # Try with comma delimiter
             csv_reader = csv.DictReader(csv_data, delimiter=',')
             headers = csv_reader.fieldnames
-            print(f"CSV Headers with comma delimiter: {headers}")
-
         if 'badge_name' not in headers or 'badge_description' not in headers:
             raise ValueError("CSV file does not contain required headers: 'badge_name' and 'badge_description'")
 
         for row in csv_reader:
-            print(f"Processing row: {row}")
             badge_name = row['badge_name']
             badge_description = row['badge_description']
             badge_filename = badge_name.lower().replace(' ', '_')
@@ -341,17 +304,14 @@ def bulk_upload():
             if badge_image:
                 new_badge = Badge(name=badge_name, description=badge_description, image=badge_image)
                 db.session.add(new_badge)
-                print(f"Added badge: {badge_name}")
             else:
                 flash(f'Image for badge "{badge_name}" not found.', 'warning')
                 print(f'Image for badge "{badge_name}" not found.')
 
     except Exception as e:
-        print(f"Error processing CSV file: {e}")
         flash('Error processing CSV file.', 'danger')
         return redirect(url_for('badges.manage_badges'))
 
     db.session.commit()
-    print("Database commit successful")
     flash('Badges and images uploaded successfully.', 'success')
     return redirect(url_for('badges.manage_badges'))

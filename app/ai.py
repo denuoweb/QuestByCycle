@@ -74,10 +74,8 @@ def generate_quest():
             return jsonify({"error": error_message or "Failed to generate valid quest details"}), 500
 
     except ValueError as ve:
-        print(f"Validation error: {ve}")
         return jsonify({'error': str(ve)}), 400
     except Exception as e:
-        print(f"Error processing request: {e}")
         return jsonify({'error': str(e)}), 400
 
 
@@ -145,46 +143,36 @@ def create_quest():
 @login_required
 def generate_badge_image():
     client = OpenAI(api_key=current_app.config['OPENAI_API_KEY'])
+    data = request.get_json()
+    badge_description = data.get('badge_description', '')
+    if not badge_description:
+        return jsonify({"error": "Badge description is required"}), 400
 
-    try:
-        data = request.get_json()
-        badge_description = data.get('badge_description', '')
-        if not badge_description:
-            return jsonify({"error": "Badge description is required"}), 400
+    sanitized_badge_description = sanitize_html(badge_description)
+    badge_prompt = (
+        "Remove any textual inscription in the framing or otherwise and create one uber epic, symbolic, and timeless badge for a Bicycle Quest Quest web app that fits this description while keeping the background invisible (transparent): " + sanitized_badge_description
+    )
+    response = client.images.generate(
+        model="dall-e-3",
+        prompt=badge_prompt,
+        size="1024x1024",
+        quality="standard",
+        n=1
+    )
 
-        sanitized_badge_description = sanitize_html(badge_description)
-        badge_prompt = (
-            "Remove any textual inscription in the framing or otherwise and create one uber epic, symbolic, and timeless badge for a Bicycle Quest Quest web app that fits this description while keeping the background invisible (transparent): " + sanitized_badge_description
-        )
-        response = client.images.generate(
-            model="dall-e-3",
-            prompt=badge_prompt,
-            size="1024x1024",
-            quality="standard",
-            n=1
-        )
+    # Fetch the generated image URL from the response
+    generated_image_url = response.data[0].url
 
-        # Fetch the generated image URL from the response
-        generated_image_url = response.data[0].url
+    # Fetch the image from the generated URL
+    image_response = requests.get(generated_image_url)
+    if image_response.status_code != 200:
+        return jsonify({'error': 'Failed to fetch generated image'}), 500
 
-        # Fetch the image from the generated URL
-        image_response = requests.get(generated_image_url)
-        if image_response.status_code != 200:
-            return jsonify({'error': 'Failed to fetch generated image'}), 500
+    # Convert the image to a format that can be saved
+    image = Image.open(BytesIO(image_response.content))
+    filename = save_badge_image(image)
 
-        # Convert the image to a format that can be saved
-        image = Image.open(BytesIO(image_response.content))
-        filename = save_badge_image(image)
-
-        return jsonify({'filename': filename})
-
-    except requests.exceptions.RequestException as e:
-        if e.response.status_code == 429:
-            return too_many_requests()
-        return jsonify({'error': str(e)}), 500
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    return jsonify({'filename': filename})
 
 def too_many_requests(e=None):
     return render_template('429.html'), 429

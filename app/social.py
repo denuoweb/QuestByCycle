@@ -1,67 +1,31 @@
 from requests_oauthlib import OAuth1Session
 from flask import url_for
-from flask_socketio import SocketIO, emit
 
 import requests
 import json
 import mimetypes
 
-def emit_status(message, sid, progress=None):
-    from app import socketio
-    data = {'status': message}
-    if progress is not None:
-        data['progress'] = progress
-    socketio.emit('loading_status', data, room=sid)
-
 
 def post_to_social_media(image_url, image_path, status, game, sid):
     twitter_url, fb_url, instagram_url = None, None, None
 
-    emit_status('Posting to Twitter...', sid, progress=10)
     if game.twitter_api_key and game.twitter_api_secret and game.twitter_access_token and game.twitter_access_token_secret:
-        try:
-            media_id, error = upload_media_to_twitter(image_path, game.twitter_api_key, game.twitter_api_secret, game.twitter_access_token, game.twitter_access_token_secret)
-            if not error:
-                twitter_url, error = post_to_twitter(status, media_id, game.twitter_username, game.twitter_api_key, game.twitter_api_secret, game.twitter_access_token, game.twitter_access_token_secret)
-                if error:
-                    print(f"Failed to post tweet: {error}")
-        except requests.exceptions.RequestException as e:
-            print(f"Error during Twitter API call: {e}")
+        media_id, error = upload_media_to_twitter(image_path, game.twitter_api_key, game.twitter_api_secret, game.twitter_access_token, game.twitter_access_token_secret)
+        if not error:
+            twitter_url, error = post_to_twitter(status, media_id, game.twitter_username, game.twitter_api_key, game.twitter_api_secret, game.twitter_access_token, game.twitter_access_token_secret)
 
-    emit_status('Posting to Facebook...', sid, progress=50)
     if game.facebook_access_token and game.facebook_page_id:
-        try:
-            page_access_token = get_facebook_page_access_token(game.facebook_access_token, game.facebook_page_id)
-            media_response = upload_image_to_facebook(game.facebook_page_id, image_path, page_access_token)
-            if media_response and 'id' in media_response:
-                image_id = media_response['id']
-                fb_url, error = post_to_facebook_with_image(game.facebook_page_id, status, image_id, page_access_token)
-                if error:
-                    print(f"Failed to post image to Facebook: {error}")
-        except requests.exceptions.RequestException as e:
-            print(f"Error during Facebook API call: {e}")
-        except json.JSONDecodeError as e:
-            print(f"JSON decode error during Facebook API call: {e}")
-        except Exception as e:
-            print(f"Unexpected error during Facebook API call: {e}")
+        page_access_token = get_facebook_page_access_token(game.facebook_access_token, game.facebook_page_id)
+        media_response = upload_image_to_facebook(game.facebook_page_id, image_path, page_access_token)
+        if media_response and 'id' in media_response:
+            image_id = media_response['id']
+            fb_url, error = post_to_facebook_with_image(game.facebook_page_id, status, image_id, page_access_token)
 
-    emit_status('Posting to Instagram...', sid, progress=80)
+
     if game.instagram_user_id and game.instagram_access_token:
-        try:
-            public_image_url = url_for('static', filename=image_url, _external=True)
-            instagram_url, error = post_to_instagram(public_image_url, status, game.instagram_user_id, game.instagram_access_token)
-            if error:
-                print(f"Failed to post image to Instagram: {error}")
-            else:
-                print(f"Instagram URL: {instagram_url}")
-        except requests.exceptions.RequestException as e:
-            print(f"Error during Instagram API call: {e}")
-        except json.JSONDecodeError as e:
-            print(f"JSON decode error during Instagram API call: {e}")
-        except Exception as e:
-            print(f"Unexpected error during Instagram API call: {e}")
+        public_image_url = url_for('static', filename=image_url, _external=True)
+        instagram_url, error = post_to_instagram(public_image_url, status, game.instagram_user_id, game.instagram_access_token)
 
-    emit_status('Submission complete', sid, progress=100)
     return twitter_url, fb_url, instagram_url
 
 
@@ -114,10 +78,6 @@ def get_facebook_page_access_token(user_access_token, page_id):
 
 
 def upload_image_to_facebook(page_id, image_path, access_token):
-    print(f"Preparing to upload image to Facebook Page ID: {page_id}")
-    print(f"Access Token: {access_token}")
-    print(f"Image Path: {image_path}")
-
     mime_type, _ = mimetypes.guess_type(image_path)
     if not mime_type:
         mime_type = 'image/jpeg'
@@ -129,16 +89,11 @@ def upload_image_to_facebook(page_id, image_path, access_token):
     }
 
     url = f"https://graph.facebook.com/v19.0/{page_id}/photos"
-    print(f"Uploading to URL: {url}")
     response = requests.post(url, files=files, data=data)
-
-    print(f"Facebook API Response Status Code: {response.status_code}")
-    print(f"Facebook API Response Text: {response.text}")
 
     if response.status_code == 200:
         return response.json()
     else:
-        print(f"Failed to upload image: {response.text}")
         return None
 
 
@@ -160,71 +115,47 @@ def post_to_facebook_with_image(page_id, message, media_object_id, access_token)
 
 def get_instagram_permalink(media_id, access_token):
     permalink_url = f"https://graph.facebook.com/{media_id}?fields=permalink&access_token={access_token}"
-    
-    try:
-        permalink_response = requests.get(permalink_url)
-        permalink_data = permalink_response.json()
-        print(f"Instagram permalink response: {permalink_data}")
+    permalink_response = requests.get(permalink_url)
+    permalink_data = permalink_response.json()
+    if 'permalink' in permalink_data:
+        return permalink_data['permalink'], None
+    else:
+        raise Exception("Permalink not available yet.")
 
-        if 'permalink' in permalink_data:
-            return permalink_data['permalink'], None
-        else:
-            raise Exception("Permalink not available yet.")
-    except Exception as e:
-        print(f"Error fetching permalink: {e}")
-    
     return None, "Failed to retrieve permalink after multiple attempts."
 
 
 def post_to_instagram(image_url, caption, user_id, access_token):
-    try:
-        # Step 1: Create Media Container
-        upload_url = f"https://graph.facebook.com/v20.0/{user_id}/media"
-        payload = {
-            'image_url': image_url,
-            'caption': caption,
-            'access_token': access_token
-        }
-        print(f"Uploading image to Instagram container: {upload_url}")
-        print(f"Payload: {payload}")
+    # Step 1: Create Media Container
+    upload_url = f"https://graph.facebook.com/v20.0/{user_id}/media"
+    payload = {
+        'image_url': image_url,
+        'caption': caption,
+        'access_token': access_token
+    }
+    response = requests.post(upload_url, data=payload)
+    response_data = response.json()
+    if 'id' not in response_data:
+        raise Exception("Failed to upload image to Instagram.")
 
-        response = requests.post(upload_url, data=payload)
-        response_data = response.json()
-        print(f"Instagram upload response: {response_data}")
+    container_id = response_data['id']
 
-        if 'id' not in response_data:
-            raise Exception("Failed to upload image to Instagram.")
+    # Step 2: Publish the Media Container
+    publish_url = f"https://graph.facebook.com/v20.0/{user_id}/media_publish"
+    publish_payload = {
+        'creation_id': container_id,
+        'access_token': access_token
+    }
+    publish_response = requests.post(publish_url, data=publish_payload)
+    publish_data = publish_response.json()
+    if 'id' not in publish_data:
+        raise Exception("Failed to publish image on Instagram.")
 
-        container_id = response_data['id']
+    media_id = publish_data['id']
 
-        # Step 2: Publish the Media Container
-        publish_url = f"https://graph.facebook.com/v20.0/{user_id}/media_publish"
-        publish_payload = {
-            'creation_id': container_id,
-            'access_token': access_token
-        }
-        print(f"Publishing image on Instagram: {publish_url}")
-        print(f"Publish Payload: {publish_payload}")
+    # Get the permalink of the published media
+    permalink, error = get_instagram_permalink(media_id, access_token)
+    if error:
+        raise Exception(error)
 
-        publish_response = requests.post(publish_url, data=publish_payload)
-        publish_data = publish_response.json()
-        print(f"Instagram publish response: {publish_data}")
-
-        if 'id' not in publish_data:
-            raise Exception("Failed to publish image on Instagram.")
-
-        media_id = publish_data['id']
-
-        # Get the permalink of the published media
-        permalink, error = get_instagram_permalink(media_id, access_token)
-        if error:
-            raise Exception(error)
-
-        return permalink, None
-
-    except json.JSONDecodeError as e:
-        return None, f"JSON decode error: {str(e)}"
-    except requests.exceptions.RequestException as e:
-        return None, f"HTTP error: {str(e)}"
-    except Exception as e:
-        return None, f"Unexpected error: {str(e)}"
+    return permalink, None
