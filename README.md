@@ -174,7 +174,11 @@ WantedBy=multi-user.target
 9. Deploy
 
 Development:
-```flask run```
+```Build CSS```
+
+```sass app/static/scss/main.scss app/static/css/main.css --no-source-map --style=compressed```
+
+```poetry run flask   --app wsgi:app   --debug   run   --cert=tests/cert.pem   --key=tests/key.pem   --host=127.0.0.1   --port=5000```
 
 Production Without service provider:
 ```gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 -b 127.0.0.1:5000 wsgi:app```
