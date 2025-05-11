@@ -42,12 +42,9 @@
   <!-- Load non-critical CSS asynchronously -->
   <link rel="preload" href="{{ url_for('static', filename='css/main.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}"></noscript>
-
-  <link rel="preload" href="{{ url_for('static', filename='css/components/_notifications.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/components/_notifications.css') }}"></noscript>
-
   <link rel="preload" href="{{ url_for('static', filename='css/bootstrap.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}"></noscript>
+
   <!-- Quill -->
   <link rel="preload" href="{{ url_for('static', filename='css/quill.snow.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/quill.snow.css') }}"></noscript>
@@ -55,6 +52,7 @@
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/katex.min.css') }}"></noscript>
   <link rel="preload" href="{{ url_for('static', filename='css/atom-one-dark.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/atom-one-dark.min.css') }}"></noscript>
+
   <!-- Onboarding -->
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/shepherd.js@13.0.0/dist/css/shepherd.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shepherd.js@13.0.0/dist/css/shepherd.css"></noscript>
@@ -63,12 +61,12 @@
   <meta name="current-user-id" content="{{ current_user.id }}">
 
   <!-- JavaScript -->
-  <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/highlight.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/katex.min.js') }}"></script>
-  <script src="{{ url_for('static', filename='js/quill.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/3rd/jquery-3.6.0.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/3rd/socket.io.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/3rd/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/3rd/highlight.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/3rd/katex.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/3rd/quill.min.js') }}"></script>
   <script type="module" src="https://cdn.jsdelivr.net/npm/shepherd.js@13.0.0/dist/esm/shepherd.mjs"></script>
 </head>
 

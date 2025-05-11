@@ -9,8 +9,7 @@
                          {{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=1200) }} 1200w"
                  sizes="(max-width: 600px) 480px, (max-width: 960px) 768px, 1200px"
                  alt="Welcome to Quest by Cycle"
-                 class="img-fluid w-100"
-                 style="max-width: 100%; height: auto;">
+                 class="img-fluid w-100 hero-image">
         </div>
         <div id="flash-messages" style="display: none;">
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -26,20 +25,17 @@
         <div id="modal-flash-messages">
         </div>
         <div class="row mb-5 align-items-center">
-            <!-- Right Column: Fancy Earth Day Event Card (50% width) -->
             <div class="col-md-6">
-                <div class="card p-4 shadow-sm" style="background: linear-gradient(135deg, #ffffff, #f1ff28); border: 2px solid #ddd; border-radius: 15px;">
-                    <!-- Title Section becomes clickable to open the login modal -->
-                    <h3 class="card-title text-center mb-1" style="font-family: 'Gill Sans'; font-size: 2rem">
-                        <a href="javascript:void(0)" onclick="openLoginModalWithGame({gameId: 17});" style="font-size: 3rem; text-decoration: none; color: inherit;">
+                <div class="card earth-day-card">
+                    <h3 class="card-title">
+                        <a href="javascript:void(0)" onclick="openLoginModalWithGame({gameId: 17});">
                             Earth Day Every Day Game
                         </a>
                     </h3>
-                    <h5 class="text-center" style="font-family: 'Georgia', serif; font-size: 1.4rem;">Join Today!</h5>
-                    <p class="text-center mb-2" style="font-size: 1.2rem; font-style: italic;">Free and open to all!</p>
+                    <h5 class="card-subtitle">Join Today!</h5>
+                    <p class="card-text">Free and open to all!</p>
                 </div>
             </div>
-            <!-- Left Column: Description Text (50% width) -->
             <div class="col-md-6">
                 <div class="introduction text-center">
                     <p class="h5 font-weight-bold" style="font-size: 1.2rem;">This is your Quest by Cycle journey!</p>
@@ -322,7 +318,7 @@
     <script src="{{ url_for('static', filename='js/user_profile_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/index_management.js') }}"></script>
     <script src="{{ url_for('static', filename='js/generated_quest.js') }}"></script>
-    <script type="module" src="{{ url_for('static', filename='js/shepherd_tour.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/3rd/shepherd_tour.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const quillEditorContainer = document.getElementById('quill-editor');
@@ -421,299 +417,4 @@
         document.getElementById('questSearchInput').addEventListener('input', filterQuests);
         document.getElementById('questCategoryDropdown').addEventListener('change', filterQuests);
     </script>
-    <style>
-        .bold-item {
-            font-weight: bold;
-        }
-        #gameDropdownMenu {
-            background-color: white;
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            max-width: 300px;
-            z-index: 1000;
-        }
-        .dropdown-item {
-            padding: 8px 16px;
-            cursor: pointer;
-        }
-        .dropdown-item:hover {
-            background-color: #f1f1f1;
-        }
-        .activity-message {
-            flex-grow: 1;
-            white-space: normal;
-            max-width: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        .quest-title {
-            display: inline-block;
-            max-width: 100%;
-            white-space: normal;
-            overflow-wrap: break-word;
-            word-break: break-word;
-            word-wrap: break-word;
-        }
-        .like-section {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-top: 5px;
-        }
-        .message-divider {
-            border-bottom: 1px dashed #ddd;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-        }
-        @media (max-width: 480px) {
-            .activity-message {
-                font-size: 1rem;
-                line-height: 1.2;
-            }
-            .quest-title {
-                display: block;
-                font-size: 0.9rem;
-                word-break: break-word;
-            }
-            .activity {
-                padding: 5px;
-                box-sizing: border-box;
-            }
-        }
-        .shout-messages-container {
-            position: relative;
-        }
-        .shout-messages {
-            max-height: 400px;
-            overflow-y: hidden;
-        }
-        .arrow-buttons {
-            position: absolute;
-            right: 0;
-            top: 50%;
-            display: flex;
-            flex-direction: column;
-            transform: translateY(-50%);
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .arrow-buttons .epic-button {
-            background-color: #007bff;
-            color: white;
-            font-size: 1.5rem;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .arrow-buttons .epic-button:hover {
-            background-color: #0056b3;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-        }
-        .arrow-buttons .epic-button:active {
-            transform: translateY(0);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        .arrow-buttons .epic-button:focus {
-            outline: none;
-        }
-        #gameDropdownButton .game-title {
-            font-weight: bold;
-            display: inline-block;
-            white-space: wrap;
-        }
-        .dropdown-menu-scrollable {
-            max-height: 200px;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-        .comment-text {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 100%;
-            display: inline-block;
-        }
-        .epic-profile-container {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: #fff;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
-            position: relative;
-            overflow: hidden;
-        }
-        .profile-header {
-            width: 100%;
-            height: 300px;
-            background-color: #000;
-            overflow: hidden;
-            position: relative;
-        }
-        .profile-photo-full {
-            position: static;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        .full-width-profile-img {
-            width: 100%;
-            height: 100%;
-            object-fit: scale-down;
-            filter: brightness(0.9);
-        }
-        .welcome-text {
-            font-size: 2.8rem;
-            margin-bottom: .5rem;
-            text-shadow: 0px 4px 8px rgba(0, 0, 0, 0.8);
-        }
-        @media (max-width: 768px) {
-            .welcome-text {
-                font-size: 2rem;
-                margin-bottom: 5px;
-            }
-            #total-points {
-                font-size: 1rem;
-                margin-top: 50px;
-            }
-        }
-        @media (max-width: 480px) {
-            .welcome-text {
-                font-size: 1.6rem;
-                margin-bottom: 20px;
-            }
-            #total-points {
-                font-size: .8rem;
-                margin-top: 5px;
-            }
-            .profile-header {
-                height: 200px;
-            }
-        }
-        .points-emphasized {
-            font-size: 2rem;
-            font-weight: bold;
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
-            color: #ffdf5f;
-            margin-bottom: 5px;
-        }
-        .profile-actions {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .profile-actions .btn {
-            font-size: 1rem;
-            padding: 12px 40px;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
-            border-radius: 50px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin: 10px 10px;
-        }
-        @media (max-width: 768px) {
-            .profile-actions {
-                flex-direction: column;
-            }
-            .profile-actions .btn {
-                width: 100%;
-                max-width: 300px;
-            }
-        }
-        .custom-btn-bg {
-            background: linear-gradient(135deg, #24c6dc 0%, #514a9d 100%);
-            border: none;
-        }
-        .custom-btn-bg:hover {
-            background: linear-gradient(135deg, #514a9d 0%, #24c6dc 100%);
-        }
-        .dropdown-menu-scrollable {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        .dropdown-item {
-            display: flex;
-            justify-content: center;
-            text-align: center;
-            padding: 10px 20px;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-        .dropdown-item:hover {
-            background-color: #f1f1f1;
-        }
-        #total-points {
-            font-size: 1.5rem;
-            margin-bottom: .5rem;
-            text-shadow: 0px 4px 8px rgba(0, 0, 0, 0.8);
-        }
-        .button-text {
-            font-size: 1rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
-        }
-        #leaderboardButton i {
-            font-size: 1.25rem;
-        }
-        /* Updated Container for the Badge Bar */
-        .badge-bar-container {
-            background-color: #f1ffee;       /* Matches the main container background */
-            padding: 15px;                   /* Slightly more padding for visual balance */
-            border-radius: 12px;             /* Same border radius as other containers */
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);  /* Same box shadow for consistency */
-            margin-bottom: 20px;             /* Space below the badge bar */
-            overflow-x: auto;
-            overflow-y: hidden;              /* Hide any vertical overflow */
-            text-align: center; /* Center the content within the badge-bar-container */
-        }
-        /* Inline-flex container for badges */
-        .badge-bar {
-            display: inline-flex;
-            gap: 15px;                       /* Increase gap for spacing between items */
-            justify-content: flex-start;     /* Ensure badges are aligned to the left */
-        }
-        /* Each badge item styled to match the overall index look */
-        .badge-item {
-            flex: 0 0 auto;                  /* Prevent items from shrinking */
-            width: 100px;                    /* Fixed width; adjust as needed */
-            height: 115px;                   /* Fixed height */
-            background-color: #fff;          /* White background for each badge item */
-            border-radius: 8px;              /* Rounded corners */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Subtle shadow for depth */
-            padding: 10px;                   /* Inner spacing */
-            text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        /* Badge image styling remains similar */
-        .badge-img {
-            width: 40px;                     /* Adjust image size */
-            height: 40px;
-            object-fit: contain;
-            transition: filter 0.3s ease; /* For smooth filter transitions */
-        }
-        .badge-name {
-            margin-top: 5px;
-            font-size: 0.85em;
-            color: #555;
-        }
-        .badge-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-        }
-        /* Style for earned badges */
-        .badge-img.badge-earned {
-            filter: none; /* No filter for earned badges - full color */
-        }
-        /* Style for not earned badges */
-        .badge-img.badge-not-earned {
-            filter: grayscale(100%); /* Grayscale for not earned badges */
-            opacity: 0.7; /* Slightly reduce opacity to further differentiate */
-        }
-    </style>
 {% endblock %}
