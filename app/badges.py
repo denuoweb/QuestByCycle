@@ -218,7 +218,7 @@ def delete_badge(badge_id):
         return jsonify({'success': True, 'message': 'Badge deleted successfully'})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'Error deleting badge: {e}'}), 500
+        return
 
 
 @badges_bp.route('/categories', methods=['GET'])

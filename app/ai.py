@@ -122,10 +122,8 @@ def create_quest():
             return jsonify({"success": True, "message": "Quest created successfully"}), 201
         except Exception as e:
             db.session.rollback()
-            return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
+            return
 
-    else:
-        return jsonify({"success": False, "message": "Validation failed", "errors": form.errors}), 400
 
 @ai_bp.route('/generate_badge_image', methods=['POST'])
 @login_required
