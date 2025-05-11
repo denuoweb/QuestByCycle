@@ -12,7 +12,8 @@ tests/rsa_key.pem
 tests/actor_priv.pem
 
 requirements.txt
-
+paste.py
+combined.txt
 wsgi.py 
 
 # Byte-compiled / optimized / DLL files
