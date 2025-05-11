@@ -225,14 +225,22 @@
     </div>
     <div class="footer-section social">
       <p>
-        <a href="{{ selected_game.twitter_url if selected_game else 'https://twitter.com/QuestByCycle' }}" target="_blank" class="social-link">
+        <a href="{{ selected_game.twitter_url if selected_game else 'https://twitter.com/QuestByCycle' }}"
+           target="_blank" class="social-link">
           <i class="fab fa-twitter"></i>
         </a>
-        <a href="{{ selected_game.facebook_url if selected_game else 'https://facebook.com/QuestByCycle' }}" target="_blank" class="social-link">
+        <a href="{{ selected_game.facebook_url if selected_game else 'https://facebook.com/QuestByCycle' }}"
+           target="_blank" class="social-link">
           <i class="fab fa-facebook-f"></i>
         </a>
-        <a href="{{ selected_game.instagram_url if selected_game else 'https://instagram.com/QuestByCycle' }}" target="_blank" class="social-link">
+        <a href="{{ selected_game.instagram_url if selected_game else 'https://instagram.com/QuestByCycle' }}"
+           target="_blank" class="social-link">
           <i class="fab fa-instagram"></i>
+        </a>
+        <!-- New GitHub link -->
+        <a href="https://github.com/denuoweb/questbycycle"
+           target="_blank" class="social-link" title="View on GitHub">
+          <i class="fab fa-github"></i>
         </a>
       </p>
     </div>
@@ -263,6 +271,13 @@
   </div>
   <div class="footer-section legal">
     &copy; {{ current_year }} QuestByCycle. All rights reserved.
+    <!-- New open-source callout -->
+    <p style="margin-top:0.5em;">
+      QuestByCycle is <strong>open source</strong>.  
+      <a href="https://github.com/denuoweb/questbycycle" target="_blank">
+        View the code on GitHub
+      </a>.
+    </p>
   </div>
 </footer>
 
