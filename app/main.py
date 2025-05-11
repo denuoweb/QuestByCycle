@@ -451,7 +451,7 @@ def mark_onboarding_complete():
         return jsonify({'success': True}), 200
     except Exception as exc:
         logger.error(f"Error marking onboarding complete: {exc}")
-        return jsonify({'success': False, 'error': str(exc)}), 500
+        return
 
 
 @main_bp.route('/shout-board/<int:game_id>', methods=['POST'])
@@ -732,7 +732,7 @@ def edit_profile(user_id):
     except Exception as exc:
         db.session.rollback()
         logger.error('Exception occurred: %s', exc)
-        return jsonify({'error': f'Failed to update profile: {exc}'}), 500
+        return
 
 
 @main_bp.route('/profile/<int:user_id>/edit-bike', methods=['POST'])
@@ -762,13 +762,13 @@ def edit_bike(user_id):
         except Exception as exc:
             db.session.rollback()
             logger.error('Exception occurred: %s', exc)
-            return jsonify({'error': f'Failed to update bike: {str(exc)}'}), 500
+            return
 
     logger.debug('Bike form validation failed.')
     for field, errors in bike_form.errors.items():
         for error in errors:
             logger.debug('Error in the %s field - %s', field, error)
-    return jsonify({'error': 'Invalid form submission'}), 400
+    return
 
 
 @main_bp.route('/like_quest/<int:quest_id>', methods=['POST'])
@@ -842,7 +842,7 @@ def contact():
             flash('Your message has been sent successfully.', 'success')
         except Exception as exc:
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify(success=False, message="Failed to send your message"), 500
+                return
             flash('Failed to send your message. Please try again later.', 'error')
             current_app.logger.error('Failed to send contact form message: %s', exc)
     else:
@@ -929,4 +929,4 @@ def resize_image():
 
     except Exception as exc:
         current_app.logger.error("Exception occurred during image processing: %s", exc)
-        return jsonify({'error': 'Internal server error'}), 500
+        return

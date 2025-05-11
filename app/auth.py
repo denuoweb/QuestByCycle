@@ -161,10 +161,8 @@ def _join_game_if_provided(user):
             try:
                 db.session.commit()
                 current_app.logger.debug("User %s joined game %s", user.id, game.id)
-            except Exception as exc:
+            except Exception:
                 db.session.rollback()
-                current_app.logger.error("Failed to join game: %s", exc)
-
 
 
 def _ensure_demo_game(user):
