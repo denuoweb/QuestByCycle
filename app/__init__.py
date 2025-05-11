@@ -1,6 +1,7 @@
 import flask.helpers as _helpers
 from flask import current_app
 from urllib.parse import urlparse, urlunparse
+from .scheduler import create_scheduler, shutdown_scheduler
 
 # keep a reference to the real one
 _original_url_for = _helpers.url_for
@@ -49,6 +50,7 @@ from logging.handlers import RotatingFileHandler
 
 import logging
 import os
+import atexit
 
 # Global variable to track the first request
 has_run = False
@@ -83,6 +85,9 @@ def create_app(config_overrides=None):
     # Load configuration
     inscopeconfig = load_config()
     app.config.update(inscopeconfig)
+
+    app.config.setdefault('SERVER_NAME', app.config['main']['LOCAL_DOMAIN'])
+    app.config.setdefault('PREFERRED_URL_SCHEME', 'http')
 
     # Set SQLAlchemy engine options to mitigate connection issues
     # This instructs SQLAlchemy to check connections before using them and to recycle them after an hour.
@@ -145,7 +150,7 @@ def create_app(config_overrides=None):
         app.config.update(config_overrides)
 
     if app.config.get('TESTING') and not app.config.get('SERVER_NAME'):
-        app.config['SERVER_NAME'] = 'localhost'
+        app.config['SERVER_NAME'] = 'localhost:5000'
 
     # Initialize extensions
     db.init_app(app)
@@ -182,7 +187,7 @@ def create_app(config_overrides=None):
     def load_user(user_id):
         from app.models import User  # Local import to avoid circular dependency
         return User.query.get(int(user_id))
-        
+
     # Error handlers
     @app.errorhandler(404)
     def not_found_error(error):
@@ -227,5 +232,9 @@ def create_app(config_overrides=None):
         logger.error(f"Unhandled Exception: {e}")
         flash('An unexpected error occurred. Please try again later.', 'error')
         return redirect(url_for('main.index'))
+
+    if not (app.debug and os.environ.get('WERKZEUG_RUN_MAIN') is None):
+        create_scheduler(app)
+        atexit.register(lambda: shutdown_scheduler(app, wait=False))
 
     return app
