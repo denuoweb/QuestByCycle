@@ -4,11 +4,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // ----------------------------------------------------------------
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker
-      .register('/static/sw.js')
-      .then(function(reg) {
-        console.log('ServiceWorker registered:', reg);
-        reg.addEventListener('updatefound', function() {
-          var newWorker = reg.installing;
+      .register("static/sw.js")
+      .then(function(registration) {
+        console.log('ServiceWorker registered:', registration);
+        registration.addEventListener('updatefound', function() {
+          var newWorker = registration.installing;
           newWorker.addEventListener('statechange', function() {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               if (confirm('A new version is available. Reload to update?')) {
@@ -18,7 +18,18 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         });
       })
-      .catch(console.error);
+      .catch(function(err) {
+        console.error('SW registration failed:', err);
+      });
+
+    navigator.serviceWorker.addEventListener('message', function(event) {
+      console.log('SW message event:', event);
+      if (event.data.type === 'UPDATE_AVAILABLE') {
+        if (confirm('A new version is available. Reload to update?')) {
+          window.location.reload();
+        }
+      }
+    });
   }
 
   // ----------------------------------------------------------------
@@ -93,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   // ----------------------------------------------------------------
-  // 4) Leaderboard click handler (unchanged)
+  // 5) Leaderboard click handler
   // ----------------------------------------------------------------
   var leaderboardLink = document.getElementById('leaderboardNavbarLink');
   if (leaderboardLink) {
