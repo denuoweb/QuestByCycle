@@ -4,11 +4,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // ----------------------------------------------------------------
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker
-      .register("static/sw.js")
-      .then(function(registration) {
-        console.log('ServiceWorker registered:', registration);
-        registration.addEventListener('updatefound', function() {
-          var newWorker = registration.installing;
+      .register('/static/sw.js')
+      .then(function(reg) {
+        console.log('ServiceWorker registered:', reg);
+        reg.addEventListener('updatefound', function() {
+          var newWorker = reg.installing;
           newWorker.addEventListener('statechange', function() {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               if (confirm('A new version is available. Reload to update?')) {
@@ -18,18 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
           });
         });
       })
-      .catch(function(err) {
-        console.error('SW registration failed:', err);
-      });
-
-    navigator.serviceWorker.addEventListener('message', function(event) {
-      console.log('SW message event:', event);
-      if (event.data.type === 'UPDATE_AVAILABLE') {
-        if (confirm('A new version is available. Reload to update?')) {
-          window.location.reload();
-        }
-      }
-    });
+      .catch(console.error);
   }
 
   // ----------------------------------------------------------------
@@ -104,7 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   // ----------------------------------------------------------------
-  // 5) Leaderboard click handler
+  // 4) Leaderboard click handler (unchanged)
   // ----------------------------------------------------------------
   var leaderboardLink = document.getElementById('leaderboardNavbarLink');
   if (leaderboardLink) {
@@ -120,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ----------------------------------------------------------------
-  // 6) Notification rendering helper
+  // 5) Notification rendering helper
   // ----------------------------------------------------------------
   function renderNotification(n) {
     var text, onclick;
@@ -133,9 +122,7 @@ document.addEventListener('DOMContentLoaded', function() {
         text = n.payload.actor_name + ' submitted a new “' + n.payload.quest_name + '” quest';
         onclick =
           "fetch('/quests/submissions/" + n.payload.submission_id + "')" +
-          ".then(function(r){return r.json();})" +
-          ".then(function(img){showSubmissionDetail(img);});" +
-          "return false;";
+          ".then(r=>r.json()).then(img=>showSubmissionDetail(img)); return false;";
         break;
       case 'profile_message':
         text = n.payload.from_user_name + ' says “' + n.payload.content + '”';
@@ -154,49 +141,56 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ----------------------------------------------------------------
-  // 7) Fetch & populate notifications on show.bs.dropdown
+  // 6) loadNotifications(), wired just like game‐select
+  // ----------------------------------------------------------------
+  function loadNotifications() {
+    if (!notifMenu) return;
+    // show “Loading…” immediately
+    notifMenu.innerHTML = '<li class="dropdown-item text-center text-muted">Loading…</li>';
+
+    fetch(notifMenu.dataset.url, { credentials: 'same-origin' })
+      .then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(notes) {
+        if (!notes.length) {
+          notifMenu.innerHTML = '<li class="dropdown-item text-center text-muted">No notifications</li>';
+        } else {
+          notifMenu.innerHTML = notes.map(function(n) {
+            return (
+              '<li>'
+              + renderNotification(n)
+              + '<small class="text-muted d-block text-center">'
+              + new Date(n.when).toLocaleString()
+              + '</small><hr></li>'
+            );
+          }).join('');
+        }
+        // drop the unread badge
+        var badge = document.querySelector('#notifBellToggle .badge');
+        if (badge) badge.remove();
+      })
+      .catch(function(err) {
+        console.error('Notification fetch failed:', err);
+        notifMenu.innerHTML = '<li class="dropdown-item text-center text-danger">Error loading notifications</li>';
+      });
+  }
+
+  // ----------------------------------------------------------------
+  // 7) Hook loadNotifications() to the **dropdown container**
   // ----------------------------------------------------------------
   if (notifBell) {
-    notifBell.addEventListener('show.bs.dropdown', function() {
-      console.log('Opening notifications menu; fetching:', notificationsUrl);
-
-      // show a loading placeholder immediately
-      notifMenu.innerHTML =
-        '<li class="dropdown-item text-center text-muted">Loading…</li>';
-
-      fetch(notificationsUrl, { credentials: 'same-origin' })
-        .then(function(response) {
-          console.log('Fetch response:', response.status, response);
-          if (!response.ok) {
-            throw new Error('Network response was not OK: ' + response.status);
-          }
-          return response.json();
-        })
-        .then(function(notes) {
-          if (!notes.length) {
-            notifMenu.innerHTML =
-              '<li class="dropdown-item text-center text-muted">' +
-              'No notifications</li>';
-          } else {
-            notifMenu.innerHTML = notes.map(function(n) {
-              return '<li>' +
-                renderNotification(n) +
-                '<small class="text-muted text-center">' +
-                new Date(n.when).toLocaleString() +
-                '</small><hr></li>';
-            }).join('');
-          }
-          // remove the unread badge
-          var badge = document.querySelector('#notifBellToggle .badge');
-          if (badge) badge.remove();
-        })
-        .catch(function(err) {
-          console.error('Notification fetch failed:', err);
-          notifMenu.innerHTML =
-            '<li class="dropdown-item text-center text-danger">' +
-            'Error loading notifications</li>';
-        });
-    });
+    notifBell.addEventListener('show.bs.dropdown', loadNotifications);
   }
-  
+
+  // ──────────────────────────────────────────────────────────
+  // Hoist every .modal out of any overflow:hidden container
+  // to live directly under <body> (so they can escape clipping)
+  // ──────────────────────────────────────────────────────────
+  document.querySelectorAll('.modal').forEach(modal => {
+    if (modal.parentNode !== document.body) {
+      document.body.appendChild(modal);
+    }
+  });
 });
