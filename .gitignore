@@ -15,6 +15,7 @@ requirements.txt
 paste.py
 combined.txt
 wsgi.py 
+old.css
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
