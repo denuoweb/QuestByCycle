@@ -150,11 +150,10 @@ class User(UserMixin, db.Model):
         For Mastodon users, if they are linked, activitypub_id should already be set to their
         Mastodon actor URL.
         """
-        if not self.activitypub_id:
+        if not self.activitypub_id or not self.private_key or not self.public_key:
             from app.activitypub_utils import generate_activitypub_keys
-            # For local users, generate keys and create a local actor URL.
             public_key, private_key = generate_activitypub_keys()
-            local_domain = current_app.config.get("LOCAL_DOMAIN", "questbycycle.org")
+            local_domain = current_app.config["LOCAL_DOMAIN"]
             actor_url = f"https://{local_domain}/users/{self.username}"
             self.activitypub_id = actor_url
             self.public_key = public_key
