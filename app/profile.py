@@ -208,9 +208,9 @@ def edit_message(user_id, message_id):
     try:
         db.session.commit()
         return jsonify({'message': 'Message updated successfully'})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return
 
 
 def is_local_actor(actor_url):
