@@ -144,9 +144,6 @@ def verify_http_signature(actor, headers, body):
     ]
     signing_string = "\n".join(signing_components).encode('utf-8')
 
-    current_app.logger.debug("SERVER SIGNING STRING:\n%s", signing_string.decode())
-    current_app.logger.debug("INCOMING SIGNATURE (hex): %s", parts.get('signature'))
-
     # Verify
     try:
         rsa.verify(signing_string, signature, pub)
