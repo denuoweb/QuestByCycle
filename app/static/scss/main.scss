@@ -1,26 +1,40 @@
-// main.scss - Import all SCSS partials in the proper order
 @use 'sass:math';
 
+// 1. ABSTRACTS
 @import 'abstracts/variables';
-@import 'abstracts/mixins';
 @import 'abstracts/functions';
+@import 'abstracts/mixins';
 
+// 2. BASE
 @import 'base/reset';
 @import 'base/typography';
 
-@import 'layout/header';
-@import 'layout/footer';
+// 3. LAYOUT
 @import 'layout/grid';
+@import 'layout/header';
+@import 'layout/layout';
+@import 'layout/footer';
 
+// 4. COMPONENTS
+@import 'components/container';
+@import 'components/notification-dropdown';
 @import 'components/navbar';
+@import 'components/dropdown';
 @import 'components/buttons';
 @import 'components/forms';
 @import 'components/modals';
 @import 'components/badges';
+@import 'components/badge-bar';
+@import 'components/utilities';
+@import 'components/shoutboard';
+@import 'components/notifications';
 
+// 5. PAGES
+@import 'pages/index';
 @import 'pages/game';
 @import 'pages/profile';
 @import 'pages/quest';
 
+// 6. UTILS
 @import 'utils/animations';
 @import 'utils/responsive';

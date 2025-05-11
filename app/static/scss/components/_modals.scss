@@ -1,45 +1,140 @@
+// ===== Reverted Modal Styles (matching main1.css) =====
+
+// 1. Base modal container (with gradient + background image)
 .modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    align-items: center;
-    justify-content: center;
+  position: fixed;
+  display: none;
+  z-index: 3000 !important;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background: linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.8),
+      rgba(0, 0, 0, 0.8)
+    ),
+    url('/static/images/header-bg.jpg') no-repeat center center/cover;
+  animation: fadeIn 0.3s ease-in-out;
+
+  &.active {
+    display: block;
   }
-  .modal.active {
+
+  // 2. Header section
+  &-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+  }
+
+  // 3. Body section
+  &-body {
+    padding: 20px;
     display: flex;
+    flex-direction: column;
+    
+    p {
+      font-size: larger;
+    }
   }
-  .modal-dialog {
-    background: #fff;
-    padding: 1.5rem;
-    border-radius: $border-radius;
-    max-width: 500px;
-    width: 90%;
-    position: relative;
+
+  // 4. Footer section
+  &-footer {
+    padding-top: 10px;
+    text-align: right;
+    border-top: 1px solid #eee;
   }
-  .modal-header,
-  .modal-footer {
-    margin-bottom: 1rem;
+
+  // 5. Action button in footer
+  &-action-btn {
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    align-self: center;
+
+    &:hover {
+      background-color: #0056b3;
+    }
   }
-  .modal-title {
-    font-size: 1.25rem;
-    font-weight: bold;
-  }
-  .modal-body {
-    max-height: 60vh;
-    overflow-y: auto;
-  }
-  .modal-close {
+
+  // 6. “X” close control
+  .close-button {
     position: absolute;
-    top: 1rem;
-    right: 1rem;
+    top: 10px;
+    right: 10px;
+    color: #aaa;
+    font-size: 24px;
+    font-weight: bold;
     background: none;
     border: none;
-    font-size: 1.5rem;
     cursor: pointer;
-    color: #333;
+    opacity: 0.6;
+
+    &:hover,
+    &:focus {
+      color: #000;
+      text-decoration: none;
+      opacity: 1;
+    }
   }
-  
+
+  // 7. Inner content wrapper
+  .modal-content {
+    max-height: calc(100vh - 30px);
+    overflow-y: auto;
+    background-color: #fefefe;
+    margin: 15px auto;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 8px;
+    position: relative;
+
+    img {
+      display: block;
+      margin-bottom: 20px;
+      size: 200px; // retained from original
+    }
+  }
+}
+
+// 8. Prevent body scroll when modal is open
+.body-no-scroll {
+  overflow: hidden !important;
+}
+
+// 9. Fade‐in keyframes
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+// 10. Submission Detail Modal overrides
+#submissionDetailModal {
+  .modal-content {
+    text-align: center;
+    padding: 20px;
+  }
+
+  #submissionComment {
+    font-size: 18px;
+    margin-top: 20px;
+    color: #333;
+    font-weight: bold;
+  }
+
+  .button {
+    margin: 10px 5px;
+    display: inline-block;
+    width: auto;
+  }
+
+  div {
+    text-align: center;
+    margin-top: 20px;
+  }
+}

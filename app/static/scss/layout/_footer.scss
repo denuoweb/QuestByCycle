@@ -1,11 +1,118 @@
-.site-footer {
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-    padding: 1rem;
+@import '../abstracts/mixins';   // for any transition mixin, if needed
+@import '../abstracts/functions';// for pxToRem()
+
+.footer {
+  // 1. Base footer container
+  background-color: #333;                         // old CSS: footer { background-color: #333 }
+  color: #fff;                                    // old CSS: footer { color: #fff }
+  text-align: center;                             // old CSS: footer { text-align: center }
+  padding: pxToRem(20) 0;                         // old CSS: footer { padding: 20px 0 }
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
+  width: 100%;
+
+  // 2. Inner flex wrapper (formerly .footer-container)
+  &-content {
+    display: flex;                                // old CSS: .footer-container { display: flex }
+    align-items: center;                          //    align-items: center
+    justify-content: center;                      //    justify-content: center
+    gap: pxToRem(20);                             //    gap: 20px
+    max-width: pxToRem(1200);                     //    max-width: 1200px
+    margin: 0 auto;                               //    margin: 0 auto
+    flex-wrap: wrap;
+    padding: 0 pxToRem(15);                       // optional horizontal padding
   }
-  .site-footer a {
-    color: #fff;
-    text-decoration: underline;
+
+  // 3. Top “text” section: supporting copy + install instructions
+  .footer-section {
+    &.text {
+      strong {
+        display: block;
+        margin-bottom: pxToRem(8);
+      }
+      p {
+        margin: pxToRem(4) 0;
+      }
+      button#install {
+        margin-top: pxToRem(10);
+      }
+      ul {
+        margin: pxToRem(8) 0 pxToRem(16);
+        padding-left: pxToRem(20);
+        text-align: left;
+        li {
+          margin-bottom: pxToRem(8);
+        }
+      }
+    }
+
+    // 4. Sponsors / logos block (unchanged from before)
+    &.logos {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      p {
+        margin: 0;
+        a {
+          display: inline-flex;
+          align-items: center;
+          color: #ffe07a;                     // keep your branded link color
+          transition: color 0.3s ease-in-out;
+          &:hover {
+            color: #bfc2b1;
+          }
+          i {
+            margin-right: pxToRem(8);
+          }
+        }
+      }
+    }
+
+    // 5. Links block: Privacy, Terms, License
+    &.links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: pxToRem(15);
+
+      a {
+        color: #fff;                         // white text
+        text-decoration: underline;         // underline by default
+        font-size: pxToRem(14);
+        &:hover {
+          text-decoration: none;
+          color: lighten(#fff, 10%);
+        }
+      }
+      margin-bottom: pxToRem(20);
+    }
+
+    // 6. Social icons block
+    &.social {
+      p {
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        gap: pxToRem(10);
+
+        a.social-link {
+          font-size: pxToRem(24);
+          color: #ffe07a;
+          transition: color 0.3s ease-in-out;
+          &:hover {
+            color: #bfc2b1;
+          }
+        }
+      }
+    }
+
+    // 7. Legal copy
+    &.legal {
+      font-size: pxToRem(12);                // slightly smaller
+      margin-top: pxToRem(16);
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      padding-top: pxToRem(12);
+    }
   }
-  
+}

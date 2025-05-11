@@ -1,0 +1,49 @@
+@use 'sass:math';               // for any direct math.div usage (if needed)
+@import '../abstracts/functions'; // pxToRem()
+@import '../abstracts/mixins';    // respond()
+
+.container {
+  // Base (mobile-first)
+  width: 100%;
+  max-width: 95%;                  // near-full width on smallest viewports
+  margin: 0 auto;                  // center horizontally
+  padding: pxToRem(20);            // 20px → rem
+  background-color: #D0E6B5;       // matches your branded container bg
+  border-radius: pxToRem(12);      // 12px → rem
+  box-shadow: 0 pxToRem(4) pxToRem(15) rgba(0, 0, 0, 0.2);
+  @include transition(
+    transform 0.3s ease-in-out,
+    box-shadow  0.3s ease
+  );
+
+  &.modal-open {
+    overflow: visible;
+  }
+
+  // Subtle “lift” on hover for interactivity
+  &:hover {
+    transform: translateY(pxToRem(-2));                           // lift by 2px
+    box-shadow: 0 pxToRem(6) pxToRem(18) rgba(0, 0, 0, 0.25);      // deeper shadow
+  }
+
+  // Responsive max-widths (mobile-first via respond())
+  @include respond(576px) { 
+    max-width: pxToRem(540);    // ~540px container on ≥576px
+  }
+  @include respond(768px) {
+    max-width: pxToRem(720);    // ~720px on ≥768px
+  }
+  @include respond(992px) {
+    max-width: pxToRem(960);    // ~960px on ≥992px
+  }
+  @include respond(1200px) {
+    max-width: pxToRem(1140);   // ~1140px on ≥1200px
+  }
+  @include respond(1400px) {
+    max-width: pxToRem(1320);   // ~1320px on ≥1400px
+  }
+}
+
+.container.modal-open {
+  overflow: visible;
+}

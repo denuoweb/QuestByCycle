@@ -1,24 +1,63 @@
-.profile-page {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 1rem;
-  }
-  .profile-header {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .profile-avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    margin-bottom: 1rem;
-  }
-  .profile-name {
-    font-size: 1.5rem;
-    font-weight: bold;
-  }
-  .profile-details {
-    margin-top: 1rem;
-  }
-  
+@import '../abstracts/functions';
+@import '../abstracts/mixins';
+
+.epic-profile-container {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: #fff;
+  box-shadow: 0 pxToRem(8) pxToRem(25) rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+.profile-header {
+  width: 100%;
+  height: pxToRem(300);
+  background-color: #000;
+  overflow: hidden;
+  position: relative;
+}
+.profile-photo-full {
+  position: static;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+.full-width-profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: scale-down;
+  filter: brightness(0.9);
+}
+.welcome-text {
+  font-size: pxToRem(44);
+  margin-bottom: pxToRem(8);
+  text-shadow: 0px pxToRem(4) pxToRem(8) rgba(0, 0, 0, 0.8);
+}
+#total-points {
+  text-shadow: 0px pxToRem(4) pxToRem(8) rgba(0, 0, 0, 0.8);
+  margin-bottom: pxToRem(8);
+}
+.points-emphasized {
+  font-size: pxToRem(32);
+  font-weight: bold;
+  text-shadow: pxToRem(2) pxToRem(2) pxToRem(5) rgba(0, 0, 0, 0.4);
+  color: #ffdf5f;
+}
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: pxToRem(10);
+  margin-top: pxToRem(20);
+}
+.profile-actions .btn {
+  padding: pxToRem(12) pxToRem(40);
+  border-radius: 50px;
+}
+.custom-btn-bg {
+  background: linear-gradient(135deg, #24c6dc 0%, #514a9d 100%);
+  border: none;
+}
+.custom-btn-bg:hover {
+  background: linear-gradient(135deg, #514a9d 0%, #24c6dc 100%);
+}

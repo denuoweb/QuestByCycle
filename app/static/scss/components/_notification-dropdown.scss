@@ -1,0 +1,34 @@
+@import '../abstracts/functions';
+@import '../abstracts/mixins';
+
+// Notification Bell dropdown
+#notifBell {
+  .nav-link {
+    padding: pxToRem(4);
+
+    i { font-size: pxToRem(18); }
+
+    .badge {
+      @include transition(opacity 0.2s ease);
+      font-size: pxToRem(12);
+      position: absolute;
+      top: 0;
+      right: 0;
+      transform: translate(50%, -50%);
+      background-color: #dc3545;
+      color: #fff;
+    }
+  }
+
+  // media tweaks for the menu
+  #notifMenu {
+    @media (max-width: 686px) {
+      .dropdown-item { white-space: normal !important; }
+    }
+    @media (min-width: 1400px) and (max-width: 1745px) {
+      transform: translateX(225px) !important;
+      left: auto !important;
+      right: 0 !important;
+    }
+  }
+}

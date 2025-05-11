@@ -1,0 +1,37 @@
+.hero-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  .earth-day-card {
+    background: linear-gradient(135deg, #ffffff, #f1ff28);
+    border: 2px solid #ddd;
+    border-radius: 15px;
+    padding: 1.5rem;     // matches .p-4
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    text-align: center;
+  
+    .card-title {
+      font-family: 'Gill Sans', sans-serif;
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+  
+      a {
+        font-size: 3rem;
+        color: inherit;
+        text-decoration: none;
+      }
+    }
+  
+    .card-subtitle {
+      font-family: 'Georgia', serif;
+      font-size: 1.4rem;
+      font-style: italic;
+      margin-bottom: 0.5rem;
+    }
+  
+    .card-text {
+      font-size: 1.2rem;
+    }
+  }

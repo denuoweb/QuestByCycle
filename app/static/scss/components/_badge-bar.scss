@@ -1,0 +1,51 @@
+@import '../abstracts/functions';
+@import '../abstracts/mixins';
+
+.badge-bar-container {
+  background-color: #f1ffee;
+  padding: pxToRem(15);
+  border-radius: pxToRem(12);
+  box-shadow: 0 pxToRem(4) pxToRem(15) rgba(0,0,0,0.2);
+  margin-bottom: pxToRem(20);
+  overflow-x: auto;
+  overflow-y: hidden;
+  text-align: center;
+}
+.badge-bar {
+  display: inline-flex;
+  gap: pxToRem(15);
+  justify-content: flex-start;
+}
+.badge-item {
+  flex: 0 0 auto;
+  width: pxToRem(100);
+  height: pxToRem(115);
+  background-color: #fff;
+  border-radius: pxToRem(8);
+  box-shadow: 0 pxToRem(2) pxToRem(5) rgba(0,0,0,0.1);
+  padding: pxToRem(10);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.badge-item:hover {
+  transform: translateY(pxToRem(-5));
+  box-shadow: 0 pxToRem(6) pxToRem(15) rgba(0,0,0,0.2);
+}
+.badge-img {
+  width: pxToRem(40);
+  height: pxToRem(40);
+  object-fit: contain;
+  transition: filter 0.3s ease;
+}
+.badge-name {
+  margin-top: pxToRem(5);
+  font-size: 0.85em;
+  color: #555;
+}
+.badge-img.badge-earned {
+  filter: none;
+}
+.badge-img.badge-not-earned {
+  filter: grayscale(100%);
+  opacity: 0.7;
+}

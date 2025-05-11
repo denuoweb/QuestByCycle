@@ -1,0 +1,31 @@
+@use 'sass:math';
+@import '../abstracts/mixins';
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  font-family: 'Arial', sans-serif;
+  padding: 0;
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.content-wrap {
+  flex: 1;
+  background: url('/static/images/header-bg.jpg') stretch;
+}
+
+.container {
+  // Overrides layout/_grid.scss .container
+  width: 100%;
+  max-width: 95%;
+  margin: 0 auto;
+  background-color: #D0E6B5;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  @include transition(transform 0.3s ease-in-out, box-shadow 0.3s ease);
+}

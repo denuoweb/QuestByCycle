@@ -1,0 +1,174 @@
+@import '../abstracts/functions';
+@import '../abstracts/mixins';
+
+// Dropdown variables
+$dropdown-bg:        #e2e8db;
+$dropdown-radius:    pxToRem(8);
+$dropdown-shadow:    0 pxToRem(6) pxToRem(32) rgba(0, 0, 0, 0.13);
+$dropdown-divider:   #d1e1cd;
+$dropdown-muted:     #6c757d;
+$dropdown-color:     #333;
+$dropdown-hover-bg:  #f8f8f8;
+$dropdown-width:     pxToRem(340);  // = 340px; adjust as needed
+$dropdown-item-max-width: pxToRem(290); // Keeps items inside bounds
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+
+  .dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    min-width: $dropdown-width;
+    max-width: $dropdown-width;
+    width: $dropdown-width;      // Force uniform width
+    background: $dropdown-bg;
+    border-radius: $dropdown-radius;
+    box-shadow: $dropdown-shadow;
+    padding: pxToRem(8) 0;
+    z-index: 1200;
+    font-family: Arial, sans-serif;
+    font-size: pxToRem(16);
+    flex-direction: column;
+    @include transition(opacity 0.2s cubic-bezier(.4,0,.2,1), transform 0.2s cubic-bezier(.4,0,.2,1));
+    
+    li {
+      margin-left: pxToRem(8);  // Or any value, e.g., 8px in rem
+      margin-right: pxToRem(8);
+      // Optional: To make sure divider matches, adjust next rule
+      &:has(.dropdown-divider) {
+        margin: 0; // ensure divider uses full width
+      }
+    }
+
+    // You might want to adjust .dropdown-divider so it spans full menu width!
+    .dropdown-divider {
+      margin-left: 0;
+      margin-right: 0;
+      width: 100%;
+    }
+
+    &.show, // for JS toggling
+    .dropdown.show & {
+      display: flex;
+      animation: slide-down 0.2s cubic-bezier(.46,.03,.52,.96);
+    }
+  }
+
+  .dropdown-toggle {
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: $dropdown-color;
+    outline: none;
+    font-size: pxToRem(17);
+    border-radius: $dropdown-radius;
+    padding: pxToRem(8) pxToRem(8);
+    display: inline-flex;
+    align-items: center;
+    transition: background 0.18s, color 0.18s;
+    &:hover, &:focus-visible, &[aria-expanded="true"] {
+      background: $dropdown-hover-bg;
+      color: darken($dropdown-color, 14%);
+      outline: none;
+    }
+    .dropdown-toggle-icon {
+      transition: transform 0.18s;
+    }
+    &[aria-expanded="true"] .dropdown-toggle-icon {
+      transform: rotate(-180deg);
+    }
+  }
+
+  .dropdown-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    padding: pxToRem(10) pxToRem(16);
+    box-sizing: border-box;
+    color: $dropdown-color;
+    background: none;
+    border: none;
+    font-size: pxToRem(16);
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: background 0.16s, color 0.16s;
+    &:hover,
+    &:focus {
+      background: $dropdown-hover-bg;
+      color: darken($dropdown-color, 8%);
+      outline: none;
+    }
+    &.fw-bold    { font-weight: bold; }
+    &.text-muted { color: $dropdown-muted; cursor: default;}
+    small.text-muted {
+      display: block;
+      font-size: pxToRem(12);
+      color: $dropdown-muted;
+    }
+    p {
+      display: inline;
+      margin: 0;
+    }
+
+    &:hover,
+    &:focus {
+      background: $dropdown-hover-bg;
+      color: darken($dropdown-color, 8%);
+      outline: none;
+    }
+    &.fw-bold    { font-weight: bold; }
+    &.text-center{ text-align: center; }
+    &.text-muted {
+      color: $dropdown-muted;
+      cursor: default;
+    }
+    small.text-muted {
+      display: block;
+      font-size: pxToRem(12);
+      color: $dropdown-muted;
+    }
+    p {
+      display: inline;
+      margin: 0;
+    }
+  }
+
+  .dropdown-divider {
+    height: 1px;
+    margin: pxToRem(4) 0;
+    background: $dropdown-divider;
+    border: none;
+  }
+}
+
+// Animation
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Responsive: Keep menu wide (never 100% on small screens)
+@media (max-width: 500px) {
+  .dropdown-menu {
+    min-width: $dropdown-width;
+    max-width: 98vw;
+    width: 98vw;
+    left: 1vw;
+    right: 1vw;
+  }
+  .dropdown-item {
+    max-width: 90vw;
+  }
+}

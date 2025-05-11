@@ -1,0 +1,34 @@
+.flash-message {
+    width: 50%;
+    margin: 20px auto;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 1em;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: opacity 0.3s ease-in-out;
+}
+  
+  .flash-success {
+    background-color: #a8d5a3;
+    color: #3c763d;
+    border: 1px solid #96c48b;
+}
+  
+  .flash-error, .flash-danger {
+    background-color: #f7c6c6;
+    color: #a94442;
+    border: 1px solid #f0a7a7;
+}
+  
+  .flash-warning {
+    background-color: #fae1b5;
+    color: #8a6d3b;
+    border: 1px solid #f7d09a;
+}
+  
+  .flash-info {
+    background-color: #56cbdf;
+    color: #31708f;
+    border: 1px solid #a3cbd3;
+}
