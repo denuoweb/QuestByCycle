@@ -772,3 +772,133 @@ def get_game_badges(game_id):
 
     print(f"get_game_badges returning {len(badges)} badges")  # Log number of badges returned
     return badges
+
+
+def send_social_media_liaison_email(game_id):  
+    """  
+    Generate and send a social media liaison email for a specific game.  
+    This function collects all submissions since the last email was sent,  
+    formats them into an HTML email, and sends it to the liaison email address.  
+      
+    Args:  
+        game_id (int): ID of the game to send the email for  
+          
+    Returns:  
+        bool: True if email was sent successfully, False otherwise  
+    """  
+    game = Game.query.get(game_id)  
+    if not game or not game.social_media_liaison_email:  
+        return False  
+          
+    # Determine the cutoff time based on when the last email was sent  
+    cutoff_time = game.last_social_media_email_sent or game.start_date  
+      
+    # Get all submissions for this game since the last email  
+    submissions = QuestSubmission.query.join(Quest).filter(  
+        Quest.game_id == game_id,  
+        QuestSubmission.timestamp > cutoff_time  
+    ).order_by(QuestSubmission.timestamp.desc()).all()  
+      
+    if not submissions:  
+        return False  # No new submissions to report  
+          
+    # Generate HTML content for the email  
+    html_content = f"""  
+    <html>  
+    <head>  
+        <style>  
+            body {{ font-family: Arial, sans-serif; }}  
+            .submission {{ margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; }}  
+            img {{ max-width: 300px; max-height: 300px; }}  
+        </style>  
+    </head>  
+    <body>  
+        <h1>New Submissions for {game.title}</h1>  
+        <p>Time period: {cutoff_time.strftime('%Y-%m-%d %H:%M')} to {datetime.now(utc).strftime('%Y-%m-%d %H:%M')}</p>  
+        <p>Total new submissions: {len(submissions)}</p>  
+          
+        <div class="submissions">  
+    """  
+      
+    for submission in submissions:  
+        quest = submission.quest  
+        user = submission.submitter  
+          
+        html_content += f"""  
+        <div class="submission">  
+            <h3>Quest: {quest.title}</h3>  
+            <p>User: {user.username}</p>  
+            <p>Submitted: {submission.timestamp.strftime('%Y-%m-%d %H:%M')}</p>  
+        """  
+          
+        if submission.comment:  
+            html_content += f"<p>Comment: {submission.comment}</p>"  
+              
+        if submission.image_url:
+            # build an absolute URL even though we're outside a real request
+            with current_app.test_request_context():
+                image_url = url_for('static',
+                                    filename=submission.image_url,
+                                    _external=True)
+            html_content += f'<img src="{image_url}" alt="Submission image"><br>'
+              
+        html_content += "</div>"  
+      
+    html_content += """  
+        </div>  
+    </body>  
+    </html>  
+    """  
+      
+    # Send the email  
+    subject = f"New Submissions for {game.title} - {datetime.now(utc).strftime('%Y-%m-%d')}"  
+    success = send_email(game.social_media_liaison_email, subject, html_content)  
+      
+    if success:  
+        # Update the last sent timestamp  
+        game.last_social_media_email_sent = datetime.now(utc)  
+        db.session.commit()  
+          
+    return success
+
+
+def _ensure_aware(dt):
+    if dt is None:
+        return None
+    return dt if dt.tzinfo else dt.replace(tzinfo=utc)
+
+
+def check_and_send_liaison_emails():
+    """
+    For every game with a liaison email, send on its schedule:
+      'minute', 'daily', 'weekly', or 'monthly'.
+    """
+    now = datetime.now(utc)
+
+    # Build your thresholds in one place
+    interval_map = {
+        'minute': timedelta(minutes=1),
+        'daily':   timedelta(days=1),
+        'weekly':  timedelta(weeks=1),
+        'monthly': timedelta(days=30),
+    }
+
+    games = Game.query.filter(Game.social_media_liaison_email.isnot(None)).all()
+
+    for game in games:
+        freq = (game.social_media_email_frequency or 'weekly').lower()
+        threshold = interval_map.get(freq, timedelta(days=1))
+
+        # coerce both dates to tz-aware UTC
+        started = _ensure_aware(game.start_date)
+        last    = _ensure_aware(game.last_social_media_email_sent) or started
+
+        # first send: only if we've passed at least one threshold since start
+        if not game.last_social_media_email_sent:
+            if now - started >= threshold:
+                send_social_media_liaison_email(game.id)
+            continue
+
+        # subsequent sends
+        if now - last >= threshold:
+            send_social_media_liaison_email(game.id)

@@ -1,12 +1,6 @@
 # pylint: disable=import-error
-"""
-Module for game-related routes and logic in the BikeHunt application.
-"""
-
 import os
 import base64
-from io import BytesIO
-
 import bleach
 import qrcode
 
@@ -15,12 +9,11 @@ from flask import (
     current_app, make_response
 )
 from flask_login import login_required, current_user
-
 from sqlalchemy.exc import SQLAlchemyError
-
 from app.models import db, Game, Quest, UserQuest, user_games, User
 from app.forms import GameForm
 from app.utils import save_leaderboard_image, generate_smoggy_images, allowed_file
+from io import BytesIO
 
 
 ALLOWED_TAGS = [
@@ -99,6 +92,8 @@ def create_game():
             facebook_page_id=sanitize_html(form.facebook_page_id.data),
             is_public=form.is_public.data,
             allow_joins=form.allow_joins.data,
+            social_media_liaison_email = sanitize_html(form.social_media_liaison_email.data),
+            social_media_email_frequency = form.social_media_email_frequency.data,
             admin_id=current_user.id
         )
         if 'leaderboard_image' in request.files:
@@ -168,6 +163,8 @@ def update_game(game_id):
         game.instagram_access_token = sanitize_html(form.instagram_access_token.data)
         game.is_public = form.is_public.data
         game.allow_joins = form.allow_joins.data
+        game.social_media_liaison_email = sanitize_html(form.social_media_liaison_email.data)  
+        game.social_media_email_frequency = form.social_media_email_frequency.data
 
         if ('leaderboard_image' in request.files and
                 request.files['leaderboard_image'].filename):

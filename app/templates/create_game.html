@@ -107,6 +107,21 @@
             <label for="custom_game_code">Custom Game Code</label>
             <input type="text" class="form-control" id="custom_game_code" name="custom_game_code" value="{{ form.custom_game_code.data }}" readonly>
         </div>
+        <div class="form-group">  
+            {{ form.social_media_liaison_email.label }}  
+            {{ form.social_media_liaison_email(class="form-control") }}  
+            <small class="form-text text-muted">  
+                Enter an email address to receive regular updates about game submissions.  
+            </small>  
+        </div>  
+        
+        <div class="form-group">  
+            {{ form.social_media_email_frequency.label }}  
+            {{ form.social_media_email_frequency(class="form-control") }}  
+            <small class="form-text text-muted">  
+                How often should submission update emails be sent?  
+            </small>  
+        </div>
         <div class="form-group">
             <label for="twitter_username">Twitter Username</label>
             {{ form.twitter_username(class_="form-control", id="twitter_username") }}
