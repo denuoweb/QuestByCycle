@@ -36,6 +36,7 @@ google-auth-oauthlib = "^1.0.0"
 httpx = "^0.24.1"
 httpcore = "^0.17.0"
 pytest = "^8.3.5"
+apscheduler = "^3.11.0"
 
 [tool.poetry.group.dev.dependencies]
 libsass  = "^0.23.0"
