@@ -345,25 +345,6 @@ def delete_user(user_id):
     return redirect(url_for('admin.user_management'))
 
 
-@admin_bp.route('/update_carousel', methods=['POST'])
-@login_required
-@require_admin
-def update_carousel():
-    try:
-        for i in range(1, 4):
-            file = request.files.get(f'carouselImage{i}')
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-                # Update your database or config here with the new filename
-                # Example: CarouselImage.query.filter_by(position=i).update({'filename': filename})
-                # db.session.commit()
-        flash('Carousel updated successfully.', 'success')
-    except Exception as e:
-        flash(f'Error updating carousel: {e}', 'error')
-    return redirect(url_for('admin.admin_dashboard'))
-
-
 @admin_bp.route('/sponsors/edit/<int:sponsor_id>', methods=['GET', 'POST'])
 @login_required
 @require_admin

@@ -254,30 +254,6 @@ def _prepare_user_data(game_id, profile):
     return earned, unearned
 
 
-def _prepare_carousel_images(game_id):
-    """
-    Prepare carousel image data for the given game.
-    Returns a list of dictionaries with image data.
-    """
-    carousel_images = []
-    if current_user.is_authenticated and game_id:
-        quest_submissions = QuestSubmission.query.join(Quest).filter(Quest.game_id == game_id).all()
-        for submission in quest_submissions:
-            if submission.image_url:
-                # Normalize image path
-                image_url = submission.image_url.lstrip('/').replace('static/', '')
-                if not image_url.startswith('images/'):
-                    image_url = f'images/{image_url}'
-                carousel_images.append({
-                    'small': image_url,
-                    'medium': image_url,
-                    'large': image_url,
-                    'quest_title': submission.quest.title,
-                    'comment': submission.comment
-                })
-    return carousel_images
-
-
 @main_bp.route('/', defaults={'game_id': None, 'quest_id': None, 'user_id': None})
 @main_bp.route('/<int:game_id>', defaults={'quest_id': None, 'user_id': None})
 @main_bp.route('/<int:game_id>/<int:quest_id>', defaults={'user_id': None})
@@ -358,7 +334,6 @@ def index(game_id, quest_id, user_id):
 
     # Prepare quests and activities
     quests, activities = _prepare_quests(game, user_id, user_quests, now)
-    carousel_images = _prepare_carousel_images(game_id)
     categories = sorted({quest.category for quest in quests if quest.category})
 
     # Custom vs closed games (exclude demos)
@@ -417,7 +392,6 @@ def index(game_id, quest_id, user_id):
         has_joined=has_joined,
         profile=profile,
         user_quests=user_quests,
-        carousel_images=carousel_images,
         total_points=total_points,
         completions=UserQuest.query.filter(UserQuest.completions > 0).order_by(UserQuest.completed_at.desc()).all(),
         open_games=open_games,

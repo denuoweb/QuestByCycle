@@ -45,7 +45,6 @@ The project is organized as follows:
 
 - `app/`: The main application directory.
   - `static/`: Contains static assets like CSS, JavaScript, images, and fonts.
-    - `carousel_images/`: Images used in the homepage carousel.
     - `css/`: Stylesheets.
     - `js/`: JavaScript files.
     - `qr_codes/`: QR code images.
@@ -300,7 +299,7 @@ JavaScript files are located in `app/static/js` and include:
 
 ### Images and Videos
 
-Images and videos are located in `app/static/images`, `app/static/qr_codes`, and `app/static/videos`. The `carousel_images` directory contains images used in the homepage carousel.
+Images and videos are located in `app/static/images`, `app/static/qr_codes`, and `app/static/videos`.
 
 ## Testing and Debugging
 

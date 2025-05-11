@@ -55,9 +55,6 @@ const APP_STATIC_RESOURCES = [
 
   // Images (Add specific files if needed)
   "/static/images/",
-
-  // Carousel Images (Add specific files if needed)
-  "/static/carousel_images/"
 ];
 
 // Install event
