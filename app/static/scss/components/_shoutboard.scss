@@ -15,27 +15,32 @@
   border-radius: pxToRem(6);
   padding: pxToRem(12);
   box-shadow: 0 pxToRem(2) pxToRem(5) rgba(0,0,0,0.1);
+  margin-bottom: pxToRem(15);
+  height: pxToRem(475);
+  overflow-y: hidden;
+}
+
+/* — Parent Row Flex Stretch — */
+#whats-happening-step > .col-md-6 {
+  display: flex;
+  flex-direction: column;
 }
 
 /* — Header Container for H2 and H3 — */
 #gameNameContainer {
   background: #f1ffee;
   border-bottom: 1px solid #e0e0e0;
-  padding: pxToRem(12);
   border-radius: pxToRem(6) pxToRem(6) 0 0;
   text-align: center;
-  margin: 0 -pxToRem(12) pxToRem(8);
 }
 
 #gameNameContainer #gameNameHeader {
   font-size: pxToRem(32);
   font-weight: bold;
-  margin: 0 0 pxToRem(5);
 }
 #gameNameContainer > h3 {
   font-size: pxToRem(24);
   font-weight: normal;
-  margin: 0;
 }
 
 .pinned-messages-header {
@@ -123,13 +128,14 @@
   margin-top: pxToRem(8);
   overflow-wrap: break-word;
 }
-.activity-message a[data-badge-id] {
-  display: block;
-  background: #FFFACD;
-  padding: pxToRem(4) pxToRem(8);
-  border-radius: pxToRem(3);
-  margin-top: pxToRem(4);
-}
+ .activity-message a[data-badge-id] {
+   display: inline-block;   // or inline
+   background: #FFFACD;
+   padding: pxToRem(2) pxToRem(6);
+   border-radius: pxToRem(3);
+   margin: 0 pxToRem(4);    // no vertical margin
+   vertical-align: middle;  // keep baseline alignment
+ }
 
 /* — Like Section — */
 .like-section {
@@ -164,15 +170,6 @@
 }
 .table thead {
   background-color: #FFF8E1;
-}
-
-/* — Parent Row Flex Stretch — */
-#whats-happening-step > .col-md-6 {
-  display: flex;
-  flex-direction: column;
-}
-#whats-happening-step .game-item {
-  flex: 1;
 }
 
 /* — Give extra bottom padding on small screens so you can scroll past last item — */

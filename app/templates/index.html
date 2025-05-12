@@ -124,8 +124,8 @@
                                         <div class="form-group">
                                             <input type="hidden" name="message" id="message-input">
                                             <div id="quill-editor"></div>
+                                            {{ form.submit() }}
                                         </div>
-                                        {{ form.submit() }}
                                     </form>
                                 {% endif %}
                                 <div class="shout-messages-container">
@@ -177,7 +177,7 @@
                                                             </a>
                                                         </strong>
                                                         <span class="activity-message">
-                                                            completed a quest<br>
+                                                            completed a quest
                                                             <a href="javascript:void(0);"
                                                                class="quest-title"
                                                                onclick="openQuestDetailModal('{{ activity.quest.id }}')">
@@ -247,7 +247,7 @@
                                                         </a>
                                                     </strong>
                                                     <span class="activity-message">
-                                                        completed a quest<br>
+                                                        completed a quest
                                                         <a href="javascript:void(0);"
                                                            class="quest-title"
                                                            onclick="openQuestDetailModal('{{ activity.quest.id }}')">

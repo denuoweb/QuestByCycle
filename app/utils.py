@@ -324,17 +324,21 @@ def check_and_award_badges(user_id, quest_id, game_id):
             # Award the quest-specific badge.
             user.badges.append(quest.badge)
             msg = (
-                f" earned the badge "
-                f"<a href='javascript:void(0);' onclick='openBadgeModal(this)' "
+                f" earned the badge"
+                f"<a class='quest-title' href='javascript:void(0);' onclick='openBadgeModal(this)' "
                 f"data-badge-id='{quest.badge.id}' "
                 f"data-badge-name='{quest.badge.name}' "
                 f"data-badge-description='{quest.badge.description}' "
                 f"data-badge-image='{quest.badge.image}' "
                 f"data-task-name='{quest.title}' "
-                f"data-badge-awarded-count='{quest.badge_awarded}' "  # Quest-specific threshold.
+                f"data-badge-awarded-count='{quest.badge_awarded}' "
                 f"data-task-id='{quest.id}' "
-                f"data-user-completions='{user_quest.completions}'>{quest.badge.name}</a> for completing quest "
-                f"<a href='javascript:void(0);' onclick='openQuestDetailModal({quest.id})'>{quest.title}</a>"
+                f"data-user-completions='{user_quest.completions}'>"
+                f"{quest.badge.name}"
+                f"</a>for completing quest "
+                f"<a class='quest-title' href='javascript:void(0);' onclick='openQuestDetailModal({quest.id})'>"
+                f"{quest.title}"
+                f"</a>"
             )
             sbm = ShoutBoardMessage(message=msg, user_id=user_id, game_id=game_id)
             db.session.add(sbm)
@@ -362,19 +366,25 @@ def check_and_award_badges(user_id, quest_id, game_id):
                     game_id=game_id
                 ).filter(ShoutBoardMessage.message.contains(f"data-badge-id='{badge.id}'")).first()
                 if not existing_award:
+                    url = url_for(
+                        'static',
+                        filename=f'images/badge_images/{badge.image}'
+                    )
                     user.badges.append(badge)
                     msg = (
                         f" earned the badge "
-                        f"<a href='javascript:void(0);' onclick='openBadgeModal(this)' "
+                        f"<a class='quest-title' href='javascript:void(0);' onclick='openBadgeModal(this)' "
                         f"data-badge-id='{badge.id}' "
                         f"data-badge-name='{badge.name}' "
                         f"data-badge-description='{badge.description}' "
-                        f"data-badge-image='{url_for('static', filename='images/badge_images/' + badge.image)}' "
-                        f"data-task-name='{quest.title}' "  # Representative task name.
-                        f"data-badge-awarded-count='1' "  # Category badge threshold is 1 per quest.
+                        f"data-badge-image='{url}' "
+                        f"data-task-name='{quest.title}' "
+                        f"data-badge-awarded-count='1' "
                         f"data-task-id='{quest.id}' "
-                        f"data-user-completed='{len(completed_quests)}' "  # How many tasks completed.
-                        f"data-total-tasks='{len(category_quests)}'>{badge.name}</a> for completing all quests in category '{quest.category}'"
+                        f"data-user-completed='{len(completed_quests)}' "
+                        f"data-total-tasks='{len(category_quests)}'>"
+                        f"{badge.name}"
+                        f"</a> for completing all quests in category '{quest.category}'"
                     )
                     sbm = ShoutBoardMessage(message=msg, user_id=user_id, game_id=game_id)
                     db.session.add(sbm)

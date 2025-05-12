@@ -232,27 +232,6 @@ document.addEventListener('DOMContentLoaded', function() {
             behavior: 'smooth'
         });
     }
-    
-    const scrollUpButton = document.getElementById('scrollUpButton');
-    const scrollDownButton = document.getElementById('scrollDownButton');
-    if (scrollUpButton) {
-        scrollUpButton.addEventListener('click', function() {
-            scrollMessagesContainer('up');
-        });
-        scrollUpButton.addEventListener('touchstart', function(event) {
-            event.preventDefault();
-            scrollMessagesContainer('up');
-        });
-    }
-    if (scrollDownButton) {
-        scrollDownButton.addEventListener('click', function() {
-            scrollMessagesContainer('down');
-        });
-        scrollDownButton.addEventListener('touchstart', function(event) {
-            event.preventDefault();
-            scrollMessagesContainer('down');
-        });
-    }
 
     const questSearchInput = document.getElementById('questSearchInput');
     if (questSearchInput) {
