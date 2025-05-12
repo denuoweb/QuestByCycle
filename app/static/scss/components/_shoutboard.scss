@@ -75,7 +75,7 @@
 /* — Individual Activity Entries — */
 .activity {
   position: relative;
-  background: #fff;
+  background: #dfeedb;
   margin-bottom: pxToRem(12);
   padding: pxToRem(12);
   border-radius: pxToRem(6);
@@ -128,14 +128,14 @@
   margin-top: pxToRem(8);
   overflow-wrap: break-word;
 }
- .activity-message a[data-badge-id] {
-   display: inline-block;   // or inline
-   background: #FFFACD;
-   padding: pxToRem(2) pxToRem(6);
-   border-radius: pxToRem(3);
-   margin: 0 pxToRem(4);    // no vertical margin
-   vertical-align: middle;  // keep baseline alignment
- }
+.activity-message a[data-badge-id] {
+  display: inline-block;   // or inline
+  background: #FFFACD;
+  padding: pxToRem(2) pxToRem(6);
+  border-radius: pxToRem(3);
+  margin: 0 pxToRem(4);    // no vertical margin
+  vertical-align: middle;  // keep baseline alignment
+}
 
 /* — Like Section — */
 .like-section {
