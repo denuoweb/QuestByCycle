@@ -199,3 +199,102 @@ document.addEventListener("DOMContentLoaded", function() {
     // Call the new function to update the game name in the header
     updateGameName();
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    const quillEditorContainer = document.getElementById('quill-editor');
+    if (quillEditorContainer) {
+        var quill = new Quill('#quill-editor', {
+            theme: 'snow',
+            placeholder: 'Write a message...',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, false] }],
+                    ['bold', 'italic', 'underline'],
+                    ['link'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    ['clean']
+                ]
+            }
+        });
+        document.querySelector('form').onsubmit = function() {
+            var messageInput = document.querySelector('#message-input');
+            messageInput.value = quill.root.innerHTML;
+            return true;
+        };
+    }
+    document.querySelectorAll('.activity-message').forEach(function(element) {
+        element.innerHTML = element.innerHTML.replace(/<\/?p[^>]*>/g, '');
+    });
+    function scrollMessagesContainer(direction) {
+        const scrollAmount = direction === 'up' ? -100 : 100;
+        document.querySelector('.shout-messages').scrollBy({
+            top: scrollAmount,
+            behavior: 'smooth'
+        });
+    }
+    
+    const scrollUpButton = document.getElementById('scrollUpButton');
+    const scrollDownButton = document.getElementById('scrollDownButton');
+    if (scrollUpButton) {
+        scrollUpButton.addEventListener('click', function() {
+            scrollMessagesContainer('up');
+        });
+        scrollUpButton.addEventListener('touchstart', function(event) {
+            event.preventDefault();
+            scrollMessagesContainer('up');
+        });
+    }
+    if (scrollDownButton) {
+        scrollDownButton.addEventListener('click', function() {
+            scrollMessagesContainer('down');
+        });
+        scrollDownButton.addEventListener('touchstart', function(event) {
+            event.preventDefault();
+            scrollMessagesContainer('down');
+        });
+    }
+
+    const questSearchInput = document.getElementById('questSearchInput');
+    if (questSearchInput) {
+        questSearchInput.addEventListener('input', function () {
+            const searchValue = this.value.toLowerCase();
+            document.querySelectorAll('#questTableBody tr').forEach(row => {
+            const title = row.querySelector('td:nth-child(1) button')
+                            .textContent.toLowerCase();
+            row.style.display = title.includes(searchValue) ? '' : 'none';
+            });
+        });
+    }
+
+    const questCategoryDropdown = document.getElementById('questCategoryDropdown');
+    if (questCategoryDropdown) {
+    questCategoryDropdown.addEventListener('change', filterQuests);
+    }
+});
+
+// Combined filtering function for both search input and category dropdown
+function filterQuests() {
+    const searchValue = document.getElementById('questSearchInput').value.toLowerCase();
+    const selectedCategory = document.getElementById('questCategoryDropdown').value;
+    const questRows = document.querySelectorAll('#questTableBody tr.quest-row');
+    
+    questRows.forEach(function(row) {
+        const questTitle = row.querySelector('td:nth-child(1) button').textContent.toLowerCase();
+        const questCategory = row.getAttribute('data-category');
+        
+        // Check if the quest title contains the search term
+        const matchesSearch = questTitle.includes(searchValue);
+        // Check if the row’s category matches the selected filter
+        const matchesCategory = (selectedCategory === 'all') || (questCategory === selectedCategory);
+        
+        if (matchesSearch && matchesCategory) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Attach event listeners to both search input and category dropdown
+document.getElementById('questSearchInput').addEventListener('input', filterQuests);
+document.getElementById('questCategoryDropdown').addEventListener('change', filterQuests);

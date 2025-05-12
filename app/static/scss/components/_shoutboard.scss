@@ -1,113 +1,195 @@
 @import '../abstracts/functions';
 @import '../abstracts/mixins';
 
-/* Shout board / recent activity styles */
-.shout-messages-container {
-  position: relative;
-}
+/*==============================================================================
+  Shout Board / Recent Activity Styles
+==============================================================================*/
 
-.shout-messages {
-  max-height: pxToRem(400);
-  overflow-y: hidden;
-}
-
-.activity {
+/* — Outer Container — */
+#whats-happening-step .game-item {
   display: flex;
-  align-items: center;
-  margin-bottom: pxToRem(10);
-  justify-content: space-between;
-  width: 100%;
+  flex-direction: column;
+  flex: 1;
+  background: #f1ffee;
+  border: 1px solid #e0e0e0;
+  border-radius: pxToRem(6);
+  padding: pxToRem(12);
+  box-shadow: 0 pxToRem(2) pxToRem(5) rgba(0,0,0,0.1);
 }
 
-.activity-message {
-  flex-grow: 1;
-  white-space: normal;
-  max-width: 100%;
+/* — Header Container for H2 and H3 — */
+#gameNameContainer {
+  background: #f1ffee;
+  border-bottom: 1px solid #e0e0e0;
+  padding: pxToRem(12);
+  border-radius: pxToRem(6) pxToRem(6) 0 0;
+  text-align: center;
+  margin: 0 -pxToRem(12) pxToRem(8);
+}
+
+#gameNameContainer #gameNameHeader {
+  font-size: pxToRem(32);
+  font-weight: bold;
+  margin: 0 0 pxToRem(5);
+}
+#gameNameContainer > h3 {
+  font-size: pxToRem(24);
+  font-weight: normal;
+  margin: 0;
+}
+
+.pinned-messages-header {
+  background: #fffbea;
+  border: 1px solid #e0d680;
+  border-radius: pxToRem(6);
+  padding: pxToRem(8) pxToRem(12);
+  margin-bottom: pxToRem(8);
+  h4 {
+    margin: 0 0 pxToRem(4);
+    font-size: pxToRem(18);
+    color: #b28c00;
+  }
+}
+
+/* Ensure the scroll container only affects unpinned messages */
+.shout-messages-container {
+  /* remove overflow: hidden if present */
+  overflow: visible;
+}
+.shout-messages {
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+/* Highlight pinned message boxes */
+.activity.pinned {
+  background: #fff8e1;
+  border-left: pxToRem(4) solid #ffd600;
+}
+
+/* — Individual Activity Entries — */
+.activity {
+  position: relative;
+  background: #fff;
+  margin-bottom: pxToRem(12);
+  padding: pxToRem(12);
+  border-radius: pxToRem(6);
+  box-shadow: 0 pxToRem(2) pxToRem(4) rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
 }
-
-.message-divider {
+.activity.message-divider {
   border-bottom: 1px dashed #ddd;
   padding-bottom: pxToRem(10);
-  margin-bottom: pxToRem(10);
+}
+/* Ensure pinned messages are always at top of the board */
+.pinned-messages .activity {
+  position: relative;         /* normal flow in pinned area */
+  margin-bottom: pxToRem(8);
 }
 
-.quest-title {
+
+/* Style list items */
+.shout-messages li.activity {
+  margin-bottom: pxToRem(12);
+}
+
+/* Disable wheel/touch scrolling inside the container */
+.shout-messages-wrapper {
+  position: relative;
+  height: 350px;      // whatever fixed height you want
+  overflow: hidden;   // hide the native scrollbar on the wrapper itself
+}
+
+
+/* — Header (timestamp & username) — */
+.activity > strong {
   display: inline-block;
-  max-width: 100%;
-  white-space: normal;
-  overflow-wrap: break-word;
-  word-break: break-word;
+  color: #DAA520;
+  font-weight: bold;
+  margin-bottom: pxToRem(8);
   word-wrap: break-word;
 }
 
+/* — Message Body — */
+.activity-message {
+  background: #FFF8DC;
+  color: #333;
+  padding: pxToRem(8);
+  border-left: pxToRem(3) solid #FFD700;
+  border-radius: pxToRem(4);
+  font-size: 1rem;
+  line-height: 1.4;
+  margin-top: pxToRem(8);
+  overflow-wrap: break-word;
+}
+.activity-message a[data-badge-id] {
+  display: block;
+  background: #FFFACD;
+  padding: pxToRem(4) pxToRem(8);
+  border-radius: pxToRem(3);
+  margin-top: pxToRem(4);
+}
+
+/* — Like Section — */
 .like-section {
+  position: absolute;
+  top: pxToRem(12);
+  right: pxToRem(12);
   display: flex;
   align-items: center;
-  gap: pxToRem(8);
-  margin-top: pxToRem(5);
+  gap: pxToRem(6);
+}
+.like-section .like-count {
+  font-size: 0.9rem;
+  color: #555;
 }
 
-.arrow-buttons {
-  position: absolute;
-  right: 0;
-  top: 50%;
+/* — Quest Title Wrapping — */
+.quest-title {
+  font-style: italic;
+  color: $primary-color;
+  word-wrap: break-word;
+}
+
+/* — Quest Table “Gold Tier” Styling — */
+.table {
+  border: pxToRem(2) solid #FFD700;
+  border-radius: pxToRem(6);
+  overflow: hidden;
+}
+.table th,
+.table td {
+  border-color: #FFD700 !important;
+}
+.table thead {
+  background-color: #FFF8E1;
+}
+
+/* — Parent Row Flex Stretch — */
+#whats-happening-step > .col-md-6 {
   display: flex;
   flex-direction: column;
-  transform: translateY(-50%);
-  border-radius: pxToRem(8);
-  box-shadow: 0 pxToRem(4) pxToRem(8) rgba(0, 0, 0, 0.1);
+}
+#whats-happening-step .game-item {
+  flex: 1;
 }
 
-.arrow-buttons .epic-button {
-  background-color: $primary-color;
-  color: #fff;
-  font-size: pxToRem(24);
-  border: none;
-  padding: pxToRem(10);
-  cursor: pointer;
-  @include transition(all 0.3s ease);
-}
-
-.arrow-buttons .epic-button:hover {
-  background-color: darken($primary-color, 10%);
-  transform: translateY(-pxToRem(2));
-  box-shadow: 0 pxToRem(8) pxToRem(16) rgba(0, 0, 0, 0.2);
-}
-
-.arrow-buttons .epic-button:active {
-  transform: translateY(0);
-  box-shadow: 0 pxToRem(4) pxToRem(8) rgba(0, 0, 0, 0.1);
-}
-
-.arrow-buttons .epic-button:focus {
-  outline: none;
-}
-
-// Responsive tweaks
-@media (max-width: 480px) {
-  .activity-message {
-    font-size: 1rem;
-    line-height: 1.2;
+/* — Give extra bottom padding on small screens so you can scroll past last item — */
+@media (max-width: 767px) {
+  .game-item {
+    margin-bottom: pxToRem(15);
   }
-  .quest-title {
-    display: block;
-    font-size: 0.9rem;
+  .shout-messages-container {
+    padding-bottom: pxToRem(20);
   }
   .activity {
-    padding: pxToRem(5);
-    box-sizing: border-box;
+    padding: pxToRem(8);
   }
-}
-
-/* Game item containers (shoutboard & tasks) */
-.game-item {
-  background-color: #f1ffee;
-  padding: pxToRem(20);
-  margin-bottom: pxToRem(20);
-  border-radius: pxToRem(8);
-  box-shadow: 0 pxToRem(2) pxToRem(5) rgba(0, 0, 0, 0.1);
-  margin-left: auto;
-  margin-right: auto;
+  .activity-message {
+    font-size: 0.95rem;
+  }
+  .table {
+    font-size: 0.9rem;
+  }
 }

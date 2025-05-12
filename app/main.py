@@ -467,6 +467,60 @@ def shout_board(game_id):
     return redirect(url_for('main.index', game_id=game_id))
 
 
+@main_bp.route('/shout-board-messages/<int:game_id>')
+@login_required
+def shout_board_messages(game_id):
+    """
+    Return JSON: { pinned: [...], messages: [...], has_next: bool }.
+    """
+    page     = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+
+    # Pinned messages only on page 1
+    pinned = []
+    if page == 1:
+        pinned_q = (ShoutBoardMessage.query
+                    .filter_by(game_id=game_id, is_pinned=True)
+                    .order_by(ShoutBoardMessage.timestamp.desc())
+                    .all())
+        pinned = [{
+            'id': m.id,
+            'message': m.message,
+            'timestamp': m.timestamp.isoformat(),
+            'user': {
+              'id': m.user.id,
+              'display_name': m.user.display_name or m.user.username
+            },
+            'like_count': len(m.likes),
+            'liked_by_user': any(l.user_id == current_user.id for l in m.likes),
+            'is_pinned': True
+        } for m in pinned_q]
+
+    paginated = (ShoutBoardMessage.query
+                 .filter_by(game_id=game_id, is_pinned=False)
+                 .order_by(ShoutBoardMessage.timestamp.desc())
+                 .paginate(page=page, per_page=per_page, error_out=False))
+
+    messages = [{
+        'id': m.id,
+        'message': m.message,
+        'timestamp': m.timestamp.isoformat(),
+        'user': {
+          'id': m.user.id,
+          'display_name': m.user.display_name or m.user.username
+        },
+        'like_count': len(m.likes),
+        'liked_by_user': any(l.user_id == current_user.id for l in m.likes),
+        'is_pinned': False
+    } for m in paginated.items]
+
+    return jsonify({
+        'pinned':   pinned,
+        'messages': messages,
+        'has_next': paginated.has_next
+    })
+
+
 @main_bp.route('/like-message/<int:message_id>', methods=['POST'])
 @login_required
 def like_message(message_id):

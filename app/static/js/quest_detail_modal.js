@@ -197,7 +197,7 @@ function getVerificationFormHTML(verificationType) {
                     <input type="file" id="image" name="image" class="epic-input" accept="image/*" required>
                 </div>
                 <div class="form-group">
-                    <button type="submit" class="epic-button">Submit Verification</button>
+                    <button type="submit>Submit Verification</button>
                 </div>`;
             break;
         case 'comment':
@@ -207,7 +207,7 @@ function getVerificationFormHTML(verificationType) {
                     <textarea id="verificationComment" name="verificationComment" class="epic-textarea" placeholder="Enter a comment..." required></textarea>
                 </div>
                 <div class="form-group">
-                    <button type="submit" class="epic-button">Submit Verification</button>
+                    <button type="submit">Submit Verification</button>
                 </div>`;
             break;
         case 'photo_comment':
@@ -221,7 +221,7 @@ function getVerificationFormHTML(verificationType) {
                     <textarea id="verificationComment" name="verificationComment" class="epic-textarea" placeholder="Enter a comment..." required></textarea>
                 </div>
                 <div class="form-group">
-                    <button type="submit" class="epic-button">Submit Verification</button>
+                    <button type="submit"">Submit Verification</button>
                 </div>`;
             break;
         case 'qr_code':
