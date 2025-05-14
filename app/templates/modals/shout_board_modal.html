@@ -1,0 +1,25 @@
+<div id="shoutBoardModal" class="modal" aria-hidden="true">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title">Post to Shout Board</h5>
+      <button type="button" class="btn-close" aria-label="Close"
+              onclick="closeModal('shoutBoardModal')"></button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Flask‑WTF form rendered inside the modal -->
+      <form id="shoutBoardForm" action="{{ url_for('main.shout_board', game_id=selected_game_id) }}"
+            method="post">
+        {{ form.hidden_tag() }}
+        <input type="hidden" name="message" id="shoutMessageInput">
+        <div id="shoutQuillEditor"></div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary"
+              onclick="closeModal('shoutBoardModal')">Cancel</button>
+      <button type="button" class="btn btn-primary" id="shoutSubmitBtn">Post</button>
+    </div>
+  </div>
+</div>

@@ -158,7 +158,7 @@
   word-wrap: break-word;
 }
 
-/* — Quest Table “Gold Tier” Styling — */
+/* — Quest Table Styling — */
 .table {
   border: pxToRem(2) solid #FFD700;
   border-radius: pxToRem(6);
@@ -170,6 +170,11 @@
 }
 .table thead {
   background-color: #FFF8E1;
+}
+
+/* make Quill editor fit nicely inside the modal */
+#shoutQuillEditor {
+  height: 200px;
 }
 
 /* — Give extra bottom padding on small screens so you can scroll past last item — */

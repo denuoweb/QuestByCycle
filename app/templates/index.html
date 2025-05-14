@@ -118,15 +118,10 @@
                                 </div>
 
                                 {% if current_user.is_admin %}
-                                    <form action="{{ url_for('main.shout_board', game_id=selected_game_id) }}"
-                                          method="post">
-                                        {{ form.hidden_tag() }}
-                                        <div class="form-group">
-                                            <input type="hidden" name="message" id="message-input">
-                                            <div id="quill-editor"></div>
-                                            {{ form.submit() }}
-                                        </div>
-                                    </form>
+                                    <button type="button" class="btn btn-primary mb-2"
+                                            onclick="openModal('shoutBoardModal')">
+                                        New Shout
+                                    </button>
                                 {% endif %}
                                 <div class="shout-messages-container">
                                     {% set pinned_activities = activities | selectattr('is_pinned') | list %}
@@ -382,6 +377,7 @@
     {% endif %}
     <div id="onboardingStatus" data-start-onboarding="{{ 'true' if start_onboarding else 'false' }}"></div>
     <div id="game_IdHolder" data-game-id="{{ selected_game_id }}" style="display:none;"></div>
+    {% include 'modals/shout_board_modal.html' %}
     {% include 'modals/login_modal.html' %}
     {% include 'modals/register_modal.html' %}
     {% include "modals/terms_modal.html" %}
@@ -404,6 +400,7 @@
     {% include 'modals/reset_password_modal.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/3rd/fontawesome/all.min.css') }}">
     <script src="{{ url_for('static', filename='js/modal_common.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/shout_board_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/badge_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/game_info_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/all_submissions_modal.js') }}"></script>
