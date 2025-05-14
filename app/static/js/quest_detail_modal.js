@@ -211,59 +211,81 @@ function manageVerificationSection(questId, canVerify, verificationType, nextEli
 }
 
 function getVerificationFormHTML(verificationType) {
-    let formHTML = '<form enctype="multipart/form-data" class="epic-form">';
+  // container + heading ------------------------------------------------------
+  let formHTML = `
+    <form enctype="multipart/form-data" class="epic-form">
+      <h2 style="text-align:center;">Verify Your Quest</h2>
+  `;
 
-    formHTML += '<h2 style="text-align: center;">Verify Your Quest</h2>';
+  switch (verificationType) {
+    /* ─────────────────────────────── PHOTO ONLY ─────────────────────────── */
+    case 'photo':
+      formHTML += `
+        <div class="form-group">
+          <label for="image" class="epic-label">Upload a Photo</label>
+          <input type="file" id="image" name="image"
+                 class="epic-input" accept="image/*" required>
+        </div>
+        <div class="form-group">
+          <button type="submit">Submit Verification</button>
+        </div>
+      `;
+      break;
 
-    switch (verificationType) {
-        case 'photo':
-            formHTML += `
-                <div class="form-group">
-                    <label for="image" class="epic-label">Upload a Photo</label>
-                    <input type="file" id="image" name="image" class="epic-input" accept="image/*" required>
-                </div>
-                <div class="form-group">
-                    <button type="submit>Submit Verification</button>
-                </div>`;
-            break;
-        case 'comment':
-            formHTML += `
-                <div class="form-group">
-                    <label for="verificationComment" class="epic-label">Enter a Comment</label>
-                    <textarea id="verificationComment" name="verificationComment" class="epic-textarea" placeholder="Enter a comment..." required></textarea>
-                </div>
-                <div class="form-group">
-                    <button type="submit">Submit Verification</button>
-                </div>`;
-            break;
-        case 'photo_comment':
-            formHTML += `
-                <div class="form-group">
-                    <label for="image" class="epic-label">Upload a Photo</label>
-                    <input type="file" id="image" name="image" class="epic-input" accept="image/*" required>
-                </div>
-                <div class="form-group">
-                    <label for="verificationComment" class="epic-label">Enter a Comment</label>
-                    <textarea id="verificationComment" name="verificationComment" class="epic-textarea" placeholder="Enter a comment..." required></textarea>
-                </div>
-                <div class="form-group">
-                    <button type="submit"">Submit Verification</button>
-                </div>`;
-            break;
-        case 'qr_code':
-            formHTML += `<p class="epic-message">Find and scan the QR code. No submission required here.</p>`;
-            break;
-        case 'pause':
-            formHTML += `<p class="epic-message">Quest is currently paused.</p>`;
-            break;
-        default:
-            formHTML += '<p class="epic-message">Submission Requirements not set correctly.</p>';
-            break;
-    }
+    /* ─────────────────────────────── COMMENT ONLY ───────────────────────── */
+    case 'comment':
+      formHTML += `
+        <div class="form-group">
+          <label for="verificationComment" class="epic-label">Enter a Comment</label>
+          <textarea id="verificationComment" name="verificationComment"
+                    class="epic-textarea" placeholder="Enter a comment..." required></textarea>
+        </div>
+        <div class="form-group">
+          <button type="submit">Submit Verification</button>
+        </div>
+      `;
+      break;
 
-    formHTML += '</form>';
-    return formHTML;
+    /* ──────────────────────────── PHOTO + COMMENT ───────────────────────── */
+    case 'photo_comment':
+      formHTML += `
+        <div class="form-group">
+          <label for="image" class="epic-label">Upload a Photo</label>
+          <input type="file" id="image" name="image"
+                 class="epic-input" accept="image/*" required>
+        </div>
+        <div class="form-group">
+          <label for="verificationComment" class="epic-label">Enter a Comment</label>
+          <textarea id="verificationComment" name="verificationComment"
+                    class="epic-textarea" placeholder="Enter a comment..." required></textarea>
+        </div>
+        <div class="form-group">
+          <button type="submit">Submit Verification</button>
+        </div>
+      `;
+      break;
+
+    /* ───────────────────────────────── QR CODE ──────────────────────────── */
+    case 'qr_code':
+      formHTML += `<p class="epic-message">Find and scan the QR code. No submission required here.</p>`;
+      break;
+
+    /* ─────────────────────────────────  PAUSE  ──────────────────────────── */
+    case 'pause':
+      formHTML += `<p class="epic-message">Quest is currently paused.</p>`;
+      break;
+
+    /* ───────────────────────────── DEFAULT / ERROR ──────────────────────── */
+    default:
+      formHTML += `<p class="epic-message">Submission requirements are not set correctly.</p>`;
+      break;
+  }
+
+  /* close form ------------------------------------------------------------- */
+  formHTML += '</form>';
+  return formHTML;
 }
+
 
 function toggleVerificationForm(questId) {
     const verifyForm = document.getElementById(`verifyQuestForm-${questId}`);
