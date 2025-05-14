@@ -1020,6 +1020,7 @@ def get_submission(submission_id):
         'user_id':              sub.user_id,
         'user_profile_picture': pic_url,
         'user_display_name':    display_name,
+        'user_username':        user.username,
         'twitter_url':          sub.twitter_url,
         'fb_url':               sub.fb_url,
         'instagram_url':        sub.instagram_url
