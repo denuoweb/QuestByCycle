@@ -1,51 +1,64 @@
-<div id="submissionDetailModal" class="modal">
+<div id="submissionDetailModal"
+     class="modal"
+     data-current-user-id="{{ current_user.id }}">   <!-- UPDATE ► add user-id here -->
   <div class="modal-content">
     <div class="modal-header">
       <h5 class="modal-title">Submission Detail</h5>
-      <button type="button" class="btn-close"
+      <button type="button"
+              class="btn-close"
               aria-label="Close"
               onclick="closeModal('submissionDetailModal')"></button>
     </div>
 
     <div id="submissionImageContainer" style="position: relative; margin-bottom: 20px;">
       <span class="submitter-label">Submitted&nbsp;by:</span>
-      <a id="submitterProfileLink" href="#" class="submitter-info-row">
-          <span id="submitterProfileFrame"  class="submitter-profile-frame">
-              <img id="submitterProfileImage"
-                  class="submitter-profile-image"
-                  src="/static/images/default_profile.png"
-                  alt="Submitter Profile">
-          </span>
 
-          <span id="submitterProfileCaption" class="submitter-profile-caption"></span>
+      <a id="submitterProfileLink" href="#" class="submitter-info-row">
+        <span id="submitterProfileFrame" class="submitter-profile-frame">
+          <img id="submitterProfileImage"
+               class="submitter-profile-image"
+               src="/static/images/default_profile.png"
+               alt="Submitter Profile">
+        </span>
+        <span id="submitterProfileCaption" class="submitter-profile-caption"></span>
       </a>
 
       <img id="submissionImage"
-          class="verification-image"
-          src="/static/images/default_badge.png"
-          alt="Submission Detail">
+           class="verification-image"
+           src="/static/images/default_badge.png"
+           alt="Submission Detail">
     </div>
-
 
     <!-- Comment display / edit container -->
     <div id="submissionCommentContainer">
       <!-- read-only -->
       <p id="submissionComment" class="comment-text"></p>
 
-      <!-- editable (hidden by default) -->
-      <textarea id="submissionCommentEdit" class="form-control"
-                rows="3" style="display:none;"></textarea>
-      <div id="commentEditButtons" style="display:none; margin-top:10px;">
-        <button class="btn btn-primary" id="saveCommentBtn">Save</button>
-        <button class="btn btn-secondary" id="cancelCommentBtn">Cancel</button>
+      <div id="commentReadButtons" style="margin-top:10px;">
+        <!-- owner only -->
+        <button id="editCommentBtn"
+                class="btn btn-outline-secondary btn-sm"
+                hidden>              <!-- hidden by default -->
+          Edit
+        </button>
+      </div>
+
+      <!-- editable -->
+      <textarea id="submissionCommentEdit"
+                class="form-control"
+                rows="3"
+                hidden></textarea>
+
+      <div id="commentEditButtons" style="margin-top:10px;" hidden>
+        <button id="saveCommentBtn"   class="btn btn-primary btn-sm">Update</button>
+        <button id="cancelCommentBtn" class="btn btn-secondary btn-sm">Cancel</button>
       </div>
     </div>
 
-    <div style="text-align: center; margin-top:20px;">
+    <div style="text-align:center; margin-top:20px;">
       <a id="twitterLink"   class="button" target="_blank" href="#">Link to Twitter</a>
       <a id="facebookLink"  class="button" target="_blank" href="#">Link to Facebook</a>
       <a id="instagramLink" class="button" target="_blank" href="#">Link to Instagram</a>
-      <!-- Download link completely removed -->
     </div>
   </div>
 </div>

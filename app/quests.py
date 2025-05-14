@@ -23,6 +23,7 @@ from flask import (
     render_template,
     request,
     url_for,
+    abort
 )
 from flask_login import current_user, login_required
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -485,26 +486,33 @@ def import_quests(game_id):
 
 @quests_bp.route("/quest/<int:quest_id>/submissions")
 @login_required
-def get_quest_submissions(quest_id):  
-    submissions = QuestSubmission.query.filter_by(quest_id=quest_id).all()  
-    submissions_data = [  
-        {  
-            "id": sub.id,  
-            "image_url": sub.image_url,  
-            "comment": sub.comment,  
-            "timestamp": sub.timestamp.strftime("%Y-%m-%d %H:%M"),  
-            "user_id": sub.user_id,  
-            "user_display_name": User.query.get(sub.user_id).display_name or User.query.get(sub.user_id).username,  
-            "user_username": User.query.get(sub.user_id).username,  
-            "twitter_url": sub.twitter_url,  
-            "fb_url": sub.fb_url,  
-            "instagram_url": sub.instagram_url,  
-            # Add the user's profile picture with proper URL formatting  
-            "user_profile_picture": url_for('static', filename=User.query.get(sub.user_id).profile_picture)   
-                                    if User.query.get(sub.user_id).profile_picture else url_for('static', filename="images/default_profile.png")  
-        }  
-        for sub in submissions  
-    ]  
+def get_quest_submissions(quest_id):
+    submissions = (
+        db.session.query(QuestSubmission, Quest)
+        .join(Quest, Quest.id == QuestSubmission.quest_id)
+        .filter(QuestSubmission.quest_id == quest_id)
+        .all()
+    )
+
+    submissions_data = []
+    for sub, quest in submissions:
+        user = User.query.get(sub.user_id)
+        submissions_data.append({
+            "id"                 : sub.id,
+            "image_url"          : sub.image_url,
+            "comment"            : sub.comment,
+            "timestamp"          : sub.timestamp.strftime("%Y-%m-%d %H:%M"),
+            "user_id"            : sub.user_id,
+            "user_display_name"  : user.display_name or user.username,
+            "user_username"      : user.username,
+            "user_profile_picture":
+                url_for('static', filename=user.profile_picture)
+                if user.profile_picture else url_for('static', filename="images/default_profile.png"),
+            "twitter_url"        : sub.twitter_url,
+            "fb_url"             : sub.fb_url,
+            "instagram_url"      : sub.instagram_url,
+            "verification_type"  : quest.verification_type      # ← UPDATE ►
+        })
     return jsonify(submissions_data)
 
 
@@ -1025,3 +1033,27 @@ def get_submission(submission_id):
         'fb_url':               sub.fb_url,
         'instagram_url':        sub.instagram_url
     })
+
+
+@quests_bp.route('/submission/<int:submission_id>/comment', methods=['PUT'])
+@login_required
+def update_submission_comment(submission_id):
+    """
+    Allow the original submitter to edit their comment.
+    """
+    sub = QuestSubmission.query.get_or_404(submission_id)
+
+    # Only the owner may edit
+    if sub.user_id != current_user.id:
+        abort(403, description="Permission denied: cannot edit another user's comment.")
+
+    data = request.get_json() or {}
+    new_comment = bleach.clean(data.get('comment', ''), tags=[], strip=True)
+    sub.comment = new_comment
+
+    MAX_LEN = 1000
+    if len(sub.comment) > MAX_LEN:
+        sub.comment = sub.comment[:MAX_LEN]
+
+    db.session.commit()
+    return jsonify(success=True, comment=sub.comment)

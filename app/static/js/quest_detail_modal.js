@@ -1,30 +1,59 @@
-function openQuestDetailModal(questId) {
-    resetModalContent();
 
-    const flashMessagesContainer = document.getElementById('flash-messages-data');
-    const modalFlashContainer = document.getElementById('modal-flash-messages');
-    if (flashMessagesContainer && modalFlashContainer) {
-        modalFlashContainer.innerHTML = flashMessagesContainer.innerHTML;
-    }
-
-    fetch(`/quests/detail/${questId}/user_completion`)
-        .then(response => response.json())
-        .then(data => {
-            const { quest, userCompletion, canVerify, nextEligibleTime } = data;
-            if (!populateQuestDetails(quest, userCompletion.completions, canVerify, questId, nextEligibleTime)) {
-                console.error('Error: Required elements are missing to populate quest details.');
-                return;
-            }
-            ensureDynamicElementsExistAndPopulate(data.quest, data.userCompletion.completions, data.nextEligibleTime, data.canVerify);
-
-            fetchSubmissions(questId);
-            openModal('questDetailModal');
-        })
-        .catch(error => {
-            console.error('Error opening quest detail modal:', error);
-            alert('Sign in to view quest details.');
-        });
+/* ------------------------------------------------------------------ */
+/*  HELPER: read meta-content                                         */
+/* ------------------------------------------------------------------ */
+function meta(name) {
+  const tag = document.querySelector(`meta[name="${name}"]`);
+  return tag ? tag.content : '';
 }
+
+/*  Current user ID and CSRF token pulled from <meta> tags.           */
+const CURRENT_USER_ID = Number(meta('current-user-id') || 0);
+const CSRF_TOKEN      = meta('csrf-token');
+
+/* ------------------------------------------------------------------ */
+/*  OPEN QUEST DETAIL MODAL                                           */
+/* ------------------------------------------------------------------ */
+function openQuestDetailModal(questId) {
+  resetModalContent();
+
+  const flashes = document.getElementById('flash-messages-data');
+  const modalFlashes = document.getElementById('modal-flash-messages');
+  if (flashes && modalFlashes) modalFlashes.innerHTML = flashes.innerHTML;
+
+  fetch(`/quests/detail/${questId}/user_completion`, { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(data => {
+      const { quest, userCompletion, canVerify, nextEligibleTime } = data;
+      if (
+        !populateQuestDetails(
+          quest,
+          userCompletion.completions,
+          canVerify,
+          questId,
+          nextEligibleTime
+        )
+      ) {
+        console.error('populateQuestDetails – required element missing');
+        return;
+      }
+
+      ensureDynamicElementsExistAndPopulate(
+        quest,
+        userCompletion.completions,
+        nextEligibleTime,
+        canVerify
+      );
+
+      fetchSubmissions(questId);
+      openModal('questDetailModal');
+    })
+    .catch(err => {
+      console.error('Error opening quest detail modal:', err);
+      alert('Sign in to view quest details.');
+    });
+}
+
 
 function lazyLoadImages() {
     const images = document.querySelectorAll('img.lazyload');
@@ -162,9 +191,6 @@ function formatTimeDiff(ms) {
     const days = Math.floor(ms / (1000 * 60 * 60 * 24));
     return `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
-
-const userToken = localStorage.getItem('userToken');
-window.currentUserId = Number(localStorage.getItem('current_user_id') || 0);
 
 function manageVerificationSection(questId, canVerify, verificationType, nextEligibleTime) {
     const userQuestData = document.querySelector('.user-quest-data');
@@ -340,168 +366,142 @@ function setInstagramLink(url) {
 let isSubmitting = false;
 
 function submitQuestDetails(event, questId) {
-    event.preventDefault();
-    if (isSubmitting) return;
-    isSubmitting = true;
+  event.preventDefault();
+  if (isSubmitting) return;
+  isSubmitting = true;
 
-    const form = event.target;
-    const formData = new FormData(form);
-    formData.append('user_id', currentUserId);
-    formData.append('sid', socket.id);
+  const formData = new FormData(event.target);
+  formData.append('user_id', CURRENT_USER_ID);
+  formData.append('sid', socket.id);
 
-    console.debug('Submitting form with data:', formData);
+  showLoadingModal();
 
-    showLoadingModal();
-
-    fetch(`/quests/quest/${questId}/submit`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'same-origin',
-        headers: {
-            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
-    })
-    .then(response => {
-        hideLoadingModal();
-        if (!response.ok) {
-            if (response.status === 403) {
-                return response.json().then(data => {
-                    if (data.message === 'This quest cannot be completed outside of the game dates') {
-                        throw new Error('The game has ended and you can no longer submit quests. Join a new game in the game dropdown menu.');
-                    }
-                    throw new Error(data.message || `Server responded with status ${response.status}`);
-                });
+  fetch(`/quests/quest/${questId}/submit`, {
+    method:      'POST',
+    body:        formData,
+    credentials: 'same-origin',
+    headers:     { 'X-CSRF-Token': CSRF_TOKEN }
+  })
+    .then(res => {
+      hideLoadingModal();
+      if (!res.ok) {
+        if (res.status === 403)
+          return res.json().then(d => {
+            // special-case message when game is over
+            if (
+              d.message ===
+              'This quest cannot be completed outside of the game dates'
+            ) {
+              throw new Error(
+                'The game has ended and you can no longer submit quests. Join a new game in the game dropdown menu.'
+              );
             }
-            throw new Error(`Server responded with status ${response.status}`);
-        }
-        return response.json();
+            throw new Error(d.message || `Server responded with status ${res.status}`);
+          });
+        throw new Error(`Server responded with status ${res.status}`);
+      }
+      return res.json();
     })
     .then(data => {
-        console.debug('Response data:', data);
+      if (!data.success) throw new Error(data.message);
 
-        if (!data.success) {
-            throw new Error(data.message);
-        }
-        if (data.total_points) {
-            const totalPointsElement = document.getElementById('total-points');
-            if (totalPointsElement) {
-                console.debug('Updating total points:', data.total_points);
-                totalPointsElement.innerText = `Total Completed Points: ${data.total_points}`;
-            }
-        }
-        if (data.twitter_url) {
-            console.debug('Updating Twitter link:', data.twitter_url);
-            updateTwitterLink(data.twitter_url);
-        }
-        if (data.fb_url) {
-            console.debug('Updating Facebook link:', data.fb_url);
-            updateFacebookLink(data.fb_url);
-        }
-        if (data.instagram_url) {
-            console.debug('Updating Instagram link:', data.instagram_url);
-            updateInstagramLink(data.instagram_url);
-        }
-        openQuestDetailModal(questId);
-        form.reset();
+      /* --- scoreboard & social links --- */
+      if (data.total_points) {
+        const el = document.getElementById('total-points');
+        if (el) el.innerText = `Total Completed Points: ${data.total_points}`;
+      }
+      if (data.twitter_url)   updateTwitterLink(data.twitter_url);
+      if (data.fb_url)        updateFacebookLink(data.fb_url);
+      if (data.instagram_url) updateInstagramLink(data.instagram_url);
+
+      /* Refresh modal with new data and clear the form */
+      openQuestDetailModal(questId);
+      event.target.reset();
     })
-    .catch(error => {
-        hideLoadingModal();
-        console.error("Submission error:", error);
-        if (error.message === 'The game has ended and you can no longer submit quests. Join a new game in the game dropdown menu.') {
-            alert('The game has ended, and you can no longer submit quests for this game. Join a new game in the game dropdown menu.');
-        } else {
-            alert('Error during submission: ' + error.message);
-        }
+    .catch(err => {
+      console.error('Submission error:', err);
+      alert(`Error during submission: ${err.message}`);
     })
     .finally(() => {
-        isSubmitting = false;
+      isSubmitting = false;
     });
 }
 
+/**********************************************************************
+ *  2. fetchSubmissions                                               *
+ **********************************************************************/
 function fetchSubmissions(questId) {
-    fetch(`/quests/quest/${questId}/submissions`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${userToken}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`Server responded with status ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(submissions => {
-            console.debug('Fetched submissions:', submissions);
+  fetch(`/quests/quest/${questId}/submissions`, {
+    method:      'GET',
+    credentials: 'same-origin'
+  })
+    .then(res => {
+      if (!res.ok) throw new Error(`Server responded with status ${res.status}`);
+      return res.json();
+    })
+    .then(submissions => {
+      /* top three social links in the modal header */
+      const twitterLink   = document.getElementById('twitterLink');
+      const facebookLink  = document.getElementById('facebookLink');
+      const instagramLink = document.getElementById('instagramLink');
 
-            const twitterLink = document.getElementById('twitterLink');
-            const facebookLink = document.getElementById('facebookLink');
-            const instagramLink = document.getElementById('instagramLink');
+      if (submissions && submissions.length) {
+        const s              = submissions[0];   // newest submission
+        const imgEl          = document.getElementById('submissionImage');
+        const commentEl      = document.getElementById('submissionComment');
+        const profileLink    = document.getElementById('submitterProfileLink');
+        const profileImg     = document.getElementById('submitterProfileImage');
+        const profileCaption = document.getElementById('submitterProfileCaption');
 
-            if (submissions && submissions.length > 0) {
-                const submission = submissions[0];
-                const submissionImage = document.getElementById('submissionImage');
-                const submissionComment = document.getElementById('submissionComment');
-                const submitterLink     = document.getElementById('submitterProfileLink');
-                const submitterAvatar   = document.getElementById('submitterProfileImage');
-                const submitterCaption  = document.getElementById('submitterProfileCaption');
+        imgEl.src          = s.image_url || '/static/images/default-placeholder.webp';
+        commentEl.textContent = s.comment || 'No comment provided.';
 
-                submissionImage.src = submission.image_url || 'image/placeholdersubmission.png';
-                submissionComment.textContent = submission.comment || 'No comment provided.';
-                submitterLink.href    = `/profile/${submission.user_id}`;
-                submitterAvatar.src   = submission.user_avatar_url || '/static/images/default_profile.png';
-                submitterCaption.textContent = submission.username || `User ${submission.user_id}`;
+        profileLink.href   = `/profile/${s.user_id}`;
+        profileImg.src     = s.user_profile_picture || '/static/images/default_profile.png';
+        profileCaption.textContent =
+          s.user_display_name || s.user_username || `User ${s.user_id}`;
 
-                if (submission.twitter_url && submission.twitter_url.trim() !== '') {
-                    twitterLink.href = submission.twitter_url;
-                    twitterLink.style.display = 'inline';
-                } else {
-                    twitterLink.style.display = 'none';
-                }
+        /* social links visibility */
+        const toggle = (el, url) => {
+          if (url && url.trim()) {
+            el.href = url;
+            el.style.display = 'inline';
+          } else {
+            el.style.display = 'none';
+          }
+        };
+        toggle(twitterLink,   s.twitter_url);
+        toggle(facebookLink,  s.fb_url);
+        toggle(instagramLink, s.instagram_url);
+      } else {
+        twitterLink.style.display = facebookLink.style.display =
+          instagramLink.style.display = 'none';
+      }
 
-                if (submission.fb_url && submission.fb_url.trim() !== '') {
-                    facebookLink.href = submission.fb_url;
-                    facebookLink.style.display = 'inline';
-                } else {
-                    facebookLink.style.display = 'none';
-                }
+      /* build thumbnails for all submissions */
+      const gallery = submissions
+        .slice()                       // clone
+        .reverse()                     // newest first
+        .map(sub => ({
+          id:                  sub.id,
+          url:                 sub.image_url,
+          alt:                 'Submission Image',
+          comment:             sub.comment,
+          user_id:             sub.user_id,
+          user_display_name:   sub.user_display_name,
+          user_username:       sub.user_username,
+          user_profile_picture: sub.user_profile_picture,
+          twitter_url:         sub.twitter_url,
+          fb_url:              sub.fb_url,
+          instagram_url:       sub.instagram_url
+        }));
 
-                if (submission.instagram_url && submission.instagram_url.trim() !== '') {
-                    instagramLink.href = submission.instagram_url;
-                    instagramLink.style.display = 'inline';
-                } else {
-                    instagramLink.style.display = 'none';
-                }
-
-            } else {
-                twitterLink.style.display = 'none';
-                facebookLink.style.display = 'none';
-                instagramLink.style.display = 'none';
-
-            }
-
-            const images = submissions.reverse().map(submission => ({
-                id:   submission.id,
-                url: submission.image_url,
-                alt: "Submission Image",
-                comment: submission.comment,
-                user_id: submission.user_id,
-                user_display_name:  submission.user_display_name,
-                user_username:      submission.user_username,
-                user_profile_picture: submission.user_profile_picture,
-                twitter_url: submission.twitter_url,
-                fb_url: submission.fb_url,
-                instagram_url: submission.instagram_url,
-
-            }));
-            distributeImages(images);
-        })
-        .catch(error => {
-            console.error('Failed to fetch submissions:', error.message);
-            alert('Could not load submissions. Please try again.');
-        });
+      distributeImages(gallery);
+    })
+    .catch(err => {
+      console.error('Failed to fetch submissions:', err);
+      alert('Could not load submissions. Please try again.');
+    });
 }
 
 function isValidImageUrl(url) {
