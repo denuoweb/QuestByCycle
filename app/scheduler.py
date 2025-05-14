@@ -21,7 +21,7 @@ def create_scheduler(app):
     scheduler.add_job(
         func=_run_check_and_send,
         trigger='cron',
-        minute='*',
+        minute='0',
         id='liaison_email_job',
         replace_existing=True,
     )

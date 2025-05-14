@@ -822,7 +822,6 @@ def check_and_send_liaison_emails():
 
     # Build your thresholds in one place
     interval_map = {
-        'minute': timedelta(minutes=1),
         'daily':   timedelta(days=1),
         'weekly':  timedelta(weeks=1),
         'monthly': timedelta(days=30),

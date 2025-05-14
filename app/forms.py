@@ -169,10 +169,9 @@ class GameForm(FlaskForm):
     social_media_email_frequency = SelectField(  
         "Email Frequency",  
         choices=[  
-            ("minute", "Minute"),   
-            ("daily", "Daily"),   
-            ("weekly", "Weekly"),   
-            ("monthly", "Monthly")  
+            ("daily", "Daily"),
+            ("weekly", "Weekly"),
+            ("monthly", "Monthly")
         ],  
         default="weekly"  
     )
