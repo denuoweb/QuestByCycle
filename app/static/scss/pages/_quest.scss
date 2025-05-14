@@ -26,3 +26,14 @@
   font-size: 1rem;
   margin-top: 0.5rem;
 }
+
+/* default thumbnail height in the carousel */
+.photo-board img {
+    height: 120px;          /* desktop & tablets */
+}
+
+@media (max-width: 480px) {
+    .photo-board img {
+        height: 70px;       /* phones */
+    }
+}

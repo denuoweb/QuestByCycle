@@ -529,41 +529,41 @@ function distributeImages(images) {
     const board = document.getElementById('submissionBoard');
     board.innerHTML = '';
 
-    let fallbackUrl = document.getElementById('questDetailModal').getAttribute('data-placeholder-url');
-    if (!fallbackUrl) {
-        console.warn("No fallback URL provided in data-placeholder-url attribute.");
-        fallbackUrl = '/static/images/default-placeholder.webp';
-    }
+    const rawFallback =
+        document.getElementById('questDetailModal')
+                .getAttribute('data-placeholder-url') ||
+        '/static/images/default-placeholder.webp';
 
-    const validFallbackUrl = isValidImageUrl(fallbackUrl) ? fallbackUrl : '';
-    if (!validFallbackUrl) {
-        console.warn("Fallback URL is not valid.");
-    }
+    const isLocal   = url => url.startsWith('/static/');
+    const localPath = url => url.replace(/^\/static\//, '');    // “images/foo.webp”
+    const onScreenW = window.innerWidth <= 480 ? 70 : 100;      // how wide it’s DRAWN
+    const reqWidth  = onScreenW * (window.devicePixelRatio || 2); // 2× for sharpness
 
-    images.forEach(image => {
-        const img = document.createElement('img');
-        
-        let finalImageUrl = '';
-        if (isValidImageUrl(image.url)) {
-            finalImageUrl = image.url;
-        } else if (validFallbackUrl) {
-            finalImageUrl = validFallbackUrl;
-        }
+    images.forEach(imgData => {
+        const thumb   = document.createElement('img');
+        const rawSrc  = isValidImageUrl(imgData.url) ? imgData.url : rawFallback;
+        const thumbSrc = isLocal(rawSrc)
+            ? `/resize_image?path=${encodeURIComponent(localPath(rawSrc))}&width=${reqWidth}`
+            : rawSrc;  // external → use as-is
 
-        img.src = finalImageUrl;
-        img.alt = "Loaded Image";
+        thumb.setAttribute('data-src', thumbSrc);   // lazy-load
+        thumb.classList.add('lazyload');
+        thumb.alt = imgData.alt || 'Submission Image';
+        thumb.style.width  = `${onScreenW}px`;       // display size
+        thumb.style.height = 'auto';
+        thumb.style.marginRight = '10px';
 
-        img.onerror = () => {
-            console.warn(`Image failed to load, using fallback: ${validFallbackUrl}`);
-            if (validFallbackUrl) {
-                img.src = validFallbackUrl;
+        thumb.onerror = () => {
+            if (isLocal(rawFallback)) {
+                thumb.src = `/resize_image?path=${encodeURIComponent(localPath(rawFallback))}&width=${reqWidth}`;
+            } else {
+                thumb.src = rawFallback;
             }
         };
 
-        img.onclick = () => {
-            showSubmissionDetail(image);
-        };
-        img.style.margin = '10px';
-        board.appendChild(img);
+        thumb.onclick = () => showSubmissionDetail(imgData);
+        board.appendChild(thumb);
     });
+
+    lazyLoadImages();
 }
