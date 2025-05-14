@@ -164,7 +164,7 @@ function formatTimeDiff(ms) {
 }
 
 const userToken = localStorage.getItem('userToken');
-const currentUserId = localStorage.getItem('current_user_id');
+window.currentUserId = Number(localStorage.getItem('current_user_id') || 0);
 
 function manageVerificationSection(questId, canVerify, verificationType, nextEligibleTime) {
     const userQuestData = document.querySelector('.user-quest-data');
@@ -447,15 +447,12 @@ function fetchSubmissions(questId) {
                 const submitterLink     = document.getElementById('submitterProfileLink');
                 const submitterAvatar   = document.getElementById('submitterProfileImage');
                 const submitterCaption  = document.getElementById('submitterProfileCaption');
-                                const downloadLink = document.getElementById('downloadLink');
 
                 submissionImage.src = submission.image_url || 'image/placeholdersubmission.png';
                 submissionComment.textContent = submission.comment || 'No comment provided.';
                 submitterLink.href    = `/profile/${submission.user_id}`;
                 submitterAvatar.src   = submission.user_avatar_url || '/static/images/default_profile.png';
                 submitterCaption.textContent = submission.username || `User ${submission.user_id}`;
-                                downloadLink.href = submission.image_url || '#';
-                downloadLink.download = `SubmissionImage-${submission.user_id}`;
 
                 if (submission.twitter_url && submission.twitter_url.trim() !== '') {
                     twitterLink.href = submission.twitter_url;
@@ -486,10 +483,14 @@ function fetchSubmissions(questId) {
             }
 
             const images = submissions.reverse().map(submission => ({
+                id:   submission.id,
                 url: submission.image_url,
                 alt: "Submission Image",
                 comment: submission.comment,
                 user_id: submission.user_id,
+                user_display_name:  submission.user_display_name,
+                user_username:      submission.user_username,
+                user_profile_picture: submission.user_profile_picture,
                 twitter_url: submission.twitter_url,
                 fb_url: submission.fb_url,
                 instagram_url: submission.instagram_url,

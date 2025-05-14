@@ -1,60 +1,51 @@
 <div id="submissionDetailModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Submission Detail</h5>
-        <button type="button" class="btn-close"
-                aria-label="Close"
-                onclick="closeModal('submissionDetailModal')"></button>
-      </div>
-  
-      <!-- critical: container must be position:relative -->
-      <div id="submissionImageContainer" style="position: relative; margin-bottom: 20px;">
-  
-        <!-- ① Wrap frame+caption in one link so clicking the photo works -->
-        <a id="submitterProfileLink" href="#">
-            <div id="submitterProfileFrame" class="submitter-profile-frame">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title">Submission Detail</h5>
+      <button type="button" class="btn-close"
+              aria-label="Close"
+              onclick="closeModal('submissionDetailModal')"></button>
+    </div>
+
+    <div id="submissionImageContainer" style="position: relative; margin-bottom: 20px;">
+      <span class="submitter-label">Submitted&nbsp;by:</span>
+      <a id="submitterProfileLink" href="#" class="submitter-info-row">
+          <span id="submitterProfileFrame"  class="submitter-profile-frame">
               <img id="submitterProfileImage"
-                   class="submitter-profile-image"
-                   src="/static/images/default_profile.png"
-                   alt="Submitter Profile">
-            </div>
-            <div id="submitterProfileCaption" class="submitter-profile-caption">
-              <!-- caption injected by JS -->
-            </div>
-          </a>       
-        <!-- the submitted image itself -->
-        <img id="submissionImage"
-             class="verification-image"
-             src="/static/images/default_badge.png"
-             alt="Submission Detail">
-      </div>
-  
-      <p id="submissionComment"></p>
-  
-      <div>
-        <a id="twitterLink"     class="button" target="_blank" href="#">Link to Twitter</a>
-        <a id="facebookLink"    class="button" target="_blank" href="#">Link to Facebook</a>
-        <a id="instagramLink"   class="button" target="_blank" href="#">Link to Instagram</a>
-        <a id="downloadLink"    class="button" download href="#">Download Image</a>
+                  class="submitter-profile-image"
+                  src="/static/images/default_profile.png"
+                  alt="Submitter Profile">
+          </span>
+
+          <span id="submitterProfileCaption" class="submitter-profile-caption"></span>
+      </a>
+
+      <img id="submissionImage"
+          class="verification-image"
+          src="/static/images/default_badge.png"
+          alt="Submission Detail">
+    </div>
+
+
+    <!-- Comment display / edit container -->
+    <div id="submissionCommentContainer">
+      <!-- read-only -->
+      <p id="submissionComment" class="comment-text"></p>
+
+      <!-- editable (hidden by default) -->
+      <textarea id="submissionCommentEdit" class="form-control"
+                rows="3" style="display:none;"></textarea>
+      <div id="commentEditButtons" style="display:none; margin-top:10px;">
+        <button class="btn btn-primary" id="saveCommentBtn">Save</button>
+        <button class="btn btn-secondary" id="cancelCommentBtn">Cancel</button>
       </div>
     </div>
+
+    <div style="text-align: center; margin-top:20px;">
+      <a id="twitterLink"   class="button" target="_blank" href="#">Link to Twitter</a>
+      <a id="facebookLink"  class="button" target="_blank" href="#">Link to Facebook</a>
+      <a id="instagramLink" class="button" target="_blank" href="#">Link to Instagram</a>
+      <!-- Download link completely removed -->
+    </div>
   </div>
-  
-  <style>
-    /* your existing CSS plus: */
-    .submitter-profile-frame {
-      position: absolute;
-      top: 0; left: 0;
-      width: 80px; height: 80px;
-      border-radius: 50%;
-      border: 3px solid #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      overflow: hidden;
-      background-color: #f8f9fa;
-    }
-    .submitter-profile-image {
-      width: 100%; height: 100%;
-      object-fit: cover;
-    }
-  </style>
-  
+</div>

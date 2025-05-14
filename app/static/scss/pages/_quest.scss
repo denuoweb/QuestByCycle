@@ -2,28 +2,27 @@
     max-width: 800px;
     margin: 0 auto;
     padding: 1rem;
-  }
-  .quest-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  .quest-item {
-    border: 1px solid #ccc;
-    padding: 1rem;
-    border-radius: $border-radius;
-    margin-bottom: 1rem;
-  }
-  .quest-item.completed {
-    background-color: $secondary-color;
-    color: #fff;
-  }
-  .quest-title {
-    font-size: 1.25rem;
-    font-weight: bold;
-  }
-  .quest-description {
-    font-size: 1rem;
-    margin-top: 0.5rem;
-  }
-  
+}
+.quest-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.quest-item {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: $border-radius;
+  margin-bottom: 1rem;
+}
+.quest-item.completed {
+  background-color: $secondary-color;
+  color: #fff;
+}
+.quest-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+.quest-description {
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
