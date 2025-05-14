@@ -35,3 +35,40 @@
       font-size: 1.2rem;
     }
   }
+
+
+  
+// ──────────────────────────────────────────────────────────────────────────────
+//  Responsive quest‐row title + view button wrapping
+// ──────────────────────────────────────────────────────────────────────────────
+
+.quest-title-cell {
+  // always left-align and allow wrapping
+  text-align: left;
+  white-space: normal;        // allow wrapped text
+}
+
+@media (max-width: 400px) {
+  .quest-title-cell {
+    display: flex;
+    flex-direction: row;          // keep button + title side by side
+    flex-wrap: wrap;              // allow title to drop to next line
+    align-items: center;          // center button & first line of title
+    justify-content: flex-start;  // everything hugs left edge
+    gap: pxToRem(8);              // space between button & title
+  }
+
+  .quest-inline-view-btn {
+    order: 0;                     // always first
+    flex: 0 0 auto;               // button takes its own width
+    margin: 0;                    // reset any margins
+  }
+
+  .quest-title {
+    order: 1;                     // always after button
+    flex: 1 1 auto;               // grow to fill remaining row width
+    white-space: normal;          // ensure wrapping
+    overflow-wrap: anywhere;      // break long words if needed
+    text-align: left;             // left-align multi-line text
+  }
+}

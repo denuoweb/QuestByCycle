@@ -354,15 +354,20 @@
                     </thead>
                     <tbody id="questTableBody">
                         {% for quest in quests %}
-                        <tr class="quest-row {{ 'pinned' if quest.is_sponsored }}" data-category="{{ quest.category or 'Not Set' }}">
-                            <td>
-                                <button class="button" onclick="openQuestDetailModal('{{ quest.id }}')">
-                                    {{ quest.title }}
+                        <tr class="quest-row" data-category="{{ quest.category or 'Not Set' }}">
+                            <td class="quest-title-cell">
+                                <button
+                                type="button"
+                                class="btn btn-sm btn-outline-primary quest-inline-view-btn"
+                                onclick="openQuestDetailModal('{{ quest.id }}')"
+                                >
+                                View
                                 </button>
+                                <span class="quest-title">{{ quest.title }}</span>
                             </td>
-                            <td style="text-align: center;">{{ quest.personal_completions }}</td>
-                            <td style="text-align: center;">{{ quest.total_completions }}</td>
-                            <td style="text-align: center;">{{ quest.points }}</td>
+                            <td style="text-align:center;">{{ quest.personal_completions }}</td>
+                            <td style="text-align:center;">{{ quest.total_completions }}</td>
+                            <td style="text-align:center;">{{ quest.points }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
