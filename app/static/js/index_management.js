@@ -253,27 +253,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Combined filtering function for both search input and category dropdown
 function filterQuests() {
-    const searchValue = document.getElementById('questSearchInput').value.toLowerCase();
-    const selectedCategory = document.getElementById('questCategoryDropdown').value;
-    const questRows = document.querySelectorAll('#questTableBody tr.quest-row');
-    
-    questRows.forEach(function(row) {
-        const questTitle = row.querySelector('td:nth-child(1) button').textContent.toLowerCase();
-        const questCategory = row.getAttribute('data-category');
-        
-        // Check if the quest title contains the search term
-        const matchesSearch = questTitle.includes(searchValue);
-        // Check if the row’s category matches the selected filter
-        const matchesCategory = (selectedCategory === 'all') || (questCategory === selectedCategory);
-        
-        if (matchesSearch && matchesCategory) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
+  const searchValue      = document.getElementById('questSearchInput').value.trim().toLowerCase();
+  const selectedCategory = document.getElementById('questCategoryDropdown').value;
+  const rows             = document.querySelectorAll('#questTableBody tr.quest-row');
+
+  rows.forEach(row => {
+    /* correct selector: the real title is in <span class="quest-title"> */
+    const title    = row.querySelector('.quest-title').textContent.toLowerCase();
+    const category = row.dataset.category || 'Not Set';
+
+    const matchesSearch    = title.includes(searchValue);
+    const matchesCategory  = selectedCategory === 'all' || category === selectedCategory;
+
+    row.style.display = (matchesSearch && matchesCategory) ? '' : 'none';
+  });
 }
 
-// Attach event listeners to both search input and category dropdown
-document.getElementById('questSearchInput').addEventListener('input', filterQuests);
-document.getElementById('questCategoryDropdown').addEventListener('change', filterQuests);
+/* attach listeners once */
+document.addEventListener('DOMContentLoaded', () => {
+  const searchBox   = document.getElementById('questSearchInput');
+  const categorySel = document.getElementById('questCategoryDropdown');
+
+  if (searchBox)   searchBox  .addEventListener('input',  filterQuests);
+  if (categorySel) categorySel.addEventListener('change', filterQuests);
+});
