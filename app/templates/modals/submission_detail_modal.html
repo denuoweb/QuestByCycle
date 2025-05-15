@@ -1,64 +1,87 @@
-<div id="submissionDetailModal"
-     class="modal"
-     data-current-user-id="{{ current_user.id }}">   <!-- UPDATE ► add user-id here -->
+<div id="submissionDetailModal" class="modal" data-current-user-id="{{ current_user.id }}">
   <div class="modal-content">
-    <div class="modal-header">
-      <h5 class="modal-title">Submission Detail</h5>
-      <button type="button"
-              class="btn-close"
-              aria-label="Close"
-              onclick="closeModal('submissionDetailModal')"></button>
+
+    <!-- ── TOP BAR: Submitted by + Like + Close ── -->
+    <div class="modal-header d-flex justify-content-between align-items-center">
+      <!-- left -->
+      <div class="d-flex align-items-center">
+        <span class="submitter-label me-2">Submitted by:</span>
+        <a id="submitterProfileLink" href="#" class="d-flex align-items-center">
+          <span class="submitter-profile-frame--inline">
+            <img
+              id="submitterProfileImage"
+              src="/static/images/default_profile.png"
+              alt="Submitter Profile"
+            >
+          </span>
+          <span id="submitterProfileCaption" class="submitter-profile-caption ms-2">—</span>
+        </a>
+      </div>
+
+      <!-- right -->
+      <div class="d-flex align-items-center">
+        <button id="submissionLikeBtn" class="btn btn-icon me-2">
+          <i class="fas fa-heart"></i>
+          <span id="submissionLikeCount">0</span>
+        </button>
+        <button type="button" class="btn-close" aria-label="Close"
+                onclick="closeModal('submissionDetailModal')"></button>
+      </div>
     </div>
-
-    <div id="submissionImageContainer" style="position: relative; margin-bottom: 20px;">
-      <span class="submitter-label">Submitted&nbsp;by:</span>
-
-      <a id="submitterProfileLink" href="#" class="submitter-info-row">
-        <span id="submitterProfileFrame" class="submitter-profile-frame">
-          <img id="submitterProfileImage"
-               class="submitter-profile-image"
-               src="/static/images/default_profile.png"
-               alt="Submitter Profile">
-        </span>
-        <span id="submitterProfileCaption" class="submitter-profile-caption"></span>
-      </a>
-
+    <!-- ── IMAGE + single overlayed profile frame ── -->
+    <div id="submissionImageContainer" class="mb-4">
+      <span class="submitter-profile-frame">
+        <img id="submitterProfileImageOverlay"
+             src="/static/images/default_profile.png"
+             alt="Submitter Profile">
+      </span>
       <img id="submissionImage"
            class="verification-image"
            src="/static/images/default_badge.png"
            alt="Submission Detail">
     </div>
 
-    <!-- Comment display / edit container -->
-    <div id="submissionCommentContainer">
-      <!-- read-only -->
-      <p id="submissionComment" class="comment-text"></p>
-
-      <div id="commentReadButtons" style="margin-top:10px;">
-        <!-- owner only -->
-        <button id="editCommentBtn"
-                class="btn btn-outline-secondary btn-sm"
-                hidden>              <!-- hidden by default -->
-          Edit
-        </button>
+    <!-- ── TWO-COLUMN: Owner Comment ⬅️ Replies & Reply Box ➡️ ── -->
+    <div class="submission-body d-flex gap-4">
+      <!-- Left column: owner’s comment -->
+      <div class="submission-owner-comment flex-fill">
+        <p id="submissionComment" class="comment-text mb-2">No comment provided.</p>
+        <div id="commentReadButtons" class="mb-2">
+          <button id="editCommentBtn"
+                  class="btn btn-outline-secondary btn-sm"
+                  hidden>Edit</button>
+        </div>
+        <textarea id="submissionCommentEdit"
+                  class="form-control mb-2"
+                  rows="3"
+                  hidden></textarea>
+        <div id="commentEditButtons" hidden>
+          <button id="saveCommentBtn" class="btn btn-primary btn-sm me-2">Update</button>
+          <button id="cancelCommentBtn" class="btn btn-secondary btn-sm">Cancel</button>
+        </div>
       </div>
 
-      <!-- editable -->
-      <textarea id="submissionCommentEdit"
-                class="form-control"
-                rows="3"
-                hidden></textarea>
-
-      <div id="commentEditButtons" style="margin-top:10px;" hidden>
-        <button id="saveCommentBtn"   class="btn btn-primary btn-sm">Update</button>
-        <button id="cancelCommentBtn" class="btn btn-secondary btn-sm">Cancel</button>
+      <!-- Right column: replies + reply box -->
+      <div id="submissionRepliesContainer" class="submission-replies flex-fill d-flex flex-column">
+        <div id="submissionRepliesList" class="mb-3 flex-grow-1 overflow-auto">
+          <!-- replies injected here -->
+        </div>
+        <textarea id="submissionReplyEdit"
+                  class="form-control mb-2"
+                  rows="2"
+                  maxlength="1000"
+                  placeholder="Leave a comment…"></textarea>
+        <button id="postReplyBtn"
+                class="btn btn-primary btn-sm align-self-end">Post Reply</button>
       </div>
     </div>
 
-    <div style="text-align:center; margin-top:20px;">
-      <a id="twitterLink"   class="button" target="_blank" href="#">Link to Twitter</a>
-      <a id="facebookLink"  class="button" target="_blank" href="#">Link to Facebook</a>
-      <a id="instagramLink" class="button" target="_blank" href="#">Link to Instagram</a>
+    <!-- ── FOOTER: social links ── -->
+    <div class="text-center mt-4">
+      <a id="twitterLink"   class="btn btn-link" target="_blank" href="#">Twitter</a>
+      <a id="facebookLink"  class="btn btn-link" target="_blank" href="#">Facebook</a>
+      <a id="instagramLink" class="btn btn-link" target="_blank" href="#">Instagram</a>
     </div>
+
   </div>
 </div>

@@ -1,22 +1,148 @@
-.submitter-profile-frame {
+// === app/static/scss/pages/_submission.scss ===
+
+// ── IMAGE CONTAINER ──
+#submissionImageContainer {
+  position: relative;
+  text-align: center;
+
+  .submitter-profile-frame {
     position: absolute;
-    top: 0; left: 0;
-    width: 80px; height: 80px;
+    top: 10px;
+    left: 10px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     border: 3px solid #fff;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     overflow: hidden;
     background-color: #f8f9fa;
+    z-index: 2;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .verification-image {
+    width: 100%;
+    height: auto;
+    max-height: calc(100vh - 200px);
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 20px;
+    border-radius: 4px;
+  }
 }
-.submitter-profile-image {
-    width: 100%; height: 100%;
+
+// ── INLINE AVATAR ──
+.submitter-profile-frame--inline {
+  position: static;
+  display: inline-block;
+  vertical-align: middle;
+  width: 32px;
+  height: 32px;
+  margin-right: .5rem;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  overflow: hidden;
+  background-color: #f8f9fa;
+
+  img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
+  }
 }
-.verification-image {
-  width: 100%;
-  height: auto;
-  max-height: calc(100vh - 200px);
-  object-fit: contain;
-  display: block;
-  margin: 0 auto 20px;
+
+// ── TOP BAR ──
+.submission-header {
+  .submitter-label {
+    font-weight: 500;
+    color: #555;
+  }
+
+  // make the link wrap avatar + name
+  a#submitterProfileLink {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .btn-icon {
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    color: #777;
+    transition: color .2s;
+    &:hover,
+    &.active {
+      color: #e25555;
+    }
+  }
+}
+
+// ── TWO-COLUMN BODY ──
+.submission-body {
+  display: flex;
+  gap: 1rem;
+
+  @media (max-width: 576px) {
+    flex-direction: column;
+  }
+
+  .submission-owner-comment,
+  #submissionRepliesContainer {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .submission-owner-comment {
+    .comment-text {
+      font-size: 1rem;
+      line-height: 1.4;
+      color: #333;
+    }
+    textarea {
+      resize: vertical;
+    }
+  }
+
+  #submissionRepliesContainer {
+    display: flex;
+    flex-direction: column;
+
+    .reply {
+      background: #f8f9f9;
+      border-radius: 6px;
+      padding: .75rem;
+      margin-bottom: .5rem;
+      font-size: .95rem;
+      color: #333;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    button {
+      align-self: flex-end;
+    }
+  }
+}
+
+// ── FOOTER LINKS ──
+.modal-content .btn-link {
+  color: #336;
+  margin: 0 .5rem;
+  &:hover {
+    text-decoration: underline;
+  }
 }

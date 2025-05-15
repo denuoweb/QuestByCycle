@@ -136,6 +136,18 @@ document.addEventListener('DOMContentLoaded', function() {
         text = n.payload.from_user_name + ' replied “' + n.payload.content + '”';
         onclick = 'showUserProfileModal(' + n.payload.profile_user_id + '); return false;';
         break;
+      case 'submission_like':
+        text = `${n.payload.liker_name} liked your submission`;
+        onclick =
+          "fetch('/quests/submissions/" + n.payload.submission_id + "', { credentials:'same-origin' })" +
+          ".then(r => r.json()).then(img => showSubmissionDetail(img)); return false;";
+        break;
+      case 'submission_reply':
+        text = `${n.payload.actor_name} replied “${n.payload.content}”`;
+        onclick =
+          "fetch('/quests/submissions/" + n.payload.submission_id + "', { credentials:'same-origin' })" +
+          ".then(r => r.json()).then(img => showSubmissionDetail(img)); return false;";
+        break;
       default:
         text = n.payload.summary || JSON.stringify(n.payload);
         onclick = "location.href='/notifications/';";

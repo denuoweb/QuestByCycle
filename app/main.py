@@ -902,7 +902,13 @@ def resize_image():
     The image is served in WEBP format.
     """
     image_path = request.args.get('path')
-    width = request.args.get('width', type=int)
+    width_arg  = request.args.get('width')
+
+    # parse width as float, then round or floor to int
+    try:
+        width = int(float(width_arg))
+    except (TypeError, ValueError):
+        return jsonify({'error': "Invalid request: 'width' must be a number"}), 400
 
     if not image_path or not width:
         return jsonify({'error': "Invalid request: Missing 'path' or 'width'"}), 400

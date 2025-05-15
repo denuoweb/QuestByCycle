@@ -605,3 +605,98 @@ class ProfileWallMessage(db.Model):
         backref=db.backref('parent', remote_side=[id]),
         cascade="all, delete-orphan"
     )
+
+
+class SubmissionLike(db.Model):
+    """A like on a specific QuestSubmission."""
+    __tablename__ = 'submission_likes'
+
+    id            = db.Column(db.Integer, primary_key=True)
+    submission_id = db.Column(
+        db.Integer,
+        db.ForeignKey('quest_submission.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    user_id       = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    timestamp     = db.Column(
+        db.DateTime(timezone=True),
+        default=lambda: datetime.now(utc),
+        nullable=False
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint('submission_id', 'user_id',
+                            name='uq_submission_user_like'),
+    )
+
+    # NO cascade here on the "many" side:
+    submission = db.relationship(
+        'QuestSubmission',
+        back_populates='likes'
+    )
+    user       = db.relationship('User', backref='submission_likes')
+
+
+class SubmissionReply(db.Model):
+    """A user reply (comment) on a QuestSubmission."""
+    __tablename__ = 'submission_replies'
+
+    id            = db.Column(db.Integer, primary_key=True)
+    submission_id = db.Column(
+        db.Integer,
+        db.ForeignKey('quest_submission.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    user_id       = db.Column(
+        db.Integer,
+        db.ForeignKey('user.id', ondelete='CASCADE'),
+        nullable=False,
+        index=True
+    )
+    content       = db.Column(db.String(1000), nullable=False)
+    timestamp     = db.Column(
+        db.DateTime(timezone=True),
+        default=lambda: datetime.now(utc),
+        nullable=False,
+        index=True
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint('submission_id', 'user_id', 'content',
+                            name='uq_submission_user_reply'),
+    )
+
+    # NO cascade here on the "many" side:
+    submission = db.relationship(
+        'QuestSubmission',
+        back_populates='replies'
+    )
+    user       = db.relationship('User', backref='submission_replies')
+
+
+# ── Configure backrefs on the ONE side (QuestSubmission) ────────────────────
+
+# at bottom of file, after QuestSubmission definition:
+
+QuestSubmission.likes = db.relationship(
+    'SubmissionLike',
+    back_populates='submission',
+    lazy='dynamic',
+    cascade='all, delete-orphan',
+    single_parent=True          # this tells SQLAlchemy this child belongs to exactly one parent
+)
+
+QuestSubmission.replies = db.relationship(
+    'SubmissionReply',
+    back_populates='submission',
+    lazy='dynamic',
+    cascade='all, delete-orphan',
+    single_parent=True
+)

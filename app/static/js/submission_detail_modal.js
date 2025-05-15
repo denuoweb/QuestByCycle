@@ -1,105 +1,212 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  /* helpers ---------------------------------------------------------------- */
-  const $     = s => document.querySelector(s);
-  const csrf  = () => (document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/) ?? [])[1] || '';
+  const $    = s => document.querySelector(s);
+  const csrf = () => document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-  /* public entry ----------------------------------------------------------- */
-  window.showSubmissionDetail = function (image) {
-
+  window.showSubmissionDetail = function(image) {
     const modal = $('#submissionDetailModal');
-    const idNow = Number(modal.dataset.currentUserId);        // owner id from DOM
-    const isOwner = Number(image.user_id) === idNow;
+    modal.dataset.submissionId = image.id;
 
-    /* get every element fresh each open ----------------------------------- */
+    const me      = Number(modal.dataset.currentUserId);
+    const isOwner = Number(image.user_id) === me;
+
     const el = {
-      img          : $('#submissionImage'),
-      commentRead  : $('#submissionComment'),
-      commentEdit  : $('#submissionCommentEdit'),
-      readBox      : $('#commentReadButtons'),
-      editBox      : $('#commentEditButtons'),
-      editBtn      : $('#editCommentBtn'),
-      profileImg   : $('#submitterProfileImage'),
-      profileCap   : $('#submitterProfileCaption'),
-      profileLink  : $('#submitterProfileLink'),
-      social : {
+      img                  : $('#submissionImage'),
+      imgOverlay           : $('#submitterProfileImageOverlay'),
+      commentRead          : $('#submissionComment'),
+      commentEdit          : $('#submissionCommentEdit'),
+      readBox              : $('#commentReadButtons'),
+      editBox              : $('#commentEditButtons'),
+      editBtn              : $('#editCommentBtn'),
+      profileImg           : $('#submitterProfileImage'),
+      profileImgOverlay    : $('#submitterProfileImageOverlay'),
+      profileCap           : $('#submitterProfileCaption'),
+      profileLink          : $('#submitterProfileLink'),
+      social: {
         tw : $('#twitterLink'),
         fb : $('#facebookLink'),
         ig : $('#instagramLink')
       }
     };
 
-    /* populate fixed fields ------------------------------------------------ */
-    el.img.src = image.url;
+    // set picture & caption
+    el.profileImg.src        = image.user_profile_picture || '/static/images/default_profile.png';
+    el.profileImgOverlay.src = el.profileImg.src;
+    el.profileCap.textContent = image.user_display_name || image.user_username || '—';
+
+    // wire up click on both the inline and overlay image
+    el.profileLink.onclick   = e => {
+      e.preventDefault();
+      showUserProfileModal(image.user_id);
+    };
+    el.imgOverlay.parentElement.onclick = el.profileLink.onclick;
+
+    // submission image & comment
+    el.img.src                 = image.url;
     el.commentRead.textContent = image.comment || 'No comment provided.';
 
-    el.profileImg.src = image.user_profile_picture || '/static/images/default_profile.png';
-    el.profileCap.textContent = image.user_display_name || image.user_username || '—';
-    el.profileLink.onclick = e => { e.preventDefault(); showUserProfileModal(image.user_id); };
+    // social links
+    ['tw','fb','ig'].forEach(k=>{
+      const prop = k==='tw'?'twitter_url':k==='fb'?'fb_url':'instagram_url';
+      try {
+        new URL(image[prop]);
+        el.social[k].href = image[prop];
+        el.social[k].style.display = 'inline-block';
+      } catch {
+        el.social[k].style.display = 'none';
+      }
+    });
 
-    link(el.social.tw, image.twitter_url);
-    link(el.social.fb, image.fb_url);
-    link(el.social.ig, image.instagram_url);
-
-    /* owner controls ------------------------------------------------------- */
+    // edit controls
     if (isOwner) {
       el.editBtn.hidden = false;
       el.readBox.hidden = false;
-      modal.dataset.submissionId = image.id;
     } else {
-      el.editBtn.hidden  =
-      el.readBox.hidden  =
-      el.commentEdit.hidden =
-      el.editBox.hidden  = true;
-      delete modal.dataset.submissionId;
+      el.editBtn.hidden      =
+      el.readBox.hidden      =
+      el.commentEdit.hidden  =
+      el.editBox.hidden      = true;
     }
 
-    /* show modal ----------------------------------------------------------- */
+    loadSubmissionDetails();
     openModal('submissionDetailModal');
   };
 
-  /* static wiring of buttons ---------------------------------------------- */
+  // comment editing
   $('#editCommentBtn').addEventListener('click', () => {
     $('#submissionCommentEdit').value = $('#submissionComment').textContent.trim();
     toggleEdit(true);
   });
 
   $('#saveCommentBtn').addEventListener('click', () => {
-    const modal = $('#submissionDetailModal');
-    const submissionId = modal.dataset.submissionId;
-    if (!submissionId) return;
-
-    fetch(`/quests/submission/${submissionId}/comment`, {
-      method      : 'PUT',
-      credentials : 'same-origin',
-      headers     : { 'Content-Type':'application/json', 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')},
-      body        : JSON.stringify({ comment: $('#submissionCommentEdit').value.trim() })
+    const id = $('#submissionDetailModal').dataset.submissionId;
+    fetch(`/quests/submission/${id}/comment`, {
+      method:      'PUT',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type':'application/json',
+        'X-CSRFToken' : csrf()
+      },
+      body: JSON.stringify({ comment: $('#submissionCommentEdit').value.trim() })
     })
-    .then(r => r.json().then(j => ({ok:r.ok, j})))
-    .then(({ok,j}) => {
-      if (!ok || !j.success) throw new Error(j.message || 'Save failed');
-      $('#submissionComment').textContent = j.comment || 'No comment provided.';
+    .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json() })
+    .then(j=>{
+      if(!j.success) throw new Error(j.message||'Save failed');
+      $('#submissionComment').textContent = j.comment||'No comment provided.';
       toggleEdit(false);
     })
-    .catch(e => alert(`Could not save comment: ${e.message}`));
+    .catch(e=>alert(`Could not save comment: ${e.message}`));
   });
 
   $('#cancelCommentBtn').addEventListener('click', () => toggleEdit(false));
-
-  /* helpers ---------------------------------------------------------------- */
-  function toggleEdit(on) {
+  function toggleEdit(on){
     $('#submissionComment').hidden      = on;
     $('#commentReadButtons').hidden     = on;
     $('#submissionCommentEdit').hidden  = !on;
     $('#commentEditButtons').hidden     = !on;
   }
 
-  function link(anchor, url) {
-    try {
-      new URL(url);
-      anchor.href = url;
-      anchor.style.display = 'inline-block';
-    } catch { anchor.style.display = 'none'; }
+
+  // load like + replies
+  function loadSubmissionDetails(){
+    const id = $('#submissionDetailModal').dataset.submissionId;
+    if(!id) return;
+
+    fetch(`/quests/submissions/${id}`, { credentials:'same-origin' })
+      .then(r=>r.json())
+      .then(d=>{
+        $('#submissionLikeCount').textContent = d.like_count||0;
+        $('#submissionLikeBtn').classList.toggle('active', d.liked_by_current_user);
+      });
+
+      fetch(`/quests/submission/${id}/replies`, { credentials:'same-origin' })
+        .then(r=>r.json())
+        .then(d=>{
+          const list = $('#submissionRepliesList');
+          list.innerHTML = '';
+          d.replies.forEach(rep=>{
+            const div = document.createElement('div');
+            div.className = 'reply mb-1';
+            div.innerHTML = `<strong>${rep.user_display}</strong>: ${rep.content}`;
+            list.appendChild(div);
+          });
+
+        const textarea = $('#submissionReplyEdit');
+        const btn = $('#postReplyBtn');
+        const existingMessage = $('#replyLimitMessage');
+        if (d.replies.length >= 10) {
+          textarea.disabled = true;
+          btn.disabled = true;
+          if (!existingMessage) {
+            const msg = document.createElement('div');
+            msg.id = 'replyLimitMessage';
+            msg.className = 'text-muted mt-2';
+            msg.textContent = 'Maximum replies reached, sorry.';
+            textarea.parentNode.insertBefore(msg, textarea);
+          }
+        } else {
+          textarea.disabled = false;
+          btn.disabled = false;
+          if (existingMessage) existingMessage.remove();
+        }
+      });
   }
+
+
+  // like/unlike
+  $('#submissionLikeBtn').addEventListener('click', () => {
+    const btn   = $('#submissionLikeBtn');
+    const id    = $('#submissionDetailModal').dataset.submissionId;
+    const liked = btn.classList.contains('active');
+
+    fetch(`/quests/submission/${id}/like`, {
+      method:     liked? 'DELETE' : 'POST',
+      credentials:'same-origin',
+      headers: {
+        'Content-Type':'application/json',
+        'X-CSRFToken' : csrf()
+      }
+    })
+    .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json() })
+    .then(j=>{
+      if(!j.success) throw new Error('Like failed');
+      $('#submissionLikeCount').textContent = j.like_count;
+      btn.classList.toggle('active', j.liked);
+    })
+    .catch(e=>alert(e.message));
+  });
+
+
+  // post a reply
+  $('#postReplyBtn').addEventListener('click', () => {
+    const id      = $('#submissionDetailModal').dataset.submissionId;
+    const content = $('#submissionReplyEdit').value.trim();
+    if(!id||!content) return;
+
+    fetch(`/quests/submission/${id}/replies`, {
+      method:      'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type':'application/json',
+        'X-CSRFToken' : csrf()
+      },
+      body: JSON.stringify({ content })
+    })
+    .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json() })
+    .then(j=>{
+      if(!j.success) throw new Error(j.message||'Error');
+      const list = $('#submissionRepliesList');
+      // keep at most 10 replies in the list
+      while (list.children.length >= 10) {
+        list.removeChild(list.lastChild);
+      }
+      const div = document.createElement('div');
+      div.className = 'reply mb-1';
+      div.innerHTML = `<strong>${j.reply.user_display}</strong>: ${j.reply.content}`;
+      list.insertBefore(div, list.firstChild);
+      $('#submissionReplyEdit').value = '';
+    })
+    .catch(e=>alert(e.message));
+  });
 
 });

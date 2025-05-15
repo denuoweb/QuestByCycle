@@ -13,10 +13,11 @@ This module provides:
 import json
 import rsa
 import requests
+from datetime import datetime, timezone
 from email.utils import formatdate
 from urllib.parse import urlparse
 from flask import Blueprint, current_app, request, abort, jsonify, url_for
-from app.models import User, ActivityStore, QuestLike, db, Notification
+from app.models import User, ActivityStore, QuestLike, db, Notification, QuestSubmission
 
 # Blueprint for ActivityPub endpoints
 ap_bp = Blueprint('activitypub', __name__)
@@ -203,6 +204,7 @@ def view_user(username):
     }
     return jsonify(actor), 200, {"Content-Type": "application/activity+json"}
 
+
 @ap_bp.route('/<username>/inbox', methods=['POST'])
 def inbox(username):
     """
@@ -285,20 +287,38 @@ def inbox(username):
 
     # 4) Handle remote Create activities
     if typ == 'Create' and actor_host != our_host:
-        obj     = activity.get('object', {}) or {}
-        summary = obj.get('content', '').strip()
-        if sender:
-            db.session.add(Notification(
-                user_id = user.id,
-                type    = 'submission',
-                payload = {
-                    'actor_id':      sender.id,
-                    'actor_name':    sender.display_name or sender.username,
-                    'object_id':     obj.get('id'),
-                    'summary':       summary
-                }
-            ))
-            db.session.commit()
+        obj = activity.get('object', {}) or {}
+        # existing submission Create handling …
+
+        # New: handle remote replies
+        if obj.get('type') == 'Note' and obj.get('inReplyTo'):
+            in_to = obj['inReplyTo']
+            if '/submissions/' in in_to:
+                sid = int(in_to.rsplit('/',1)[1])
+                # record SubmissionReply locally
+                from app.models import SubmissionReply
+                reply = SubmissionReply(
+                    submission_id=sid,
+                    user_id=(sender.id if sender else None),
+                    content=obj.get('content','')
+                )
+                db.session.add(reply)
+                db.session.commit()
+                # notify submission owner
+                sub = QuestSubmission.query.get(sid)
+                if sub:
+                    db.session.add(Notification(
+                        user_id=sub.user_id,
+                        type='submission_reply',
+                        payload={
+                          'submission_id': sid,
+                          'reply_id'     : reply.id,
+                          'actor_id'     : sender.id,
+                          'actor_name'   : sender.display_name or sender.username,
+                          'content'      : reply.content
+                        }
+                    ))
+                    db.session.commit()
         return ('', 202)
 
     # 5) Handle Like activities
@@ -465,3 +485,49 @@ def following(username):
         "totalItems": 0,
         "orderedItems": []
     }), 200, {'Content-Type':'application/activity+json'}
+
+
+def post_activitypub_like_activity(submission, user):
+    """
+    Build and deliver a Like activity for a submission.
+    """
+    actor_id   = user.activitypub_id
+    object_id  = f"{actor_id}/submissions/{submission.id}"
+    activity = {
+      '@context': AS_CONTEXT,
+      'id'     : f"{actor_id}/activities/like/{submission.id}/{int(datetime.now(timezone.utc).timestamp())}",
+      'type'   : 'Like',
+      'actor'  : actor_id,
+      'object' : {'id': object_id, 'type': 'Image'},
+      'to'     : [submission_attributed_actor := submission.user.activitypub_id]
+    }
+    # Persist to outbox if desired, then fan-out:
+    deliver_activity(activity, user)
+    return activity
+
+
+def post_activitypub_comment_activity(reply, user):
+    """
+    Build and deliver a Create(Note) activity for a submission reply.
+    """
+    actor_id   = user.activitypub_id
+    submission = reply.submission
+    object_id  = f"{actor_id}/comments/{reply.id}"
+    in_reply_to= f"{submission.user.activitypub_id}/submissions/{submission.id}"
+    note = {
+      'id'        : object_id,
+      'type'      : 'Note',
+      'inReplyTo' : in_reply_to,
+      'content'   : reply.content,
+      'published' : reply.timestamp.isoformat()
+    }
+    activity = {
+      '@context': AS_CONTEXT,
+      'id'     : f"{actor_id}/activities/comment/{reply.id}",
+      'type'   : 'Create',
+      'actor'  : actor_id,
+      'object' : note,
+      'to'     : [submission.user.activitypub_id]
+    }
+    deliver_activity(activity, user)
+    return activity

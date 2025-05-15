@@ -39,8 +39,16 @@ from app.utils import (
     save_submission_image,
     update_user_score,
 )
-from app.activitypub_utils import post_activitypub_create_activity
-from .models import db, Badge, Game, Quest, QuestSubmission, User, UserQuest
+from app.activitypub_utils import (
+    post_activitypub_create_activity, 
+    post_activitypub_like_activity,
+    post_activitypub_comment_activity
+)
+from .models import (
+    db, Badge, Game, Quest, QuestSubmission,
+    User, UserQuest, SubmissionLike, SubmissionReply,
+    Notification
+)
 
 quests_bp = Blueprint("quests", __name__, template_folder="templates")
 
@@ -1022,7 +1030,14 @@ def get_submission(submission_id):
 
     display_name = user.display_name or user.username
 
+    liked = bool(SubmissionLike.query.filter_by(
+            submission_id=submission_id,
+            user_id=current_user.id
+        ).first())
+    like_count = sub.likes.count()
+    
     return jsonify({
+        'id': submission_id,
         'url':                  sub.image_url,
         'comment':              sub.comment,
         'user_id':              sub.user_id,
@@ -1031,7 +1046,9 @@ def get_submission(submission_id):
         'user_username':        user.username,
         'twitter_url':          sub.twitter_url,
         'fb_url':               sub.fb_url,
-        'instagram_url':        sub.instagram_url
+        'instagram_url':        sub.instagram_url,
+        'like_count':           like_count,
+        'liked_by_current_user': liked
     })
 
 
@@ -1057,3 +1074,121 @@ def update_submission_comment(submission_id):
 
     db.session.commit()
     return jsonify(success=True, comment=sub.comment)
+
+
+@quests_bp.route('/submission/<int:submission_id>/like', methods=['POST','DELETE'])
+@login_required
+def submission_like(submission_id):
+    sub = QuestSubmission.query.get_or_404(submission_id)
+    existing = SubmissionLike.query.filter_by(
+        submission_id=submission_id,
+        user_id=current_user.id
+    ).first()
+
+    if request.method == 'POST':
+        if not existing:
+            like = SubmissionLike(
+                submission_id=submission_id,
+                user_id=current_user.id
+            )
+            db.session.add(like)
+            db.session.commit()
+
+            post_activitypub_like_activity(sub, current_user)
+
+            # ── NEW: notify the submission’s owner ───────────────
+            if sub.user_id != current_user.id:
+                db.session.add(Notification(
+                    user_id   = sub.user_id,
+                    type      = 'submission_like',
+                    payload   = {
+                        'submission_id': submission_id,
+                        'liker_id'     : current_user.id,
+                        'liker_name'   : current_user.display_name or current_user.username
+                    }
+                ))
+                db.session.commit()
+        liked = True
+    else:
+        if existing:
+            db.session.delete(existing)
+            db.session.commit()
+        liked = False
+
+    count = sub.likes.count()
+    return jsonify(success=True, liked=liked, like_count=count)
+
+
+@quests_bp.route('/submission/<int:submission_id>/replies', methods=['GET', 'POST'])
+@login_required
+def submission_replies(submission_id):
+    """
+    GET: return up to 2 replies for a submission.
+    POST: create a new reply (up to 2 per submission), fire ActivityPub Create.
+    """
+    sub = QuestSubmission.query.get_or_404(submission_id)
+
+    if request.method == 'GET':
+        reps = (SubmissionReply.query
+                .filter_by(submission_id=submission_id)
+                .order_by(SubmissionReply.timestamp.desc())
+                .limit(10)
+                .all())
+        data = [{
+            'id'           : r.id,
+            'content'      : r.content,
+            'timestamp'    : r.timestamp.isoformat(),
+            'user_id'      : r.user_id,
+            'user_display' : (r.user.display_name or r.user.username)
+        } for r in reps]
+        return jsonify(success=True, replies=data)
+
+    # POST
+    payload = request.get_json() or {}
+    content = payload.get('content','').strip()
+    if not content:
+        return jsonify(success=False, message="Empty reply"), 400
+
+    # enforce max 10 replies
+    existing_count = SubmissionReply.query.filter_by(
+        submission_id=submission_id
+    ).count()
+    if existing_count >= 10:
+        return jsonify(success=False,
+                       message="Reply limit of 10 reached"), 403
+
+    reply = SubmissionReply(
+        submission_id=submission_id,
+        user_id=current_user.id,
+        content=content
+    )
+    db.session.add(reply)
+    db.session.commit()
+
+    if sub.user_id != current_user.id:
+        db.session.add(Notification(
+            user_id   = sub.user_id,
+            type      = 'submission_reply',
+            payload   = {
+                'submission_id': submission_id,
+                'reply_id'     : reply.id,
+                'actor_id'     : current_user.id,
+                'actor_name'   : current_user.display_name or current_user.username,
+                'content'      : reply.content
+            }
+        ))
+        db.session.commit()
+
+    # ActivityPub Create(Note)
+    post_activitypub_comment_activity(reply, current_user)
+
+    return jsonify(
+      success=True,
+      reply={
+        'id'           : reply.id,
+        'content'      : reply.content,
+        'timestamp'    : reply.timestamp.isoformat(),
+        'user_id'      : reply.user_id,
+        'user_display' : (current_user.display_name or current_user.username)
+      }
+    )
