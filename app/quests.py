@@ -13,6 +13,7 @@ import qrcode
 import requests 
 from datetime import datetime, timezone
 from io import BytesIO
+from sqlalchemy.exc import IntegrityError
 from flask import (
     Blueprint,
     current_app,
@@ -1143,27 +1144,27 @@ def submission_replies(submission_id):
         } for r in reps]
         return jsonify(success=True, replies=data)
 
-    # POST
-    payload = request.get_json() or {}
-    content = payload.get('content','').strip()
-    if not content:
-        return jsonify(success=False, message="Empty reply"), 400
+    if request.method == 'POST':
+        payload = request.get_json() or {}
+        content = payload.get('content','').strip()
+        if not content:
+            return jsonify(success=False, message="Empty reply"), 400
 
-    # enforce max 10 replies
-    existing_count = SubmissionReply.query.filter_by(
-        submission_id=submission_id
-    ).count()
-    if existing_count >= 10:
-        return jsonify(success=False,
-                       message="Reply limit of 10 reached"), 403
+        # enforce max 10 replies
+        existing_count = SubmissionReply.query.filter_by(
+            submission_id=submission_id
+        ).count()
+        if existing_count >= 10:
+            return jsonify(success=False,
+                           message="Reply limit of 10 reached"), 403
 
-    reply = SubmissionReply(
-        submission_id=submission_id,
-        user_id=current_user.id,
-        content=content
-    )
-    db.session.add(reply)
-    db.session.commit()
+        reply = SubmissionReply(
+            submission_id=submission_id,
+            user_id=current_user.id,
+            content=content
+        )
+        db.session.add(reply)
+        db.session.commit()
 
     if sub.user_id != current_user.id:
         db.session.add(Notification(

@@ -668,12 +668,6 @@ class SubmissionReply(db.Model):
         index=True
     )
 
-    __table_args__ = (
-        db.UniqueConstraint('submission_id', 'user_id', 'content',
-                            name='uq_submission_user_reply'),
-    )
-
-    # NO cascade here on the "many" side:
     submission = db.relationship(
         'QuestSubmission',
         back_populates='replies'

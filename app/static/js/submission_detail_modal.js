@@ -180,7 +180,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // post a reply
   $('#postReplyBtn').addEventListener('click', () => {
     const id      = $('#submissionDetailModal').dataset.submissionId;
-    const content = $('#submissionReplyEdit').value.trim();
+    const textarea= $('#submissionReplyEdit');
+    const btn     = $('#postReplyBtn');
+    const content = textarea.value.trim();
     if(!id||!content) return;
 
     fetch(`/quests/submission/${id}/replies`, {
@@ -192,21 +194,50 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       body: JSON.stringify({ content })
     })
-    .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json() })
-    .then(j=>{
-      if(!j.success) throw new Error(j.message||'Error');
-      const list = $('#submissionRepliesList');
-      // keep at most 10 replies in the list
-      while (list.children.length >= 10) {
-        list.removeChild(list.lastChild);
+    .then(r => r.json().then(j => ({ ok: r.ok, status: r.status, body: j })))
+    .then(({ ok, status, body }) => {
+      if (!body.success) {
+        // if it’s the “limit reached” response, disable the form and show the message
+        if (body.message === 'Reply limit of 10 reached') {
+          disableReplyForm();
+          return;
+        }
+        // otherwise it might be a duplicate reply
+        if (status === 409 && body.message === 'Duplicate reply') {
+          return alert('You have already posted that exact reply.');
+        }
+        throw new Error(body.message || 'Error');
       }
+
+      // success → inject the new reply
+      const list = $('#submissionRepliesList');
       const div = document.createElement('div');
       div.className = 'reply mb-1';
-      div.innerHTML = `<strong>${j.reply.user_display}</strong>: ${j.reply.content}`;
+      div.innerHTML = `<strong>${body.reply.user_display}</strong>: ${body.reply.content}`;
       list.insertBefore(div, list.firstChild);
-      $('#submissionReplyEdit').value = '';
+
+      textarea.value = '';
+
+      // if we’ve just hit 10, disable and show the limit message
+      if (list.children.length >= 10) {
+        disableReplyForm();
+      }
     })
-    .catch(e=>alert(e.message));
+    .catch(e => alert(e.message));
   });
 
+  // helper to hide the form & show a “max replies” notice
+  function disableReplyForm() {
+    const textarea = $('#submissionReplyEdit');
+    const btn      = $('#postReplyBtn');
+    textarea.disabled = true;
+    btn.disabled      = true;
+    if (!$('#replyLimitMessage')) {
+      const msg = document.createElement('div');
+      msg.id = 'replyLimitMessage';
+      msg.className = 'text-muted mt-2';
+      msg.textContent = 'Maximum replies reached, sorry.';
+      textarea.parentNode.insertBefore(msg, textarea);
+    }
+  }
 });
