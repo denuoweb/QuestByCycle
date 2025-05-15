@@ -176,7 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(e=>alert(e.message));
   });
 
-
   // post a reply
   $('#postReplyBtn').addEventListener('click', () => {
     const id      = $('#submissionDetailModal').dataset.submissionId;
