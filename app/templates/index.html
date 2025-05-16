@@ -111,29 +111,104 @@
 
                     <div class="col-md-6">
                         <div id="whats-happening-step">
-                            <div class="game-item">
-                                <div id="gameNameContainer">
-                                    <h2 id="gameNameHeader">Loading game...</h2>
-                                    <h3>Recent Activity</h3>
-                                </div>
-
-                                {% if current_user.is_admin %}
-                                    <button type="button" class="btn btn-primary mb-2"
-                                            onclick="openModal('shoutBoardModal')">
-                                        New Shout
-                                    </button>
-                                {% endif %}
-                                <div class="shout-messages-container">
-                                    {% set pinned_activities = activities | selectattr('is_pinned') | list %}
-                                    {% if pinned_activities %}
-                                        <div class="pinned-messages-header">
-                                            {% for activity in pinned_activities %}
-                                                <div class="activity pinned message-divider">
+                            <div class="game-item">  
+                                <div id="gameNameContainer">  
+                                    <h2 id="gameNameHeader">Loading game...</h2>  
+                                    <!-- Tab Navigation -->  
+                                    <div class="wh-tab-navigation">
+                                        <button class="wh-tab-button active" data-wh-tab="recent-activity">Recent Activity</button>
+                                        <button class="wh-tab-button"        data-wh-tab="google-calendar">Calendar</button>
+                                    </div>
+                                </div>  
+                                <!-- Recent Activity Tab -->  
+                                <div class="wh-tab-content active" id="wh-recent-activity-tab">
+                                    {% if current_user.is_admin %}
+                                        <button type="button" class="btn btn-primary mb-2"
+                                                onclick="openModal('shoutBoardModal')">
+                                            New Shout
+                                        </button>
+                                    {% endif %}
+                                    <div class="shout-messages-container">
+                                        {% set pinned_activities = activities | selectattr('is_pinned') | list %}
+                                        {% if pinned_activities %}
+                                            <div class="pinned-messages-header">
+                                                {% for activity in pinned_activities %}
+                                                    <div class="activity pinned message-divider">
+                                                        {% if activity.__tablename__ == 'shout_board_message' %}
+                                                            <strong>
+                                                                {{ activity.timestamp.strftime('%m-%d') }} -
+                                                                <a href="javascript:void(0)"
+                                                                onclick="showUserProfileModal('{{ activity.user.id }}')">
+                                                                    {{ activity.user.display_name or activity.user.username }}
+                                                                </a>
+                                                            </strong>
+                                                            <span class="activity-message">
+                                                                {{ activity.message|safe }}
+                                                            </span>
+                                                            {% if current_user.is_admin %}
+                                                                <form action="{{ url_for('main.pin_message',
+                                                                                        game_id=selected_game_id,
+                                                                                        message_id=activity.id) }}"
+                                                                    method="post">
+                                                                    {{ form.hidden_tag() }}
+                                                                    <button type="submit" class="blue_button">
+                                                                        {{ 'Unpin' if activity.is_pinned else 'Pin' }}
+                                                                    </button>
+                                                                </form>
+                                                            {% endif %}
+                                                            <div class="like-section">
+                                                                <button type="button"
+                                                                        class="blue_button like-button"
+                                                                        id="like-button-{{ activity.id }}"
+                                                                        onclick="likeMessage('{{ activity.id }}')">
+                                                                    {{ 'Liked' if activity.liked_by_user else 'Like' }}
+                                                                </button>
+                                                                <span id="like-count-{{ activity.id }}"
+                                                                    class="like-count">
+                                                                    {{ activity.likes|length }}
+                                                                </span>👍
+                                                            </div>
+                                                        {% elif activity.__tablename__ == 'user_quests' %}
+                                                            <strong>
+                                                                {{ activity.completed_at.strftime('%m-%d') }} -
+                                                                <a href="javascript:void(0)"
+                                                                onclick="showUserProfileModal('{{ activity.user.id }}')">
+                                                                    {{ activity.user.display_name or activity.user.username }}
+                                                                </a>
+                                                            </strong>
+                                                            <span class="activity-message">
+                                                                completed a quest
+                                                                <a href="javascript:void(0);"
+                                                                class="quest-title"
+                                                                onclick="openQuestDetailModal('{{ activity.quest.id }}')">
+                                                                    {{ activity.quest.title }}
+                                                                </a>
+                                                            </span>
+                                                            <div class="like-section">
+                                                                <button class="blue_button like-button"
+                                                                        id="like-button-{{ activity.quest.id }}"
+                                                                        onclick="likeQuest('{{ activity.quest.id }}');"
+                                                                        {{ 'disabled' if activity.quest.liked_by_user }}>
+                                                                    {{ 'Liked' if activity.quest.liked_by_user else 'Like' }}
+                                                                </button>
+                                                                <span id="like-count-{{ activity.quest.id }}"
+                                                                    class="like-count">
+                                                                    {{ activity.quest.likes|length }}
+                                                                </span>👍
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="shout-messages">
+                                            {% for activity in activities | rejectattr('is_pinned') %}
+                                                <div class="activity message-divider">
                                                     {% if activity.__tablename__ == 'shout_board_message' %}
                                                         <strong>
                                                             {{ activity.timestamp.strftime('%m-%d') }} -
                                                             <a href="javascript:void(0)"
-                                                               onclick="showUserProfileModal('{{ activity.user.id }}')">
+                                                            onclick="showUserProfileModal('{{ activity.user.id }}')">
                                                                 {{ activity.user.display_name or activity.user.username }}
                                                             </a>
                                                         </strong>
@@ -142,9 +217,9 @@
                                                         </span>
                                                         {% if current_user.is_admin %}
                                                             <form action="{{ url_for('main.pin_message',
-                                                                                     game_id=selected_game_id,
-                                                                                     message_id=activity.id) }}"
-                                                                  method="post">
+                                                                                    game_id=selected_game_id,
+                                                                                    message_id=activity.id) }}"
+                                                                method="post">
                                                                 {{ form.hidden_tag() }}
                                                                 <button type="submit" class="blue_button">
                                                                     {{ 'Unpin' if activity.is_pinned else 'Pin' }}
@@ -159,7 +234,7 @@
                                                                 {{ 'Liked' if activity.liked_by_user else 'Like' }}
                                                             </button>
                                                             <span id="like-count-{{ activity.id }}"
-                                                                  class="like-count">
+                                                                class="like-count">
                                                                 {{ activity.likes|length }}
                                                             </span>👍
                                                         </div>
@@ -167,15 +242,15 @@
                                                         <strong>
                                                             {{ activity.completed_at.strftime('%m-%d') }} -
                                                             <a href="javascript:void(0)"
-                                                               onclick="showUserProfileModal('{{ activity.user.id }}')">
+                                                            onclick="showUserProfileModal('{{ activity.user.id }}')">
                                                                 {{ activity.user.display_name or activity.user.username }}
                                                             </a>
                                                         </strong>
                                                         <span class="activity-message">
                                                             completed a quest
                                                             <a href="javascript:void(0);"
-                                                               class="quest-title"
-                                                               onclick="openQuestDetailModal('{{ activity.quest.id }}')">
+                                                            class="quest-title"
+                                                            onclick="openQuestDetailModal('{{ activity.quest.id }}')">
                                                                 {{ activity.quest.title }}
                                                             </a>
                                                         </span>
@@ -187,7 +262,7 @@
                                                                 {{ 'Liked' if activity.quest.liked_by_user else 'Like' }}
                                                             </button>
                                                             <span id="like-count-{{ activity.quest.id }}"
-                                                                  class="like-count">
+                                                                class="like-count">
                                                                 {{ activity.quest.likes|length }}
                                                             </span>👍
                                                         </div>
@@ -195,77 +270,15 @@
                                                 </div>
                                             {% endfor %}
                                         </div>
-                                    {% endif %}
-                                    <div class="shout-messages">
-                                        {% for activity in activities | rejectattr('is_pinned') %}
-                                            <div class="activity message-divider">
-                                                {% if activity.__tablename__ == 'shout_board_message' %}
-                                                    <strong>
-                                                        {{ activity.timestamp.strftime('%m-%d') }} -
-                                                        <a href="javascript:void(0)"
-                                                           onclick="showUserProfileModal('{{ activity.user.id }}')">
-                                                            {{ activity.user.display_name or activity.user.username }}
-                                                        </a>
-                                                    </strong>
-                                                    <span class="activity-message">
-                                                        {{ activity.message|safe }}
-                                                    </span>
-                                                    {% if current_user.is_admin %}
-                                                        <form action="{{ url_for('main.pin_message',
-                                                                                 game_id=selected_game_id,
-                                                                                 message_id=activity.id) }}"
-                                                              method="post">
-                                                            {{ form.hidden_tag() }}
-                                                            <button type="submit" class="blue_button">
-                                                                {{ 'Unpin' if activity.is_pinned else 'Pin' }}
-                                                            </button>
-                                                        </form>
-                                                    {% endif %}
-                                                    <div class="like-section">
-                                                        <button type="button"
-                                                                class="blue_button like-button"
-                                                                id="like-button-{{ activity.id }}"
-                                                                onclick="likeMessage('{{ activity.id }}')">
-                                                            {{ 'Liked' if activity.liked_by_user else 'Like' }}
-                                                        </button>
-                                                        <span id="like-count-{{ activity.id }}"
-                                                              class="like-count">
-                                                            {{ activity.likes|length }}
-                                                        </span>👍
-                                                    </div>
-                                                {% elif activity.__tablename__ == 'user_quests' %}
-                                                    <strong>
-                                                        {{ activity.completed_at.strftime('%m-%d') }} -
-                                                        <a href="javascript:void(0)"
-                                                           onclick="showUserProfileModal('{{ activity.user.id }}')">
-                                                            {{ activity.user.display_name or activity.user.username }}
-                                                        </a>
-                                                    </strong>
-                                                    <span class="activity-message">
-                                                        completed a quest
-                                                        <a href="javascript:void(0);"
-                                                           class="quest-title"
-                                                           onclick="openQuestDetailModal('{{ activity.quest.id }}')">
-                                                            {{ activity.quest.title }}
-                                                        </a>
-                                                    </span>
-                                                    <div class="like-section">
-                                                        <button class="blue_button like-button"
-                                                                id="like-button-{{ activity.quest.id }}"
-                                                                onclick="likeQuest('{{ activity.quest.id }}');"
-                                                                {{ 'disabled' if activity.quest.liked_by_user }}>
-                                                            {{ 'Liked' if activity.quest.liked_by_user else 'Like' }}
-                                                        </button>
-                                                        <span id="like-count-{{ activity.quest.id }}"
-                                                              class="like-count">
-                                                            {{ activity.quest.likes|length }}
-                                                        </span>👍
-                                                    </div>
-                                                {% endif %}
-                                            </div>
-                                        {% endfor %}
                                     </div>
                                 </div>
+                                <!-- Google Calendar Tab -->  
+                                <div class="wh-tab-content" id="wh-google-calendar-tab">  
+                                    <div class="calendar-container">  
+                                        <iframe src="https://calendar.google.com/calendar/embed?src=7641f437a33113e72a9539618fefdb4275bbdc56bcd8090e8598383398dd1bab@group.calendar.google.com&ctz=America%2FLos_Angeles"   
+                                                style="border: 0" width="100%" height="350" frameborder="0" scrolling="no"></iframe>  
+                                    </div>  
+                                </div>  
                             </div>
                         </div>
                     </div>

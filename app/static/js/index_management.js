@@ -277,3 +277,29 @@ document.addEventListener('DOMContentLoaded', () => {
   if (searchBox)   searchBox  .addEventListener('input',  filterQuests);
   if (categorySel) categorySel.addEventListener('change', filterQuests);
 });
+
+/* ---------------------------------------------------------
+   Tab switching – scoped to the What’s-Happening widget
+--------------------------------------------------------- */
+document.addEventListener('DOMContentLoaded', () => {
+  /* locate the widget once – prevents multiple event installs */
+  const widget = document.querySelector('#whats-happening-step');
+  if (!widget) return;                   // defensive
+
+  const tabButtons  = widget.querySelectorAll('.wh-tab-button');
+  const tabContents = widget.querySelectorAll('.wh-tab-content');
+
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-wh-tab');
+
+      /* reset only inside this widget */
+      tabButtons .forEach(b => b.classList.remove('active'));
+      tabContents.forEach(c => c.classList.remove('active'));
+
+      /* activate the chosen tab */
+      btn.classList.add('active');
+      widget.querySelector(`#wh-${target}-tab`).classList.add('active');
+    });
+  });
+});
