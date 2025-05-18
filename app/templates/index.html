@@ -342,7 +342,13 @@
                                 >
                                 View
                                 </button>
-                                <span class="quest-title">{{ quest.title }}</span>
+                                    <a
+                                        href="javascript:void(0)"
+                                        class="quest-title text-decoration-none ms-2"
+                                        onclick="openQuestDetailModal('{{ quest.id }}')"
+                                        >
+                                        {{ quest.title }}
+                                        </a>
                             </td>
                             <td style="text-align:center;">{{ quest.personal_completions }}</td>
                             <td style="text-align:center;">{{ quest.total_completions }}</td>
