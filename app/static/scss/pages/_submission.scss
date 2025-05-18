@@ -70,18 +70,6 @@
     align-items: center;
     text-decoration: none;
   }
-
-  .btn-icon {
-    background: none;
-    border: none;
-    font-size: 1.4rem;
-    color: #777;
-    transition: color .2s;
-    &:hover,
-    &.active {
-      color: #e25555;
-    }
-  }
 }
 
 // ── TWO-COLUMN BODY ──
@@ -144,5 +132,37 @@
   margin: 0 .5rem;
   &:hover {
     text-decoration: underline;
+  }
+}
+
+// ── SUBMISSION DETAIL MODAL OVERRIDES ──
+#submissionDetailModal {
+  .modal-header {
+    .btn-icon {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      transition: color .2s;
+
+      // target the icon itself
+      .fa-heart {
+        // Unliked: Bootstrap primary blue
+        color: #0d6efd;
+      }
+
+      // When the button has .active, recolor the <i>
+      &.active {
+        .fa-heart {
+          color: #dc3545;
+        }
+      }
+
+      // optional: change hover on unliked
+      &:not(.active):hover {
+        .fa-heart {
+          color: darken(#0d6efd, 10%);
+        }
+      }
+    }
   }
 }
