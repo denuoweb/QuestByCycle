@@ -43,13 +43,11 @@
           <div id="forgotContainer" class="mt-1"></div>
         </div>
 
-        <div class="form-group">
-          <div class="d-inline-flex align-items-center" style="gap: .5rem;">
-            {{ login_form.remember_me(class="form-check-input", style="width:auto;") }}
-            <label class="form-check-label" for="{{ login_form.remember_me.id }}">
-              Remember Me
-            </label>
-          </div>
+        <div class="form-check form-check-inline">
+          {{ login_form.remember_me(class="form-check-input") }}
+          <label class="form-check-label" for="{{ login_form.remember_me.id }}">
+            Remember Me
+          </label>
         </div>
 
         <div class="form-group">
