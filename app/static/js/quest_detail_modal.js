@@ -17,10 +17,6 @@ const CSRF_TOKEN      = meta('csrf-token');
 function openQuestDetailModal(questId) {
   resetModalContent();
 
-  const flashes = document.getElementById('flash-messages-data');
-  const modalFlashes = document.getElementById('modal-flash-messages');
-  if (flashes && modalFlashes) modalFlashes.innerHTML = flashes.innerHTML;
-
   fetch(`/quests/detail/${questId}/user_completion`, { credentials: 'same-origin' })
     .then(r => r.json())
     .then(data => {

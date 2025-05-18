@@ -71,6 +71,16 @@
 </head>
 
 <body data-user-id="{{ current_user.id if current_user.is_authenticated else 'none' }}">
+
+<!-- Flash Overlay Modal (in layout.html) -->
+<div id="flash-overlay">
+  <div class="flash-modal">
+    <button type="button" class="flash-close" aria-label="Close">&times;</button>
+    <div class="flash-content"></div>
+    <button type="button" class="flash-ok-btn">OK</button>
+  </div>
+</div>
+
 <!-- BEGIN: Navbar -->
 <!-- Use navbar-expand-xxl so that below 1400px the hamburger menu is used -->
 <nav class="navbar navbar-expand-xxl">
@@ -278,8 +288,13 @@
     </p>
   </div>
 </footer>
+<div id="flash-data"
+     data-messages='{{ get_flashed_messages(with_categories=true) | tojson }}'>
+</div>
 
 <script src="{{ url_for('static', filename='js/layout.js') }}" defer></script>
+
+<script src="{{ url_for('static', filename='js/flash_modal.js') }}" defer></script>
 
 </body>
 </html>

@@ -11,18 +11,6 @@
                  alt="Welcome to Quest by Cycle"
                  class="img-fluid w-100 hero-image">
         </div>
-        <div id="flash-messages" style="display: none;">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div id="flash-messages-data">
-                        {% for category, message in messages %}
-                            <div class="flash-message {{ category }}">{{ message }}</div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% endwith %}
-        </div>
-        <div id="modal-flash-messages"></div>
         <div class="row mb-5 align-items-center">
             <div class="col-md-6">
                 <div class="card earth-day-card">
@@ -65,28 +53,11 @@
                 </div>
             </div>
         {% endif %}
-
         {% if current_user.is_authenticated %}
             <div class="col-12">
                 <div class="row">
                     {% if profile %}
                         <div class="col-md-6 mb-4">
-                            <div id="flash-messages" class="flash-messages-container">
-                                {% with messages = get_flashed_messages(with_categories=true) %}
-                                    {% if messages %}
-                                        <div id="flash-messages-data">
-                                            {% for category, message in messages %}
-                                                <div class="flash-message {{ category }}">
-                                                    <i class="fas fa-info-circle"></i>
-                                                    <span>{{ message }}</span>
-                                                </div>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                {% endwith %}
-                            </div>
-                            <div id="modal-flash-messages"></div>
-
                             <div id="profileView"
                                  class="card mb-4 w-100 profile-view epic-profile-container text-center">
                                 <div class="text-center">
