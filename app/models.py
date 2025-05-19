@@ -478,28 +478,6 @@ class ShoutBoardMessage(db.Model):
         db.DateTime, index=True, default=lambda: datetime.now(utc)
     )
     is_pinned = db.Column(db.Boolean, default=False)
-    likes = db.relationship(
-        'ShoutBoardLike', backref='message',
-        cascade="all, delete-orphan"
-    )
-
-
-class ShoutBoardLike(db.Model):
-    """Model representing a like on a shout board message."""
-    id = db.Column(db.Integer, primary_key=True)
-    message_id = db.Column(
-        db.Integer,
-        db.ForeignKey('shout_board_message.id', ondelete='CASCADE'),
-        nullable=False
-    )
-    user_id = db.Column(
-        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'),
-        nullable=False
-    )
-
-    __table_args__ = (
-        db.UniqueConstraint('message_id', 'user_id', name='_message_user_uc'),
-    )
 
 
 class QuestSubmission(db.Model):

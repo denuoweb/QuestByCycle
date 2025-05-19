@@ -127,18 +127,7 @@
                                                                     </button>
                                                                 </form>
                                                             {% endif %}
-                                                            <div class="like-section">
-                                                                <button type="button"
-                                                                        class="blue_button like-button"
-                                                                        id="like-button-{{ activity.id }}"
-                                                                        onclick="likeMessage('{{ activity.id }}')">
-                                                                    {{ 'Liked' if activity.liked_by_user else 'Like' }}
-                                                                </button>
-                                                                <span id="like-count-{{ activity.id }}"
-                                                                    class="like-count">
-                                                                    {{ activity.likes|length }}
-                                                                </span>👍
-                                                            </div>
+
                                                         {% elif activity.__tablename__ == 'user_quests' %}
                                                             <strong>
                                                                 {{ activity.completed_at.strftime('%m-%d') }} -
@@ -155,18 +144,6 @@
                                                                     {{ activity.quest.title }}
                                                                 </a>
                                                             </span>
-                                                            <div class="like-section">
-                                                                <button class="blue_button like-button"
-                                                                        id="like-button-{{ activity.quest.id }}"
-                                                                        onclick="likeQuest('{{ activity.quest.id }}');"
-                                                                        {{ 'disabled' if activity.quest.liked_by_user }}>
-                                                                    {{ 'Liked' if activity.quest.liked_by_user else 'Like' }}
-                                                                </button>
-                                                                <span id="like-count-{{ activity.quest.id }}"
-                                                                    class="like-count">
-                                                                    {{ activity.quest.likes|length }}
-                                                                </span>👍
-                                                            </div>
                                                         {% endif %}
                                                     </div>
                                                 {% endfor %}
@@ -197,18 +174,6 @@
                                                                 </button>
                                                             </form>
                                                         {% endif %}
-                                                        <div class="like-section">
-                                                            <button type="button"
-                                                                    class="blue_button like-button"
-                                                                    id="like-button-{{ activity.id }}"
-                                                                    onclick="likeMessage('{{ activity.id }}')">
-                                                                {{ 'Liked' if activity.liked_by_user else 'Like' }}
-                                                            </button>
-                                                            <span id="like-count-{{ activity.id }}"
-                                                                class="like-count">
-                                                                {{ activity.likes|length }}
-                                                            </span>👍
-                                                        </div>
                                                     {% elif activity.__tablename__ == 'user_quests' %}
                                                         <strong>
                                                             {{ activity.completed_at.strftime('%m-%d') }} -
@@ -225,18 +190,6 @@
                                                                 {{ activity.quest.title }}
                                                             </a>
                                                         </span>
-                                                        <div class="like-section">
-                                                            <button class="blue_button like-button"
-                                                                    id="like-button-{{ activity.quest.id }}"
-                                                                    onclick="likeQuest('{{ activity.quest.id }}');"
-                                                                    {{ 'disabled' if activity.quest.liked_by_user }}>
-                                                                {{ 'Liked' if activity.quest.liked_by_user else 'Like' }}
-                                                            </button>
-                                                            <span id="like-count-{{ activity.quest.id }}"
-                                                                class="like-count">
-                                                                {{ activity.quest.likes|length }}
-                                                            </span>👍
-                                                        </div>
                                                     {% endif %}
                                                 </div>
                                             {% endfor %}

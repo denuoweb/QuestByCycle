@@ -21,7 +21,7 @@ from datetime import datetime, timedelta
 from PIL import Image, ExifTags
 from pytz import utc
 from app.models import (db, Game, User, Quest, Badge, UserQuest, QuestSubmission,
-                        QuestLike, ShoutBoardMessage, ShoutBoardLike, ProfileWallMessage,
+                        QuestLike, ShoutBoardMessage, ProfileWallMessage,
                         user_games)
 from app.forms import (ProfileForm, ShoutBoardForm, ContactForm, BikeForm,
                        LoginForm, RegistrationForm, ForgotPasswordForm, ResetPasswordForm)
@@ -491,8 +491,6 @@ def shout_board_messages(game_id):
               'id': m.user.id,
               'display_name': m.user.display_name or m.user.username
             },
-            'like_count': len(m.likes),
-            'liked_by_user': any(l.user_id == current_user.id for l in m.likes),
             'is_pinned': True
         } for m in pinned_q]
 
@@ -509,8 +507,6 @@ def shout_board_messages(game_id):
           'id': m.user.id,
           'display_name': m.user.display_name or m.user.username
         },
-        'like_count': len(m.likes),
-        'liked_by_user': any(l.user_id == current_user.id for l in m.likes),
         'is_pinned': False
     } for m in paginated.items]
 
@@ -520,26 +516,6 @@ def shout_board_messages(game_id):
         'has_next': paginated.has_next
     })
 
-
-@main_bp.route('/like-message/<int:message_id>', methods=['POST'])
-@login_required
-def like_message(message_id):
-    """
-    Process a like action on a shout board message.
-    """
-    message = ShoutBoardMessage.query.get_or_404(message_id)
-    already_liked = ShoutBoardLike.query.filter_by(user_id=current_user.id, message_id=message.id).first() is not None
-
-    if not already_liked:
-        new_like = ShoutBoardLike(user_id=current_user.id, message_id=message.id)
-        db.session.add(new_like)
-        db.session.commit()
-        success = True
-    else:
-        success = False
-
-    new_like_count = ShoutBoardLike.query.filter_by(message_id=message_id).count()
-    return jsonify(success=success, new_like_count=new_like_count, already_liked=already_liked)
 
 
 @main_bp.route('/leaderboard_partial')
@@ -795,27 +771,6 @@ def edit_bike(user_id):
         for error in errors:
             logger.debug('Error in the %s field - %s', field, error)
     return
-
-
-@main_bp.route('/like_quest/<int:quest_id>', methods=['POST'])
-@login_required
-def like_quest(quest_id):
-    """
-    Process a like action on a quest.
-    """
-    quest = Quest.query.get_or_404(quest_id)
-    already_liked = QuestLike.query.filter_by(user_id=current_user.id, quest_id=quest.id).first() is not None
-
-    if not already_liked:
-        new_like = QuestLike(user_id=current_user.id, quest_id=quest.id)
-        db.session.add(new_like)
-        db.session.commit()
-        success = True
-    else:
-        success = False
-
-    new_like_count = QuestLike.query.filter_by(quest_id=quest.id).count()
-    return jsonify(success=success, new_like_count=new_like_count, already_liked=already_liked)
 
 
 @main_bp.route('/pin_message/<int:game_id>/<int:message_id>', methods=['POST'])
