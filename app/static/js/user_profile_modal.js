@@ -1,59 +1,3 @@
-function initializeQuill() {
-  const editorElement = document.getElementById('editor');
-  if (!editorElement) {
-    console.error('Quill editor container not found');
-    return;
-  }
-
-  const quill = new Quill('#editor', {
-    theme: 'snow',
-    placeholder: 'Write your message here...',
-    modules: {
-      toolbar: [
-        [{ header: [1, 2, false] }],
-        ['bold', 'italic', 'underline'],
-        ['link', 'blockquote', 'code-block'],
-        [{ list: 'ordered' }, { list: 'bullet' }]
-      ]
-    }
-  });
-
-  const form = document.getElementById('messageForm');
-  form.onsubmit = function(event) {
-    event.preventDefault();
-    const messageContent = document.querySelector('input[name=content]');
-    messageContent.value = quill.root.innerHTML;
-    postMessage(form);
-  };
-}
-
-function postMessage(form) {
-  const formData = new FormData(form);
-  const messageContent = formData.get('content');
-
-  fetch(`/profile/${form.dataset.userid}/messages`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-    },
-    body: JSON.stringify({ content: messageContent })
-  })
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) {
-        alert(`Error: ${data.error}`);
-      } else {
-        alert('Message posted successfully.');
-        showUserProfileModal(form.dataset.userid);
-      }
-    })
-    .catch(err => {
-      console.error('Error posting message:', err);
-      alert('Failed to post message. Please try again.');
-    });
-}
-
 function showUserProfileModal(userId) {
   fetch(`/profile/${userId}`)
     .then(r => r.json())
@@ -70,14 +14,6 @@ function showUserProfileModal(userId) {
       }
 
       const isCurrent = data.current_user_id === data.user.id;
-      const messagesHtml = buildMessageTree(
-        data.profile_messages,
-        null,
-        isCurrent,
-        data.current_user_id,
-        userId,
-        0
-      );
 
       container.innerHTML = `
         <header class="profile-header text-center py-5 mb-4 position-relative bg-gradient-primary">
@@ -347,8 +283,7 @@ function showUserProfileModal(userId) {
         btn.textContent = following ? 'Unfollow' : 'Follow';
       };
 
-      // initialize Quill & show modal
-      initializeQuill();
+      // Show modal
       document.getElementById('userProfileModal').classList.add('active','user-profile-modal');
       openModal('userProfileModal');
     })
@@ -451,80 +386,6 @@ function saveBike(userId) {
     });
 }
 
-// Recursively builds message threads
-function buildMessageTree(messages, parentId, isCurrentUser, currentUserId, profileUserId, depth) {
-  if (depth > 3) return '';
-  return messages
-    .filter(m => m.parent_id === parentId)
-    .map(message => {
-      const replies = buildMessageTree(messages, message.id, isCurrentUser, currentUserId, profileUserId, depth + 1);
-      const canReply = depth < 2 && (
-        currentUserId === profileUserId ||
-        currentUserId === message.author_id ||
-        currentUserId === message.user_id ||
-        (message.parent_id && currentUserId === messages.find(x => x.id === message.parent_id).author_id)
-      );
-      const canDelete = currentUserId === message.author_id || currentUserId === profileUserId;
-      const displayName = message.author.display_name || message.author.username;
-
-      return `
-        <li class="list-group-item ${message.parent_id ? 'reply-message' : ''}" data-messageid="${message.id}">
-          <div class="message-content">${message.content}</div>
-          <small>Posted by ${displayName} on ${message.timestamp}</small>
-          ${message.author_id === currentUserId ? `
-            <div class="mt-2">
-              <button class="btn btn-secondary btn-sm" onclick="editMessage(${message.id}, ${currentUserId})">Edit</button>
-            </div>` : ''}
-          ${canDelete ? `
-            <button class="btn btn-danger btn-sm mt-2" onclick="deleteMessage(${message.id}, ${profileUserId})">Delete</button>` : ''}
-          ${canReply ? `
-            <button class="btn btn-sm btn-primary mt-2" onclick="showReplyForm(${message.id}, ${profileUserId})">Reply</button>
-            <form id="replyForm-${message.id}" class="reply-form mt-2 d-none" data-messageid="${message.id}">
-              <div class="form-group">
-                <textarea class="form-control" name="replyContent" rows="3"></textarea>
-              </div>
-              <button type="button" class="btn btn-primary" onclick="postReply(${profileUserId}, ${message.id})">Submit Reply</button>
-            </form>` : ''}
-          <ul class="list-group mt-2">
-            ${replies}
-          </ul>
-        </li>
-      `;
-    })
-    .join('');
-}
-
-function showReplyForm(messageId, profileUserId) {
-  const form = document.getElementById(`replyForm-${messageId}`);
-  form.classList.toggle('d-none');
-  form.dataset.profileUserId = profileUserId;
-}
-
-function postReply(profileUserId, messageId) {
-  const replyForm = document.querySelector(`#replyForm-${messageId}`);
-  const replyContent = replyForm.querySelector('textarea[name=replyContent]').value;
-  fetch(`/profile/${profileUserId}/messages/${messageId}/reply`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-    },
-    body: JSON.stringify({ content: replyContent })
-  })
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) {
-        alert(`Error: ${data.error}`);
-      } else {
-        alert('Reply posted successfully.');
-        showUserProfileModal(profileUserId);
-      }
-    })
-    .catch(err => {
-      console.error('Error posting reply:', err);
-      alert('Failed to post reply. Please try again.');
-    });
-}
 
 function deleteSubmission(submissionId, context, userId) {
   fetch(`/quests/quest/delete_submission/${submissionId}`, {
@@ -578,72 +439,5 @@ function deleteAccount() {
     .catch(err => {
       console.error('Error deleting account:', err);
       alert('Failed to delete account. Please try again.');
-    });
-}
-
-function editMessage(messageId, userId) {
-  const messageElement = document.querySelector(`li[data-messageid="${messageId}"]`);
-  const messageContentElement = messageElement.querySelector('.message-content');
-  const currentContent = messageContentElement.innerHTML;
-
-  messageContentElement.innerHTML = `
-    <textarea class="form-control">${currentContent}</textarea>
-    <button class="btn btn-primary mt-2" onclick="saveMessage(${messageId}, ${userId})">Save</button>
-    <button class="btn btn-secondary mt-2" onclick="cancelEditMessage(${messageId}, '${currentContent}')">Cancel</button>
-  `;
-}
-
-function saveMessage(messageId, userId) {
-  const messageElement = document.querySelector(`li[data-messageid="${messageId}"]`);
-  const textArea = messageElement.querySelector('textarea');
-  const newContent = textArea.value;
-
-  fetch(`/profile/${userId}/messages/${messageId}/edit`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-    },
-    body: JSON.stringify({ content: newContent })
-  })
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) {
-        alert(`Error: ${data.error}`);
-      } else {
-        alert('Message updated successfully.');
-        showUserProfileModal(userId);
-      }
-    })
-    .catch(err => {
-      console.error('Error updating message:', err);
-      alert('Failed to update message. Please try again.');
-    });
-}
-
-function cancelEditMessage(messageId, originalContent) {
-  const messageElement = document.querySelector(`li[data-messageid="${messageId}"] .message-content`);
-  messageElement.innerHTML = originalContent;
-}
-
-function deleteMessage(messageId, userId) {
-  fetch(`/profile/${userId}/messages/${messageId}/delete`, {
-    method: 'POST',
-    headers: {
-      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-    }
-  })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        alert('Message deleted successfully.');
-        showUserProfileModal(userId);
-      } else {
-        throw new Error(data.error);
-      }
-    })
-    .catch(err => {
-      console.error('Error deleting message:', err);
-      alert('Error during deletion: ' + err.message);
     });
 }
