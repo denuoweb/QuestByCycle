@@ -20,8 +20,6 @@ function openModal(modalId) {
   if (backdrop) {
     backdrop.style.display = 'block';
     backdrop.style.zIndex   = topZIndex - 1;
-  } else {
-    console.warn('No .modal-backdrop found inside', modalId);
   }
 
   document.body.classList.add('body-no-scroll');
