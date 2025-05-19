@@ -268,83 +268,78 @@ function showUserProfileModal(userId) {
           </div> <!-- /.tab-content -->
         </div> <!-- /.row -->
       `;
+      // 2) Set modal title
       const modalTitle = document.getElementById('userProfileModalLabel');
       modalTitle.textContent = `${data.user.display_name || data.user.username}'s Profile`;
 
-      let following = data.current_user_following;
+      // 2.1) Reset Follow button visibility
       const btn = document.getElementById('followBtn');
-
-      // Helper: update button text & styling based on `following`
-      function updateFollowButton() {
-        if (following) {
-          // Currently following → show 'Following' with outline style
-          btn.textContent = 'Following';
-          btn.classList.remove('btn-primary');
-          btn.classList.add('btn-outline-primary');
-        } else {
-          // Not following → show 'Follow' with filled primary style
-          btn.textContent = 'Follow';
-          btn.classList.remove('btn-outline-primary');
-          btn.classList.add('btn-primary');
-        }
+      if (btn) {
+        btn.style.display = '';      // undo any previous 'display:none'
       }
 
-      // Initialize appearance
-      updateFollowButton();
+      // 3) Follow/Unfollow button logic
+      if (!isCurrent && btn) {
+        if (btn) {
+          btn.style.display = '';       // clear any previous 'none'
+          btn.classList.remove('d-none'); // just in case you ever use that
+        }
+        let following = data.current_user_following;
 
-      // Attach click handler
-      btn.onclick = async () => {
-        const token = document
-          .querySelector('meta[name="csrf-token"]')
-          .getAttribute('content');
+        function updateFollowButton() {
+          if (following) {
+            btn.textContent = 'Following';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline-primary');
+          } else {
+            btn.textContent = 'Follow';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-primary');
+          }
+        }
 
-        // Flip the follow state on the server
-        const action = following ? 'unfollow' : 'follow';
-        const response = await fetch(
-          `/profile/${data.user.username}/${action}`, {
+        updateFollowButton();
+        btn.onclick = async () => {
+          const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+          const action = following ? 'unfollow' : 'follow';
+          const res = await fetch(`/profile/${data.user.username}/${action}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'X-CSRFToken': token
             },
             credentials: 'same-origin'
+          });
+
+          if (!res.ok) {
+            console.error('Follow toggle failed:', await res.text());
+            return;
           }
-        );
+          following = !following;
+          updateFollowButton();
+        };
+      } else {
+        // Hide on your own profile
+        const btn = document.getElementById('followBtn');
+        if (btn) btn.style.display = 'none';
+      }
 
-        if (!response.ok) {
-          console.error('Follow toggle failed:', await response.text());
-          return;
-        }
-
-        // Toggle local state and update UI
-        following = !following;
-        updateFollowButton();
-      };
-
-      // 5) Show modal
-      const modalEl = document.getElementById('userProfileModal');
-      modalEl.classList.add('active','user-profile-modal');
-      openModal('userProfileModal')
+      // 4) Small-screen <select> ↔ tabs synchronization
+      openModal('userProfileModal');
       const tabSelect = document.getElementById('profileTabSelect');
       if (tabSelect) {
-        // When user picks from the dropdown, show that pane
         tabSelect.addEventListener('change', e => {
           const paneId = e.target.value;
-          const trigger = document.querySelector(
-            `#profileTabs a[href="#${paneId}"]`
-          );
+          const trigger = document.querySelector(`#profileTabs a[href="#${paneId}"]`);
           if (trigger) new bootstrap.Tab(trigger).show();
         });
-
-        // When user clicks a real tab (SM+), update the dropdown
         document.querySelectorAll('#profileTabs a[data-bs-toggle="tab"]')
           .forEach(a => {
             a.addEventListener('shown.bs.tab', evt => {
-              const id = evt.target.getAttribute('href').substring(1);
-              tabSelect.value = id;
+              tabSelect.value = evt.target.getAttribute('href').slice(1);
             });
           });
-      };
+      }
     })
     .catch(err => {
       console.error('Failed to load profile:', err);
