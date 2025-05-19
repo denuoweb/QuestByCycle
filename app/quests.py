@@ -50,6 +50,7 @@ from .models import (
     User, UserQuest, SubmissionLike, SubmissionReply,
     Notification
 )
+from pytz import utc
 
 quests_bp = Blueprint("quests", __name__, template_folder="templates")
 
@@ -199,7 +200,7 @@ def submit_quest(quest_id):
     """
     quest = Quest.query.get_or_404(quest_id)
     game = Game.query.get_or_404(quest.game_id)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(utc)
 
     # Check if the quest is within game dates.
     if game.start_date > now or now > game.end_date:
@@ -716,7 +717,7 @@ def submit_photo(quest_id):
     form = PhotoForm()
     quest = Quest.query.get_or_404(quest_id)
     game = Game.query.get_or_404(quest.game_id)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(utc)
 
     if not quest.enabled:
         flash("This quest is not enabled.", "error")

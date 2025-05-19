@@ -340,10 +340,13 @@ def index(game_id, quest_id, user_id):
     all_custom = Game.query.filter(
         Game.custom_game_code.isnot(None),
         Game.is_public.is_(True),
-        Game.is_demo.is_(False)
+        Game.is_demo.is_(False),
+        Game.start_date <= now,
+        (Game.end_date.is_(None) | (Game.end_date >= now))
     ).all()
-    open_games = [g for g in all_custom if g.start_date <= now and (not g.end_date or g.end_date >= now)]
-    closed_games = [g for g in all_custom if g.end_date and g.end_date < now]
+
+    open_games   = all_custom
+    closed_games = []  # or another query if you really need it
 
     # Ongoing demo for UI context
     demo_game = (Game.query
