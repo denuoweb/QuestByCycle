@@ -16,13 +16,24 @@ function showUserProfileModal(userId) {
 
       const isCurrent = data.current_user_id === data.user.id;
 
-      // ) Render tabs & panes into #userProfileDetails
+      // Render tabs & panes into #userProfileDetails
       detailsContainer.innerHTML = `
-        <div class="row g-4">
-          <ul class="nav nav-tabs epic-tabs" id="profileTabs" role="tablist">
+          <!-- XS: native select dropdown -->
+          <div class="d-block d-sm-none mb-3">
+            <select id="profileTabSelect" class="form-select">
+              <option value="profile" selected>Profile</option>
+              <option value="bike">Bike</option>
+              <option value="badges-earned">Badges Earned</option>
+              <option value="games-participated">Games Participated</option>
+              <option value="quest-submissions">Quest Submissions</option>
+            </select>
+          </div>
+
+          <!-- SM+ nav-tabs (will scroll horizontally) -->
+          <ul class="nav nav-tabs epic-tabs d-none d-sm-flex" id="profileTabs" role="tablist">
             <li class="nav-item" role="presentation">
               <a class="nav-link active" id="profile-tab" data-bs-toggle="tab"
-                 href="#profile" role="tab" aria-controls="profile" aria-selected="true">
+                href="#profile" role="tab" aria-controls="profile" aria-selected="true">
                 <i class="bi bi-person-circle me-2"></i>Profile
               </a>
             </li>
@@ -59,6 +70,12 @@ function showUserProfileModal(userId) {
               <section class="profile mb-4">
                 ${isCurrent ? `
                   <div id="profileViewMode">
+                    ${data.user.profile_picture ? `
+                      <div class="profile-picture-container position-relative mx-auto mb-3">
+                        <img src="/static/${data.user.profile_picture}"
+                            class="profile-picture rounded-circle shadow-lg border border-white border-4"
+                            alt="Profile Picture">
+                      </div>` : ''}
                     <p><strong>Display Name:</strong> ${data.user.display_name || ''}</p>
                     <p><strong>Age Group:</strong> ${data.user.age_group || ''}</p>
                     <p><strong>Interests:</strong> ${data.user.interests || ''}</p>
@@ -67,7 +84,7 @@ function showUserProfileModal(userId) {
                     <button class="btn btn-primary" onclick="toggleProfileEditMode()">Edit</button>
                   </div>
                   <div id="profileEditMode" class="d-none">
-                    <form id="editProfileForm" enctype="multipart/form-data" class="needs-validation" novalidate>
+                    <form id="editProfileForm" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
                       <div class="form-group mb-3">
                         <label for="profilePictureInput">Profile Picture:</label>
                         <input type="file" class="form-control" id="profilePictureInput"
@@ -121,7 +138,7 @@ function showUserProfileModal(userId) {
                         <label class="form-check-label" for="uploadToMastodon">Cross post to your federation server?</label>
                       </div>
                       <div class="d-flex justify-content-between">
-                        <button class="btn btn-success" onclick="saveProfile(${userId})">
+                        <button type="button" class="btn btn-success" onclick="saveProfile(${userId})">
                           <i class="bi bi-save me-2"></i>Save Profile
                         </button>
                         <button class="btn btn-secondary" onclick="toggleProfileEditMode()">Cancel</button>
@@ -140,11 +157,16 @@ function showUserProfileModal(userId) {
                       </button>
                     </form>
                   </div>` : `
-                  <p><strong>Display Name:</strong> ${data.user.display_name || ''}</p>
-                  <p><strong>Age Group:</strong> ${data.user.age_group || ''}</p>
-                  <p><strong>Interests:</strong> ${data.user.interests || ''}</p>
-                  <p><strong>Riding Preferences:</strong> ${data.user.riding_preferences.join(', ')}</p>
-                  <p><strong>Ride Description:</strong> ${data.user.ride_description || ''}</p>
+                  <div id="profileViewMode">
+                    <p><img src="/static/${data.user.profile_picture}"
+                        class="profile-picture rounded-circle shadow-lg border border-white border-4 w-50"
+                        alt="Profile Picture"></p>
+                    <p><strong>Display Name:</strong> ${data.user.display_name || ''}</p>
+                    <p><strong>Age Group:</strong> ${data.user.age_group || ''}</p>
+                    <p><strong>Interests:</strong> ${data.user.interests || ''}</p>
+                    <p><strong>Riding Preferences:</strong> ${data.user.riding_preferences.join(', ')}</p>
+                    <p><strong>Ride Description:</strong> ${data.user.ride_description || ''}</p>
+                  </div>
                 `}
               </section>
             </div>
@@ -249,15 +271,37 @@ function showUserProfileModal(userId) {
       const modalTitle = document.getElementById('userProfileModalLabel');
       modalTitle.textContent = `${data.user.display_name || data.user.username}'s Profile`;
 
-      // 4) Wire up Follow/Unfollow
       let following = data.current_user_following;
       const btn = document.getElementById('followBtn');
-      btn.textContent = following ? 'Following' : 'Follow';
+
+      // Helper: update button text & styling based on `following`
+      function updateFollowButton() {
+        if (following) {
+          // Currently following → show 'Following' with outline style
+          btn.textContent = 'Following';
+          btn.classList.remove('btn-primary');
+          btn.classList.add('btn-outline-primary');
+        } else {
+          // Not following → show 'Follow' with filled primary style
+          btn.textContent = 'Follow';
+          btn.classList.remove('btn-outline-primary');
+          btn.classList.add('btn-primary');
+        }
+      }
+
+      // Initialize appearance
+      updateFollowButton();
+
+      // Attach click handler
       btn.onclick = async () => {
-        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        await fetch(
-          `/profile/${data.user.username}/${following ? 'unfollow' : 'follow'}`,
-          {
+        const token = document
+          .querySelector('meta[name="csrf-token"]')
+          .getAttribute('content');
+
+        // Flip the follow state on the server
+        const action = following ? 'unfollow' : 'follow';
+        const response = await fetch(
+          `/profile/${data.user.username}/${action}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -266,14 +310,41 @@ function showUserProfileModal(userId) {
             credentials: 'same-origin'
           }
         );
+
+        if (!response.ok) {
+          console.error('Follow toggle failed:', await response.text());
+          return;
+        }
+
+        // Toggle local state and update UI
         following = !following;
-        btn.textContent = following ? 'Unfollow' : 'Follow';
+        updateFollowButton();
       };
 
       // 5) Show modal
       const modalEl = document.getElementById('userProfileModal');
       modalEl.classList.add('active','user-profile-modal');
-      openModal('userProfileModal');
+      openModal('userProfileModal')
+      const tabSelect = document.getElementById('profileTabSelect');
+      if (tabSelect) {
+        // When user picks from the dropdown, show that pane
+        tabSelect.addEventListener('change', e => {
+          const paneId = e.target.value;
+          const trigger = document.querySelector(
+            `#profileTabs a[href="#${paneId}"]`
+          );
+          if (trigger) new bootstrap.Tab(trigger).show();
+        });
+
+        // When user clicks a real tab (SM+), update the dropdown
+        document.querySelectorAll('#profileTabs a[data-bs-toggle="tab"]')
+          .forEach(a => {
+            a.addEventListener('shown.bs.tab', evt => {
+              const id = evt.target.getAttribute('href').substring(1);
+              tabSelect.value = id;
+            });
+          });
+      };
     })
     .catch(err => {
       console.error('Failed to load profile:', err);
