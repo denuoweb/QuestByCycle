@@ -1,15 +1,17 @@
-/*
- * notifications.js
- * Unified logic for fetching, paginating, and rendering notifications
- * within the navbar dropdown. Uses a dispatch table for payload rendering.
- */
-
 document.addEventListener('DOMContentLoaded', () => {
+  // --------------------------------------------------------------
+  // 0) Ensure the notifications menu exists on this page
+  // --------------------------------------------------------------
+  const menu = document.getElementById('notifMenu');
+  if (!menu) {
+    // No notifications menu on this page → nothing to do
+    return;
+  }
+
   // --------------------------------------------------------------
   // 1) Cache DOM references
   // --------------------------------------------------------------
   const notifBellToggle = document.getElementById('notifBellToggle');
-  const menu            = document.getElementById('notifMenu');
   const loadingLi       = menu.querySelector('#notifLoading');
   const footerLi        = menu.querySelector('li.dropdown-footer');
   const loadMoreBtn     = footerLi.querySelector('#loadMoreBtn');
@@ -26,22 +28,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2) Payload renderers dispatch table
   // --------------------------------------------------------------
   const payloadRenderers = {
-    // When you follow someone
     follow: ({ from_user_name, from_user_id }) => ({
       text: `Now following ${from_user_name}`,
       onclick: `showUserProfileModal(${from_user_id}); return false;`
     }),
-    // When someone follows you
     followed_by: ({ follower_name, follower_id }) => ({
       text: `${follower_name} is now following you`,
       onclick: `showUserProfileModal(${follower_id}); return false;`
     }),
     submission: ({ actor_name, quest_name, submission_id }) => ({
-      text:
-        `${actor_name} submitted a new “${quest_name}” quest`,
-      onclick:
-        `fetch('/quests/submissions/${submission_id}')` +
-        `.then(r => r.json()).then(img => showSubmissionDetail(img)); return false;`
+      text: `${actor_name} submitted a new “${quest_name}” quest`,
+      onclick: `fetch('/quests/submissions/${submission_id}')` +
+               `.then(r => r.json()).then(img => showSubmissionDetail(img)); return false;`
     }),
     profile_message: ({ from_user_name, content, profile_user_id }) => ({
       text: `${from_user_name} says “${content}”`,
@@ -53,15 +51,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }),
     submission_like: ({ liker_name, submission_id }) => ({
       text: `${liker_name} liked your submission`,
-      onclick:
-        `fetch('/quests/submissions/${submission_id}', { credentials: 'same-origin' })` +
-        `.then(r => r.json()).then(img => showSubmissionDetail(img)); return false;`
+      onclick: `fetch('/quests/submissions/${submission_id}', { credentials: 'same-origin' })` +
+               `.then(r => r.json()).then(img => showSubmissionDetail(img)); return false;`
     }),
     submission_reply: ({ actor_name, content, submission_id }) => ({
       text: `${actor_name} replied “${content}”`,
-      onclick:
-        `fetch('/quests/submissions/${submission_id}', { credentials: 'same-origin' })` +
-        `.then(r => r.json()).then(img => showSubmissionDetail(img)); return false;`
+      onclick: `fetch('/quests/submissions/${submission_id}', { credentials: 'same-origin' })` +
+               `.then(r => r.json()).then(img => showSubmissionDetail(img)); return false;`
     })
     // Add new types here as needed
   };
@@ -102,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 4) Safely remove a node if present
   // --------------------------------------------------------------
   function safeRemove(node) {
-    if (node.parentNode === menu) {
+    if (node && node.parentNode === menu) {
       menu.removeChild(node);
     }
   }
