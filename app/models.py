@@ -475,7 +475,7 @@ class ShoutBoardMessage(db.Model):
         nullable=False
     )
     timestamp = db.Column(
-        db.DateTime, index=True, default=lambda: datetime.now(utc)
+        db.DateTime(timezone=True), index=True, default=lambda: datetime.now(utc)
     )
     is_pinned = db.Column(db.Boolean, default=False)
 
@@ -494,7 +494,7 @@ class QuestSubmission(db.Model):
     image_url = db.Column(db.String(500), nullable=True)
     comment = db.Column(db.String(1000), nullable=True)
     timestamp = db.Column(
-        db.DateTime, index=True, default=lambda: datetime.now(utc)
+        db.DateTime(timezone=True), index=True, default=lambda: datetime.now(utc)
     )
     twitter_url = db.Column(db.String(1024), nullable=True)
     fb_url = db.Column(db.String(1024), nullable=True)
@@ -526,7 +526,7 @@ class ProfileWallMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(
-        db.DateTime, default=lambda: datetime.now(utc), index=True
+        db.DateTime(timezone=True), default=lambda: datetime.now(utc), index=True
     )
     user_id = db.Column(
         db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'),
