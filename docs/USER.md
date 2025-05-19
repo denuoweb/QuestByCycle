@@ -17,10 +17,6 @@ Welcome to our Ultimate Challenge and Reward Platform! This guide will help you 
 4. [Earning Badges](#earning-badges)
     - [Types of Badges](#types-of-badges)
     - [Badge Requirements](#badge-requirements)
-5. [Using the Profile Message Board](#using-the-profile-message-board)
-    - [Posting Messages](#posting-messages)
-    - [Replying to Messages](#replying-to-messages)
-    - [Deleting Messages](#deleting-messages)
 6. [Social Media Integration](#social-media-integration)
 7. [Best Practices](#best-practices)
 8. [Support and FAQs](#support-and-faqs)
@@ -114,28 +110,6 @@ Each badge has specific requirements that must be met:
 - **View Badge Details**: Navigate to the "Badges" section to see the requirements for each badge.
 - **Complete Required Quests**: Ensure you complete the quests associated with each badge.
 
-## Using the Profile Message Board
-
-### Posting Messages
-
-**Post a New Message**:
-1. **Navigate to Your Profile**: Click on your username at the top right corner and select "Profile."
-2. **Compose Your Message**: Write your message in the provided form in the "Messages" section.
-3. **Post Message**: Click on "Post" to publish your message.
-
-### Replying to Messages
-
-**Reply to a Message**:
-1. **Find the Message to Reply To**: Browse the messages on your profile.
-2. **Click "Reply"**: Write your reply in the provided form.
-3. **Submit Reply**: Click on "Reply" to publish your reply.
-
-### Deleting Messages
-
-**Delete a Message**:
-1. **Find the Message to Delete**: Browse the messages on your profile.
-2. **Click "Delete"**: Confirm the deletion.
-
 ## Social Media Integration
 
 **Linking Your Accounts**:
@@ -153,7 +127,6 @@ Each badge has specific requirements that must be met:
 
 - **Regular Participation**: Regularly check for new quests and updates.
 - **Encourage Others**: Motivate fellow participants by liking and commenting on their submissions.
-- **Provide Feedback**: Use the profile message board to give feedback and suggestions.
 
 ### Ensuring Fair Play
 

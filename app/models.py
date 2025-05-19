@@ -462,31 +462,6 @@ class Game(db.Model):
         return "https://instagram.com/QuestByCycle"
 
 
-class PlayerMessageBoardMessage(db.Model):
-    """Model for messages posted on the player message board."""
-    id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.String(500), nullable=False)
-    timestamp = db.Column(
-        db.DateTime, default=lambda: datetime.now(utc), index=True
-    )
-    user_id = db.Column(
-        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'),
-        nullable=False
-    )
-    author_id = db.Column(
-        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'),
-        nullable=False
-    )
-    user = db.relationship(
-        'User', foreign_keys=[user_id],
-        backref='messages_received'
-    )
-    author = db.relationship(
-        'User', foreign_keys=[author_id],
-        backref='messages_sent'
-    )
-
-
 class ShoutBoardMessage(db.Model):
     """Model representing a message on the shout board."""
     id = db.Column(db.Integer, primary_key=True)

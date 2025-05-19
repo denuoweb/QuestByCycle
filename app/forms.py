@@ -401,15 +401,3 @@ class SponsorForm(FlaskForm):
     )
     game_id = HiddenField("Game ID", validators=[DataRequired()])
     submit = SubmitField("Submit")
-
-
-class PlayerMessageBoardForm(FlaskForm):
-    """Form for player message board posts."""
-    content = TextAreaField("Message", validators=[DataRequired(), Length(max=500)])
-    submit = SubmitField("Post")
-
-
-class ProfileWallMessageForm(FlaskForm):
-    """Form for profile wall messages."""
-    content = TextAreaField("Message", validators=[DataRequired()])
-    submit = SubmitField("Post")
