@@ -3,7 +3,7 @@ import json
 import requests
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import current_user, login_required
-from .models import db, ProfileWallMessage, User
+from .models import db, ProfileWallMessage, User, Notification
 from .main import user_profile
 from sqlalchemy.exc import IntegrityError
 from app.activitypub_utils import sign_activitypub_request
@@ -243,6 +243,27 @@ def follow_user(username):
 
     # 2) record the follow in the DB
     current_user.following.append(target)
+    db.session.commit()
+
+    follower_name = current_user.display_name or current_user.username
+    db.session.add(Notification(
+        user_id = target.id,
+        type    = 'followed_by',
+        payload = {
+            'follower_id':   current_user.id,
+            'follower_name': follower_name
+        }
+    ))
+    db.session.commit()
+
+    db.session.add(Notification(
+        user_id = current_user.id,
+        type    = 'follow',
+        payload = {
+            'from_user_id':   target.id,
+            'from_user_name': target.display_name or target.username
+        }
+    ))
     db.session.commit()
 
     # 3) prepare the Follow activity
