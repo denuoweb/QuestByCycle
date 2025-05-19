@@ -22,18 +22,12 @@ QuestByCycle is a Flask-based web application designed to engage and motivate th
 
 - Python 3.11+
 - PostgreSQL
+- git
+-
 
-### Server Setup
+### Debian 12 Server Setup
 
-
-1. Login with SSH key:
-
-```ssh-keygen -t rsa -b 4096 -C "YOUR_EMAIL"```
-```cat ~/.ssh/id_rsa.pub``` <- Copy this key from local computer
-```mkdir -p ~/.ssh && nano ~/.ssh/authorized_keys``` Paste the key in here on remote server 
-Now login with ```ssh USER@HOST```
-
-2. Allocate Swap on low ram systems:
+1. Allocate Swap on low ram systems:
 
 ```sudo fallocate -l 4G /swapfile```
 ```sudo chmod 600 /swapfile```
@@ -41,81 +35,105 @@ Now login with ```ssh USER@HOST```
 ```sudo swapon /swapfile```
 ```echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab```
 
-3. Install NGINX:
-```sudo apt-get install curl gnupg2 ca-certificates lsb-release ubuntu-keyring```
-```sudo apt install nginx```
-```sudo ufw allow 'Nginx Full'```
+2. Install PostgreSQL
+```sudo apt-get update```
+```sudo apt-get install -y postgresql postgresql-contrib```
+
+   Secure the postgres superuser
+```sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'STRONG_SUPERSECRET';"```
+
+   Create application database & role
+```sudo -u postgres psql <<EOF```
+```CREATE DATABASE questdb;```
+```CREATE USER questuser WITH PASSWORD 'EVEN_STRONGER_PASSWORD';```
+```GRANT ALL PRIVILEGES ON DATABASE questdb TO questuser;```
+```EOF```
+
+   Ensure Postgres listens only on localhost
+```sudo sed -i "s/^#listen_addresses =.*/listen_addresses = 'localhost'/" /etc/postgresql/*/main/postgresql.conf```
+```sudo systemctl restart postgresql``
+
+3. Install python dependencies
+```sudo apt-get install -y python3-pip```
+
+4. Create User
+```sudo adduser --system --group appuser```
+```sudo mkdir -p /opt/QuestByCycle```
+```sudo chown appuser:appuser /opt/QuestByCycle```
+```sudo chmod 755 /opt/QuestByCycle```
+```sudo -u appuser git clone https://github.com/denuoweb/QuestByCycle.git /opt/QuestByCycle```
+
+5. Install Poetry
+```sudo su -s /bin/bash appuser -c 'curl -sSL https://install.python-poetry.org | python3 - && \```
+```echo "export PATH=\"$HOME/.local/bin:\$PATH\"" >> /home/appuser/.bashrc'```
+
+6. Download QuestByCycle
+```sudo -u appuser git clone https://github.com/denuoweb/QuestByCycle.git /opt/QuestByCycle```
+
+7. Install Python VM
+```cd /opt/QuestByCycle```
+```sudo -u appuser /home/appuser/.local/bin/poetry env use /usr/bin/python3```
+```sudo -u appuser /home/appuser/.local/bin/poetry install```
+
+8. Install NGINX:
+```sudo apt install curl gnupg2 ca-certificates lsb-release debian-archive-keyring python3-certbot-nginx```
+```curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \```
+```    | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null```
+```echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \```
+```http://nginx.org/packages/mainline/debian `lsb_release -cs` nginx" \```
+```    | sudo tee /etc/apt/sources.list.d/nginx.list```
+```echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" \```
+```    | sudo tee /etc/apt/preferences.d/99nginx```
+```sudo apt update```
+```sudo apt install nginx nginx-common```
+
+9. Install the GeoIP2 module and database
+
+10. Set up UFW
+```sudo apt install ufw```
+```sudo ufw allow 'WWW Full'```
 ```sudo ufw allow 'OpenSSH'```
 ```sudo ufw enable```
 
-4. Edit NGINX config:
+11. Edit NGINX config:
 ```sudo nano /etc/nginx/conf.d/default.conf```
     [Example default](/docs/default.NGINX)
 ```sudo systemctl restart nginx.service```
 ```sudo certbot --nginx -d DOMAINNAME```
 
-### Installation and Deployment
-1. Ensure Poetry uses Python 3.11
-```poetry env use /usr/bin/python3.11```
+12. PostgresDB Setup:
 
-2. Add Flask to your project
-```poetry add flask```
+```sudo systemctl start postgresql```
 
-3. (Optional) Add python-dotenv for .env support
-```poetry add python-dotenv```
+```sudo systemctl enable postgresql```
 
-4. Install everything
-```poetry install```
+```\c databasename```
 
-5. Enable HTTPS locally
-``` openssl req -nodes -x509 -newkey rsa:4096 \```
-```  -keyout tests/key.pem \```
-```  -out tests/cert.pem \```
-```  -days 365 \```
-```  -subj "/CN=localhost" \```
-```  -addext "subjectAltName = DNS:localhost,IP:127.0.0.1"```
+```GRANT ALL PRIVILEGES ON DATABASE databasename TO username;```
 
-6. Build CSS
+```GRANT USAGE, CREATE ON SCHEMA public TO username;```
 
-sass app/static/scss/main.scss app/static/css/main.css --no-source-map --style=compressed
+```GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO username;```
 
-7. Run the server
-   Either:
-```poetry run flask \```
-```  --app wsgi:app \```
-```  --debug \```
-```  run \```
-```  --cert=tests/cert.pem \```
-```  --key=tests/key.pem \```
-```  --host=127.0.0.1 \```
-```  --port=5000```
+```ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO username;```
 
+```\q```
 
-### Extra Installation and Deployment
-1. Create new user:
+```exit```
 
-```sudo adduser --system --group --disabled-login APPUSER```
-```sudo -u APPUSER mkdir /opt/QuestByCycle```
+13. Build CSS
 
-2.Clone and open the repository:
+```cd /opt/QuestByCycle```
+```sass app/static/scss/main.scss app/static/css/main.css --no-source-map --style=compressed```
 
-``` cd /opt```
-``` sudo mkdir QuestByCycle```
-``` chown APPUSER:APPUSER QuestByCycle```
-```git clone https://github.com/denuoweb/QuestByCycle.git```
-```cd QuestByCycle```
+14. Configure
+    - Copy `config.toml.example` to `config.toml` and adjust the variables accordingly.
+    - Copy `gunicorn.conf.py.example` to `gunicorn.conf.py` and adjust the variables accordingly.
 
-2. Install python3.11:
+15. Run the server in debug
+```sudo -u APPUSER /home/APPUSER/.local/bin/poetry run flask   --app wsgi:app   run   --host=127.0.0.1   --port=5000```
 
-```sudo add-apt-repository ppa:deadsnakes/ppa```
-```sudo apt install python3.11 python3.11-venv python3-pip python3-gevent python3-certbot-nginx```
-
-3. Install Poetry:
-```sudo -u APPUSER HOME=/home/APPUSER curl -sSL https://install.python-poetry.org | sudo -u APPUSER HOME=/home/APPUSER python3 -```
-```sudo -u APPUSER /home/APPUSER/.local/bin/poetry env use /usr/bin/python3.11```
-```sudo -u APPUSER /home/APPUSER/.local/bin/poetry install```
-
-4. Prepare the Deployment:
+16. Run the server in production:
 
 ```sudo nano /etc/systemd/system/questbycycleApp.service```
 
@@ -135,54 +153,8 @@ Environment="PATH=/home/APPUSER/.cache/pypoetry/virtualenvs/questbycycle-BK-IO7k
 [Install]
 WantedBy=multi-user.target
 ```
+8. Run:
 
-7. PostgresDB Setup:
-```sudo apt install postgresql postgresql-contrib```
-
-```sudo systemctl start postgresql```
-
-```sudo systemctl enable postgresql```
-
-```sudo su - postgres```
-
-```psql -U postgres```
-
-```CREATE DATABASE databasename;```
-
-```\c databasename```
-
-```CREATE USER username WITH PASSWORD 'password';```
-
-```GRANT ALL PRIVILEGES ON DATABASE databasename TO username;```
-
-```GRANT USAGE, CREATE ON SCHEMA public TO username;```
-
-```GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO username;```
-
-```ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO username;```
-
-```\q```
-
-```exit```
-
-8. Set up the environment variables:
-    
-    - Copy `config.toml.example` to `config.toml` and adjust the variables accordingly.
-
-
-9. Deploy
-
-Development:
-```Build CSS```
-
-```sass app/static/scss/main.scss app/static/css/main.css --no-source-map --style=compressed```
-
-```poetry run flask   --app wsgi:app   --debug   run   --cert=tests/cert.pem   --key=tests/key.pem   --host=127.0.0.1   --port=5000```
-
-Production Without service provider:
-```gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 -b 127.0.0.1:5000 wsgi:app```
-
-Production With service provider:
 ```sudo systemctl start questbycycleApp.service```
 ```sudo systemctl enable questbycycleApp.service```
 
