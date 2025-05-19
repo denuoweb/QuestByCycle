@@ -9,6 +9,21 @@ This guide provides detailed instructions on integrating Facebook with your appl
 - Access to Facebook Business Manager (if you are managing business assets).
 - Administrative access to the Facebook app you are integrating.
 
+## Connect Game to Facebook and Instagram
+Create 'app' here to get app id and app secret: https://developers.facebook.com/
+Use this to generate the access token: https://developers.facebook.com/tools/explorer/
+
+Permissions required:
+pages_show_list
+pages_read_engagement
+pages_read_user_content
+pages_manage_posts
+pages_manage_engagement
+instagram_basic
+instagram_branded_content_ads_brand
+instagram_branded_content_brand
+instagram_branded_content_creator
+
 ## Step 1: Create a Facebook App
 
 1. **Log in to Facebook for Developers**:

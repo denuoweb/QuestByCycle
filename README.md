@@ -121,6 +121,11 @@ QuestByCycle is a Flask-based web application designed to engage and motivate th
 
 ```exit```
 
+13. Set up Emailing
+```sudo apt update```
+```sudo apt install postfix```
+```sudo nano /etc/postfix/main.cf```
+
 13. Build CSS
 
 ```cd /opt/QuestByCycle```
@@ -159,68 +164,8 @@ WantedBy=multi-user.target
 ```sudo systemctl enable questbycycleApp.service```
 
 Update Poetry:
-$ sudo -u APPUSER HOME=/home/APPUSER /home/APPUSER/.local/bin/poetry update
+```sudo -u APPUSER HOME=/home/APPUSER /home/APPUSER/.local/bin/poetry update```
 
-## Connect Game to X
-https://developer.x.com/en/portal/dashboard
-
-## Connect Game to Facebook and Instagram
-Create 'app' here to get app id and app secret: https://developers.facebook.com/
-Use this to generate the access token: https://developers.facebook.com/tools/explorer/
-
-Permissions required:
-pages_show_list
-pages_read_engagement
-pages_read_user_content
-pages_manage_posts
-pages_manage_engagement
-instagram_basic
-instagram_branded_content_ads_brand
-instagram_branded_content_brand
-instagram_branded_content_creator
-
-## Connect OpenAI API for Quest and Badge Generation
-https://platform.openai.com/api-keys
-
-## msmtp
-```
-sudo apt-get update
-sudo apt-get install msmtp msmtp-mta
-nano ~/.msmtprc
-
-# Set default values for all accounts
-defaults
-auth           on
-tls            on
-tls_trust_file /etc/ssl/certs/ca-certificates.crt
-logfile        ~/.msmtp.log
-
-# Set a default account
-account        default
-host           smtp.gmail.com
-port           587
-from           no-reply@questbycycle.org
-user           your-email@gmail.com
-password       your-gmail-password
-
-# Alternatively, if you are using another SMTP server
-# host           smtp.your-email-provider.com
-# port           587
-# from           no-reply@questbycycle.org
-# user           your-smtp-username
-# password       your-smtp-password
-
-# Map local user to this account
-account default : default
-
-chmod 600 ~/.msmtprc
-
-echo "Subject: Test Email" | msmtp -a default your-email@gmail.com
-
-pip install Flask-Mail
-
-
-```
 ## Contributing
 
 We welcome contributions from the community! Whether you're interested in adding new features, fixing bugs, or improving documentation, your help is appreciated. Please refer to CONTRIBUTING.md for guidelines on how to contribute to QuestByCycle.
