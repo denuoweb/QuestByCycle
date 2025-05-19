@@ -129,8 +129,20 @@
                     aria-labelledby="notifBellToggle"
                     id="notifMenu"
                     data-url="{{ url_for('notifications.list_notifications') }}"
+                    data-page="0"
+                    data-total-pages="1"
+                    data-per-page="10"
                   >
-                    <li class="dropdown-item text-center text-muted">Loading…</li>
+                    <!-- notifications will be injected here -->
+                    <li class="dropdown-item text-center text-muted" id="notifLoading">
+                      Loading…
+                    </li>
+                    <!-- this footer will always be at the bottom -->
+                    <li class="dropdown-footer text-center">
+                      <button class="btn btn-sm btn-link" id="loadMoreBtn" disabled>
+                        Load more
+                      </button>
+                    </li>
                   </ul>
                 </li>
                 {% if not in_admin_dashboard %}

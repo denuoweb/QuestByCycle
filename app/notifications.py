@@ -1,25 +1,8 @@
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, render_template, jsonify, request
 from flask_login import current_user, login_required
 from app.models import Notification, db
 
 notifications_bp = Blueprint('notifications', __name__)
-
-@notifications_bp.route('/', methods=['GET'])
-@login_required
-def index():
-    # Fetch all notifications for this user
-    notifs = Notification.query.filter_by(
-        user_id=current_user.id
-    ).order_by(Notification.timestamp.desc()).all()
-
-    # Auto-mark any unread ones as read
-    unread = [n for n in notifs if not n.is_read]
-    if unread:
-        for n in unread:
-            n.is_read = True
-        db.session.commit()
-
-    return render_template('notifications.html', notifications=notifs)
 
 
 @notifications_bp.route('/unread_count')
@@ -32,34 +15,42 @@ def unread_count():
 @notifications_bp.route('/recent')
 @login_required
 def list_notifications():
-    # 1) mark *all* unread notifications as read
-    Notification.query.\
-        filter_by(user_id=current_user.id, is_read=False).\
-        update({'is_read': True})
+    # 1) optional: mark all *currently* unread notifications as read.
+    Notification.query \
+        .filter_by(user_id=current_user.id, is_read=False) \
+        .update({'is_read': True})
     db.session.commit()
 
-    # 2) now fetch the 10 most recent (they’ll all be read)
-    notes = (Notification.query
-             .filter_by(user_id=current_user.id)
-             .order_by(Notification.timestamp.desc())
-             .limit(10)
-             .all())
+    # 2) read pagination parameters
+    try:
+        page     = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 10))
+    except ValueError:
+        page, per_page = 1, 10
 
-    # auto-mark any unread as read
-    unread = [n for n in notes if not n.is_read]
-    for n in unread:
-        n.is_read = True
-    if unread:
-        db.session.commit()
-    return jsonify([
-        {
-          'id':    n.id,
-          'type':  n.type,
-          'when':  n.timestamp.isoformat(),
-          'payload': n.payload,
-          'is_read': n.is_read
-        } for n in notes
-    ])
+    # 3) paginate
+    pagination = Notification.query \
+        .filter_by(user_id=current_user.id) \
+        .order_by(Notification.timestamp.desc()) \
+        .paginate(page=page, per_page=per_page, error_out=False)
+
+    # 4) serialize
+    return jsonify({
+        'items': [
+            {
+                'id':       n.id,
+                'type':     n.type,
+                'when':     n.timestamp.isoformat(),
+                'payload':  n.payload,
+                'is_read':  n.is_read
+            }
+            for n in pagination.items
+        ],
+        'page':        pagination.page,
+        'per_page':    pagination.per_page,
+        'total_pages': pagination.pages,
+        'total_items': pagination.total
+    })
 
 @notifications_bp.route('/<int:note_id>/read', methods=['POST'])
 @login_required
