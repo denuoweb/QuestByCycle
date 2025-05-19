@@ -140,7 +140,7 @@ def _join_game_if_provided(user):
     if not game_id:
         game_id = request.form.get('game_id')
     
-    if game_id:
+    if game_id is not None:
         try:
             # Ensure game_id is treated as an integer
             game_id = int(game_id)
