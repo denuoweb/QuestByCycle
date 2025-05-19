@@ -7,64 +7,46 @@ function showUserProfileModal(userId) {
         return;
       }
 
-      const container = document.getElementById('userProfileDetails');
-      if (!container) {
-        console.error('#userProfileDetails not found');
+      const detailsContainer = document.getElementById('userProfileDetails');
+
+      if (!detailsContainer) {
+        console.error('Profile details containers not found');
         return;
       }
 
       const isCurrent = data.current_user_id === data.user.id;
 
-      container.innerHTML = `
-        <header class="profile-header text-center py-5 mb-4 position-relative bg-gradient-primary">
-          ${data.user.profile_picture ? `
-            <div class="profile-picture-container position-relative mx-auto mb-3">
-              <img src="/static/${data.user.profile_picture}"
-                   class="profile-picture rounded-circle shadow-lg border border-white border-4"
-                   alt="Profile Picture">
-            </div>` : ''}
-          <div class="header-bg position-absolute w-100 h-100 top-0 start-0 bg-opacity-50"></div>
-          <div class="header-content position-relative z-index-1">
-            <h1 class="display-4 text-white font-weight-bold">
-              ${data.user.display_name || data.user.username}'s Profile
-            </h1>
-          </div>
-          <button id="followBtn" class="btn btn-outline-light ms-2"></button>
-          <div class="header-decorative-elements position-absolute w-100 h-100 top-0 start-0">
-            <div class="decorative-circle"></div>
-            <div class="decorative-triangle"></div>
-          </div>
-        </header>
-
+      // ) Render tabs & panes into #userProfileDetails
+      detailsContainer.innerHTML = `
         <div class="row g-4">
           <ul class="nav nav-tabs epic-tabs" id="profileTabs" role="tablist">
             <li class="nav-item" role="presentation">
               <a class="nav-link active" id="profile-tab" data-bs-toggle="tab"
-                  href="#profile" role="tab" aria-controls="profile" aria-selected="true">
+                 href="#profile" role="tab" aria-controls="profile" aria-selected="true">
                 <i class="bi bi-person-circle me-2"></i>Profile
               </a>
             </li>
             <li class="nav-item" role="presentation">
               <a class="nav-link" id="bike-tab" data-bs-toggle="tab"
-                  href="#bike" role="tab" aria-controls="bike" aria-selected="false">
+                 href="#bike" role="tab" aria-controls="bike" aria-selected="false">
                 <i class="bi bi-bicycle me-2"></i>Bike
               </a>
             </li>
             <li class="nav-item" role="presentation">
               <a class="nav-link" id="badges-earned-tab" data-bs-toggle="tab"
-                  href="#badges-earned" role="tab" aria-controls="badges-earned" aria-selected="false">
+                 href="#badges-earned" role="tab" aria-controls="badges-earned" aria-selected="false">
                 <i class="bi bi-trophy me-2"></i>Badges Earned
               </a>
             </li>
             <li class="nav-item" role="presentation">
               <a class="nav-link" id="games-participated-tab" data-bs-toggle="tab"
-                  href="#games-participated" role="tab" aria-controls="games-participated" aria-selected="false">
+                 href="#games-participated" role="tab" aria-controls="games-participated" aria-selected="false">
                 <i class="bi bi-controller me-2"></i>Games Participated
               </a>
             </li>
             <li class="nav-item" role="presentation">
               <a class="nav-link" id="quest-submissions-tab" data-bs-toggle="tab"
-                  href="#quest-submissions" role="tab" aria-controls="quest-submissions" aria-selected="false">
+                 href="#quest-submissions" role="tab" aria-controls="quest-submissions" aria-selected="false">
                 <i class="bi bi-list-quest me-2"></i>Quest Submissions
               </a>
             </li>
@@ -264,27 +246,33 @@ function showUserProfileModal(userId) {
           </div> <!-- /.tab-content -->
         </div> <!-- /.row -->
       `;
+      const modalTitle = document.getElementById('userProfileModalLabel');
+      modalTitle.textContent = `${data.user.display_name || data.user.username}'s Profile`;
 
-      // follow/unfollow logic
+      // 4) Wire up Follow/Unfollow
       let following = data.current_user_following;
       const btn = document.getElementById('followBtn');
-      btn.textContent = following ? 'Unfollow' : 'Follow';
+      btn.textContent = following ? 'Following' : 'Follow';
       btn.onclick = async () => {
         const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        await fetch(`/profile/${data.user.username}/${following ? 'unfollow' : 'follow'}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': token
-          },
-          credentials: 'same-origin'
-        });
+        await fetch(
+          `/profile/${data.user.username}/${following ? 'unfollow' : 'follow'}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': token
+            },
+            credentials: 'same-origin'
+          }
+        );
         following = !following;
         btn.textContent = following ? 'Unfollow' : 'Follow';
       };
 
-      // Show modal
-      document.getElementById('userProfileModal').classList.add('active','user-profile-modal');
+      // 5) Show modal
+      const modalEl = document.getElementById('userProfileModal');
+      modalEl.classList.add('active','user-profile-modal');
       openModal('userProfileModal');
     })
     .catch(err => {
