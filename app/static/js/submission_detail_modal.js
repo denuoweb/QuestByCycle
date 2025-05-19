@@ -10,6 +10,57 @@ document.addEventListener('DOMContentLoaded', () => {
     const me      = Number(modal.dataset.currentUserId);
     const isOwner = Number(image.user_id) === me;
 
+
+    // ── NEW: grab your photo-edit controls ──
+    const editPhotoBtn      = $('#editPhotoBtn');
+    const photoEditControls = $('#photoEditControls');
+    const photoInput        = $('#submissionPhotoInput');
+    const savePhotoBtn      = $('#savePhotoBtn');
+    const cancelPhotoBtn    = $('#cancelPhotoBtn');
+
+    // show/hide the “Change Photo” button
+    editPhotoBtn.hidden      = !isOwner;
+    photoEditControls.hidden = true;
+
+    // wire the click to reveal the file picker
+    editPhotoBtn.addEventListener('click', () => {
+      photoEditControls.hidden = false;
+      editPhotoBtn.hidden      = true;
+    });
+
+    // cancel → hide picker, restore button
+    cancelPhotoBtn.addEventListener('click', () => {
+      photoInput.value         = '';
+      photoEditControls.hidden = true;
+      editPhotoBtn.hidden      = false;
+    });
+
+    // save → upload to server
+    savePhotoBtn.addEventListener('click', () => {
+      const id   = modal.dataset.submissionId;
+      const file = photoInput.files[0];
+      if (!file) return alert('Please select an image first.');
+
+      const form = new FormData();
+      form.append('photo', file);
+
+      fetch(`/quests/submission/${id}/photo`, {
+        method:      'PUT',
+        credentials: 'same-origin',
+        headers:     { 'X-CSRFToken': csrf() },
+        body:        form
+      })
+      .then(r => r.json())
+      .then(json => {
+        if (!json.success) throw new Error(json.message || 'Upload failed');
+        // update the displayed image:
+        $('#submissionImage').src = json.image_url;
+        // reset the photo-edit UI:
+        cancelPhotoBtn.click();
+      })
+      .catch(e => alert(e.message));
+    });
+
     $('#submissionReplyEdit').hidden = isOwner;
     $('#postReplyBtn').hidden        = isOwner;
     $('#ownerNotice').hidden = !isOwner;

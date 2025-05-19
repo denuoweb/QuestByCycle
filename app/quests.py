@@ -1199,3 +1199,24 @@ def submission_replies(submission_id):
         'user_display' : (current_user.display_name or current_user.username)
       }
     )
+
+
+@quests_bp.route('/submission/<int:submission_id>/photo', methods=['PUT'])
+@login_required
+def update_submission_photo(submission_id):
+    sub = QuestSubmission.query.get_or_404(submission_id)
+    # only owner can replace
+    if sub.user_id != current_user.id:
+        abort(403)
+
+    # expect multipart/form-data
+    photo = request.files.get('photo')
+    if not photo or photo.filename == '':
+        return jsonify(success=False, message='No file uploaded'), 400
+
+    # save new image (you may want to delete old one)
+    new_path = save_submission_image(photo)
+    sub.image_url = url_for('static', filename=new_path, _external=False)
+    db.session.commit()
+
+    return jsonify(success=True, image_url=sub.image_url)

@@ -39,6 +39,16 @@
            class="verification-image"
            src="/static/images/default_badge.png"
            alt="Submission Detail">
+      <button id="editPhotoBtn" class="btn btn-outline-secondary btn-sm mt-2" hidden>
+        Change Photo
+      </button>
+
+      <!-- hidden file-picker + controls -->
+      <div id="photoEditControls" class="mt-2" hidden>
+        <input type="file" id="submissionPhotoInput" accept="image/*" />
+        <button id="savePhotoBtn" class="btn btn-primary btn-sm ms-2">Save</button>
+        <button id="cancelPhotoBtn" class="btn btn-secondary btn-sm ms-1">Cancel</button>
+      </div>
     </div>
 
     <!-- ── TWO-COLUMN: Owner Comment ⬅️ Replies & Reply Box ➡️ ── -->
