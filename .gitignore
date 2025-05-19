@@ -1,10 +1,10 @@
 migrations/
 instance/
-app/static/badge_images/
-app/static/images/
-
-app/static/images/carousel_images
-app/static/carousel_images/
+app/static/images/badge_images/
+app/static/images/bicycle_pictures/
+app/static/images/leaderboard/
+app/static/images/sponsors/
+app/static/images/verifications/
 
 tests/cert.pem
 tests/key.pem
