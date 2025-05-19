@@ -1145,6 +1145,12 @@ def submission_replies(submission_id):
         return jsonify(success=True, replies=data)
 
     if request.method == 'POST':
+        if sub.user_id == current_user.id:
+            return jsonify(
+                success=False,
+                message="You cannot comment on your own submission"
+            ), 403
+
         payload = request.get_json() or {}
         content = payload.get('content','').strip()
         if not content:

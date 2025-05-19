@@ -10,7 +10,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const me      = Number(modal.dataset.currentUserId);
     const isOwner = Number(image.user_id) === me;
 
-    const el = {
+    $('#submissionReplyEdit').hidden = isOwner;
+    $('#postReplyBtn').hidden        = isOwner;
+    $('#ownerNotice').hidden = !isOwner;
+
+    const repliesSection = $('#submissionRepliesContainer');
+
+    if (isOwner) {
+      repliesSection.hidden = true;
+    } else {
+      repliesSection.hidden = false;
+    }
+
+  const el = {
       img                  : $('#submissionImage'),
       imgOverlay           : $('#submitterProfileImageOverlay'),
       commentRead          : $('#submissionComment'),
@@ -124,12 +136,26 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(d=>{
           const list = $('#submissionRepliesList');
           list.innerHTML = '';
-          d.replies.forEach(rep=>{
-            const div = document.createElement('div');
-            div.className = 'reply mb-1';
-            div.innerHTML = `<strong>${rep.user_display}</strong>: ${rep.content}`;
-            list.appendChild(div);
+        d.replies.forEach(rep => {
+          const div = document.createElement('div');
+          div.className = 'reply mb-1';
+
+          // Render the reply author as a clickable link
+          div.innerHTML = `
+            <a href="#" class="reply-user-link" data-user-id="${rep.user_id}">
+              <strong>${rep.user_display}</strong>
+            </a>: ${rep.content}
+          `;
+
+          // Wire up profile-opening
+          const userLink = div.querySelector('.reply-user-link');
+          userLink.addEventListener('click', e => {
+            e.preventDefault();
+            showUserProfileModal(rep.user_id);
           });
+
+          list.appendChild(div);
+        });
 
         const textarea = $('#submissionReplyEdit');
         const btn = $('#postReplyBtn');

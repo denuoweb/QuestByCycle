@@ -111,29 +111,3 @@
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-
-// 10. Submission Detail Modal overrides
-#submissionDetailModal {
-  .modal-content {
-    text-align: center;
-    padding: 20px;
-  }
-
-  #submissionComment {
-    font-size: 18px;
-    margin-top: 20px;
-    color: #333;
-    font-weight: bold;
-  }
-
-  .button {
-    margin: 10px 5px;
-    display: inline-block;
-    width: auto;
-  }
-
-  div {
-    text-align: center;
-    margin-top: 20px;
-  }
-}
