@@ -628,10 +628,6 @@ class SubmissionReply(db.Model):
     user       = db.relationship('User', backref='submission_replies')
 
 
-# ── Configure backrefs on the ONE side (QuestSubmission) ────────────────────
-
-# at bottom of file, after QuestSubmission definition:
-
 QuestSubmission.likes = db.relationship(
     'SubmissionLike',
     back_populates='submission',
@@ -639,6 +635,7 @@ QuestSubmission.likes = db.relationship(
     cascade='all, delete-orphan',
     single_parent=True          # this tells SQLAlchemy this child belongs to exactly one parent
 )
+
 
 QuestSubmission.replies = db.relationship(
     'SubmissionReply',
