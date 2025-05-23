@@ -1,22 +1,18 @@
-from flask import flash, current_app, jsonify, request, url_for
+from flask import current_app, request, url_for
 from .models import db, Quest, Badge, Game, UserQuest, User, ShoutBoardMessage, QuestSubmission, UserIP
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from PIL import Image
 from pytz import utc
 from email.mime.text import MIMEText
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
+from email.mime.multipart import MIMEMultipart
+from email.mime.image    import MIMEImage
 
 import uuid
 import os
 import csv
 import bleach
-import json
-import base64
 import smtplib
-
-SCOPES = ['https://mail.google.com/']
 
 ALLOWED_TAGS = [
     'a', 'b', 'i', 'u', 'em', 'strong', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -494,60 +490,79 @@ def enhance_badges_with_task_info(badges, game_id=None, user_id=None):
     return enhanced_badges
 
 
-def send_email(to, subject, html_content):
+def send_email(to: str,
+               subject: str,
+               html_content: str,
+               inline_images: list[tuple[str, bytes, str]] | None = None) -> bool:
     """
-    Send an email using the Postfix server configuration defined in the Flask
-    application configuration. The function reads MAIL_SERVER, MAIL_PORT,
-    MAIL_USE_TLS, MAIL_USE_SSL, MAIL_USERNAME, MAIL_PASSWORD and MAIL_DEFAULT_SENDER
-    to determine how to connect and authenticate (if necessary).
+    Send an e-mail (via the Postfix SMTP settings in Flask config).
 
-    Args:
-        to (str): The recipient email address.
-        subject (str): The email subject.
-        html_content (str): The HTML content of the email.
+    Parameters
+    ----------
+    to : str
+        Recipient address.
+    subject : str
+        Mail subject line.
+    html_content : str
+        Fully-rendered HTML body *that already contains* <img src="cid:XXX"> tags.
+    inline_images : list[tuple[cid, data, mime_subtype]]
+        Optional list where each element is:
+            cid           the Content-ID without angle brackets
+            data          raw image bytes
+            mime_subtype  e.g. 'jpeg', 'png', …
 
-    Returns:
-        bool: True if the email was sent successfully; otherwise, False.
+    Returns
+    -------
+    bool
+        True if the message was sent without raising; False otherwise.
     """
-    # Create the email message.
-    msg = MIMEText(html_content, 'html')
-    msg['Subject'] = subject
-    msg['From'] = current_app.config['MAIL_DEFAULT_SENDER']
-    msg['To'] = to
+    # Build a multipart/related mail so HTML can reference inline parts
+    msg_root        = MIMEMultipart('related')
+    msg_root['Subject'] = subject
+    msg_root['From']    = current_app.config['MAIL_DEFAULT_SENDER']
+    msg_root['To']      = to
 
+    # The HTML part goes into a multipart/alternative container
+    alt_part = MIMEMultipart('alternative')
+    msg_root.attach(alt_part)
+    alt_part.attach(MIMEText(html_content, 'html'))
+
+    # Attach all requested inline images
+    inline_images = inline_images or []
+    for cid, data, subtype in inline_images:
+        img = MIMEImage(data, _subtype=subtype)
+        img.add_header('Content-ID', f'<{cid}>')
+        img.add_header('Content-Disposition', 'inline', filename=f'{cid}.{subtype}')
+        msg_root.attach(img)
+
+    # ---------- SMTP plumbing (unchanged except for message variable) --------
     try:
-        # Fetch email server configuration from Flask config.
-        mail_server = current_app.config.get('MAIL_SERVER')
-        mail_port = current_app.config.get('MAIL_PORT')
-        use_tls = current_app.config.get('MAIL_USE_TLS', False)
-        use_ssl = current_app.config.get('MAIL_USE_SSL', False)
+        mail_server   = current_app.config.get('MAIL_SERVER')
+        mail_port     = current_app.config.get('MAIL_PORT')
+        use_tls       = current_app.config.get('MAIL_USE_TLS', False)
+        use_ssl       = current_app.config.get('MAIL_USE_SSL', False)
         mail_username = current_app.config.get('MAIL_USERNAME')
         mail_password = current_app.config.get('MAIL_PASSWORD')
 
-        # Establish the appropriate SMTP connection.
-        if use_ssl:
-            smtp_conn = smtplib.SMTP_SSL(mail_server, mail_port)
-        else:
-            smtp_conn = smtplib.SMTP(mail_server, mail_port)
-        
+        smtp_conn = (
+            smtplib.SMTP_SSL(mail_server, mail_port)
+            if use_ssl else
+            smtplib.SMTP(mail_server, mail_port)
+        )
         smtp_conn.ehlo()
-
         if use_tls:
             smtp_conn.starttls()
             smtp_conn.ehlo()
-
-        # If username and password are specified, authenticate.
         if mail_username and mail_password:
             smtp_conn.login(mail_username, mail_password)
 
-        # Send the email.
-        smtp_conn.sendmail(msg['From'], [to], msg.as_string())
+        smtp_conn.sendmail(msg_root['From'], [to], msg_root.as_string())
         smtp_conn.quit()
         current_app.logger.info('Email sent successfully to %s.', to)
         return True
 
-    except Exception as e:
-        current_app.logger.error('Failed to send email: %s', e)
+    except Exception as exc:          # pylint: disable=broad-except
+        current_app.logger.error('Failed to send email: %s', exc)
         return False
 
 
@@ -719,92 +734,83 @@ def get_game_badges(game_id):
     return badges
 
 
-def send_social_media_liaison_email(game_id):  
-    """  
-    Generate and send a social media liaison email for a specific game.  
-    This function collects all submissions since the last email was sent,  
-    formats them into an HTML email, and sends it to the liaison email address.  
-      
-    Args:  
-        game_id (int): ID of the game to send the email for  
-          
-    Returns:  
-        bool: True if email was sent successfully, False otherwise  
-    """  
-    game = Game.query.get(game_id)  
-    if not game or not game.social_media_liaison_email:  
-        return False  
-          
-    # Determine the cutoff time based on when the last email was sent  
-    cutoff_time = game.last_social_media_email_sent or game.start_date  
-      
-    # Get all submissions for this game since the last email  
-    submissions = QuestSubmission.query.join(Quest).filter(  
-        Quest.game_id == game_id,  
-        QuestSubmission.timestamp > cutoff_time  
-    ).order_by(QuestSubmission.timestamp.desc()).all()  
-      
-    if not submissions:  
-        return False  # No new submissions to report  
-          
-    # Generate HTML content for the email  
-    html_content = f"""  
-    <html>  
-    <head>  
-        <style>  
-            body {{ font-family: Arial, sans-serif; }}  
-            .submission {{ margin-bottom: 20px; padding: 10px; border: 1px solid #ddd; }}  
-            img {{ max-width: 300px; max-height: 300px; }}  
-        </style>  
-    </head>  
-    <body>  
-        <h1>New Submissions for {game.title}</h1>  
-        <p>Time period: {cutoff_time.strftime('%Y-%m-%d %H:%M')} to {datetime.now(utc).strftime('%Y-%m-%d %H:%M')}</p>  
-        <p>Total new submissions: {len(submissions)}</p>  
-          
-        <div class="submissions">  
-    """  
-      
-    for submission in submissions:  
-        quest = submission.quest  
-        user = submission.submitter  
-          
-        html_content += f"""  
-        <div class="submission">  
-            <h3>Quest: {quest.title}</h3>  
-            <p>User: {user.username}</p>  
-            <p>Submitted: {submission.timestamp.strftime('%Y-%m-%d %H:%M')}</p>  
-        """  
-          
-        if submission.comment:  
-            html_content += f"<p>Comment: {submission.comment}</p>"  
-              
-        if submission.image_url:
-            # build an absolute URL even though we're outside a real request
-            with current_app.test_request_context():
-                image_url = url_for('static',
-                                    filename=submission.image_url,
-                                    _external=True)
-            html_content += f'<img src="{image_url}" alt="Submission image"><br>'
-              
-        html_content += "</div>"  
-      
-    html_content += """  
-        </div>  
-    </body>  
-    </html>  
-    """  
-      
-    # Send the email  
-    subject = f"New Submissions for {game.title} - {datetime.now(utc).strftime('%Y-%m-%d')}"  
-    success = send_email(game.social_media_liaison_email, subject, html_content)  
-      
-    if success:  
-        # Update the last sent timestamp  
-        game.last_social_media_email_sent = datetime.now(utc)  
-        db.session.commit()  
-          
-    return success
+def send_social_media_liaison_email(game_id: int) -> bool:
+    """
+    Collect submissions since the last liaison e-mail and send a message that
+    embeds each photo inline (no external links).
+    """
+    game = Game.query.get(game_id)
+    if not game or not game.social_media_liaison_email:
+        return False
+
+    cutoff_time = game.last_social_media_email_sent or game.start_date
+
+    submissions = (
+        QuestSubmission.query
+        .join(Quest)
+        .filter(Quest.game_id == game_id,
+                QuestSubmission.timestamp > cutoff_time)
+        .order_by(QuestSubmission.timestamp.desc())
+        .all()
+    )
+    if not submissions:
+        return False
+
+    # --------------------------------------------------------------------- HTML
+    html_parts   = [f"""
+        <h1>New submissions for {game.title}</h1>
+        <p><b>Time period:</b> {cutoff_time:%Y-%m-%d %H:%M} → {datetime.now(utc):%Y-%m-%d %H:%M}</p>
+        <p><b>Total new submissions:</b> {len(submissions)}</p>
+        <hr>
+    """]
+
+    inline_images: list[tuple[str, bytes, str]] = []      # for send_email()
+
+    for idx, sub in enumerate(submissions, start=1):
+        quest = sub.quest
+        user  = sub.submitter
+
+        html_parts.append(f"""
+            <div style="margin-bottom:1.5rem">
+              <h3>{idx}. Quest: {quest.title}</h3>
+              <p>User: {user.username} &nbsp;|&nbsp; Submitted: {sub.timestamp:%Y-%m-%d %H:%M}</p>
+        """)
+
+        if sub.comment:
+            html_parts.append(f"<p><i>{sanitize_html(sub.comment)}</i></p>")
+
+        if sub.image_url:
+            # load the image bytes and create a CID
+            image_path = os.path.join(current_app.static_folder, sub.image_url)
+            try:
+                with open(image_path, 'rb') as f:
+                    img_bytes = f.read()
+                ext   = os.path.splitext(image_path)[1].lstrip('.').lower() or 'png'
+                cid   = f'submission_{sub.id}'
+                inline_images.append((cid, img_bytes, ext))
+                html_parts.append(f"""
+                    <img src="cid:{cid}" alt="submission image"
+                         style="max-width:300px;max-height:300px"><br>
+                """)
+            except OSError:
+                # fall back to external link if the file is missing
+                with current_app.test_request_context():
+                    url = url_for('static', filename=sub.image_url, _external=True)
+                html_parts.append(f'<img src="{url}" alt="submission image"><br>')
+
+        html_parts.append("</div>")
+
+    html_body = "<html><body>" + "\n".join(html_parts) + "</body></html>"
+
+    subject = f"New submissions for {game.title} – {datetime.now(utc):%Y-%m-%d}"
+    sent = send_email(game.social_media_liaison_email, subject,
+                      html_body, inline_images)
+
+    if sent:
+        game.last_social_media_email_sent = datetime.now(utc)
+        db.session.commit()
+
+    return sent
 
 
 def _ensure_aware(dt):
