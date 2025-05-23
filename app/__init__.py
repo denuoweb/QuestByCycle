@@ -26,7 +26,6 @@ _helpers.url_for = _url_for
 
 from flask import Flask, render_template, flash, redirect, url_for
 from flask_login import LoginManager, current_user
-from flask_migrate import Migrate
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.exceptions import HTTPException
 from app.auth import auth_bp
@@ -50,7 +49,6 @@ from logging.handlers import RotatingFileHandler
 has_run = False
 
 login_manager = LoginManager()
-migrate = Migrate()
 socketio = SocketIO()
 #cache = Cache(config={'CACHE_TYPE': 'simple'})  # Configure as needed
 
@@ -134,7 +132,6 @@ def create_app(config_overrides=None):
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
-    migrate.init_app(app, db)
     socketio.init_app(app, async_mode='gevent', logger=True, engineio_logger=True)
 
     with app.app_context():
