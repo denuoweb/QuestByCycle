@@ -1,3 +1,8 @@
+import uuid
+import os
+import csv
+import bleach
+import smtplib
 from flask import current_app, request, url_for
 from .models import db, Quest, Badge, Game, UserQuest, User, ShoutBoardMessage, QuestSubmission, UserIP
 from werkzeug.utils import secure_filename
@@ -7,12 +12,7 @@ from pytz import utc
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image    import MIMEImage
-
-import uuid
-import os
-import csv
-import bleach
-import smtplib
+from sqlalchemy.exc import SQLAlchemyError, OperationalError
 
 ALLOWED_TAGS = [
     'a', 'b', 'i', 'u', 'em', 'strong', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -824,32 +824,43 @@ def check_and_send_liaison_emails():
     For every game with a liaison email, send on its schedule:
       'minute', 'daily', 'weekly', or 'monthly'.
     """
-    now = datetime.now(utc)
+    try:
+        now = datetime.now(utc)
 
-    # Build your thresholds in one place
-    interval_map = {
-        'hourly':  timedelta(hours=1),
-        'daily':   timedelta(days=1),
-        'weekly':  timedelta(weeks=1),
-        'monthly': timedelta(days=30),
-    }
+        # Build your thresholds in one place
+        interval_map = {
+            'hourly':  timedelta(hours=1),
+            'daily':   timedelta(days=1),
+            'weekly':  timedelta(weeks=1),
+            'monthly': timedelta(days=30),
+        }
 
-    games = Game.query.filter(Game.social_media_liaison_email.isnot(None)).all()
+        games = Game.query.filter(Game.social_media_liaison_email.isnot(None)).all()
 
-    for game in games:
-        freq = (game.social_media_email_frequency or 'weekly').lower()
-        threshold = interval_map.get(freq, timedelta(days=1))
+        for game in games:
+            freq = (game.social_media_email_frequency or 'weekly').lower()
+            threshold = interval_map.get(freq, timedelta(days=1))
 
-        # coerce both dates to tz-aware UTC
-        started = _ensure_aware(game.start_date)
-        last    = _ensure_aware(game.last_social_media_email_sent) or started
+            # coerce both dates to tz-aware UTC
+            started = _ensure_aware(game.start_date)
+            last    = _ensure_aware(game.last_social_media_email_sent) or started
 
-        # first send: only if we've passed at least one threshold since start
-        if not game.last_social_media_email_sent:
-            if now - started >= threshold:
+            # first send: only if we've passed at least one threshold since start
+            if not game.last_social_media_email_sent:
+                if now - started >= threshold:
+                    send_social_media_liaison_email(game.id)
+                continue
+
+            # subsequent sends
+            if now - last >= threshold:
                 send_social_media_liaison_email(game.id)
-            continue
 
-        # subsequent sends
-        if now - last >= threshold:
-            send_social_media_liaison_email(game.id)
+    except OperationalError as exc:
+        current_app.logger.exception("DB error in liaison email job: %s", exc)
+        db.session.rollback()        # safety first
+    except SQLAlchemyError:
+        db.session.rollback()
+        raise                       # let apscheduler log the traceback
+    finally:
+        # <-- THIS is the important line
+        db.session.remove()          # close / return the connection
