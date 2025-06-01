@@ -54,11 +54,11 @@ def _deliver_follow_activity(actor_url, activity, sender_id):
         sender = User.query.get(sender_id)
         sender.ensure_activitypub_actor()
 
-        doc = requests.get(actor_url, timeout=5, verify=False).json()
+        doc = requests.get(actor_url, timeout=5).json()
         inbox = doc.get("inbox")
         if inbox:
             hdrs = sign_activitypub_request(sender, 'POST', inbox, json.dumps(activity))
-            requests.post(inbox, json=activity, headers=hdrs, timeout=5, verify=False)
+            requests.post(inbox, json=activity, headers=hdrs, timeout=5)
     except Exception as e:
         current_app.logger.error(
             "Failed to deliver ActivityPub activity to %s: %s", actor_url, e
