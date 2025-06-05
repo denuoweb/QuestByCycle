@@ -735,10 +735,6 @@ def get_game_badges(game_id):
 
 
 def send_social_media_liaison_email(game_id: int) -> bool:
-    """
-    Collect submissions since the last liaison e-mail and send a message that
-    embeds each photo inline (no external links).
-    """
     game = Game.query.get(game_id)
     if not game or not game.social_media_liaison_email:
         return False
@@ -756,15 +752,13 @@ def send_social_media_liaison_email(game_id: int) -> bool:
     if not submissions:
         return False
 
-    # --------------------------------------------------------------------- HTML
     html_parts   = [f"""
         <h1>New submissions for {game.title}</h1>
         <p><b>Time period:</b> {cutoff_time:%Y-%m-%d %H:%M} → {datetime.now(utc):%Y-%m-%d %H:%M}</p>
         <p><b>Total new submissions:</b> {len(submissions)}</p>
         <hr>
     """]
-
-    inline_images: list[tuple[str, bytes, str]] = []      # for send_email()
+    inline_images: list[tuple[str, bytes, str]] = []
 
     for idx, sub in enumerate(submissions, start=1):
         quest = sub.quest
@@ -775,12 +769,10 @@ def send_social_media_liaison_email(game_id: int) -> bool:
               <h3>{idx}. Quest: {quest.title}</h3>
               <p>User: {user.username} &nbsp;|&nbsp; Submitted: {sub.timestamp:%Y-%m-%d %H:%M}</p>
         """)
-
         if sub.comment:
             html_parts.append(f"<p><i>{sanitize_html(sub.comment)}</i></p>")
 
         if sub.image_url:
-            # load the image bytes and create a CID
             image_path = os.path.join(current_app.static_folder, sub.image_url)
             try:
                 with open(image_path, 'rb') as f:
@@ -793,19 +785,16 @@ def send_social_media_liaison_email(game_id: int) -> bool:
                          style="max-width:300px;max-height:300px"><br>
                 """)
             except OSError:
-                # fall back to external link if the file is missing
+                # Fall back to a public URL using url_for('static', …)
                 with current_app.test_request_context():
-                    url = url_for('static', filename=sub.image_url, _external=True)
-                html_parts.append(f'<img src="{url}" alt="submission image"><br>')
+                    public_url = url_for('static', filename=sub.image_url, _external=True)
+                html_parts.append(f'<img src="{public_url}" alt="submission image"><br>')
 
         html_parts.append("</div>")
 
     html_body = "<html><body>" + "\n".join(html_parts) + "</body></html>"
-
     subject = f"New submissions for {game.title} – {datetime.now(utc):%Y-%m-%d}"
-    sent = send_email(game.social_media_liaison_email, subject,
-                      html_body, inline_images)
-
+    sent = send_email(game.social_media_liaison_email, subject, html_body, inline_images)
     if sent:
         game.last_social_media_email_sent = datetime.now(utc)
         db.session.commit()
