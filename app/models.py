@@ -112,10 +112,14 @@ class User(UserMixin, db.Model):
         'QuestSubmission', backref='submitter', lazy='dynamic',
         cascade='all, delete-orphan'
     )
-    # Use a JSON column so that the tests can run on SQLite which does not
-    # support the PostgreSQL ARRAY type used in production. JSON gracefully
-    # degrades to TEXT storage on SQLite while preserving list semantics.
-    riding_preferences = db.Column(db.JSON, nullable=True, default=list)
+    # Use an ARRAY column in PostgreSQL but fall back to JSON for other
+    # backends (e.g. SQLite during tests). ``with_variant`` allows SQLAlchemy
+    # to use the appropriate type per dialect.
+    riding_preferences = db.Column(
+        db.JSON().with_variant(ARRAY(TEXT), "postgresql"),
+        nullable=True,
+        default=list,
+    )
     ride_description = db.Column(db.String(500), nullable=True)
     bike_picture = db.Column(db.String(200), nullable=True)
     bike_description = db.Column(db.String(500), nullable=True)
