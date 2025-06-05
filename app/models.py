@@ -112,7 +112,10 @@ class User(UserMixin, db.Model):
         'QuestSubmission', backref='submitter', lazy='dynamic',
         cascade='all, delete-orphan'
     )
-    riding_preferences = db.Column(ARRAY(TEXT), nullable=True, default=list)
+    # Use a JSON column so that the tests can run on SQLite which does not
+    # support the PostgreSQL ARRAY type used in production. JSON gracefully
+    # degrades to TEXT storage on SQLite while preserving list semantics.
+    riding_preferences = db.Column(db.JSON, nullable=True, default=list)
     ride_description = db.Column(db.String(500), nullable=True)
     bike_picture = db.Column(db.String(200), nullable=True)
     bike_description = db.Column(db.String(500), nullable=True)
