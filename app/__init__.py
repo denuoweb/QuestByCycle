@@ -96,7 +96,6 @@ def create_app(config_overrides=None):
         "UPLOAD_FOLDER": inscopeconfig["main"]["UPLOAD_FOLDER"],
         "VERIFICATIONS": inscopeconfig["main"]["VERIFICATIONS"],
         "BADGE_IMAGE_DIR": inscopeconfig["main"]["BADGE_IMAGE_DIR"],
-        "CAROUSEL_IMAGES_DIR": inscopeconfig["main"]["CAROUSEL_IMAGES_DIR"],
         "TASKCSV": inscopeconfig["main"]["TASKCSV"],
         "LOCAL_DOMAIN": inscopeconfig["main"]["LOCAL_DOMAIN"],
         "MAIL_SERVER": inscopeconfig["mail"]["MAIL_SERVER"],
