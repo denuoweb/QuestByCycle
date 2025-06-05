@@ -737,7 +737,7 @@ def edit_profile(user_id):
     except Exception as exc:
         db.session.rollback()
         logger.error('Exception occurred: %s', exc)
-        return
+        return jsonify({'error': 'Internal server error'}), 500
 
 
 @main_bp.route('/profile/<int:user_id>/edit-bike', methods=['POST'])
@@ -767,13 +767,13 @@ def edit_bike(user_id):
         except Exception as exc:
             db.session.rollback()
             logger.error('Exception occurred: %s', exc)
-            return
+            return jsonify({'error': 'Internal server error'}), 500
 
     logger.debug('Bike form validation failed.')
     for field, errors in bike_form.errors.items():
         for error in errors:
             logger.debug('Error in the %s field - %s', field, error)
-    return
+    return jsonify({'error': 'Invalid form submission'}), 400
 
 
 @main_bp.route('/pin_message/<int:game_id>/<int:message_id>', methods=['POST'])
