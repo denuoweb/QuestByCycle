@@ -86,7 +86,6 @@ def load_config():
             "UPLOAD_FOLDER": _get_env("UPLOAD_FOLDER", _toml_config["main"]["UPLOAD_FOLDER"]),
             "VERIFICATIONS": _get_env("VERIFICATIONS", _toml_config["main"]["VERIFICATIONS"]),
             "BADGE_IMAGE_DIR": _get_env("BADGE_IMAGE_DIR", _toml_config["main"]["BADGE_IMAGE_DIR"]),
-            "CAROUSEL_IMAGES_DIR": _get_env("CAROUSEL_IMAGES_DIR", _toml_config["main"]["CAROUSEL_IMAGES_DIR"]),
             "TASKCSV": _get_env("TASKCSV", _toml_config["main"]["TASKCSV"]),
             "LOCAL_DOMAIN": _get_env("LOCAL_DOMAIN", _toml_config["main"]["LOCAL_DOMAIN"]),
         },
