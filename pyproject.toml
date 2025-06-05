@@ -44,6 +44,7 @@ toml                  = "0.10.2"
 
 # ───── Development & testing ───────────────────────────────────────────
 pytest                = "^8.3.5"
+python-dotenv = "^1.1.0"
 
 [tool.poetry.group.dev.dependencies]
 libsass               = "^0.23.0"
