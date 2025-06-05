@@ -271,9 +271,7 @@ def submit_quest(quest_id):
         new_submission = QuestSubmission(
             quest_id=quest_id,
             user_id=current_user.id,
-            image_url=(url_for("static", filename=image_url)
-                       if image_url
-                       else url_for("static", filename="images/commentPlaceholder.png")),
+            image_url=(image_url if image_url else "images/commentPlaceholder.png"),
             comment=comment,
             twitter_url=twitter_url,
             fb_url=fb_url,
@@ -762,9 +760,7 @@ def submit_photo(quest_id):
         new_submission = QuestSubmission(
             quest_id=quest_id,
             user_id=current_user.id,
-            image_url=(url_for("static", filename=image_url)
-                       if image_url
-                       else url_for("static", filename="images/commentPlaceholder.png")),
+            image_url=(image_url if image_url else "images/commentPlaceholder.png"),
             comment="",  # Adjust if you wish to include comments
             twitter_url=twitter_url,
             fb_url=fb_url,
@@ -1217,7 +1213,7 @@ def update_submission_photo(submission_id):
 
     # save new image (you may want to delete old one)
     new_path = save_submission_image(photo)
-    sub.image_url = url_for('static', filename=new_path, _external=False)
+    sub.image_url = new_path
     db.session.commit()
 
     return jsonify(success=True, image_url=sub.image_url)
