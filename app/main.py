@@ -337,7 +337,7 @@ def index(game_id, quest_id, user_id):
     categories = sorted({quest.category for quest in quests if quest.category})
 
     # Custom vs closed games (exclude demos)
-    all_custom = Game.query.filter(
+    open_games = Game.query.filter(
         Game.custom_game_code.isnot(None),
         Game.is_public.is_(True),
         Game.is_demo.is_(False),
@@ -345,8 +345,12 @@ def index(game_id, quest_id, user_id):
         (Game.end_date.is_(None) | (Game.end_date >= now))
     ).all()
 
-    open_games   = all_custom
-    closed_games = []  # or another query if you really need it
+    closed_games = Game.query.filter(
+        Game.custom_game_code.isnot(None),
+        Game.is_public.is_(True),
+        Game.is_demo.is_(False),
+        Game.end_date < now
+    ).all()
 
     # Ongoing demo for UI context
     demo_game = (Game.query
