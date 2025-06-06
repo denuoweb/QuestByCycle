@@ -3,6 +3,7 @@
     "short_name": "QuestCycle",
     "description": "Photo sharing cycling app promoting environmental sustainability.",
     "start_url": "/",
+    "scope": "/",
     "theme_color": "#D0E6B5",
     "background_color": "#f0f0f0",
     "display": "standalone",

@@ -15,6 +15,7 @@ QuestByCycle is a Flask-based web application designed to engage and motivate th
 - **Quest Submission:** An interface for users to submit completed quests or missions, facilitating the review and award of badges.
 - **User Profiles:** Dedicated pages for users to view their badges, completed quests, and ranking within the community.
 - **Responsive Design:** Ensuring a seamless and engaging user experience across various devices and screen sizes.
+- **PWA/TWA Support:** Service worker and offline page. See [docs/PWA.md](docs/PWA.md) for configuration.
 
 ## Getting Started
 

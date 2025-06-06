@@ -941,10 +941,10 @@ def send_social_media_liaison_email(game_id: int) -> bool:
     # 9) Attempt to send the email
     try:
         sent = send_email(
-            to_address=liaison_email,
+            to=liaison_email,
             subject=subject,
-            html_body=html_body,
-            inline_images=inline_images
+            html_content=html_body,
+            inline_images=inline_images,
         )
     except Exception as e:
         current_app.logger.error(f"Exception when sending email to '{liaison_email}': {e}")

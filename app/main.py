@@ -924,3 +924,37 @@ def resize_image():
     except Exception as exc:
         current_app.logger.error("Exception occurred during image processing: %s", exc)
         return
+
+
+@main_bp.route('/sw.js')
+def service_worker():
+    """Serve the service worker from the application root."""
+    response = current_app.send_static_file('sw.js')
+    response.headers['Content-Type'] = 'application/javascript'
+    return response
+
+
+@main_bp.route('/offline.html')
+def offline_page():
+    """Return the offline fallback page."""
+    return current_app.send_static_file('offline.html')
+
+
+@main_bp.route('/.well-known/assetlinks.json')
+def assetlinks():
+    """Serve digital asset links for TWA validation."""
+    fingerprint = current_app.config.get("TWA_SHA256_FINGERPRINT", "")
+    data = [
+        {
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {
+                "namespace": "android_app",
+                "package_name": "org.questbycycle.app",
+                "sha256_cert_fingerprints": [fingerprint],
+            },
+        }
+    ]
+    return current_app.response_class(
+        response=json.dumps(data),
+        mimetype="application/json",
+    )

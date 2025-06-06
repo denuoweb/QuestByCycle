@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // --------------------------------------------------------------
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker
-      .register('static/sw.js')
+      .register('/sw.js')
       .then(function(registration) {
         registration.addEventListener('updatefound', function() {
           var newWorker = registration.installing;
