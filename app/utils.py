@@ -204,6 +204,11 @@ def save_submission_video(submission_video_file):
         submission_video_file.seek(0, os.SEEK_END)
         size = submission_video_file.tell()
         submission_video_file.seek(0)
+        current_app.logger.debug(
+            "Uploaded video size: %s bytes for file '%s'",
+            size,
+            submission_video_file.filename,
+        )
         if size > MAX_VIDEO_BYTES:
             raise ValueError("Video exceeds 10 MB limit")
 
@@ -213,6 +218,7 @@ def save_submission_video(submission_video_file):
         os.makedirs(tmp_dir, exist_ok=True)
         orig_name = secure_filename(f"{uuid.uuid4()}_orig.{ext}")
         orig_path = os.path.join(tmp_dir, orig_name)
+        current_app.logger.debug("Saving original upload to %s", orig_path)
         submission_video_file.save(orig_path)
 
         # final path for the compressed mp4
@@ -229,14 +235,21 @@ def save_submission_video(submission_video_file):
             '-c:a', 'aac', '-movflags', 'faststart',
             '-y', final_path
         ]
+        current_app.logger.debug("Running ffmpeg command: %s", ' '.join(ffmpeg_cmd))
         subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         # cleanup original upload
         os.remove(orig_path)
+        current_app.logger.debug("Removed temporary upload %s", orig_path)
 
         # final size check
-        if os.path.getsize(final_path) > MAX_VIDEO_BYTES:
+        final_size = os.path.getsize(final_path)
+        current_app.logger.debug("Compressed video size: %s bytes", final_size)
+        if final_size > MAX_VIDEO_BYTES:
             os.remove(final_path)
+            current_app.logger.debug(
+                "Compressed video exceeded max size and was deleted"
+            )
             raise ValueError("Video exceeds 10 MB limit after compression")
 
         return os.path.join('videos', 'verifications', final_name)

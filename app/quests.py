@@ -207,6 +207,7 @@ def submit_quest(quest_id):
     if an image is provided and the user is set to cross-post, it will also post
     to Mastodon and generate a local ActivityPub Create activity.
     """
+    current_app.logger.debug("Start quest submission for quest_id=%s", quest_id)
     quest = Quest.query.get_or_404(quest_id)
     game = Game.query.get_or_404(quest.game_id)
     now = datetime.now(utc)
@@ -233,6 +234,15 @@ def submit_quest(quest_id):
     image_file = request.files.get("image")
     video_file = request.files.get("video")
     comment = sanitize_html(request.form.get("verificationComment", ""))
+
+    # Debug logging of incoming files and parameters
+    current_app.logger.debug(
+        "submit_quest called: sid=%s, verification_type=%s, image_file=%s, video_file=%s",
+        sid,
+        verification_type,
+        getattr(image_file, "filename", None),
+        getattr(video_file, "filename", None),
+    )
 
     # Handle different verification types.
     if verification_type == "qr_code":
@@ -267,8 +277,12 @@ def submit_quest(quest_id):
             image_url = save_submission_image(image_file)
             image_path = os.path.join(current_app.static_folder, image_url)
         elif video_file and video_file.filename:
+            current_app.logger.debug(
+                "Attempting to save video file '%s'", video_file.filename
+            )
             try:
                 video_url = save_submission_video(video_file)
+                current_app.logger.debug("Video saved to %s", video_url)
             except ValueError as ve:
                 current_app.logger.error(f"Error processing video file: {str(ve)}")
                 return jsonify({"success": False, "message": "An error occurred while processing the video file. Please try again later."}), 400
@@ -332,6 +346,11 @@ def submit_quest(quest_id):
         if image_url or video_url:
             activity = post_activitypub_create_activity(new_submission, current_user, quest)
 
+        current_app.logger.debug(
+            "Quest submission successful: image_url=%s, video_url=%s",
+            image_url,
+            video_url,
+        )
 
         return jsonify({
             "success": True,
