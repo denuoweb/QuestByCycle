@@ -6,6 +6,7 @@ from app import create_app, db
 from app.models import Game, User, Quest, QuestSubmission, Badge
 from app.main import _prepare_quests, _prepare_user_data
 
+
 @pytest.fixture
 def app():
     app = create_app({

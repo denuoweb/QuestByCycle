@@ -207,7 +207,7 @@ def _prepare_quests(game, user_id, user_quests, now):
 
     quests.sort(key=lambda x: (-x.is_sponsored, -x.personal_completions, -x.total_completions))
     return quests, activities
-
+  
 
 def _prepare_user_data(game_id, profile):
     # 1. Bulk-load all game badges and their quests in one go
