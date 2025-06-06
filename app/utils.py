@@ -187,6 +187,23 @@ def save_submission_image(submission_image_file):
         raise
 
 
+def save_submission_video(submission_video_file):
+    """Save an uploaded video for quest verification."""
+    try:
+        ext = submission_video_file.filename.rsplit('.', 1)[-1]
+        filename = secure_filename(f"{uuid.uuid4()}.{ext}")
+        uploads_dir = os.path.join(current_app.static_folder, 'videos', 'verifications')
+
+        os.makedirs(uploads_dir, exist_ok=True)
+
+        full_path = os.path.join(uploads_dir, filename)
+        submission_video_file.save(full_path)
+        return os.path.join('videos', 'verifications', filename)
+    except Exception as e:
+        current_app.logger.error(f"Failed to save video: {e}")
+        raise
+
+
 def save_sponsor_logo(image_file, old_filename=None):
     # Check if the uploaded file has a valid filename
     if image_file and allowed_file(image_file.filename):
