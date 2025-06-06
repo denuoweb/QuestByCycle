@@ -141,7 +141,7 @@ function showUserProfileModal(userId) {
                         <button type="button" class="btn btn-success" onclick="saveProfile(${userId})">
                           <i class="bi bi-save me-2"></i>Save Profile
                         </button>
-                        <button class="btn btn-secondary" onclick="toggleProfileEditMode()">Cancel</button>
+                        <button class="btn btn-secondary" onclick="cancelProfileEdit(${userId})">Cancel</button>
                       </div>
                     </form>
                     <hr>
@@ -372,6 +372,10 @@ function toggleProfileEditMode() {
   const editDiv = document.getElementById('profileEditMode');
   viewDiv.classList.toggle('d-none');
   editDiv.classList.toggle('d-none');
+}
+
+function cancelProfileEdit(userId) {
+  showUserProfileModal(userId);
 }
 
 function saveProfile(userId) {
