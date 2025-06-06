@@ -109,7 +109,7 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
     }
     switch (quest.verification_type) {
         case 'photo_comment':
-            elements['modalQuestVerificationType'].innerText = "Must upload a photo and a comment to earn points!";
+            elements['modalQuestVerificationType'].innerText = "Must upload a photo to earn points! Comment optional.";
             break;
         case 'photo':
             elements['modalQuestVerificationType'].innerText = "Must upload a photo to earn points!";
@@ -251,9 +251,9 @@ function getVerificationFormHTML(verificationType) {
                  class="epic-input" accept="image/*" required>
         </div>
         <div class="form-group">
-          <label for="verificationComment" class="epic-label">Enter a Comment</label>
+          <label for="verificationComment" class="epic-label">Enter a Comment (optional)</label>
           <textarea id="verificationComment" name="verificationComment"
-                    class="epic-textarea" placeholder="Enter a comment..." required></textarea>
+                    class="epic-textarea" placeholder="Enter a comment..."></textarea>
         </div>
         <div class="form-group">
           <button type="submit">Submit Verification</button>
