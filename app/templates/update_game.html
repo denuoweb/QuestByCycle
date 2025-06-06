@@ -129,6 +129,10 @@
         </div>
         <button type="submit" class="btn btn-primary">Update Game</button>
     </form>
+    <form method="POST" action="{{ url_for('games.send_liaison_email', game_id=game_id) }}" style="margin-top: 1rem;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-secondary">Send Liaison Email Now</button>
+    </form>
 </div>
 
 
