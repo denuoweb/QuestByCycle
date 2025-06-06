@@ -390,7 +390,6 @@ function submitQuestDetails(event, questId) {
 
   const formData = new FormData(event.target);
   formData.append('user_id', CURRENT_USER_ID);
-  formData.append('sid', socket.id);
 
   showLoadingModal();
 

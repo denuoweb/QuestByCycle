@@ -161,9 +161,6 @@ def load_config():
             "instagram_access_token": _get_env("INSTAGRAM_ACCESS_TOKEN", _toml_config["social"]["instagram_access_token"]),
             "instagram_user_id": _get_env("INSTAGRAM_USER_ID", _toml_config["social"]["instagram_user_id"]),
         },
-        "socketio": {
-            "SERVER_URL": _get_env("SOCKETIO_SERVER_URL", _toml_config["socketio"]["SERVER_URL"]),
-        },
         # -----------------------------------------------------------------------------
         # 6. Safely read the sqlalchemy_engine_options section or fall back to defaults
         # -----------------------------------------------------------------------------

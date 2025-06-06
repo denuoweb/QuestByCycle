@@ -308,8 +308,6 @@ def submit_quest(quest_id):
         if image_url:
             activity = post_activitypub_create_activity(new_submission, current_user, quest)
 
-        from app import socketio
-        socketio.emit("submission_complete", {"status": "Submission Complete"}, room=sid)
 
         return jsonify({
             "success": True,
@@ -790,8 +788,6 @@ def submit_photo(quest_id):
 
         activity = post_activitypub_create_activity(new_submission, current_user, quest)
 
-        from app import socketio
-        socketio.emit("submission_complete", {"status": "Submission Complete"}, room=sid)
         message = "Photo submitted successfully!"
         return jsonify({
             "success": True,
