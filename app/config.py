@@ -10,6 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent       # e.g., "<project_root>/app"
 PROJECT_ROOT = BASE_DIR.parent                   # "<project_root>"
 ENV_PATH = PROJECT_ROOT / ".env"
 TOML_PATH = PROJECT_ROOT / "config.toml"
+DEFAULT_TOML_PATH = PROJECT_ROOT / "config.toml.example"
 
 # -----------------------------------------------------------------------------
 # 2. Load environment variables from ".env" if it exists.
@@ -54,10 +55,12 @@ def _get_env_integer(key: str, default: int):
 # -----------------------------------------------------------------------------
 # 4. Load the TOML file into a dictionary. If it is missing, error out.
 # -----------------------------------------------------------------------------
-if not TOML_PATH.exists():
-    raise FileNotFoundError(f"Configuration file not found at {TOML_PATH}")
-
-_toml_config = toml.load(TOML_PATH)
+if TOML_PATH.exists():
+    _toml_config = toml.load(TOML_PATH)
+elif DEFAULT_TOML_PATH.exists():
+    _toml_config = toml.load(DEFAULT_TOML_PATH)
+else:
+    _toml_config = {}
 
 # -----------------------------------------------------------------------------
 # 5. Build a new config dictionary, where environment variables override TOML.
