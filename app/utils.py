@@ -2,6 +2,7 @@ import uuid
 import os
 import subprocess
 import csv
+import io
 import bleach
 import smtplib
 from flask import current_app, request, url_for
@@ -836,23 +837,20 @@ def send_social_media_liaison_email(game_id: int) -> bool:
             html_parts.append(f"<p><i>{sanitize_html(sub.comment)}</i></p>")
 
         if sub.image_url:
-            # If it's already a fully-qualified URL, just embed directly
-            if sub.image_url.startswith(('http://', 'https://')):
-                html_parts.append(
-                    f'<img src="{sub.image_url}" alt="submission image" '
-                    f'style="max-width:300px;max-height:300px"><br>'
-                )
-            else:
-                image_rel = sub.image_url.lstrip('/')
-                if image_rel.startswith('static/'):
-                    image_rel = image_rel[len('static/') :]
-                image_path = os.path.join(current_app.static_folder, image_rel)
-                try:
-                    with open(image_path, 'rb') as f:
-                        img_bytes = f.read()
-                    ext = os.path.splitext(image_path)[1].lstrip('.') or 'png'
-                    cid = f'submission_{sub.id}'
-                    inline_images.append((cid, img_bytes, ext))
+            image_path = os.path.join(current_app.static_folder, sub.image_url)
+            try:
+                with Image.open(image_path) as img:
+                    max_width = 600
+                    if img.width > max_width:
+                        ratio = max_width / float(img.width)
+                        height = int(img.height * ratio)
+                        img = img.resize((max_width, height), Image.Resampling.LANCZOS)
+
+                    buffer = io.BytesIO()
+                    img.convert('RGB').save(buffer, format='JPEG', quality=70)
+                    img_bytes = buffer.getvalue()
+                cid = f'submission_{sub.id}'
+                inline_images.append((cid, img_bytes, 'jpeg'))
                     html_parts.append(
                         f'<img src="cid:{cid}" alt="submission image" '
                         f'style="max-width:300px;max-height:300px"><br>'
