@@ -141,7 +141,7 @@ function showUserProfileModal(userId) {
                         <button type="button" class="btn btn-success" onclick="saveProfile(${userId})">
                           <i class="bi bi-save me-2"></i>Save Profile
                         </button>
-                        <button class="btn btn-secondary" onclick="toggleProfileEditMode()">Cancel</button>
+                        <button class="btn btn-secondary" onclick="cancelProfileEdit(${userId})">Cancel</button>
                       </div>
                     </form>
                     <hr>
@@ -374,6 +374,10 @@ function toggleProfileEditMode() {
   editDiv.classList.toggle('d-none');
 }
 
+function cancelProfileEdit(userId) {
+  showUserProfileModal(userId);
+}
+
 function saveProfile(userId) {
   const form = document.getElementById('editProfileForm');
   const formData = new FormData(form);
@@ -399,7 +403,15 @@ function saveProfile(userId) {
     .then(r => r.json())
     .then(data => {
       if (data.error) {
-        alert(`Error: ${data.error}`);
+        let msg = `Error: ${data.error}`;
+        if (data.details) {
+          const details = [];
+          Object.values(data.details).forEach(errArr => {
+            details.push(errArr.join(', '));
+          });
+          if (details.length) msg += ` - ${details.join('; ')}`;
+        }
+        alert(msg);
       } else {
         alert('Profile updated successfully.');
         showUserProfileModal(userId);

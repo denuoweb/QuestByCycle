@@ -160,7 +160,7 @@ Forms are defined using WTForms in `app/forms.py` and include:
 - **`ProfileForm`**: Form for updating user profiles.
 - **`ShoutBoardForm`**: Form for posting messages on the Shout Board.
 - **`QuestForm`**: Form for creating and updating quests.
-- **`PhotoForm`**: Form for submitting photos for quest verification.
+ - **`PhotoForm`**: Form for submitting photos or videos for quest verification.
 - **`ContactForm`**: Form for contacting support.
 
 ### Utilities

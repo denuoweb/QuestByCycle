@@ -185,6 +185,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="javascript:void(0)" onclick="openModal('sponsorsModal', '{{ selected_game_id }}')">
+                                <i class="fas fa-handshake me-1"></i>Sponsors
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="javascript:void(0)" onclick="openModal('contactModal', '{{ selected_game_id }}')">
                                 <i class="fas fa-comment-dots me-1"></i> Feedback
                             </a>
@@ -222,11 +227,6 @@
                     <a href="javascript:void(0)" class="btn btn-primary btn-lg" onclick="openModal('registerModal')">Register Today!</a>
                 </li>
               {% endif %}
-              <li class="nav-item">
-                  <a class="nav-link" href="javascript:void(0)" onclick="openModal('sponsorsModal', '{{ selected_game_id }}')">
-                      <i class="fas fa-handshake me-1"></i>Game Sponsors
-                  </a>
-              </li>
           </ul>
       </div>
   </div>
