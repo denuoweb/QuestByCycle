@@ -761,8 +761,17 @@ def submit_photo(quest_id):
 
         photo = request.files.get("photo")
         video = request.files.get("video")
+
+        # If the "photo" field contains a video (common from mobile devices),
+        # treat it as a video upload. The form only has a single file input
+        # named "photo", so video files will appear in this field.
+        if photo and not video and photo.mimetype.startswith("video/"):
+            video = photo
+            photo = None
+
         image_url = None
         video_url = None
+
         if photo:
             image_url = save_submission_image(photo)
             media_path = os.path.join(current_app.static_folder, image_url)
