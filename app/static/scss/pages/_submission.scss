@@ -34,6 +34,16 @@
     margin: 0 auto 20px;
     border-radius: 4px;
   }
+
+  .verification-video {
+    width: 100%;
+    height: auto;
+    max-height: calc(100vh - 200px);
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 20px;
+    border-radius: 4px;
+  }
 }
 
 // ── INLINE AVATAR ──

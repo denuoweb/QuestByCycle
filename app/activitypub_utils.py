@@ -406,13 +406,22 @@ def post_activitypub_create_activity(submission, user, quest):
     Build, store, deliver—and notify local followers of—an ActivityPub Create activity.
     """
     # 1) build the Submission object
+    if submission.video_url:
+        media_type = 'video/mp4'
+        media_url = submission.video_url
+        obj_type = 'Video'
+    else:
+        media_type = 'image/jpeg'
+        media_url = submission.image_url
+        obj_type = 'Image'
+
     submission_object = {
         'id':           f"{user.activitypub_id}/submissions/{submission.id}",
-        'type':         'Image',
+        'type':         obj_type,
         'attributedTo': user.activitypub_id,
         'content':      f"Submission for quest “{quest.title}”",
-        'mediaType':    'image/jpeg',
-        'url':          submission.image_url,
+        'mediaType':    media_type,
+        'url':          media_url,
         'published':    submission.timestamp.isoformat()
     }
 
@@ -493,12 +502,13 @@ def post_activitypub_like_activity(submission, user):
     """
     actor_id   = user.activitypub_id
     object_id  = f"{actor_id}/submissions/{submission.id}"
+    obj_type = 'Video' if submission.video_url else 'Image'
     activity = {
       '@context': AS_CONTEXT,
       'id'     : f"{actor_id}/activities/like/{submission.id}/{int(datetime.now(timezone.utc).timestamp())}",
       'type'   : 'Like',
       'actor'  : actor_id,
-      'object' : {'id': object_id, 'type': 'Image'},
+      'object' : {'id': object_id, 'type': obj_type},
       'to'     : [submission_attributed_actor := submission.user.activitypub_id]
     }
     # Persist to outbox if desired, then fan-out:
