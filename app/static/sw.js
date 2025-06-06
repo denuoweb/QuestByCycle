@@ -37,7 +37,6 @@ const APP_STATIC_RESOURCES = [
   "/static/js/leaderboard_modal.js",
   "/static/js/modal_common.js",
   "/static/js/quest_detail_modal.js",
-  "/static/js/shepherd_tour.js",
   "/static/js/3rd/quill.js.map",
   "/static/js/3rd/quill.min.js",
   "/static/js/3rd/socket.io.min.js",
