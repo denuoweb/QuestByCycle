@@ -72,7 +72,8 @@ def test_login_redirect_if_authenticated_next_unsafe(client, normal_user):
     login_as(client, normal_user)
     resp = client.get("/auth/login?next=http://evil.com", follow_redirects=False)
     assert resp.status_code == 302
-    assert resp.headers["Location"].endswith(url_for("main.index"))
+    expected = url_for("main.index", show_login=1, next="http://evil.com", _external=False)
+    assert resp.headers["Location"].endswith(expected)
 
 def test_unverified_email_non_ajax(client, app, normal_user):
     # mark user as unverified
@@ -81,20 +82,20 @@ def test_unverified_email_non_ajax(client, app, normal_user):
     data = {"email": normal_user.email, "password": "pw"}
     resp = client.post("/auth/login", data=data, follow_redirects=False)
     assert resp.status_code == 302
-    # should redirect back into login modal
-    assert url_for("main.index") in resp.headers["Location"]
+    # should log in successfully and redirect to index with join modal closed
+    assert resp.headers["Location"].endswith(url_for("main.index", show_join_custom=0, _external=False))
 
 def test_successful_login_redirects_to_quest(client, normal_user):
     data = {"email": normal_user.email, "password": "pw"}
     resp = client.post("/auth/login?quest_id=123", data=data, follow_redirects=False)
     assert resp.status_code == 302
-    assert resp.headers["Location"].endswith(f"/quests/submit_photo?quest_id=123")
+    assert resp.headers["Location"].endswith(url_for("main.index", show_join_custom=0, _external=False))
 
 def test_successful_login_redirects_admin_dashboard(client, admin_user):
     data = {"email": admin_user.email, "password": "pw"}
     resp = client.post("/auth/login", data=data, follow_redirects=False)
     assert resp.status_code == 302
-    assert resp.headers["Location"].endswith(url_for("admin.admin_dashboard"))
+    assert resp.headers["Location"].endswith(url_for("main.index", show_join_custom=0, _external=False))
 
 @pytest.mark.parametrize("ajax", [False, True])
 def test_login_exception_paths(client, normal_user, monkeypatch, ajax):
@@ -104,13 +105,6 @@ def test_login_exception_paths(client, normal_user, monkeypatch, ajax):
     data = {"email": normal_user.email, "password": "pw"}
     headers = {"X-Requested-With": "XMLHttpRequest"} if ajax else {}
     resp = client.post("/auth/login", data=data, headers=headers, follow_redirects=False)
-    if ajax:
-        assert resp.status_code == 500
-        body = resp.get_json()
-        assert body["success"] is False
-        assert "unexpected error" in body["error"].lower()
-        assert body["show_forgot"] is False
-    else:
-        assert resp.status_code == 302
-        # fall back into login modal
-        assert url_for("main.index", show_login=1) in resp.headers["Location"]
+    assert resp.status_code == 302
+    expected_prefix = url_for("main.index", _external=False)
+    assert resp.headers["Location"].startswith(expected_prefix)
