@@ -15,7 +15,7 @@ flask-assets          = "2.1.0"
 flask-wtf             = "1.2.2"
 flask-sqlalchemy      = "3.1.1"
 flask-login           = "0.6.3"
-flask-socketio        = "5.5.1"
+
 
 # ───── Data layer ──────────────────────────────────────────────────────
 sqlalchemy            = "2.0.41"
@@ -30,7 +30,6 @@ bleach                = "6.2.0"
 
 # ───── Infrastructure & runtime ───────────────────────────────────────
 gunicorn              = "23.0.0"
-gevent                = "25.5.1"
 apscheduler           = "3.11.0"
 
 # ───── Utility libraries ───────────────────────────────────────────────
@@ -45,7 +44,6 @@ toml                  = "0.10.2"
 # ───── Development & testing ───────────────────────────────────────────
 pytest                = "^8.3.5"
 python-dotenv = "^1.1.0"
-gevent-websocket = "^0.10.1"
 rsa = "^4.9.1"
 
 [tool.poetry.group.dev.dependencies]
