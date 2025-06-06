@@ -193,6 +193,9 @@ def _prepare_quests(game, user_id, user_quests, now):
     activities = pinned_messages + (unpinned_messages + [ut for ut in completed_quests if ut.quest.game_id == game.id])
     activities.sort(key=get_datetime, reverse=True)
 
+    # Filter out quests with no badge and no submissions
+    quests = [q for q in quests if not (q.badge_id is None and q.total_completions == 0)]
+
     quests.sort(key=lambda x: (-x.is_sponsored, -x.personal_completions, -x.total_completions))
     return quests, activities
 
