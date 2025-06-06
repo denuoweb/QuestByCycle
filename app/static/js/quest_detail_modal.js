@@ -261,6 +261,25 @@ function getVerificationFormHTML(verificationType) {
       `;
       break;
 
+    /* ─────────────────────────────── VIDEO ─────────────────────────────── */
+    case 'video':
+      formHTML += `
+        <div class="form-group">
+          <label for="video" class="epic-label">Upload a Video</label>
+          <input type="file" id="video" name="video"
+                 class="epic-input" accept="video/*" required>
+        </div>
+        <div class="form-group">
+          <label for="verificationComment" class="epic-label">Add a Comment (optional)</label>
+          <textarea id="verificationComment" name="verificationComment"
+                    class="epic-textarea" placeholder="Enter an optional comment..."></textarea>
+        </div>
+        <div class="form-group">
+          <button type="submit">Submit Verification</button>
+        </div>
+      `;
+      break;
+
     /* ───────────────────────────────── QR CODE ──────────────────────────── */
     case 'qr_code':
       formHTML += `<p class="epic-message">Find and scan the QR code. No submission required here.</p>`;
