@@ -773,22 +773,32 @@ def send_social_media_liaison_email(game_id: int) -> bool:
             html_parts.append(f"<p><i>{sanitize_html(sub.comment)}</i></p>")
 
         if sub.image_url:
-            image_path = os.path.join(current_app.static_folder, sub.image_url)
-            try:
-                with open(image_path, 'rb') as f:
-                    img_bytes = f.read()
-                ext   = os.path.splitext(image_path)[1].lstrip('.').lower() or 'png'
-                cid   = f'submission_{sub.id}'
-                inline_images.append((cid, img_bytes, ext))
-                html_parts.append(f"""
-                    <img src="cid:{cid}" alt="submission image"
-                         style="max-width:300px;max-height:300px"><br>
-                """)
-            except OSError:
-                # Fall back to a public URL using url_for('static', …)
-                with current_app.test_request_context():
-                    public_url = url_for('static', filename=sub.image_url, _external=True)
-                html_parts.append(f'<img src="{public_url}" alt="submission image"><br>')
+            # If it's already a fully-qualified URL, just embed directly
+            if sub.image_url.startswith(('http://', 'https://')):
+                html_parts.append(
+                    f'<img src="{sub.image_url}" alt="submission image" '
+                    f'style="max-width:300px;max-height:300px"><br>'
+                )
+            else:
+                image_rel = sub.image_url.lstrip('/')
+                if image_rel.startswith('static/'):
+                    image_rel = image_rel[len('static/') :]
+                image_path = os.path.join(current_app.static_folder, image_rel)
+                try:
+                    with open(image_path, 'rb') as f:
+                        img_bytes = f.read()
+                    ext = os.path.splitext(image_path)[1].lstrip('.') or 'png'
+                    cid = f'submission_{sub.id}'
+                    inline_images.append((cid, img_bytes, ext))
+                    html_parts.append(
+                        f'<img src="cid:{cid}" alt="submission image" '
+                        f'style="max-width:300px;max-height:300px"><br>'
+                    )
+                except OSError:
+                    # Fall back to a public URL using url_for('static', …)
+                    with current_app.test_request_context():
+                        public_url = url_for('static', filename=image_rel, _external=True)
+                    html_parts.append(f'<img src="{public_url}" alt="submission image"><br>')
 
         html_parts.append("</div>")
 
