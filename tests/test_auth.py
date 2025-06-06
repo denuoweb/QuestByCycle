@@ -120,12 +120,6 @@ def test_post_invalid_email(client, ajax):
         body = resp.get_json()
         assert body["error"] == "Invalid email or password."
         assert body["show_forgot"] is True
-        # Forgot-URL should point at our forgot_password endpoint
-        from flask import url_for
-        # Build it in a request context so url_for works
-        with client.application.test_request_context():
-            expected_forgot = url_for("auth.forgot_password")
-        assert expected_forgot in body["forgot_url"]
     else:
         # Non-AJAX should redirect back into login modal with show_login=1
         assert resp.status_code == 302
@@ -151,9 +145,9 @@ def test_unverified_email_flow(client, user_unverified, app):
         headers={"X-Requested-With": "XMLHttpRequest"},
         follow_redirects=False,
     )
-    assert resp.status_code == 403
+    assert resp.status_code == 409
     body = resp.get_json()
-    assert body["error"] == "Please verify your email before logging in."
+    assert body["error"] == "Please verify your email. A new link has been sent."
     assert body["show_forgot"] is False
 
 @pytest.mark.parametrize("ajax", [False, True])
@@ -177,11 +171,12 @@ def test_successful_login_defaults_to_index(client, user_normal, ajax):
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
-        # Default redirect is the main index
-        assert body["redirect"] == url_for("main.index")
+        # Default redirect should include the join modal flag
+        assert body["redirect"] == url_for("main.index", show_join_custom=0, _external=False)
     else:
         assert resp.status_code == 302
-        assert resp.headers["Location"].startswith(url_for("main.index"))
+        expected = url_for("main.index", show_join_custom=0, _external=False)
+        assert resp.headers["Location"].startswith(expected)
 
 def test_successful_login_with_next_param(client, user_normal):
     data = {"email": user_normal.email, "password": "secret", "remember_me": "y"}

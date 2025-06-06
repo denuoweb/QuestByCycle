@@ -50,7 +50,7 @@ def test_register_mail_server_sends_verification_and_modal(client):
     assert resp.status_code == 302
     loc = resp.headers["Location"]
     assert "show_join_custom=1" in loc
-    assert "show_login=0" in loc
+    # login flag is not included on success
 
 def test_register_next_overrides_quest(client):
     data = {

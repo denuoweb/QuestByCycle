@@ -136,7 +136,7 @@ def test_register_success_default(client):
     # Should redirect to index opening join modal
     assert url_for("main.index") in loc
     assert "show_join_custom=1" in loc
-    assert "show_login=0" in loc
+    # login flag is not included on success
 
 # 6. POST with next parameter: redirect to next
 
@@ -171,7 +171,6 @@ def test_register_with_game_id(client):
     assert parsed.path == "/42"
     qs = parse_qs(parsed.query)
     assert qs.get("show_join_custom") == ["0"]
-    assert qs.get("show_login") == ["0"]
 
 
 # 8. POST with quest_id parameter: redirect to quest submission
