@@ -39,6 +39,7 @@ from app.utils import (
     save_badge_image,
     save_submission_image,
     save_submission_video,
+    public_media_url,
     update_user_score,
 )
 from app.activitypub_utils import (
@@ -327,8 +328,8 @@ def submit_quest(quest_id):
             "success": True,
             "new_completion_count": user_quest.completions,
             "total_points": total_points,
-            "image_url": image_url,
-            "video_url": video_url,
+            "image_url": public_media_url(image_url),
+            "video_url": public_media_url(video_url),
             "comment": comment,
             "twitter_url": twitter_url,
             "fb_url": fb_url,
@@ -520,8 +521,8 @@ def get_quest_submissions(quest_id):
         user = User.query.get(sub.user_id)
         submissions_data.append({
             "id"                 : sub.id,
-            "image_url"          : sub.image_url,
-            "video_url"          : sub.video_url,
+            "image_url"          : public_media_url(sub.image_url),
+            "video_url"          : public_media_url(sub.video_url),
             "comment"            : sub.comment,
             "timestamp"          : sub.timestamp.strftime("%Y-%m-%d %H:%M"),
             "user_id"            : sub.user_id,
@@ -862,8 +863,8 @@ def get_user_submissions():
     submissions_data = [
         {
             "id": submission.id,
-            "image_url": submission.image_url,
-            "video_url": submission.video_url,
+            "image_url": public_media_url(submission.image_url),
+            "video_url": public_media_url(submission.video_url),
             "comment": submission.comment,
             "user_id": submission.user_id,
             "quest_id": submission.quest_id,
@@ -948,8 +949,8 @@ def get_all_submissions():
                 if submission.user.profile_picture
                 else url_for('static', filename="images/default_profile.png")
             ),
-            "image_url": submission.image_url,
-            "video_url": submission.video_url,
+            "image_url": public_media_url(submission.image_url),
+            "video_url": public_media_url(submission.video_url),
             "comment": submission.comment,
             "timestamp": submission.timestamp.strftime("%Y-%m-%d %H:%M"),
             "twitter_url": submission.twitter_url,
@@ -1059,9 +1060,9 @@ def get_submission(submission_id):
     
     return jsonify({
         'id': submission_id,
-        'url':                  sub.image_url or sub.video_url,
-        'image_url':            sub.image_url,
-        'video_url':            sub.video_url,
+        'url':                  public_media_url(sub.image_url or sub.video_url),
+        'image_url':            public_media_url(sub.image_url),
+        'video_url':            public_media_url(sub.video_url),
         'comment':              sub.comment,
         'user_id':              sub.user_id,
         'user_profile_picture': pic_url,
@@ -1244,4 +1245,8 @@ def update_submission_photo(submission_id):
         return jsonify(success=False, message='No file uploaded'), 400
 
     db.session.commit()
-    return jsonify(success=True, image_url=sub.image_url, video_url=sub.video_url)
+    return jsonify(
+        success=True,
+        image_url=public_media_url(sub.image_url),
+        video_url=public_media_url(sub.video_url)
+    )

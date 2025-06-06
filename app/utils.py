@@ -204,6 +204,13 @@ def save_submission_video(submission_video_file):
         raise
 
 
+def public_media_url(path):
+    """Return a publicly accessible URL for a stored media path."""
+    if not path:
+        return None
+    return url_for('static', filename=path)
+
+
 def save_sponsor_logo(image_file, old_filename=None):
     # Check if the uploaded file has a valid filename
     if image_file and allowed_file(image_file.filename):
