@@ -249,6 +249,25 @@ def public_media_url(path):
     """Return a publicly accessible URL for a stored media path."""
     if not path:
         return None
+
+    # Already an absolute URL
+    if path.startswith(('http://', 'https://')):
+        return path
+
+    # Paths may be stored with or without the leading "static/" segment
+    # and may include a leading slash. Handle these variants to avoid
+    # generating URLs like "/static//images/..." or duplicating the
+    # "static" prefix.
+
+    if path.startswith('/static/'):
+        return path
+
+    # Remove any leading slash before further checks
+    path = path.lstrip('/')
+
+    if path.startswith('static/'):
+        path = path[len('static/') :]
+
     return url_for('static', filename=path)
 
 
