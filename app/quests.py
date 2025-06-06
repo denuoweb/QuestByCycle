@@ -128,12 +128,12 @@ def manage_game_quests(game_id):
 @quests_bp.route("/game/<int:game_id>/add_quest", methods=["GET", "POST"])
 @login_required
 def add_quest(game_id):
-    """
-    Add a new quest to the game.
+    """Add a new quest to the game."""
 
-    Args:
-        game_id (int): The ID of the game.
-    """
+    if not current_user.is_admin:
+        flash("Access denied: Only administrators can add quests.", "danger")
+        return redirect(url_for("main.index", game_id=game_id))
+
     form = QuestForm()
     form.game_id.data = game_id  # Set the game_id field in the form
 
@@ -180,9 +180,16 @@ def add_quest(game_id):
         db.session.add(new_quest)
         try:
             db.session.commit()
+            if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
+                return jsonify(
+                    success=True,
+                    redirectUrl=url_for("quests.manage_game_quests", game_id=game_id)
+                )
             flash("Quest added successfully!", "success")
         except Exception:  # pylint: disable=broad-except
             db.session.rollback()
+            if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
+                return jsonify(success=False, message="An error occurred"), 500
             flash(f"An error occured.", "error")
 
         return redirect(url_for("quests.manage_game_quests", game_id=game_id,
