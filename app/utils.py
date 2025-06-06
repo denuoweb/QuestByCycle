@@ -1,6 +1,8 @@
 import uuid
 import os
+import subprocess
 import csv
+import io
 import bleach
 import smtplib
 from flask import current_app, request, url_for
@@ -13,6 +15,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image    import MIMEImage
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
+from textwrap import dedent
 
 ALLOWED_TAGS = [
     'a', 'b', 'i', 'u', 'em', 'strong', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
@@ -54,6 +57,8 @@ def sanitize_html(html_content):
 
 MAX_POINTS_INT = 2**63 - 1
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+# Videos are limited to 10 MB for uploads
+MAX_VIDEO_BYTES = 10 * 1024 * 1024
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -185,6 +190,66 @@ def save_submission_image(submission_image_file):
     except Exception as e:
         current_app.logger.error(f"Failed to save image: {e}")
         raise
+
+
+def save_submission_video(submission_video_file):
+    """Save an uploaded video for quest verification.
+
+    The uploaded file is converted to H.264 MP4 with basic compression using
+    ``ffmpeg``. Videos over ``MAX_VIDEO_BYTES`` are rejected before conversion
+    and again after compression to ensure storage limits are respected.
+    """
+    try:
+        # initial size check before saving
+        submission_video_file.seek(0, os.SEEK_END)
+        size = submission_video_file.tell()
+        submission_video_file.seek(0)
+        if size > MAX_VIDEO_BYTES:
+            raise ValueError("Video exceeds 10 MB limit")
+
+        # temporary path for the original upload
+        ext = submission_video_file.filename.rsplit('.', 1)[-1]
+        tmp_dir = os.path.join(current_app.static_folder, 'videos', 'tmp')
+        os.makedirs(tmp_dir, exist_ok=True)
+        orig_name = secure_filename(f"{uuid.uuid4()}_orig.{ext}")
+        orig_path = os.path.join(tmp_dir, orig_name)
+        submission_video_file.save(orig_path)
+
+        # final path for the compressed mp4
+        uploads_dir = os.path.join(current_app.static_folder, 'videos', 'verifications')
+        os.makedirs(uploads_dir, exist_ok=True)
+        final_name = secure_filename(f"{uuid.uuid4()}.mp4")
+        final_path = os.path.join(uploads_dir, final_name)
+
+        # run ffmpeg to compress and scale
+        ffmpeg_cmd = [
+            'ffmpeg', '-i', orig_path,
+            '-vf', "scale='min(1280,iw)':-2",
+            '-c:v', 'libx264', '-preset', 'fast', '-crf', '28',
+            '-c:a', 'aac', '-movflags', 'faststart',
+            '-y', final_path
+        ]
+        subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        # cleanup original upload
+        os.remove(orig_path)
+
+        # final size check
+        if os.path.getsize(final_path) > MAX_VIDEO_BYTES:
+            os.remove(final_path)
+            raise ValueError("Video exceeds 10 MB limit after compression")
+
+        return os.path.join('videos', 'verifications', final_name)
+    except Exception as e:
+        current_app.logger.error(f"Failed to save video: {e}")
+        raise
+
+
+def public_media_url(path):
+    """Return a publicly accessible URL for a stored media path."""
+    if not path:
+        return None
+    return url_for('static', filename=path)
 
 
 def save_sponsor_logo(image_file, old_filename=None):
@@ -735,72 +800,174 @@ def get_game_badges(game_id):
 
 
 def send_social_media_liaison_email(game_id: int) -> bool:
-    game = Game.query.get(game_id)
-    if not game or not game.social_media_liaison_email:
+    """
+    Sends an email to the social media liaison for the specified game, reporting
+    all QuestSubmissions that have occurred since the last email (or the game start_date).
+    
+    Returns True if an email was sent, False otherwise.
+    """
+    # 1) Retrieve the Game record (with a possible row‐level lock to avoid race conditions)
+    try:
+        # If you want to lock the row: uncomment the next line
+        # game = Game.query.with_for_update().get(game_id)
+        game = Game.query.get(game_id)
+    except Exception as e:
+        current_app.logger.error(f"Database error while fetching Game id={game_id}: {e}")
         return False
 
+    if game is None:
+        current_app.logger.warning(f"No Game found with id={game_id}. Aborting social media email.")
+        return False
+
+    # 2) Verify that the liaison email is configured
+    liaison_email = game.social_media_liaison_email
+    if not liaison_email:
+        current_app.logger.warning(
+            f"Game id={game_id} has no social_media_liaison_email. Aborting email."
+        )
+        return False
+
+    # 3) Determine cutoff_time: either last email sent or game start_date
     cutoff_time = game.last_social_media_email_sent or game.start_date
+    # Ensure cutoff_time is timezone‐aware; if naive, make it UTC for comparison
+    if cutoff_time.tzinfo is None or cutoff_time.tzinfo.utcoffset(cutoff_time) is None:
+        cutoff_time = cutoff_time.replace(tzinfo=utc)
 
-    submissions = (
-        QuestSubmission.query
-        .join(Quest)
-        .filter(Quest.game_id == game_id,
-                QuestSubmission.timestamp > cutoff_time)
-        .order_by(QuestSubmission.timestamp.desc())
-        .all()
-    )
-    if not submissions:
+    # 4) Fetch all new quest submissions since cutoff_time
+    try:
+        submissions = (
+            QuestSubmission.query
+            .join(Quest, Quest.id == QuestSubmission.quest_id)
+            .filter(
+                Quest.game_id == game_id,
+                QuestSubmission.timestamp > cutoff_time
+            )
+            .order_by(QuestSubmission.timestamp.asc())  # Chronological order (oldest first)
+            .all()
+        )
+    except Exception as e:
+        current_app.logger.error(f"Database error fetching submissions for game_id={game_id}: {e}")
         return False
 
-    html_parts   = [f"""
-        <h1>New submissions for {game.title}</h1>
-        <p><b>Time period:</b> {cutoff_time:%Y-%m-%d %H:%M} → {datetime.now(utc):%Y-%m-%d %H:%M}</p>
+    if not submissions:
+        current_app.logger.info(f"No new submissions since {cutoff_time.isoformat()} for game_id={game_id}.")
+        return False
+
+    # 5) Start constructing the HTML email
+    #    Use dedent to remove leading indentation
+    now = datetime.now(utc)
+    html_header = dedent(f"""\
+        <h1>New submissions for "{sanitize_html(game.title)}"</h1>
+        <p><b>Time period:</b> {cutoff_time:%Y-%m-%d %H:%M %Z} → {now:%Y-%m-%d %H:%M %Z}</p>
         <p><b>Total new submissions:</b> {len(submissions)}</p>
         <hr>
-    """]
+    """)
+    html_parts = [html_header]
     inline_images: list[tuple[str, bytes, str]] = []
 
+    # 6) Loop over each submission
     for idx, sub in enumerate(submissions, start=1):
+        # 6a) Safely extract quest.title and user.username
         quest = sub.quest
-        user  = sub.submitter
+        user = sub.submitter
 
-        html_parts.append(f"""
+        safe_quest_title = sanitize_html(quest.title) if quest and quest.title else "(Untitled Quest)"
+        safe_username = sanitize_html(user.username) if user and user.username else "(Unknown User)"
+
+        # Format the individual‐submission header
+        html_parts.append(dedent(f"""\
             <div style="margin-bottom:1.5rem">
-              <h3>{idx}. Quest: {quest.title}</h3>
-              <p>User: {user.username} &nbsp;|&nbsp; Submitted: {sub.timestamp:%Y-%m-%d %H:%M}</p>
-        """)
+              <h3>{idx}. Quest: {safe_quest_title}</h3>
+              <p>User: {safe_username} &nbsp;|&nbsp; Submitted: {sub.timestamp:%Y-%m-%d %H:%M %Z}</p>
+        """))
+
+        # 6b) Include comment if present
         if sub.comment:
-            html_parts.append(f"<p><i>{sanitize_html(sub.comment)}</i></p>")
+            sanitized_comment = sanitize_html(sub.comment).replace("\n", "<br>")
+            html_parts.append(f"<p><i>{sanitized_comment}</i></p>")
 
+        # 6c) Include image if present
         if sub.image_url:
-            image_path = os.path.join(current_app.static_folder, sub.image_url)
-            try:
-                with open(image_path, 'rb') as f:
-                    img_bytes = f.read()
-                ext   = os.path.splitext(image_path)[1].lstrip('.').lower() or 'png'
-                cid   = f'submission_{sub.id}'
-                inline_images.append((cid, img_bytes, ext))
-                html_parts.append(f"""
-                    <img src="cid:{cid}" alt="submission image"
-                         style="max-width:300px;max-height:300px"><br>
-                """)
-            except OSError:
-                # Fall back to a public URL using url_for('static', …)
-                with current_app.test_request_context():
-                    public_url = url_for('static', filename=sub.image_url, _external=True)
-                html_parts.append(f'<img src="{public_url}" alt="submission image"><br>')
+            # Validate that image_url is a relative path without dangerous segments
+            rel_path = sub.image_url.strip("/\\")
+            if ".." in rel_path:
+                current_app.logger.warning(
+                    f"Skipping image for submission id={sub.id} due to suspicious path '{sub.image_url}'"
+                )
+            else:
+                image_path = os.path.join(current_app.static_folder, rel_path)
+                try:
+                    with Image.open(image_path) as img:
+                        # Ensure both dimensions are bounded to 600px
+                        max_size = (600, 600)
+                        img.thumbnail(max_size, Image.Resampling.LANCZOS)
 
+                        with io.BytesIO() as buffer:
+                            img.convert("RGB").save(buffer, format="JPEG", quality=70)
+                            img_bytes = buffer.getvalue()
+
+                        cid = f"submission_{sub.id}"
+                        inline_images.append((cid, img_bytes, "jpeg"))
+                        # Display at up to 300×300 in email
+                        html_parts.append(
+                            f'<img src="cid:{cid}" alt="submission image" '
+                            f'style="max-width:300px;max-height:300px"><br>'
+                        )
+                except OSError as e:
+                    current_app.logger.warning(
+                        f"Could not open or process image for submission id={sub.id} at {image_path}: {e}. "
+                        f"Falling back to public URL."
+                    )
+                    # Fallback: link to the static URL
+                    try:
+                        # We need a request context for url_for
+                        with current_app.test_request_context():
+                            public_url = url_for("static", filename=rel_path, _external=True)
+                        html_parts.append(f'<img src="{public_url}" alt="submission image"><br>')
+                    except Exception as ue:
+                        current_app.logger.error(
+                            f"Failed to generate public URL for image '{rel_path}': {ue}"
+                        )
+
+        # 6d) Close this submission’s <div>
         html_parts.append("</div>")
 
-    html_body = "<html><body>" + "\n".join(html_parts) + "</body></html>"
-    subject = f"New submissions for {game.title} – {datetime.now(utc):%Y-%m-%d}"
-    sent = send_email(game.social_media_liaison_email, subject, html_body, inline_images)
+    # 7) Combine parts into a single HTML body
+    html_body = "<html><body>\n" + "\n".join(html_parts) + "\n</body></html>"
+
+    # 8) Prepare subject line
+    subject = f"New submissions for \"{game.title}\" – {now:%Y-%m-%d %H:%M %Z}"
+
+    # 9) Attempt to send the email
+    try:
+        sent = send_email(
+            to_address=liaison_email,
+            subject=subject,
+            html_body=html_body,
+            inline_images=inline_images
+        )
+    except Exception as e:
+        current_app.logger.error(f"Exception when sending email to '{liaison_email}': {e}")
+        return False
+
+    # 10) If sent successfully, update last_social_media_email_sent
     if sent:
-        game.last_social_media_email_sent = datetime.now(utc)
-        db.session.commit()
-
-    return sent
-
+        try:
+            game.last_social_media_email_sent = now
+            db.session.commit()
+            current_app.logger.info(
+                f"Sent social media email for game_id={game_id} to {liaison_email}. "
+                f"Updated last_social_media_email_sent to {now.isoformat()}."
+            )
+        except Exception as db_err:
+            current_app.logger.error(
+                f"Email sent, but failed to update last_social_media_email_sent for game_id={game_id}: {db_err}"
+            )
+            # We still return True, since the email was sent.
+        return True
+    else:
+        current_app.logger.warning(f"send_email returned False for game_id={game_id}, no DB update performed.")
+        return False
 
 def _ensure_aware(dt):
     if dt is None:

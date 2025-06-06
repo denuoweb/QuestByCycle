@@ -160,7 +160,7 @@ Forms are defined using WTForms in `app/forms.py` and include:
 - **`ProfileForm`**: Form for updating user profiles.
 - **`ShoutBoardForm`**: Form for posting messages on the Shout Board.
 - **`QuestForm`**: Form for creating and updating quests.
-- **`PhotoForm`**: Form for submitting photos for quest verification.
+ - **`PhotoForm`**: Form for submitting photos or videos for quest verification.
 - **`ContactForm`**: Form for contacting support.
 
 ### Utilities
@@ -411,18 +411,6 @@ Before deploying to production, ensure the following settings in `config.toml`:
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    location /socket.io/ {
-        proxy_pass http://127.0.0.1:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        # Allow WebSocket origin
-        proxy_set_header Origin "https://questbycycle.org";
-    }
 
     client_max_body_size 10M;
 

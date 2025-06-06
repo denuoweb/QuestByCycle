@@ -152,7 +152,7 @@ After=network.target
 User=APPUSER
 Group=APPUSER
 WorkingDirectory=/opt/QuestByCycle
-ExecStart=/home/APPUSER/.cache/pypoetry/virtualenvs/questbycycle-BK-IO7k_-py3/bin/gunicorn  --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker  --config /opt/QuestByCycle/gunicorn.conf.py wsgi:app
+ExecStart=/home/APPUSER/.cache/pypoetry/virtualenvs/questbycycle-BK-IO7k_-py3/bin/gunicorn --config /opt/QuestByCycle/gunicorn.conf.py wsgi:app
 Nice=-10
 Environment="PATH=/home/APPUSER/.cache/pypoetry/virtualenvs/questbycycle-BK-IO7k_-py3/bin"
 

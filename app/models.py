@@ -499,6 +499,7 @@ class QuestSubmission(db.Model):
         nullable=False
     )
     image_url = db.Column(db.String(500), nullable=True)
+    video_url = db.Column(db.String(500), nullable=True)
     comment = db.Column(db.String(1000), nullable=True)
     timestamp = db.Column(
         db.DateTime(timezone=True), index=True, default=lambda: datetime.now(utc)

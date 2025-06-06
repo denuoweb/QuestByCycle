@@ -334,7 +334,7 @@ class QuestSubmissionForm(FlaskForm):
     """Form for submitting quest evidence."""
     evidence = FileField(
         "Upload Evidence",
-        validators=[FileAllowed(["jpg", "jpeg", "png"], "Images only!")],
+        validators=[FileAllowed(["jpg", "jpeg", "png", "mp4", "webm", "mov"], "Images or videos only!")],
     )
     comment = TextAreaField("Comment")
     submit = SubmitField("Submit Quest")

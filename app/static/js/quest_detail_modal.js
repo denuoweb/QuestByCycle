@@ -109,7 +109,7 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
     }
     switch (quest.verification_type) {
         case 'photo_comment':
-            elements['modalQuestVerificationType'].innerText = "Must upload a photo and a comment to earn points!";
+            elements['modalQuestVerificationType'].innerText = "Must upload a photo to earn points! Comment optional.";
             break;
         case 'photo':
             elements['modalQuestVerificationType'].innerText = "Must upload a photo to earn points!";
@@ -251,9 +251,28 @@ function getVerificationFormHTML(verificationType) {
                  class="epic-input" accept="image/*" required>
         </div>
         <div class="form-group">
-          <label for="verificationComment" class="epic-label">Enter a Comment</label>
+          <label for="verificationComment" class="epic-label">Enter a Comment (optional)</label>
           <textarea id="verificationComment" name="verificationComment"
-                    class="epic-textarea" placeholder="Enter a comment..." required></textarea>
+                    class="epic-textarea" placeholder="Enter a comment..."></textarea>
+        </div>
+        <div class="form-group">
+          <button type="submit">Submit Verification</button>
+        </div>
+      `;
+      break;
+
+    /* ─────────────────────────────── VIDEO ─────────────────────────────── */
+    case 'video':
+      formHTML += `
+        <div class="form-group">
+          <label for="video" class="epic-label">Upload a Video</label>
+          <input type="file" id="video" name="video"
+                 class="epic-input" accept="video/*" required>
+        </div>
+        <div class="form-group">
+          <label for="verificationComment" class="epic-label">Add a Comment (optional)</label>
+          <textarea id="verificationComment" name="verificationComment"
+                    class="epic-textarea" placeholder="Enter an optional comment..."></textarea>
         </div>
         <div class="form-group">
           <button type="submit">Submit Verification</button>
@@ -388,9 +407,16 @@ function submitQuestDetails(event, questId) {
   if (isSubmitting) return;
   isSubmitting = true;
 
+  const fileInput = event.target.querySelector('input[type="file"]');
+  const file      = fileInput ? fileInput.files[0] : null;
+  if (file && file.type.startsWith('video/') && file.size > 10 * 1024 * 1024) {
+    alert('Video must be 10 MB or smaller.');
+    isSubmitting = false;
+    return;
+  }
+
   const formData = new FormData(event.target);
   formData.append('user_id', CURRENT_USER_ID);
-  formData.append('sid', socket.id);
 
   showLoadingModal();
 
@@ -466,12 +492,23 @@ function fetchSubmissions(questId) {
       if (submissions && submissions.length) {
         const s              = submissions[0];   // newest submission
         const imgEl          = document.getElementById('submissionImage');
+        const vidEl          = document.getElementById('submissionVideo');
+        const vidSrc         = document.getElementById('submissionVideoSource');
         const commentEl      = document.getElementById('submissionComment');
         const profileLink    = document.getElementById('submitterProfileLink');
         const profileImg     = document.getElementById('submitterProfileImage');
         const profileCaption = document.getElementById('submitterProfileCaption');
 
-        imgEl.src          = s.image_url || '/static/images/default-placeholder.webp';
+        if (s.video_url) {
+          imgEl.hidden = true;
+          vidEl.hidden = false;
+          vidSrc.src   = s.video_url;
+          vidEl.load();
+        } else {
+          vidEl.hidden = true;
+          imgEl.hidden = false;
+          imgEl.src    = s.image_url || '/static/images/default-placeholder.webp';
+        }
         commentEl.textContent = s.comment || 'No comment provided.';
 
         profileLink.href   = `/profile/${s.user_id}`;
@@ -502,7 +539,8 @@ function fetchSubmissions(questId) {
         .reverse()                     // newest first
         .map(sub => ({
           id:                  sub.id,
-          url:                 sub.image_url,
+          url:                 sub.image_url || sub.video_url,
+          video_url:           sub.video_url,
           alt:                 'Submission Image',
           comment:             sub.comment,
           user_id:             sub.user_id,
@@ -547,10 +585,11 @@ function distributeImages(images) {
     const board = document.getElementById('submissionBoard');
     board.innerHTML = '';
 
-    const rawFallback =
+    const rawFallbackRaw =
         document.getElementById('questDetailModal')
                 .getAttribute('data-placeholder-url') ||
         '/static/images/default-placeholder.webp';
+    const rawFallback = isValidImageUrl(rawFallbackRaw) ? rawFallbackRaw : '/static/images/default-placeholder.webp';
 
     const isLocal   = url => url.startsWith('/static/');
     const localPath = url => url.replace(/^\/static\//, '');    // “images/foo.webp”
@@ -558,26 +597,40 @@ function distributeImages(images) {
     const reqWidth  = onScreenW * (window.devicePixelRatio || 2); // 2× for sharpness
 
     images.forEach(imgData => {
-        const thumb   = document.createElement('img');
-        const rawSrc  = isValidImageUrl(imgData.url) ? imgData.url : rawFallback;
-        const thumbSrc = isLocal(rawSrc)
-            ? `/resize_image?path=${encodeURIComponent(localPath(rawSrc))}&width=${reqWidth}`
-            : rawSrc;  // external → use as-is
+        let thumb;
+        if (imgData.video_url) {
+            thumb = document.createElement('video');
+            thumb.src = imgData.video_url;
+            thumb.preload = 'metadata';
+            thumb.muted = true;
+            thumb.playsInline = true;
+            thumb.style.objectFit = 'cover';
+        } else {
+            thumb = document.createElement('img');
+            const rawSrc = isValidImageUrl(imgData.url) ? imgData.url : rawFallback;
+            const thumbSrc = isLocal(rawSrc)
+                ? `/resize_image?path=${encodeURIComponent(localPath(rawSrc))}&width=${reqWidth}`
+                : rawSrc;
+            thumb.setAttribute('data-src', thumbSrc);
+            thumb.classList.add('lazyload');
+            thumb.alt = imgData.alt || 'Submission Image';
+        }
 
-        thumb.setAttribute('data-src', thumbSrc);   // lazy-load
-        thumb.classList.add('lazyload');
-        thumb.alt = imgData.alt || 'Submission Image';
-        thumb.style.width  = `${onScreenW}px`;       // display size
+        thumb.style.width = `${onScreenW}px`;
         thumb.style.height = 'auto';
         thumb.style.marginRight = '10px';
 
-        thumb.onerror = () => {
-            if (isLocal(rawFallback)) {
-                thumb.src = `/resize_image?path=${encodeURIComponent(localPath(rawFallback))}&width=${reqWidth}`;
-            } else {
-                thumb.src = rawFallback;
-            }
-        };
+        if (imgData.video_url) {
+            // no lazy load for videos
+        } else {
+            thumb.onerror = () => {
+                if (isLocal(rawFallback)) {
+                    thumb.src = `/resize_image?path=${encodeURIComponent(localPath(rawFallback))}&width=${reqWidth}`;
+                } else {
+                    thumb.src = rawFallback;
+                }
+            };
+        }
 
         thumb.onclick = () => showSubmissionDetail(imgData);
         board.appendChild(thumb);

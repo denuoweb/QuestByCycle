@@ -47,12 +47,14 @@
     <div class="form-group">
         <label for="verification_type">Verification Type</label>
         <p id="verification_type">
-            {{ 'photo' if quest['Verification Type'].lower() == 'photo' else 
-               'comment' if quest['Verification Type'].lower() == 'comment' else 
+            {{ 'photo' if quest['Verification Type'].lower() == 'photo' else
+               'comment' if quest['Verification Type'].lower() == 'comment' else
+               'video' if quest['Verification Type'].lower() == 'video' else
                'photo_comment' }}
         </p>
-        <input type="hidden" name="verification_type" value="{{ 'photo' if quest['Verification Type'].lower() == 'photo' else 
-                                                               'comment' if quest['Verification Type'].lower() == 'comment' else 
+        <input type="hidden" name="verification_type" value="{{ 'photo' if quest['Verification Type'].lower() == 'photo' else
+                                                               'comment' if quest['Verification Type'].lower() == 'comment' else
+                                                               'video' if quest['Verification Type'].lower() == 'video' else
                                                                'photo_comment' }}">
     </div>
     <div class="form-group">

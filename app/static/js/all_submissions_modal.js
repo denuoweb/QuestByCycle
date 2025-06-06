@@ -88,9 +88,10 @@ function displayAllSubmissions(submissions, isAdmin) {
 
         // Make the card clickable to show the submission detail modal
         card.addEventListener('click', function() {  
-            showSubmissionDetail({  
-                url: submission.image_url,  
-                comment: submission.comment,  
+            showSubmissionDetail({
+                url: submission.image_url || submission.video_url,
+                video_url: submission.video_url,
+                comment: submission.comment,
                 user_id: submission.user_id,  
                 user_display_name: submission.user_display_name || submission.user_username,  
                 user_profile_picture: submission.user_profile_picture,

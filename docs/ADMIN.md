@@ -84,7 +84,7 @@ To create a new quest:
     - **Points**: Assign a point value based on difficulty.
     - **Completion Limit**: Set the maximum number of times the quest can be completed.
     - **Frequency**: Choose the quest frequency (daily, weekly, monthly).
-    - **Verification Type**: Select the verification method (photo, comment, both).
+    - **Verification Type**: Select the verification method (photo, video, comment, both).
     - **Badge ID**: Link a badge to the quest, if applicable.
 
 ### Editing Quests

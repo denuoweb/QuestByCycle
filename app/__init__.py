@@ -25,14 +25,12 @@ from app.models import db
 from .config import load_config
 from flask_wtf.csrf import CSRFProtect
 from datetime import timedelta
-from flask_socketio import SocketIO
 from logging.handlers import RotatingFileHandler
 
 # ----------------------
 # Flask extension instances:
 # ----------------------
 login_manager = LoginManager()
-socketio = SocketIO()
 csrf = CSRFProtect()
 
 # ----------------------
@@ -119,6 +117,7 @@ def create_app(config_overrides=None):
         "INSTAGRAM_USER_ID": inscopeconfig["social"]["instagram_user_id"],
         "SOCKETIO_SERVER_URL": inscopeconfig["socketio"]["SERVER_URL"],
         "TWA_SHA256_FINGERPRINT": inscopeconfig["twa"]["SHA256_CERT_FINGERPRINT"],
+
         "DEFAULT_SUPER_ADMIN_USERNAME": inscopeconfig["encryption"]["DEFAULT_SUPER_ADMIN_USERNAME"],
         "DEFAULT_SUPER_ADMIN_PASSWORD": inscopeconfig["encryption"]["DEFAULT_SUPER_ADMIN_PASSWORD"],
         "DEFAULT_SUPER_ADMIN_EMAIL": inscopeconfig["encryption"]["DEFAULT_SUPER_ADMIN_EMAIL"],
@@ -141,7 +140,6 @@ def create_app(config_overrides=None):
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
-    socketio.init_app(app, async_mode="gevent", logger=True, engineio_logger=True)
 
     # 4. Database setup and super‐admin creation
     with app.app_context():
@@ -198,9 +196,6 @@ def create_app(config_overrides=None):
         from app.forms import LogoutForm
         return dict(logout_form=LogoutForm())
 
-    @app.context_processor
-    def inject_socketio_url():
-        return dict(socketio_server_url=app.config["SOCKETIO_SERVER_URL"])
 
     @app.context_processor
     def inject_selected_game_id():

@@ -12,7 +12,12 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import SQLAlchemyError
 from app.models import db, Game, Quest, UserQuest, user_games, User
 from app.forms import GameForm
-from app.utils import save_leaderboard_image, generate_smoggy_images, allowed_file
+from app.utils import (
+    save_leaderboard_image,
+    generate_smoggy_images,
+    allowed_file,
+    send_social_media_liaison_email,
+)
 from io import BytesIO
 
 ALLOWED_TAGS = [
@@ -200,6 +205,22 @@ def update_game(game_id):
         leaderboard_image=game.leaderboard_image,
         in_admin_dashboard=True
     )
+
+
+@games_bp.route('/send_liaison_email/<int:game_id>', methods=['POST'])
+@login_required
+def send_liaison_email(game_id):
+    """Manually trigger sending of liaison emails for a game."""
+    if not current_user.is_admin:
+        flash('Access denied: Only administrators can send liaison emails.', 'danger')
+        return redirect(url_for('main.index'))
+
+    if send_social_media_liaison_email(game_id):
+        flash('Liaison email sent successfully.', 'success')
+    else:
+        flash('No new submissions to email or sending failed.', 'info')
+
+    return redirect(url_for('games.update_game', game_id=game_id))
 
 
 @games_bp.route('/register_game/<int:game_id>', methods=['POST'])
