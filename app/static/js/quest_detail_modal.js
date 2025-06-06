@@ -485,12 +485,23 @@ function fetchSubmissions(questId) {
       if (submissions && submissions.length) {
         const s              = submissions[0];   // newest submission
         const imgEl          = document.getElementById('submissionImage');
+        const vidEl          = document.getElementById('submissionVideo');
+        const vidSrc         = document.getElementById('submissionVideoSource');
         const commentEl      = document.getElementById('submissionComment');
         const profileLink    = document.getElementById('submitterProfileLink');
         const profileImg     = document.getElementById('submitterProfileImage');
         const profileCaption = document.getElementById('submitterProfileCaption');
 
-        imgEl.src          = s.image_url || '/static/images/default-placeholder.webp';
+        if (s.video_url) {
+          imgEl.hidden = true;
+          vidEl.hidden = false;
+          vidSrc.src   = s.video_url;
+          vidEl.load();
+        } else {
+          vidEl.hidden = true;
+          imgEl.hidden = false;
+          imgEl.src    = s.image_url || '/static/images/default-placeholder.webp';
+        }
         commentEl.textContent = s.comment || 'No comment provided.';
 
         profileLink.href   = `/profile/${s.user_id}`;
@@ -521,7 +532,8 @@ function fetchSubmissions(questId) {
         .reverse()                     // newest first
         .map(sub => ({
           id:                  sub.id,
-          url:                 sub.image_url,
+          url:                 sub.image_url || sub.video_url,
+          video_url:           sub.video_url,
           alt:                 'Submission Image',
           comment:             sub.comment,
           user_id:             sub.user_id,

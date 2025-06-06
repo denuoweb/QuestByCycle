@@ -42,7 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!file) return alert('Please select an image first.');
 
       const form = new FormData();
-      form.append('photo', file);
+      if (file.type.startsWith('video/')) {
+        form.append('video', file);
+      } else {
+        form.append('photo', file);
+      }
 
       fetch(`/quests/submission/${id}/photo`, {
         method:      'PUT',
