@@ -193,6 +193,18 @@ def _prepare_quests(game, user_id, user_quests, now):
     activities = pinned_messages + (unpinned_messages + [ut for ut in completed_quests if ut.quest.game_id == game.id])
     activities.sort(key=get_datetime, reverse=True)
 
+    # Filter out quests lacking a valid badge and with no submissions
+    quests = [
+        q for q in quests
+        if not (
+            (
+                q.badge_id is None
+                or (q.badge is not None and not q.badge.image)
+            )
+            and q.total_completions == 0
+        )
+    ]
+
     quests.sort(key=lambda x: (-x.is_sponsored, -x.personal_completions, -x.total_completions))
     return quests, activities
 
@@ -203,7 +215,11 @@ def _prepare_user_data(game_id, profile):
         Badge.query
              .options(joinedload(Badge.quests))   # eager-load the quests relationship
              .join(Quest)
-             .filter(Quest.game_id == game_id, Quest.badge_id.isnot(None))
+             .filter(
+                 Quest.game_id == game_id,
+                 Quest.badge_id.isnot(None),
+                 Badge.image.isnot(None)
+             )
              .distinct()
              .all()
     )
