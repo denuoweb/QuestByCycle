@@ -164,6 +164,12 @@ def load_config():
         "socketio": {
             "SERVER_URL": _get_env("SOCKETIO_SERVER_URL", _toml_config["socketio"]["SERVER_URL"]),
         },
+        "twa": {
+            "SHA256_CERT_FINGERPRINT": _get_env(
+                "TWA_SHA256_FINGERPRINT",
+                _toml_config.get("twa", {}).get("SHA256_CERT_FINGERPRINT", "")
+            ),
+        },
         # -----------------------------------------------------------------------------
         # 6. Safely read the sqlalchemy_engine_options section or fall back to defaults
         # -----------------------------------------------------------------------------

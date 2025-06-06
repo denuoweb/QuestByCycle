@@ -49,3 +49,6 @@ instagram_user_id = ""
 
 [socketio]
 SERVER_URL = "ws://127.0.0.1:5000"
+
+[twa]
+SHA256_CERT_FINGERPRINT = ""
