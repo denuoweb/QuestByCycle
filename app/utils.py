@@ -2,6 +2,7 @@ import uuid
 import os
 import subprocess
 import csv
+import io
 import bleach
 import smtplib
 from flask import current_app, request, url_for
@@ -838,11 +839,18 @@ def send_social_media_liaison_email(game_id: int) -> bool:
         if sub.image_url:
             image_path = os.path.join(current_app.static_folder, sub.image_url)
             try:
-                with open(image_path, 'rb') as f:
-                    img_bytes = f.read()
-                ext   = os.path.splitext(image_path)[1].lstrip('.').lower() or 'png'
-                cid   = f'submission_{sub.id}'
-                inline_images.append((cid, img_bytes, ext))
+                with Image.open(image_path) as img:
+                    max_width = 600
+                    if img.width > max_width:
+                        ratio = max_width / float(img.width)
+                        height = int(img.height * ratio)
+                        img = img.resize((max_width, height), Image.Resampling.LANCZOS)
+
+                    buffer = io.BytesIO()
+                    img.convert('RGB').save(buffer, format='JPEG', quality=70)
+                    img_bytes = buffer.getvalue()
+                cid = f'submission_{sub.id}'
+                inline_images.append((cid, img_bytes, 'jpeg'))
                 html_parts.append(f"""
                     <img src="cid:{cid}" alt="submission image"
                          style="max-width:300px;max-height:300px"><br>
