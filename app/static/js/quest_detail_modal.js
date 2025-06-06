@@ -589,26 +589,40 @@ function distributeImages(images) {
     const reqWidth  = onScreenW * (window.devicePixelRatio || 2); // 2× for sharpness
 
     images.forEach(imgData => {
-        const thumb   = document.createElement('img');
-        const rawSrc  = isValidImageUrl(imgData.url) ? imgData.url : rawFallback;
-        const thumbSrc = isLocal(rawSrc)
-            ? `/resize_image?path=${encodeURIComponent(localPath(rawSrc))}&width=${reqWidth}`
-            : rawSrc;  // external → use as-is
+        let thumb;
+        if (imgData.video_url) {
+            thumb = document.createElement('video');
+            thumb.src = imgData.video_url;
+            thumb.preload = 'metadata';
+            thumb.muted = true;
+            thumb.playsInline = true;
+            thumb.style.objectFit = 'cover';
+        } else {
+            thumb = document.createElement('img');
+            const rawSrc = isValidImageUrl(imgData.url) ? imgData.url : rawFallback;
+            const thumbSrc = isLocal(rawSrc)
+                ? `/resize_image?path=${encodeURIComponent(localPath(rawSrc))}&width=${reqWidth}`
+                : rawSrc;
+            thumb.setAttribute('data-src', thumbSrc);
+            thumb.classList.add('lazyload');
+            thumb.alt = imgData.alt || 'Submission Image';
+        }
 
-        thumb.setAttribute('data-src', thumbSrc);   // lazy-load
-        thumb.classList.add('lazyload');
-        thumb.alt = imgData.alt || 'Submission Image';
-        thumb.style.width  = `${onScreenW}px`;       // display size
+        thumb.style.width = `${onScreenW}px`;
         thumb.style.height = 'auto';
         thumb.style.marginRight = '10px';
 
-        thumb.onerror = () => {
-            if (isLocal(rawFallback)) {
-                thumb.src = `/resize_image?path=${encodeURIComponent(localPath(rawFallback))}&width=${reqWidth}`;
-            } else {
-                thumb.src = rawFallback;
-            }
-        };
+        if (imgData.video_url) {
+            // no lazy load for videos
+        } else {
+            thumb.onerror = () => {
+                if (isLocal(rawFallback)) {
+                    thumb.src = `/resize_image?path=${encodeURIComponent(localPath(rawFallback))}&width=${reqWidth}`;
+                } else {
+                    thumb.src = rawFallback;
+                }
+            };
+        }
 
         thumb.onclick = () => showSubmissionDetail(imgData);
         board.appendChild(thumb);
