@@ -40,6 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const id   = modal.dataset.submissionId;
       const file = photoInput.files[0];
       if (!file) return alert('Please select an image first.');
+      if (file.type.startsWith('video/') && file.size > 10 * 1024 * 1024) {
+        alert('Video must be 10 MB or smaller.');
+        return;
+      }
 
       const form = new FormData();
       if (file.type.startsWith('video/')) {

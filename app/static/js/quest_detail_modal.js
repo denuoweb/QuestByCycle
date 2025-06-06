@@ -407,6 +407,14 @@ function submitQuestDetails(event, questId) {
   if (isSubmitting) return;
   isSubmitting = true;
 
+  const fileInput = event.target.querySelector('input[type="file"]');
+  const file      = fileInput ? fileInput.files[0] : null;
+  if (file && file.type.startsWith('video/') && file.size > 10 * 1024 * 1024) {
+    alert('Video must be 10 MB or smaller.');
+    isSubmitting = false;
+    return;
+  }
+
   const formData = new FormData(event.target);
   formData.append('user_id', CURRENT_USER_ID);
   formData.append('sid', socket.id);

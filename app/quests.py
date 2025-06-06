@@ -260,7 +260,10 @@ def submit_quest(quest_id):
             image_url = save_submission_image(image_file)
             image_path = os.path.join(current_app.static_folder, image_url)
         elif video_file and video_file.filename:
-            video_url = save_submission_video(video_file)
+            try:
+                video_url = save_submission_video(video_file)
+            except ValueError as ve:
+                return jsonify({"success": False, "message": str(ve)}), 400
             image_path = os.path.join(current_app.static_folder, video_url)
         else:
             image_path = None
@@ -758,7 +761,10 @@ def submit_photo(quest_id):
             image_url = save_submission_image(photo)
             media_path = os.path.join(current_app.static_folder, image_url)
         elif video:
-            video_url = save_submission_video(video)
+            try:
+                video_url = save_submission_video(video)
+            except ValueError as ve:
+                return jsonify({"success": False, "message": str(ve)}), 400
             media_path = os.path.join(current_app.static_folder, video_url)
         else:
             return jsonify({"success": False, "message": "No media detected, please try again."}), 400
@@ -1239,7 +1245,10 @@ def update_submission_photo(submission_id):
         new_path = save_submission_image(photo)
         sub.image_url = new_path
     elif video and video.filename:
-        new_path = save_submission_video(video)
+        try:
+            new_path = save_submission_video(video)
+        except ValueError as ve:
+            return jsonify(success=False, message=str(ve)), 400
         sub.video_url = new_path
     else:
         return jsonify(success=False, message='No file uploaded'), 400

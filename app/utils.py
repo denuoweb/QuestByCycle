@@ -54,6 +54,8 @@ def sanitize_html(html_content):
 
 MAX_POINTS_INT = 2**63 - 1
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+# Videos are limited to 10 MB for uploads
+MAX_VIDEO_BYTES = 10 * 1024 * 1024
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -190,6 +192,13 @@ def save_submission_image(submission_image_file):
 def save_submission_video(submission_video_file):
     """Save an uploaded video for quest verification."""
     try:
+        # Check file size before attempting to save
+        submission_video_file.seek(0, os.SEEK_END)
+        size = submission_video_file.tell()
+        submission_video_file.seek(0)
+        if size > MAX_VIDEO_BYTES:
+            raise ValueError("Video exceeds 10 MB limit")
+
         ext = submission_video_file.filename.rsplit('.', 1)[-1]
         filename = secure_filename(f"{uuid.uuid4()}.{ext}")
         uploads_dir = os.path.join(current_app.static_folder, 'videos', 'verifications')
