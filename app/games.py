@@ -215,10 +215,10 @@ def send_liaison_email(game_id):
         flash('Access denied: Only administrators can send liaison emails.', 'danger')
         return redirect(url_for('main.index'))
 
-    if send_social_media_liaison_email(game_id):
+    if send_social_media_liaison_email(game_id, fallback_to_last=True):
         flash('Liaison email sent successfully.', 'success')
     else:
-        flash('No new submissions to email or sending failed.', 'info')
+        flash('No submissions available to email.', 'info')
 
     return redirect(url_for('games.update_game', game_id=game_id))
 

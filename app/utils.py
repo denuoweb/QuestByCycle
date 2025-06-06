@@ -818,7 +818,11 @@ def get_game_badges(game_id):
     return badges
 
 
-def send_social_media_liaison_email(game_id: int) -> bool:
+def send_social_media_liaison_email(
+    game_id: int,
+    fallback_to_last: bool = False,
+    last_limit: int = 5,
+) -> bool:
     """
     Sends an email to the social media liaison for the specified game, reporting
     all QuestSubmissions that have occurred since the last email (or the game start_date).
@@ -868,17 +872,41 @@ def send_social_media_liaison_email(game_id: int) -> bool:
         current_app.logger.error(f"Database error fetching submissions for game_id={game_id}: {e}")
         return False
 
+    fallback_used = False
+
     if not submissions:
-        current_app.logger.info(f"No new submissions since {cutoff_time.isoformat()} for game_id={game_id}.")
+        current_app.logger.info(
+            f"No new submissions since {cutoff_time.isoformat()} for game_id={game_id}."
+        )
+        if fallback_to_last:
+            submissions = (
+                QuestSubmission.query
+                .join(Quest, Quest.id == QuestSubmission.quest_id)
+                .filter(Quest.game_id == game_id)
+                .order_by(QuestSubmission.timestamp.desc())
+                .limit(last_limit)
+                .all()
+            )
+            submissions.reverse()  # send oldest first
+            if submissions:
+                fallback_used = True
+                current_app.logger.info(
+                    "Using last %s submissions for game_id=%s due to empty new list.",
+                    len(submissions),
+                    game_id,
+                )
+
+    if not submissions:
         return False
 
     # 5) Start constructing the HTML email
     #    Use dedent to remove leading indentation
     now = datetime.now(utc)
+    header_title = "Recent submissions" if fallback_used else "New submissions"
     html_header = dedent(f"""\
-        <h1>New submissions for "{sanitize_html(game.title)}"</h1>
+        <h1>{header_title} for "{sanitize_html(game.title)}"</h1>
         <p><b>Time period:</b> {cutoff_time:%Y-%m-%d %H:%M %Z} → {now:%Y-%m-%d %H:%M %Z}</p>
-        <p><b>Total new submissions:</b> {len(submissions)}</p>
+        <p><b>Total {header_title.lower()}:</b> {len(submissions)}</p>
         <hr>
     """)
     html_parts = [html_header]
@@ -972,12 +1000,18 @@ def send_social_media_liaison_email(game_id: int) -> bool:
     # 10) If sent successfully, update last_social_media_email_sent
     if sent:
         try:
-            game.last_social_media_email_sent = now
-            db.session.commit()
-            current_app.logger.info(
-                f"Sent social media email for game_id={game_id} to {liaison_email}. "
-                f"Updated last_social_media_email_sent to {now.isoformat()}."
-            )
+            if not fallback_used:
+                game.last_social_media_email_sent = now
+                db.session.commit()
+                current_app.logger.info(
+                    f"Sent social media email for game_id={game_id} to {liaison_email}. "
+                    f"Updated last_social_media_email_sent to {now.isoformat()}."
+                )
+            else:
+                current_app.logger.info(
+                    "Sent fallback liaison email for game_id=%s without updating last_social_media_email_sent",
+                    game_id,
+                )
         except Exception as db_err:
             current_app.logger.error(
                 f"Email sent, but failed to update last_social_media_email_sent for game_id={game_id}: {db_err}"
