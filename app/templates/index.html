@@ -318,7 +318,6 @@
             </div>
         {% endif %}
     {% endif %}
-    <div id="onboardingStatus" data-start-onboarding="{{ 'true' if start_onboarding else 'false' }}"></div>
     <div id="game_IdHolder" data-game-id="{{ selected_game_id }}" style="display:none;"></div>
     {% include 'modals/shout_board_modal.html' %}
     {% include 'modals/login_modal.html' %}
@@ -353,6 +352,5 @@
     <script src="{{ url_for('static', filename='js/user_profile_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/index_management.js') }}"></script>
     <script src="{{ url_for('static', filename='js/generated_quest.js') }}"></script>
-    <script type="module" src="{{ url_for('static', filename='js/shepherd_tour.js') }}"></script>
 
 {% endblock %}

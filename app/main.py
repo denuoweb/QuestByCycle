@@ -282,7 +282,6 @@ def index(game_id, quest_id, user_id):
     register_form = RegistrationForm()
     forgot_form = ForgotPasswordForm()
     reset_form = ResetPasswordForm()
-    start_onboarding = False
 
     now = datetime.now(utc)
 
@@ -426,7 +425,6 @@ def index(game_id, quest_id, user_id):
         next=request.args.get('next'),
         selected_game=game,
         quest_id=quest_id,
-        start_onboarding=start_onboarding,
         login_form=login_form,
         register_form=register_form,
         forgot_form=forgot_form,
@@ -434,19 +432,6 @@ def index(game_id, quest_id, user_id):
     )
 
 
-@main_bp.route('/mark-onboarding-complete', methods=['POST'])
-@login_required
-def mark_onboarding_complete():
-    """
-    Mark the onboarding process as complete for the current user.
-    """
-    try:
-        current_user.onboarded = True
-        db.session.commit()
-        return jsonify({'success': True}), 200
-    except Exception as exc:
-        logger.error(f"Error marking onboarding complete: {exc}")
-        return
 
 
 @main_bp.route('/shout-board/<int:game_id>', methods=['POST'])
