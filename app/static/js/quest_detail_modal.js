@@ -198,7 +198,10 @@ function manageVerificationSection(questId, canVerify, verificationType, nextEli
         verifyForm.className = 'verify-quest-form';
         verifyForm.style.display = 'block';
 
-        const formHTML = getVerificationFormHTML(verificationType.trim().toLowerCase());
+        const formHTML = getVerificationFormHTML(
+          verificationType.trim().toLowerCase(),
+          questId
+        );
         verifyForm.innerHTML = formHTML;
         userQuestData.appendChild(verifyForm);
 
@@ -206,10 +209,10 @@ function manageVerificationSection(questId, canVerify, verificationType, nextEli
     }
 }
 
-function getVerificationFormHTML(verificationType) {
+function getVerificationFormHTML(verificationType, questId) {
   // container + heading ------------------------------------------------------
   let formHTML = `
-    <form enctype="multipart/form-data" class="epic-form">
+    <form enctype="multipart/form-data" class="epic-form" method="post" action="/quests/quest/${questId}/submit">
       <h2 style="text-align:center;">Verify Your Quest</h2>
   `;
 
