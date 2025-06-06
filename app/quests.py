@@ -240,7 +240,7 @@ def submit_quest(quest_id):
     if verification_type == "photo_comment" and (not image_file or image_file.filename == ""):
         return jsonify({
             "success": False,
-            "message": "Both photo and comment are required for verification"
+            "message": "Photo required for verification"
         }), 400
     if quest.verification_type == "Pause":
         return jsonify({"success": False, "message": "This quest is currently paused"}), 403

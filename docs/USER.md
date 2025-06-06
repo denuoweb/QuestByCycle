@@ -81,7 +81,7 @@ The dashboard is your central hub for accessing games, quests, and community fea
 Quests can have different verification methods:
 - **Photo Verification**: Upload a photo as evidence of quest completion.
 - **Comment Verification**: Provide a comment describing how you completed the quest.
-- **Photo and Comment Verification**: Both upload a photo and provide a comment.
+- **Photo and Comment Verification**: Upload a photo with an optional comment.
 
 ### Quest Submissions
 
