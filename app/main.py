@@ -876,6 +876,13 @@ def resize_image():
         return jsonify({'error': "Invalid request: Missing 'path' or 'width'"}), 400
 
     try:
+        # Normalize the image path. Stored paths may or may not include the
+        # leading "static/" segment. The resize endpoint expects paths relative
+        # to the static folder.
+        image_path = image_path.lstrip('/')
+        if image_path.startswith('static/'):
+            image_path = image_path[len('static/'):] 
+
         full_image_path = os.path.abspath(os.path.join(current_app.static_folder, image_path))
         if not full_image_path.startswith(os.path.abspath(current_app.static_folder)):
             current_app.logger.error("Attempted path traversal detected: %s", image_path)
