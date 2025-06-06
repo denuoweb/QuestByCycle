@@ -586,10 +586,11 @@ function distributeImages(images) {
     const board = document.getElementById('submissionBoard');
     board.innerHTML = '';
 
-    const rawFallback =
+    const rawFallbackRaw =
         document.getElementById('questDetailModal')
                 .getAttribute('data-placeholder-url') ||
         '/static/images/default-placeholder.webp';
+    const rawFallback = isValidImageUrl(rawFallbackRaw) ? rawFallbackRaw : '/static/images/default-placeholder.webp';
 
     const isLocal   = url => url.startsWith('/static/');
     const localPath = url => url.replace(/^\/static\//, '');    // “images/foo.webp”
