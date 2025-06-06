@@ -263,7 +263,8 @@ def submit_quest(quest_id):
             try:
                 video_url = save_submission_video(video_file)
             except ValueError as ve:
-                return jsonify({"success": False, "message": str(ve)}), 400
+                current_app.logger.error(f"Error processing video file: {str(ve)}")
+                return jsonify({"success": False, "message": "An error occurred while processing the video file. Please try again later."}), 400
             image_path = os.path.join(current_app.static_folder, video_url)
         else:
             image_path = None
