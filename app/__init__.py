@@ -3,7 +3,16 @@ import logging
 import os
 import atexit
 
-from flask import current_app, Flask, render_template, flash, redirect, url_for
+from flask import (
+    current_app,
+    Flask,
+    render_template,
+    flash,
+    redirect,
+    url_for,
+    jsonify,
+    request,
+)
 from urllib.parse import urlparse, urlunparse
 from flask_login import LoginManager, current_user
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -23,7 +32,7 @@ from app.activitypub_utils import ap_bp
 from app.ai import ai_bp
 from app.models import db
 from .config import load_config
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from datetime import timedelta
 from logging.handlers import RotatingFileHandler
 
@@ -181,6 +190,17 @@ def create_app(config_overrides=None):
     def too_many_requests(e):
         logger.warning(f"429 error: {e}")
         return render_template("429.html"), 429
+
+    @app.errorhandler(CSRFError)
+    def handle_csrf_error(e):
+        logger.warning(
+            "CSRF failure on %s: %s form=%s headers=%s",
+            request.path,
+            e.description,
+            dict(request.form),
+            {k: v for k, v in request.headers.items() if k.startswith('X-CSRF')},
+        )
+        return jsonify(success=False, message="CSRF token missing or incorrect"), 400
 
     @app.errorhandler(Exception)
     def handle_exception(e):
