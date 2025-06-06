@@ -5,6 +5,7 @@ app/static/images/bicycle_pictures/
 app/static/images/leaderboard/
 app/static/images/sponsors/
 app/static/images/verifications/
+app/static/videos
 
 tests/cert.pem
 tests/key.pem
