@@ -861,9 +861,11 @@ def send_social_media_liaison_email(
         submissions = (
             QuestSubmission.query
             .join(Quest, Quest.id == QuestSubmission.quest_id)
+            .join(User, User.id == QuestSubmission.user_id)
             .filter(
                 Quest.game_id == game_id,
-                QuestSubmission.timestamp > cutoff_time
+                QuestSubmission.timestamp > cutoff_time,
+                User.upload_to_socials.is_(True),
             )
             .order_by(QuestSubmission.timestamp.asc())  # Chronological order (oldest first)
             .all()
@@ -882,7 +884,11 @@ def send_social_media_liaison_email(
             submissions = (
                 QuestSubmission.query
                 .join(Quest, Quest.id == QuestSubmission.quest_id)
-                .filter(Quest.game_id == game_id)
+                .join(User, User.id == QuestSubmission.user_id)
+                .filter(
+                    Quest.game_id == game_id,
+                    User.upload_to_socials.is_(True),
+                )
                 .order_by(QuestSubmission.timestamp.desc())
                 .limit(last_limit)
                 .all()
