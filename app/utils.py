@@ -851,15 +851,15 @@ def send_social_media_liaison_email(game_id: int) -> bool:
                     img_bytes = buffer.getvalue()
                 cid = f'submission_{sub.id}'
                 inline_images.append((cid, img_bytes, 'jpeg'))
-                html_parts.append(f"""
-                    <img src="cid:{cid}" alt="submission image"
-                         style="max-width:300px;max-height:300px"><br>
-                """)
-            except OSError:
-                # Fall back to a public URL using url_for('static', …)
-                with current_app.test_request_context():
-                    public_url = url_for('static', filename=sub.image_url, _external=True)
-                html_parts.append(f'<img src="{public_url}" alt="submission image"><br>')
+                    html_parts.append(
+                        f'<img src="cid:{cid}" alt="submission image" '
+                        f'style="max-width:300px;max-height:300px"><br>'
+                    )
+                except OSError:
+                    # Fall back to a public URL using url_for('static', …)
+                    with current_app.test_request_context():
+                        public_url = url_for('static', filename=image_rel, _external=True)
+                    html_parts.append(f'<img src="{public_url}" alt="submission image"><br>')
 
         html_parts.append("</div>")
 

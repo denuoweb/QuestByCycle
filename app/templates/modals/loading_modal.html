@@ -15,36 +15,15 @@
     </div>
 </div>
 <script>
-    // Connect to the Socket.IO server
-    const socket = io.connect('{{ socketio_server_url }}');
-
-    // Show the loading modal
     function showLoadingModal() {
         console.debug('Showing loading modal');
         document.getElementById('loadingModal').style.display = 'flex';
     }
 
-    // Hide the loading modal
     function hideLoadingModal() {
         console.debug('Hiding loading modal');
         document.getElementById('loadingModal').style.display = 'none';
     }
-
-    // Update the loading status
-    socket.on('loading_status', function(data) {
-        console.debug('Received loading status:', data);
-        document.getElementById('loadingStatus').innerText = data.status;
-        const progressBar = document.querySelector('.uber-loading-progress');
-        if (data.progress) {
-            progressBar.style.width = data.progress + '%';
-        }
-    });
-
-    // Hide loading modal when quest submission is complete or fails
-    socket.on('submission_complete', function(data) {
-        console.debug('Submission complete:', data);
-        hideLoadingModal();
-    });
 </script>
 <style>
 .uber-modal {
