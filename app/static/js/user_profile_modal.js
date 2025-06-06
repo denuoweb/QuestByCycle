@@ -399,7 +399,15 @@ function saveProfile(userId) {
     .then(r => r.json())
     .then(data => {
       if (data.error) {
-        alert(`Error: ${data.error}`);
+        let msg = `Error: ${data.error}`;
+        if (data.details) {
+          const details = [];
+          Object.values(data.details).forEach(errArr => {
+            details.push(errArr.join(', '));
+          });
+          if (details.length) msg += ` - ${details.join('; ')}`;
+        }
+        alert(msg);
       } else {
         alert('Profile updated successfully.');
         showUserProfileModal(userId);
