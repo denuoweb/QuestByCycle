@@ -22,6 +22,5 @@ Disallow: /like_message/
 Disallow: /like_quest/
 Disallow: /pin_message/
 Disallow: /shout-board/
-Disallow: /mark-onboarding-complete/
 
 Allow: /static/images/public/
