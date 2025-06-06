@@ -1,5 +1,6 @@
 import uuid
 import os
+import subprocess
 import csv
 import bleach
 import smtplib
@@ -54,6 +55,8 @@ def sanitize_html(html_content):
 
 MAX_POINTS_INT = 2**63 - 1
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+# Videos are limited to 10 MB for uploads
+MAX_VIDEO_BYTES = 10 * 1024 * 1024
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -185,6 +188,66 @@ def save_submission_image(submission_image_file):
     except Exception as e:
         current_app.logger.error(f"Failed to save image: {e}")
         raise
+
+
+def save_submission_video(submission_video_file):
+    """Save an uploaded video for quest verification.
+
+    The uploaded file is converted to H.264 MP4 with basic compression using
+    ``ffmpeg``. Videos over ``MAX_VIDEO_BYTES`` are rejected before conversion
+    and again after compression to ensure storage limits are respected.
+    """
+    try:
+        # initial size check before saving
+        submission_video_file.seek(0, os.SEEK_END)
+        size = submission_video_file.tell()
+        submission_video_file.seek(0)
+        if size > MAX_VIDEO_BYTES:
+            raise ValueError("Video exceeds 10 MB limit")
+
+        # temporary path for the original upload
+        ext = submission_video_file.filename.rsplit('.', 1)[-1]
+        tmp_dir = os.path.join(current_app.static_folder, 'videos', 'tmp')
+        os.makedirs(tmp_dir, exist_ok=True)
+        orig_name = secure_filename(f"{uuid.uuid4()}_orig.{ext}")
+        orig_path = os.path.join(tmp_dir, orig_name)
+        submission_video_file.save(orig_path)
+
+        # final path for the compressed mp4
+        uploads_dir = os.path.join(current_app.static_folder, 'videos', 'verifications')
+        os.makedirs(uploads_dir, exist_ok=True)
+        final_name = secure_filename(f"{uuid.uuid4()}.mp4")
+        final_path = os.path.join(uploads_dir, final_name)
+
+        # run ffmpeg to compress and scale
+        ffmpeg_cmd = [
+            'ffmpeg', '-i', orig_path,
+            '-vf', "scale='min(1280,iw)':-2",
+            '-c:v', 'libx264', '-preset', 'fast', '-crf', '28',
+            '-c:a', 'aac', '-movflags', 'faststart',
+            '-y', final_path
+        ]
+        subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        # cleanup original upload
+        os.remove(orig_path)
+
+        # final size check
+        if os.path.getsize(final_path) > MAX_VIDEO_BYTES:
+            os.remove(final_path)
+            raise ValueError("Video exceeds 10 MB limit after compression")
+
+        return os.path.join('videos', 'verifications', final_name)
+    except Exception as e:
+        current_app.logger.error(f"Failed to save video: {e}")
+        raise
+
+
+def public_media_url(path):
+    """Return a publicly accessible URL for a stored media path."""
+    if not path:
+        return None
+    return url_for('static', filename=path)
 
 
 def save_sponsor_logo(image_file, old_filename=None):

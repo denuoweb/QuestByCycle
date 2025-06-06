@@ -24,7 +24,15 @@
                 event.preventDefault();
                 if (isSubmitting) return;
                 isSubmitting = true;
-    
+
+                const fileInput = submitPhotoForm.querySelector('input[name="photo"]');
+                const file = fileInput ? fileInput.files[0] : null;
+                if (file && file.type.startsWith('video/') && file.size > 10 * 1024 * 1024) {
+                    displayFlashMessage('Video must be 10 MB or smaller.', 'error');
+                    isSubmitting = false;
+                    return;
+                }
+
                 showFloatingModal();
     
                 // Retrieve the session ID from the Socket.IO client
@@ -261,10 +269,10 @@
     <div id="flash-messages"></div>
 
     <div class="card">
-        <h1>Upload a Photo to Complete the Quest: "{{ quest.title }}"</h1>
+        <h1>Upload Media to Complete the Quest: "{{ quest.title }}"</h1>
         <form id="submitPhotoForm" method="post" enctype="multipart/form-data" action="{{ url_for('quests.submit_photo', quest_id=quest.id) }}">
             {{ form.csrf_token }}
-            <input type="file" name="photo" accept="image/*" capture="camera" required>
+            <input type="file" name="photo" accept="image/*,video/*" capture="camera" required>
             <button type="submit">Submit</button>
         </form>
     </div>

@@ -82,6 +82,7 @@ Quests can have different verification methods:
 - **Photo Verification**: Upload a photo as evidence of quest completion.
 - **Comment Verification**: Provide a comment describing how you completed the quest.
 - **Photo and Comment Verification**: Both upload a photo and provide a comment.
+- **Video Verification**: Upload a short video as evidence, optionally with a comment. Videos are automatically compressed to stay under 10&nbsp;MB.
 
 ### Quest Submissions
 

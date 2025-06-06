@@ -38,6 +38,8 @@ from app.utils import (
     getLastRelevantCompletionTime,
     save_badge_image,
     save_submission_image,
+    save_submission_video,
+    public_media_url,
     update_user_score,
 )
 from app.activitypub_utils import (
@@ -222,6 +224,7 @@ def submit_quest(quest_id):
 
     verification_type = quest.verification_type
     image_file = request.files.get("image")
+    video_file = request.files.get("video")
     comment = sanitize_html(request.form.get("verificationComment", ""))
 
     # Handle different verification types.
@@ -235,6 +238,11 @@ def submit_quest(quest_id):
             "success": False,
             "message": "No file selected for photo verification"
         }), 400
+    if verification_type == "video" and (not video_file or video_file.filename == ""):
+        return jsonify({
+            "success": False,
+            "message": "No file selected for video verification"
+        }), 400
     if verification_type == "comment" and not comment:
         return jsonify({"success": False, "message": "Comment required for verification"}), 400
     if verification_type == "photo_comment" and (not image_file or image_file.filename == ""):
@@ -247,9 +255,17 @@ def submit_quest(quest_id):
 
     try:
         image_url = None
+        video_url = None
         if image_file and image_file.filename:
             image_url = save_submission_image(image_file)
             image_path = os.path.join(current_app.static_folder, image_url)
+        elif video_file and video_file.filename:
+            try:
+                video_url = save_submission_video(video_file)
+            except ValueError as ve:
+                current_app.logger.error(f"Error processing video file: {str(ve)}")
+                return jsonify({"success": False, "message": "An error occurred while processing the video file. Please try again later."}), 400
+            image_path = os.path.join(current_app.static_folder, video_url)
         else:
             image_path = None
 
@@ -271,7 +287,8 @@ def submit_quest(quest_id):
         new_submission = QuestSubmission(
             quest_id=quest_id,
             user_id=current_user.id,
-            image_url=(image_url if image_url else "images/commentPlaceholder.png"),
+            image_url=(image_url if image_url else None),
+            video_url=video_url,
             comment=comment,
             twitter_url=twitter_url,
             fb_url=fb_url,
@@ -305,7 +322,7 @@ def submit_quest(quest_id):
 
         # Create and deliver ActivityPub Create activity.
         activity = None
-        if image_url:
+        if image_url or video_url:
             activity = post_activitypub_create_activity(new_submission, current_user, quest)
 
         from app import socketio
@@ -315,7 +332,8 @@ def submit_quest(quest_id):
             "success": True,
             "new_completion_count": user_quest.completions,
             "total_points": total_points,
-            "image_url": image_url,
+            "image_url": public_media_url(image_url),
+            "video_url": public_media_url(video_url),
             "comment": comment,
             "twitter_url": twitter_url,
             "fb_url": fb_url,
@@ -507,7 +525,8 @@ def get_quest_submissions(quest_id):
         user = User.query.get(sub.user_id)
         submissions_data.append({
             "id"                 : sub.id,
-            "image_url"          : sub.image_url,
+            "image_url"          : public_media_url(sub.image_url),
+            "video_url"          : public_media_url(sub.video_url),
             "comment"            : sub.comment,
             "timestamp"          : sub.timestamp.strftime("%Y-%m-%d %H:%M"),
             "user_id"            : sub.user_id,
@@ -736,11 +755,21 @@ def submit_photo(quest_id):
             return jsonify({"success": False, "message": "No session ID provided"}), 400
 
         photo = request.files.get("photo")
-        if not photo:
-            return jsonify({"success": False, "message": "No photo detected, please try again."}), 400
-
-        image_url = save_submission_image(photo)
-        image_path = os.path.join(current_app.static_folder, image_url)
+        video = request.files.get("video")
+        image_url = None
+        video_url = None
+        if photo:
+            image_url = save_submission_image(photo)
+            media_path = os.path.join(current_app.static_folder, image_url)
+        elif video:
+            try:
+                video_url = save_submission_video(video)
+            except ValueError as ve:
+                current_app.logger.error(f"Error processing video: {ve}")
+                return jsonify({"success": False, "message": "An error occurred while processing the video."}), 400
+            media_path = os.path.join(current_app.static_folder, video_url)
+        else:
+            return jsonify({"success": False, "message": "No media detected, please try again."}), 400
         display_name = current_user.display_name or current_user.username
         status_text = f"{display_name} completed '{quest.title}'! #QuestByCycle"
 
@@ -749,18 +778,19 @@ def submit_photo(quest_id):
         twitter_url, fb_url, instagram_url = (None, None, None)
         if image_url and current_user.upload_to_socials:
             twitter_url, fb_url, instagram_url = post_to_social_media(
-                image_url, image_path, status_text, game, sid
+                image_url, media_path, status_text, game, sid
             )
 
         # Post to Mastodon if the user is linked.
         mastodon_url = None
         if image_url and current_user.upload_to_mastodon and current_user.mastodon_access_token:
-            mastodon_url = post_to_mastodon_status(image_path, status_text, current_user)
+            mastodon_url = post_to_mastodon_status(media_path, status_text, current_user)
 
         new_submission = QuestSubmission(
             quest_id=quest_id,
             user_id=current_user.id,
-            image_url=(image_url if image_url else "images/commentPlaceholder.png"),
+            image_url=image_url,
+            video_url=video_url if video else None,
             comment="",  # Adjust if you wish to include comments
             twitter_url=twitter_url,
             fb_url=fb_url,
@@ -792,7 +822,7 @@ def submit_photo(quest_id):
 
         from app import socketio
         socketio.emit("submission_complete", {"status": "Submission Complete"}, room=sid)
-        message = "Photo submitted successfully!"
+        message = "Media submitted successfully!"
         return jsonify({
             "success": True,
             "message": message,
@@ -811,7 +841,7 @@ def allowed_file(filename):
     Args:
         filename (str): The file name.
     """
-    allowed_extensions = {"png", "jpg", "jpeg", "gif"}
+    allowed_extensions = {"png", "jpg", "jpeg", "gif", "mp4", "webm", "mov"}
     return (
         "." in filename
         and filename.rsplit(".", 1)[1].lower() in allowed_extensions
@@ -841,7 +871,8 @@ def get_user_submissions():
     submissions_data = [
         {
             "id": submission.id,
-            "image_url": submission.image_url,
+            "image_url": public_media_url(submission.image_url),
+            "video_url": public_media_url(submission.video_url),
             "comment": submission.comment,
             "user_id": submission.user_id,
             "quest_id": submission.quest_id,
@@ -926,7 +957,8 @@ def get_all_submissions():
                 if submission.user.profile_picture
                 else url_for('static', filename="images/default_profile.png")
             ),
-            "image_url": submission.image_url,
+            "image_url": public_media_url(submission.image_url),
+            "video_url": public_media_url(submission.video_url),
             "comment": submission.comment,
             "timestamp": submission.timestamp.strftime("%Y-%m-%d %H:%M"),
             "twitter_url": submission.twitter_url,
@@ -1036,7 +1068,9 @@ def get_submission(submission_id):
     
     return jsonify({
         'id': submission_id,
-        'url':                  sub.image_url,
+        'url':                  public_media_url(sub.image_url or sub.video_url),
+        'image_url':            public_media_url(sub.image_url),
+        'video_url':            public_media_url(sub.video_url),
         'comment':              sub.comment,
         'user_id':              sub.user_id,
         'user_profile_picture': pic_url,
@@ -1208,12 +1242,23 @@ def update_submission_photo(submission_id):
 
     # expect multipart/form-data
     photo = request.files.get('photo')
-    if not photo or photo.filename == '':
+    video = request.files.get('video')
+    if photo and photo.filename:
+        new_path = save_submission_image(photo)
+        sub.image_url = new_path
+    elif video and video.filename:
+        try:
+            new_path = save_submission_video(video)
+        except ValueError as ve:
+            current_app.logger.error("Error saving submission video: %s", str(ve))
+            return jsonify(success=False, message="An error occurred while processing the video."), 400
+        sub.video_url = new_path
+    else:
         return jsonify(success=False, message='No file uploaded'), 400
 
-    # save new image (you may want to delete old one)
-    new_path = save_submission_image(photo)
-    sub.image_url = new_path
     db.session.commit()
-
-    return jsonify(success=True, image_url=sub.image_url)
+    return jsonify(
+        success=True,
+        image_url=public_media_url(sub.image_url),
+        video_url=public_media_url(sub.video_url)
+    )

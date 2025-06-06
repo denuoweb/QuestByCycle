@@ -40,9 +40,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const id   = modal.dataset.submissionId;
       const file = photoInput.files[0];
       if (!file) return alert('Please select an image first.');
+      if (file.type.startsWith('video/') && file.size > 10 * 1024 * 1024) {
+        alert('Video must be 10 MB or smaller.');
+        return;
+      }
 
       const form = new FormData();
-      form.append('photo', file);
+      if (file.type.startsWith('video/')) {
+        form.append('video', file);
+      } else {
+        form.append('photo', file);
+      }
 
       fetch(`/quests/submission/${id}/photo`, {
         method:      'PUT',
@@ -53,9 +61,16 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(r => r.json())
       .then(json => {
         if (!json.success) throw new Error(json.message || 'Upload failed');
-        // update the displayed image:
-        $('#submissionImage').src = json.image_url;
-        // reset the photo-edit UI:
+        if (json.video_url) {
+          $('#submissionImage').hidden = true;
+          $('#submissionVideo').hidden = false;
+          $('#submissionVideoSource').src = json.video_url;
+          $('#submissionVideo').load();
+        } else {
+          $('#submissionVideo').hidden = true;
+          $('#submissionImage').hidden = false;
+          $('#submissionImage').src = json.image_url;
+        }
         cancelPhotoBtn.click();
       })
       .catch(e => alert(e.message));
@@ -75,6 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const el = {
       img                  : $('#submissionImage'),
+      video                : $('#submissionVideo'),
+      videoSource          : $('#submissionVideoSource'),
       imgOverlay           : $('#submitterProfileImageOverlay'),
       commentRead          : $('#submissionComment'),
       commentEdit          : $('#submissionCommentEdit'),
@@ -105,7 +122,16 @@ document.addEventListener('DOMContentLoaded', () => {
     el.imgOverlay.parentElement.onclick = el.profileLink.onclick;
 
     // submission image & comment
-    el.img.src                 = image.url;
+    if (image.video_url) {
+      el.img.hidden = true;
+      el.video.hidden = false;
+      el.videoSource.src = image.video_url;
+      el.video.load();
+    } else {
+      el.video.hidden = true;
+      el.img.hidden   = false;
+      el.img.src = image.url;
+    }
     el.commentRead.textContent = image.comment || 'No comment provided.';
 
     // social links
