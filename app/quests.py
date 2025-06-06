@@ -1248,7 +1248,8 @@ def update_submission_photo(submission_id):
         try:
             new_path = save_submission_video(video)
         except ValueError as ve:
-            return jsonify(success=False, message=str(ve)), 400
+            current_app.logger.error("Error saving submission video: %s", str(ve))
+            return jsonify(success=False, message="An error occurred while processing the video."), 400
         sub.video_url = new_path
     else:
         return jsonify(success=False, message='No file uploaded'), 400
