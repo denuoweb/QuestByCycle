@@ -5,6 +5,7 @@ SQLALCHEMY_ECHO = false
 BADGE_IMAGE_DIR = "badge_images"
 TASKCSV = "csv"
 LOCAL_DOMAIN = "localhost:5000"
+FFMPEG_PATH = "ffmpeg"
 
 [encryption]
 DEFAULT_SUPER_ADMIN_PASSWORD = "test"

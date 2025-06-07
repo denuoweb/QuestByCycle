@@ -24,6 +24,7 @@ QuestByCycle is a Flask-based web application designed to engage and motivate th
 - Python 3.11+
 - PostgreSQL
 - git
+- ffmpeg (for video processing)
 -
 
 ### Debian 12 Server Setup
@@ -135,6 +136,7 @@ QuestByCycle is a Flask-based web application designed to engage and motivate th
 14. Configure
     - Copy `config.toml.example` to `config.toml` and adjust the variables accordingly.
     - Copy `gunicorn.conf.py.example` to `gunicorn.conf.py` and adjust the variables accordingly.
+    - Ensure the `ffmpeg` binary is installed and accessible or set `FFMPEG_PATH` in `config.toml`.
 
 15. Run the server in debug
 ```sudo -u APPUSER /home/APPUSER/.local/bin/poetry run flask   --app wsgi:app   run   --host=127.0.0.1   --port=5000```
