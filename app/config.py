@@ -82,6 +82,7 @@ def load_config():
             "BADGE_IMAGE_DIR": _get_env("BADGE_IMAGE_DIR", _toml_config["main"]["BADGE_IMAGE_DIR"]),
             "TASKCSV": _get_env("TASKCSV", _toml_config["main"]["TASKCSV"]),
             "LOCAL_DOMAIN": _get_env("LOCAL_DOMAIN", _toml_config["main"]["LOCAL_DOMAIN"]),
+            "FFMPEG_PATH": _get_env("FFMPEG_PATH", _toml_config["main"].get("FFMPEG_PATH", "ffmpeg")),
         },
         "encryption": {
             "DEFAULT_SUPER_ADMIN_USERNAME": _get_env(

@@ -1,6 +1,7 @@
 import uuid
 import os
 import subprocess
+import shutil
 import csv
 import io
 import bleach
@@ -227,9 +228,16 @@ def save_submission_video(submission_video_file):
         final_name = secure_filename(f"{uuid.uuid4()}.mp4")
         final_path = os.path.join(uploads_dir, final_name)
 
+        # determine ffmpeg binary
+        ffmpeg_bin = current_app.config.get('FFMPEG_PATH') or shutil.which('ffmpeg')
+        if not ffmpeg_bin or (not os.path.isabs(ffmpeg_bin) and shutil.which(ffmpeg_bin) is None):
+            raise FileNotFoundError(
+                "ffmpeg executable not found. Install ffmpeg or set FFMPEG_PATH"
+            )
+
         # run ffmpeg to compress and scale
         ffmpeg_cmd = [
-            'ffmpeg', '-i', orig_path,
+            ffmpeg_bin, '-i', orig_path,
             '-vf', "scale='min(1280,iw)':-2",
             '-c:v', 'libx264', '-preset', 'fast', '-crf', '28',
             '-c:a', 'aac', '-movflags', 'faststart',
