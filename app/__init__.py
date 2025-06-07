@@ -105,6 +105,7 @@ def create_app(config_overrides=None):
         "BADGE_IMAGE_DIR": inscopeconfig["main"]["BADGE_IMAGE_DIR"],
         "TASKCSV": inscopeconfig["main"]["TASKCSV"],
         "LOCAL_DOMAIN": inscopeconfig["main"]["LOCAL_DOMAIN"],
+        "FFMPEG_PATH": inscopeconfig["main"].get("FFMPEG_PATH", "ffmpeg"),
         "MAIL_SERVER": inscopeconfig["mail"]["MAIL_SERVER"],
         "MAIL_PORT": inscopeconfig["mail"]["MAIL_PORT"],
         "MAIL_USE_SSL": inscopeconfig["mail"]["MAIL_USE_SSL"],
