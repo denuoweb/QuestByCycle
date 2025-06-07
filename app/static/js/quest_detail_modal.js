@@ -213,6 +213,7 @@ function getVerificationFormHTML(verificationType, questId) {
   // container + heading ------------------------------------------------------
   let formHTML = `
     <form enctype="multipart/form-data" class="epic-form" method="post" action="/quests/quest/${questId}/submit">
+      <input type="hidden" name="csrf_token" value="${CSRF_TOKEN}">
       <h2 style="text-align:center;">Verify Your Quest</h2>
   `;
 
@@ -311,15 +312,21 @@ function toggleVerificationForm(questId) {
 }
 
 function setupSubmissionForm(questId) {
-    const submissionForm = document.getElementById(`verifyQuestForm-${questId}`);
-    if (submissionForm) {
-        submissionForm.addEventListener('submit', function(event) {
-            showLoadingModal();
-            submitQuestDetails(event, questId);
-        });
-    } else {
-        console.error("Form not found for quest ID:", questId);
+    const container = document.getElementById(`verifyQuestForm-${questId}`);
+    if (!container) {
+        console.error("Form container not found for quest ID:", questId);
+        return;
     }
+
+    const form = container.querySelector('form');
+    if (!form) {
+        console.error("Form element missing for quest ID:", questId);
+        return;
+    }
+
+    form.addEventListener('submit', function(event) {
+        submitQuestDetails(event, questId);
+    });
 }
 
 function verifyQuest(questId) {
@@ -421,16 +428,13 @@ function submitQuestDetails(event, questId) {
   const formData = new FormData(event.target);
   formData.append('user_id', CURRENT_USER_ID);
 
-  showLoadingModal();
-
   fetch(`/quests/quest/${questId}/submit`, {
     method:      'POST',
     body:        formData,
     credentials: 'same-origin',
-    headers:     { 'X-CSRF-Token': CSRF_TOKEN }
+    headers:     { 'X-CSRFToken': CSRF_TOKEN }
   })
     .then(res => {
-      hideLoadingModal();
       if (!res.ok) {
         if (res.status === 403)
           return res.json().then(d => {

@@ -366,8 +366,12 @@ def submit_quest(quest_id):
             "activity": activity  # For debugging, shows the constructed ActivityPub activity
         })
     except Exception as error:
+        current_app.logger.error("Quest submission failed: %s", error)
         db.session.rollback()
-        return
+        return jsonify({
+            "success": False,
+            "message": "An unexpected error occurred while submitting your quest."
+        }), 500
 
 
 @quests_bp.route("/quest/<int:quest_id>/update", methods=["POST"])
