@@ -254,7 +254,9 @@ def save_submission_video(submission_video_file):
         except subprocess.CalledProcessError as e:
             stderr_output = e.stderr.decode(errors="ignore") if e.stderr else ""
             current_app.logger.error("ffmpeg failed: %s", stderr_output)
-            raise
+            os.remove(orig_path)
+            current_app.logger.debug("Removed temporary upload %s", orig_path)
+            raise ValueError("Invalid or corrupted video file") from e
 
         # cleanup original upload
         os.remove(orig_path)

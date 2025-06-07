@@ -32,3 +32,16 @@ def test_public_media_url_variants(app):
 
     # stored without slash or static prefix
     assert public_media_url("images/foo.jpg") == expect
+
+
+def test_save_submission_video_invalid(app, tmp_path):
+    """Uploading an invalid video should raise a ValueError."""
+    from io import BytesIO
+    from werkzeug.datastructures import FileStorage
+    from app.utils import save_submission_video
+
+    fake_video = BytesIO(b"not a real video")
+    file = FileStorage(stream=fake_video, filename="bad.mp4", content_type="video/mp4")
+
+    with pytest.raises(ValueError):
+        save_submission_video(file)
