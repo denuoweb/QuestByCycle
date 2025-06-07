@@ -244,7 +244,17 @@ def save_submission_video(submission_video_file):
             '-y', final_path
         ]
         current_app.logger.debug("Running ffmpeg command: %s", ' '.join(ffmpeg_cmd))
-        subprocess.run(ffmpeg_cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            subprocess.run(
+                ffmpeg_cmd,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+        except subprocess.CalledProcessError as e:
+            stderr_output = e.stderr.decode(errors="ignore") if e.stderr else ""
+            current_app.logger.error("ffmpeg failed: %s", stderr_output)
+            raise
 
         # cleanup original upload
         os.remove(orig_path)
