@@ -226,9 +226,6 @@ def submit_quest(quest_id):
             "message": f"You cannot submit this quest again until {next_eligible_time}"
         }), 403
 
-    sid = request.form.get("sid")
-    if not sid:
-        return jsonify({"success": False, "message": "No session ID provided"}), 400
 
     verification_type = quest.verification_type
     image_file = request.files.get("image")
@@ -237,8 +234,7 @@ def submit_quest(quest_id):
 
     # Debug logging of incoming files and parameters
     current_app.logger.debug(
-        "submit_quest called: sid=%s, verification_type=%s, image_file=%s, video_file=%s",
-        sid,
+        "submit_quest called: verification_type=%s, image_file=%s, video_file=%s",
         verification_type,
         getattr(image_file, "filename", None),
         getattr(video_file, "filename", None),
@@ -297,7 +293,7 @@ def submit_quest(quest_id):
         twitter_url, fb_url, instagram_url = (None, None, None)
         if image_url and current_user.upload_to_socials:
             twitter_url, fb_url, instagram_url = post_to_social_media(
-                image_url, image_path, status_text, game, sid
+                image_url, image_path, status_text, game
             )
 
         # Hybrid cross-post: Post to Mastodon if the user is linked.
@@ -778,10 +774,6 @@ def submit_photo(quest_id):
             message = f"You cannot submit this quest again until {next_eligible_time}."
             return jsonify({"success": False, "message": message}), 400
 
-        sid = request.form.get("sid")
-        if not sid:
-            return jsonify({"success": False, "message": "No session ID provided"}), 400
-
         photo = request.files.get("photo")
         video = request.files.get("video")
 
@@ -815,7 +807,7 @@ def submit_photo(quest_id):
         twitter_url, fb_url, instagram_url = (None, None, None)
         if image_url and current_user.upload_to_socials:
             twitter_url, fb_url, instagram_url = post_to_social_media(
-                image_url, media_path, status_text, game, sid
+                image_url, media_path, status_text, game
             )
 
         # Post to Mastodon if the user is linked.

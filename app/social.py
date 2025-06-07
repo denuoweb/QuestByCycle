@@ -6,7 +6,7 @@ import json
 import mimetypes
 
 
-def post_to_social_media(image_url, image_path, status, game, sid):
+def post_to_social_media(image_url, image_path, status, game):
     twitter_url, fb_url, instagram_url = None, None, None
 
     if game.twitter_api_key and game.twitter_api_secret and game.twitter_access_token and game.twitter_access_token_secret:
