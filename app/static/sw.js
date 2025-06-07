@@ -1,5 +1,5 @@
 // The version of the cache
-const VERSION = "v2"; // Update this version number when changes are made
+const VERSION = "v3"; // Update this version number when changes are made
 const CACHE_NAME = `questbycycle-${VERSION}`;
 
 // List of static resources to cache
@@ -99,6 +99,19 @@ function notifyClientsAboutUpdate() {
   });
 }
 
+// Determine if a request should be cached
+function shouldCacheRequest(request) {
+  if (request.method !== "GET") {
+    return false;
+  }
+  const acceptHeader = request.headers.get("Accept") || "";
+  if (acceptHeader.includes("application/json")) {
+    return false;
+  }
+  const url = new URL(request.url);
+  return url.origin === self.location.origin;
+}
+
 // Fetch event with offline fallback
 self.addEventListener("fetch", (event) => {
   if (event.request.mode === "navigate") {
@@ -119,7 +132,7 @@ self.addEventListener("fetch", (event) => {
           return cachedResponse;
         }
         const networkResponse = await fetch(event.request);
-        if (event.request.url.startsWith(self.location.origin)) {
+        if (shouldCacheRequest(event.request)) {
           cache.put(event.request, networkResponse.clone());
         }
         return networkResponse;
