@@ -39,7 +39,7 @@
   
           <div class="form-group">
             {{ register_form.password.label }}
-            {{ register_form.password(class="form-control") }}
+            {{ register_form.password(class="form-control", id="registerPassword") }}
             {% for err in register_form.password.errors %}
               <span style="color: red;">[{{ err }}]</span>
             {% endfor %}
