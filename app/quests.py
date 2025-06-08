@@ -956,6 +956,10 @@ def delete_submission(submission_id):
         check_and_revoke_badges(submission.user_id, game_id=quest.game_id)
         db.session.commit()
 
+    # Explicitly remove likes and replies so they do not linger
+    SubmissionLike.query.filter_by(submission_id=submission.id).delete()
+    SubmissionReply.query.filter_by(submission_id=submission.id).delete()
+
     db.session.delete(submission)
     db.session.commit()
     return jsonify({"success": True})
