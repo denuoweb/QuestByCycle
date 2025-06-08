@@ -10,3 +10,32 @@
   max-width: 100%;
   display: inline-block;
 }
+
+// Generic helpers for form and layout tweaks
+.hidden {
+  display: none !important;
+}
+
+.inline-form {
+  display: inline;
+}
+
+.error-note {
+  color: red;
+}
+
+.gap-half {
+  gap: .5rem;
+}
+
+.mt-quarter {
+  margin-top: .25rem;
+}
+
+.mt-half {
+  margin-top: .5rem;
+}
+
+.mt-1rem {
+  margin-top: 1rem;
+}

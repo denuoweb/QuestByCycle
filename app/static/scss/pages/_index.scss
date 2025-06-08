@@ -114,3 +114,23 @@
   .wh-tab-button { padding: 8px 15px; font-size: .9rem; }
   .calendar-container { height: 350px; }
 }
+
+// Utility classes for index.html
+.fs-1-2 {
+  font-size: 1.2rem;
+}
+
+.fs-1-1 {
+  font-size: 1.1rem;
+}
+
+.no-border {
+  border: 0;
+}
+
+.col-auto-width { width: auto; }
+.col-12pct { width: 12%; }
+.col-14pct { width: 14%; }
+
+.va-middle { vertical-align: middle; }
+.ta-center { text-align: center; }

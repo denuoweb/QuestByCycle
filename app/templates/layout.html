@@ -85,7 +85,7 @@
       <a class="navbar-brand" href="{{ url_for('main.index') }}">
           <img src="{{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=175) }}"
                 alt="Quest by Cycle"
-                style="vertical-align: middle;">
+                class="navbar-brand-img">
       </a>
       <!-- Hamburger for mobile -->
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -293,8 +293,8 @@
   <div class="footer-section legal">
     &copy; {{ current_year }} QuestByCycle. All rights reserved.
     <!-- New open-source callout -->
-    <p style="margin-top:0.5em;">
-      QuestByCycle is <strong>open source</strong>.  
+    <p class="open-source-callout">
+      QuestByCycle is <strong>open source</strong>.
       <a href="https://github.com/denuoweb/questbycycle" target="_blank">
         View the code on GitHub
       </a>.

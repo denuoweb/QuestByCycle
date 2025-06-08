@@ -42,7 +42,7 @@
                             <a href="{{ sponsor.website }}" class="btn btn-primary" target="_blank">Visit Website</a>
                         {% endif %}
                         <a href="{{ url_for('admin.edit_sponsor', sponsor_id=sponsor.id, game_id=game_id) }}" class="btn btn-warning">Edit</a>
-                        <form action="{{ url_for('admin.delete_sponsor', sponsor_id=sponsor.id) }}" method="POST" style="display:inline;">
+                        <form action="{{ url_for('admin.delete_sponsor', sponsor_id=sponsor.id) }}" method="POST" class="inline-form">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="game_id" value="{{ game_id }}">  <!-- Include game_id as a hidden input -->
                             <button type="submit" class="btn btn-danger">Delete</button>

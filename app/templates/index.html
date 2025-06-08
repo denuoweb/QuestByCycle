@@ -25,11 +25,11 @@
             </div>
             <div class="col-md-6">
                 <div class="introduction text-center">
-                    <p class="h5 font-weight-bold" style="font-size: 1.2rem;">
+                    <p class="h5 font-weight-bold fs-1-2">
                         This is your Quest by Cycle journey!
                     </p>
-                    <p class="font-weight-bold" style="font-size: 1.1rem;">
-                        Ready to transform your bike rides into a thrilling adventure that benefits the planet? 
+                    <p class="font-weight-bold fs-1-1">
+                        Ready to transform your bike rides into a thrilling adventure that benefits the planet?
                         Join the QuestByCycle community! Pedal your way to a greener world as you tackle exciting challenges, 
                         earn points that combat carbon emissions, and discover hidden gems in your city. Connect with fellow 
                         cycling enthusiasts, compete for top spots on the leaderboard, and make a real difference - 
@@ -199,8 +199,8 @@
                                 <!-- Google Calendar Tab -->  
                                 <div class="wh-tab-content" id="wh-google-calendar-tab">  
                                     <div class="calendar-container">  
-                                        <iframe src="https://calendar.google.com/calendar/embed?src=7641f437a33113e72a9539618fefdb4275bbdc56bcd8090e8598383398dd1bab@group.calendar.google.com&ctz=America%2FLos_Angeles"   
-                                                style="border: 0" width="100%" height="350" frameborder="0" scrolling="no"></iframe>  
+                                        <iframe src="https://calendar.google.com/calendar/embed?src=7641f437a33113e72a9539618fefdb4275bbdc56bcd8090e8598383398dd1bab@group.calendar.google.com&ctz=America%2FLos_Angeles"
+                                                class="no-border" width="100%" height="350" frameborder="0" scrolling="no"></iframe>
                                     </div>  
                                 </div>  
                             </div>
@@ -271,17 +271,17 @@
                 </div>
                 <table class="table">
                     <colgroup>
-                        <col style="width: auto;">
-                        <col style="width: 12%;">
-                        <col style="width: 12%;">
-                        <col style="width: 14%;">
+                        <col class="col-auto-width">
+                        <col class="col-12pct">
+                        <col class="col-12pct">
+                        <col class="col-14pct">
                     </colgroup>
                     <thead>
                         <tr>
-                            <th style="vertical-align: middle; text-align: left;">Quest</th>
-                            <th style="vertical-align: right; text-align: center;">Your Posts</th>
-                            <th style="vertical-align: right; text-align: center;">All Posts</th>
-                            <th style="vertical-align: right; text-align: center;">Points</th>
+                            <th class="va-middle text-start">Quest</th>
+                            <th class="va-middle ta-center">Your Posts</th>
+                            <th class="va-middle ta-center">All Posts</th>
+                            <th class="va-middle ta-center">Points</th>
                         </tr>
                     </thead>
                     <tbody id="questTableBody">
@@ -303,9 +303,9 @@
                                         {{ quest.title }}
                                         </a>
                             </td>
-                            <td style="text-align:center;">{{ quest.personal_completions }}</td>
-                            <td style="text-align:center;">{{ quest.total_completions }}</td>
-                            <td style="text-align:center;">{{ quest.points }}</td>
+                            <td class="ta-center">{{ quest.personal_completions }}</td>
+                            <td class="ta-center">{{ quest.total_completions }}</td>
+                            <td class="ta-center">{{ quest.points }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -318,7 +318,7 @@
             </div>
         {% endif %}
     {% endif %}
-    <div id="game_IdHolder" data-game-id="{{ selected_game_id }}" style="display:none;"></div>
+    <div id="game_IdHolder" data-game-id="{{ selected_game_id }}" class="hidden"></div>
     {% include 'modals/shout_board_modal.html' %}
     {% include 'modals/login_modal.html' %}
     {% include 'modals/register_modal.html' %}

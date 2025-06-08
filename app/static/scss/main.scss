@@ -32,6 +32,8 @@
 @import 'components/user_profile_modal';
 @import 'components/badges';
 @import 'components/badge-bar';
+@import 'components/badge_modal';
+@import 'components/contact_modal';
 @import 'components/utilities';
 @import 'components/shoutboard';
 @import 'components/notifications';
@@ -43,6 +45,7 @@
 @import 'pages/quest';
 @import 'pages/submission';
 @import 'pages/submit_photo';
+@import 'pages/generated_quest';
 
 // 6. UTILS
 @import 'utils/animations';

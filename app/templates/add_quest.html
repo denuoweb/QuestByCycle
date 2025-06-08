@@ -15,12 +15,12 @@
         <div class="mb-3">
             <label for="{{ form.description.id }}" class="form-label">{{ form.description.label }}</label>
             <div id="description-editor" class="quill-editor"></div>
-            {{ form.description(class="form-control", id="description", style="display: none;", required=False) }}
+            {{ form.description(class="form-control hidden", id="description", required=False) }}
         </div>
         <div class="mb-3">
             <label for="{{ form.tips.id }}" class="form-label">{{ form.tips.label }}</label>
             <div id="tips-editor" class="quill-editor"></div>
-            {{ form.tips(class="form-control", id="tips", style="display: none;", required=False) }}
+            {{ form.tips(class="form-control hidden", id="tips", required=False) }}
         </div>
         <div class="mb-3">
             <label for="{{ form.points.id }}" class="form-label">{{ form.points.label }}</label>

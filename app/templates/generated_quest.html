@@ -69,8 +69,8 @@
         <label for="badge_image_filename">Badge Image</label>
         <input type="file" class="form-control" id="badge_image_filename" name="badge_image_filename">
         <button type="button" class="btn btn-secondary" id="generateAIImage">Generate AI Badge</button>
-        <div id="aiBadgeContainer" style="margin-top: 10px;">
-            <img id="aiBadgeImage" src="static/images/default_badge.png" alt="AI Generated Badge" style="display: none; max-width: 100%;">
+        <div id="aiBadgeContainer" class="ai-badge-container">
+            <img id="aiBadgeImage" src="static/images/default_badge.png" alt="AI Generated Badge" class="ai-badge-image">
             <input type="hidden" id="aiBadgeFilename" name="ai_badge_filename" value="">
         </div>
     </div>

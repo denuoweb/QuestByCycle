@@ -38,6 +38,7 @@
   .meter-bar {
     background: linear-gradient(to top, #6286d5, #3568d5);
     box-shadow: inset 0 -2px 5px rgba(0,0,0,0.4);
+    height: 0%;
     width: 100%;
     transition: height 1s ease-in-out, background-color 1s;
     display: flex;
