@@ -72,6 +72,11 @@ def create_game():
     Create a new game using data from the submitted form.
     """
     form = GameForm()
+    form.admins.choices = [
+        (u.id, u.username) for u in User.query.filter_by(is_admin=True).all()
+    ]
+    if not form.admins.data:
+        form.admins.data = [current_user.id]
     if form.validate_on_submit():
         game = Game(
             title=sanitize_html(form.title.data),
@@ -98,8 +103,9 @@ def create_game():
             allow_joins=form.allow_joins.data,
             social_media_liaison_email = sanitize_html(form.social_media_liaison_email.data),
             social_media_email_frequency = form.social_media_email_frequency.data,
-            admin_id=current_user.id
+            admin_id=(form.admins.data[0] if form.admins.data else current_user.id)
         )
+        game.admins = User.query.filter(User.id.in_(form.admins.data or [current_user.id])).all()
         if 'leaderboard_image' in request.files:
             image_file = request.files['leaderboard_image']
             if image_file and allowed_image_file(image_file.filename):
@@ -141,7 +147,14 @@ def update_game(game_id):
     Update an existing game's information based on the submitted form data.
     """
     game = Game.query.get_or_404(game_id)
+    if not current_user.is_admin_for_game(game_id):
+        flash('Access denied: Only assigned admins can edit this game.', 'danger')
+        return redirect(url_for('main.index'))
     form = GameForm(obj=game)
+    form.admins.choices = [
+        (u.id, u.username) for u in User.query.filter_by(is_admin=True).all()
+    ]
+    form.admins.data = [admin.id for admin in game.admins]
     if form.validate_on_submit():
         game.title = sanitize_html(form.title.data)
         game.description = sanitize_html(form.description.data)
@@ -169,7 +182,10 @@ def update_game(game_id):
         game.allow_joins = form.allow_joins.data
         game.social_media_liaison_email = sanitize_html(form.social_media_liaison_email.data)  
         game.social_media_email_frequency = form.social_media_email_frequency.data
-
+        game.admins = User.query.filter(User.id.in_(form.admins.data)).all()
+        if form.admins.data:
+            game.admin_id = form.admins.data[0]
+        
         if ('leaderboard_image' in request.files and
                 request.files['leaderboard_image'].filename):
             image_file = request.files['leaderboard_image']

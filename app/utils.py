@@ -778,6 +778,9 @@ def generate_demo_game():
         leaderboard_image="leaderboard_image.png"  # Assuming the image is stored in the static folder
     )
     db.session.add(demo_game)
+    admin_user = User.query.get(1)
+    if admin_user:
+        demo_game.admins.append(admin_user)
     db.session.commit()
 
     # Import quests and badges for the demo game

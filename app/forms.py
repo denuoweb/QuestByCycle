@@ -189,8 +189,9 @@ class GameForm(FlaskForm):
     custom_game_code = StringField("Custom Game Code", validators=[Optional()])
     is_public = BooleanField("Public Game", default=True)
     allow_joins = BooleanField("Allow Joining", default=True)
-    social_media_liaison_email = StringField("Social Media Liaison Email",   
-                                            validators=[Optional(), Email()])  
+    admins = SelectMultipleField("Game Admins", coerce=int)
+    social_media_liaison_email = StringField("Social Media Liaison Email",
+                                            validators=[Optional(), Email()])
     social_media_email_frequency = SelectField(  
         "Email Frequency",  
         choices=[  

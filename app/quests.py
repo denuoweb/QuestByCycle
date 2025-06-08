@@ -110,7 +110,7 @@ def manage_game_quests(game_id):
     """
     game = Game.query.get_or_404(game_id)
 
-    if not current_user.is_admin:
+    if not current_user.is_admin_for_game(game_id):
         flash("Access denied: Only administrators can manage quests.", "danger")
         return redirect(url_for("main.index", game_id=game_id))
 
@@ -131,7 +131,7 @@ def manage_game_quests(game_id):
 def add_quest(game_id):
     """Add a new quest to the game."""
 
-    if not current_user.is_admin:
+    if not current_user.is_admin_for_game(game_id):
         flash("Access denied: Only administrators can add quests.", "danger")
         return redirect(url_for("main.index", game_id=game_id))
 
@@ -424,10 +424,10 @@ def delete_quest(quest_id):
     Args:
         quest_id (int): The ID of the quest to delete.
     """
-    if not current_user.is_admin:
-        return jsonify({"success": False, "message": "Permission denied"}), 403
-
     quest_to_delete = Quest.query.get_or_404(quest_id)
+    game_id = quest_to_delete.game_id
+    if not current_user.is_admin_for_game(game_id):
+        return jsonify({"success": False, "message": "Permission denied"}), 403
     db.session.delete(quest_to_delete)
 
     try:
@@ -1050,7 +1050,7 @@ def delete_all_quests(game_id):
     """
     game = Game.query.get_or_404(game_id)
 
-    if game.admin_id != current_user.id:
+    if not current_user.is_admin_for_game(game_id):
         return (
             jsonify(
                 {
@@ -1081,7 +1081,7 @@ def get_game_title(game_id):
     """
     game = Game.query.get_or_404(game_id)
 
-    if game.admin_id != current_user.id:
+    if not current_user.is_admin_for_game(game_id):
         return jsonify(
             {"success": False, "message": "You do not have permission to view this game."}
         ), 403
