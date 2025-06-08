@@ -1,0 +1,20 @@
+<div id="deleteGameModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title">Delete Game</h5>
+      <button type="button" class="btn-close" aria-label="Close" onclick="closeModal('deleteGameModal')"></button>
+    </div>
+    <div class="modal-body">
+      <p>Type <strong>delete</strong> to confirm.</p>
+      <input type="text" id="deleteGameConfirmInput" class="form-control mb-3" placeholder="delete">
+      <div id="deleteGameCountdown" class="mb-3" hidden>
+        Deleting in <span id="deleteGameTimer">5</span>...
+        <button id="deleteGameUndo" class="btn btn-sm btn-secondary ms-2">Undo</button>
+      </div>
+      <button id="deleteGameConfirmBtn" class="btn btn-danger" disabled>Delete</button>
+    </div>
+  </div>
+  <form id="deleteGameForm" method="post" style="display:none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  </form>
+</div>
