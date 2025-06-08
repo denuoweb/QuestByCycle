@@ -8,12 +8,13 @@ window.allBadges = window.allBadges || [];
  * Calls the provided callback with the badge array.
  */
 function loadAllBadges(callback) {
-  const selectedGameId = document.getElementById('game_IdHolder').getAttribute('data-game-id');
+  const gameHolder = document.getElementById("game_IdHolder");
+  const selectedGameId = gameHolder ? gameHolder.getAttribute("data-game-id") : null;
   let fetchUrl = '/badges/badges';
-  if (selectedGameId && selectedGameId !== '0') {
+  if (selectedGameId && !isNaN(parseInt(selectedGameId,10)) && selectedGameId !== "0") {
     fetchUrl += `?game_id=${selectedGameId}`;
   }
-  fetch(fetchUrl)
+  fetch(fetchUrl, { credentials: 'same-origin' })
     .then(response => {
       if (!response.ok) {
         throw new Error("Error fetching badges");
