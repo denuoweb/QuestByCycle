@@ -60,6 +60,8 @@ MAX_POINTS_INT = 2**63 - 1
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 # Videos are limited to 10 MB for uploads
 MAX_VIDEO_BYTES = 10 * 1024 * 1024
+# Default timeout for outgoing HTTP requests in seconds
+REQUEST_TIMEOUT = 5
 
 def allowed_file(filename):
     return '.' in filename and \

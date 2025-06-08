@@ -8,7 +8,7 @@ import re
 from flask import Blueprint, jsonify, render_template, request, current_app
 from flask_login import login_required
 from app.forms import QuestForm
-from app.utils import save_badge_image
+from app.utils import save_badge_image, REQUEST_TIMEOUT
 from .models import db, Quest, Badge
 from werkzeug.datastructures import MultiDict
 from openai import OpenAI
@@ -151,7 +151,10 @@ def generate_badge_image():
     generated_image_url = response.data[0].url
 
     # Fetch the image from the generated URL
-    image_response = requests.get(generated_image_url)
+    image_response = requests.get(
+        generated_image_url,
+        timeout=REQUEST_TIMEOUT,
+    )
     if image_response.status_code != 200:
         return jsonify({'error': 'Failed to fetch generated image'}), 500
 

@@ -13,6 +13,7 @@ This module provides:
 import json
 import rsa
 import requests
+from .utils import REQUEST_TIMEOUT
 from datetime import datetime, timezone
 from email.utils import formatdate
 from urllib.parse import urlparse
@@ -50,7 +51,7 @@ def discover_remote_inbox(actor_uri):
     parsed = urlparse(actor_uri)
     webfinger_url = f"{parsed.scheme}://{parsed.netloc}/.well-known/webfinger"
     params = {'resource': f"acct:{parsed.path.strip('/')}"}
-    wf = requests.get(webfinger_url, params=params, timeout=5)
+    wf = requests.get(webfinger_url, params=params, timeout=REQUEST_TIMEOUT)
     wf.raise_for_status()
     data = wf.json()
     # find the link rel="self" with type application/activity+json
@@ -62,7 +63,7 @@ def discover_remote_inbox(actor_uri):
     canonical_actor = self_link['href']
 
     # 2) Actor document GET
-    resp = requests.get(canonical_actor, timeout=5)
+    resp = requests.get(canonical_actor, timeout=REQUEST_TIMEOUT)
     resp.raise_for_status()
     actor_doc = resp.json()
 
@@ -258,8 +259,8 @@ def inbox(username):
                 remote_inbox,
                 json=accept,
                 headers=hdrs,
-                timeout=5,
-                verify=True
+                timeout=REQUEST_TIMEOUT,
+                verify=True,
             )
         except Exception as e:
             current_app.logger.error(
@@ -395,7 +396,12 @@ def deliver_activity(activity, sender):
         inbox_url = recipient.rstrip('/') + '/inbox'
         try:
             headers = sign_activitypub_request(sender, 'POST', inbox_url, json.dumps(activity))
-            resp = requests.post(inbox_url, json=activity, headers=headers)
+            resp = requests.post(
+                inbox_url,
+                json=activity,
+                headers=headers,
+                timeout=REQUEST_TIMEOUT,
+            )
             resp.raise_for_status()
         except Exception as e:
             current_app.logger.error(f"Failed to deliver to {inbox_url}: {e}")

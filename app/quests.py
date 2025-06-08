@@ -31,6 +31,7 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 from app.forms import PhotoForm, QuestForm
 from app.social import post_to_social_media
+from app.utils import REQUEST_TIMEOUT
 from app.utils import (
     can_complete_quest,
     check_and_award_badges,
@@ -730,7 +731,12 @@ def post_to_mastodon_status(image_path, status_text, user):
     headers = {"Authorization": f"Bearer {access_token}"}
     with open(image_path, "rb") as image_file:
         files = {"file": image_file}
-        media_response = requests.post(media_upload_url, headers=headers, files=files)
+        media_response = requests.post(
+            media_upload_url,
+            headers=headers,
+            files=files,
+            timeout=REQUEST_TIMEOUT,
+        )
     media_response.raise_for_status()
     media_data = media_response.json()
     media_id = media_data.get("id")
@@ -740,7 +746,12 @@ def post_to_mastodon_status(image_path, status_text, user):
     # Step 2: Post the status with the media attached.
     statuses_url = f"https://{instance}/api/v1/statuses"
     payload = {"status": status_text, "media_ids[]": media_id}
-    status_response = requests.post(statuses_url, headers=headers, data=payload)
+    status_response = requests.post(
+        statuses_url,
+        headers=headers,
+        data=payload,
+        timeout=REQUEST_TIMEOUT,
+    )
     status_response.raise_for_status()
     status_data = status_response.json()
     status_url = status_data.get("url")
