@@ -8,6 +8,54 @@
 
 QuestByCycle is a Flask-based web application designed to engage and motivate the bicycling community through a gamified approach, promoting environmental sustainability and climate activism. Participants complete quests or missions related to bicycling and environmental stewardship, earning badges and recognition among the community. The platform features a competitive yet collaborative environment where users can view their standings on a leaderboard, track their progress through profile pages, and contribute to a greener planet.
 
+## Package Icons
+
+This project relies on a variety of open source libraries. The badges below link directly to the GitHub repository for each package.
+
+### Flask Core & Extensions
+
+[![Flask](https://img.shields.io/badge/Flask-000?style=for-the-badge&logo=flask&logoColor=white)](https://github.com/pallets/flask)
+[![Werkzeug](https://img.shields.io/badge/Werkzeug-333?style=for-the-badge&logo=github&logoColor=white)](https://github.com/pallets/werkzeug)
+[![Flask-Assets](https://img.shields.io/badge/Flask--Assets-555?style=for-the-badge&logo=github&logoColor=white)](https://github.com/flask-assets/flask-assets)
+[![Flask-WTF](https://img.shields.io/badge/Flask--WTF-555?style=for-the-badge&logo=github&logoColor=white)](https://github.com/wtforms/flask-wtf)
+[![Flask-SQLAlchemy](https://img.shields.io/badge/Flask--SQLAlchemy-555?style=for-the-badge&logo=github&logoColor=white)](https://github.com/pallets/flask-sqlalchemy)
+[![Flask-Login](https://img.shields.io/badge/Flask--Login-555?style=for-the-badge&logo=github&logoColor=white)](https://github.com/maxcountryman/flask-login)
+
+### Data Layer
+
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-000?style=for-the-badge&logo=sqlalchemy&logoColor=white)](https://github.com/sqlalchemy/sqlalchemy)
+[![psycopg](https://img.shields.io/badge/psycopg-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://github.com/psycopg/psycopg)
+
+### Forms, Validation & Security
+
+[![WTForms](https://img.shields.io/badge/WTForms-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/wtforms/wtforms)
+[![email-validator](https://img.shields.io/badge/email--validator-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/JoshData/python-email-validator)
+[![cryptography](https://img.shields.io/badge/cryptography-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/pyca/cryptography)
+[![PyJWT](https://img.shields.io/badge/PyJWT-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/jpadilla/pyjwt)
+[![Bleach](https://img.shields.io/badge/bleach-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/mozilla/bleach)
+
+### Infrastructure & Runtime
+
+[![Gunicorn](https://img.shields.io/badge/Gunicorn-872729?style=for-the-badge&logo=gunicorn&logoColor=white)](https://github.com/benoitc/gunicorn)
+[![APScheduler](https://img.shields.io/badge/APScheduler-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/agronholm/apscheduler)
+
+### Utility Libraries
+
+[![qrcode](https://img.shields.io/badge/qrcode-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/lincolnloop/python-qrcode)
+[![Tweepy](https://img.shields.io/badge/Tweepy-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://github.com/tweepy/tweepy)
+[![OpenAI](https://img.shields.io/badge/OpenAI-000000?style=for-the-badge&logo=openai&logoColor=white)](https://github.com/openai/openai-python)
+[![HTTPX](https://img.shields.io/badge/HTTPX-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/encode/httpx)
+[![HTTPCore](https://img.shields.io/badge/HTTPCore-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/encode/httpcore)
+[![Tomli](https://img.shields.io/badge/Tomli-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/hukkinj1/tomli)
+
+### Development & Testing
+
+[![Pytest](https://img.shields.io/badge/Pytest-0A9EDC?style=for-the-badge&logo=pytest&logoColor=white)](https://github.com/pytest-dev/pytest)
+[![python-dotenv](https://img.shields.io/badge/python--dotenv-000?style=for-the-badge&logo=dotenv&logoColor=white)](https://github.com/theskumar/python-dotenv)
+[![rsa](https://img.shields.io/badge/rsa-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/sybrenstuvel/python-rsa)
+[![libsass](https://img.shields.io/badge/libsass-555?style=for-the-badge&logo=sass&logoColor=white)](https://github.com/sass/libsass-python)
+[![watchdog](https://img.shields.io/badge/watchdog-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/gorakhargosh/watchdog)
+
 ## Features
 
 - **User Authentication:** Secure sign-up and login functionality to manage user access and personalize user experiences.
