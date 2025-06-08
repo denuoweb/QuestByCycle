@@ -1,0 +1,56 @@
+// Flash message styling ported from old CSS (main1.css)
+
+.flash-message {
+  background-color: #edf944;
+}
+
+.flash-success {
+  background-color: #a8d5a3; /* Light green background */
+  color: #3c763d;            /* Dark green text */
+  border: 1px solid #96c48b;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.flash-error,
+.flash-danger {
+  background-color: #f7c6c6; /* Light red background */
+  color: #a94442;            /* Dark red text */
+  border: 1px solid #f0a7a7;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.flash-warning {
+  background-color: #fae1b5; /* Light orange background */
+  color: #8a6d3b;            /* Dark orange text */
+  border: 1px solid #f7d09a;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.flash-info {
+  background-color: #56cbdf; /* Light blue background */
+  color: #31708f;            /* Dark blue text */
+  border: 1px solid #a3cbd3;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.blue_button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background-color 0.3s;
+}
+
+.blue_button:hover {
+  background-color: #0056b3;
+}
