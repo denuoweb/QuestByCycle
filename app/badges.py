@@ -61,7 +61,7 @@ def create_badge():
     return render_template('create_badge.html', form=form)
 
 
-@badges_bp.route('/badges', methods=['GET'])
+@badges_bp.route('/', methods=['GET'])
 def get_badges():
     game_id = request.args.get('game_id', type=int)
     if game_id:
@@ -129,7 +129,7 @@ def get_badges():
     return jsonify(badges=badges_data)
 
 
-@badges_bp.route('/badges/manage_badges', methods=['GET', 'POST'])
+@badges_bp.route('/manage_badges', methods=['GET', 'POST'])
 @login_required
 def manage_badges():
     if not current_user.is_admin:
