@@ -480,7 +480,6 @@ def generate_qr_for_game(game_id):
 
 
 @games_bp.route('/get_game/<int:game_id>', methods=['GET'])
-@login_required
 def get_game(game_id):
     """
     Retrieve the game with the given game_id and return its title as JSON.
