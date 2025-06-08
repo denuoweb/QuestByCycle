@@ -1,0 +1,25 @@
+// Styles for join_custom_game_modal.html
+
+.join-custom-game-modal {
+  .modal-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .modal-title {
+    font-weight: bold;
+  }
+
+  .modal-body {
+    padding: 2rem;
+  }
+
+  .list-group-item {
+    background-color: #f8f9fa;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #e9ecef;
+    }
+  }
+}

@@ -1,0 +1,151 @@
+// Styles for submit_photo.html
+
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: url('../images/background.png') no-repeat center center/cover;
+  color: #ffffff;
+  font-family: 'Montserrat', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+h1 {
+  font-size: 3rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  color: #ffffff;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+
+.card {
+  width: 100%;
+  max-width: 500px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  backdrop-filter: blur(10px);
+  z-index: 2;
+
+  &:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.8);
+  }
+
+  h1 {
+    color: #08251c;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  input[type='file'] {
+    margin-bottom: 1.5rem;
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 2px solid #2ebf91;
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    transition: border-color 0.3s ease;
+
+    &:focus {
+      border-color: #8360c3;
+      outline: none;
+    }
+  }
+
+  button[type='submit'] {
+    background-color: #2ebf91;
+    color: #ffffff;
+    border: none;
+    padding: 0.85rem 1.75rem;
+    font-size: 1.25rem;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+
+    &:hover {
+      background-color: #8360c3;
+      transform: translateY(-3px);
+    }
+  }
+}
+
+#flash-messages {
+  position: fixed;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: 90%;
+  max-width: 500px;
+}
+
+.flash-message {
+  background-color: #f7ff00;
+  color: #ffffff;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: opacity 0.3s ease;
+}
+
+#floating-modal {
+  display: none;
+  padding: 1.25rem;
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #2ebf91;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+  font-size: 1.1rem;
+  font-weight: bold;
+  backdrop-filter: blur(10px);
+  z-index: 2;
+}
+
+@media (min-width: 576px) {
+  h1 {
+    font-size: 3.5rem;
+  }
+
+  .card {
+    h1 {
+      font-size: 2.4rem;
+    }
+
+    button[type='submit'] {
+      font-size: 1.5rem;
+    }
+  }
+
+  .climate-icons img {
+    width: 50px;
+    height: 50px;
+  }
+}
