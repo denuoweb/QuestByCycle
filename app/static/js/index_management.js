@@ -45,11 +45,13 @@ function updateGameName() {
     const gameHolder = document.getElementById("game_IdHolder");
     if (!gameHolder) return;
 
-    const gameId = gameHolder.getAttribute("data-game-id");
+    const gameIdAttr = gameHolder.getAttribute("data-game-id");
+    if (!gameIdAttr || isNaN(parseInt(gameIdAttr, 10))) return;
+    const gameId = parseInt(gameIdAttr, 10);
     const gameNameHeader = document.getElementById("gameNameHeader");
 
-    if (gameId && gameNameHeader) {
-        fetch(`/games/get_game/${gameId}`)
+    if (gameNameHeader) {
+        fetch(`/games/get_game/${gameId}`, { credentials: 'same-origin' })
             .then(response => {
                 if (!response.ok) {
                     throw new Error("Network response was not ok");
