@@ -1,6 +1,7 @@
 import bleach
 import json
 import requests
+from .utils import REQUEST_TIMEOUT
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import current_user, login_required
 from .models import db, ProfileWallMessage, User, Notification
@@ -54,11 +55,16 @@ def _deliver_follow_activity(actor_url, activity, sender_id):
         sender = User.query.get(sender_id)
         sender.ensure_activitypub_actor()
 
-        doc = requests.get(actor_url, timeout=5).json()
+        doc = requests.get(actor_url, timeout=REQUEST_TIMEOUT).json()
         inbox = doc.get("inbox")
         if inbox:
             hdrs = sign_activitypub_request(sender, 'POST', inbox, json.dumps(activity))
-            requests.post(inbox, json=activity, headers=hdrs, timeout=5)
+            requests.post(
+                inbox,
+                json=activity,
+                headers=hdrs,
+                timeout=REQUEST_TIMEOUT,
+            )
     except Exception as e:
         current_app.logger.error(
             "Failed to deliver ActivityPub activity to %s: %s", actor_url, e

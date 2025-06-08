@@ -1,6 +1,8 @@
 from requests_oauthlib import OAuth1Session
 from flask import url_for
 
+from .utils import REQUEST_TIMEOUT
+
 import requests
 import json
 import mimetypes
@@ -39,7 +41,7 @@ def upload_media_to_twitter(file_path, api_key, api_secret, access_token, access
 
     with open(file_path, 'rb') as file:
         files = {'media': file}
-        response = twitter.post(url, files=files)
+        response = twitter.post(url, files=files, timeout=REQUEST_TIMEOUT)
 
         if response.status_code == 200:
             media_id = response.json().get('media_id_string')
@@ -57,7 +59,7 @@ def post_to_twitter(status, media_ids, twitter_username, api_key, api_secret, ac
         }
     }
     twitter = authenticate_twitter(api_key, api_secret, access_token, access_token_secret)
-    response = twitter.post(url, json=payload)
+    response = twitter.post(url, json=payload, timeout=REQUEST_TIMEOUT)
     if response.status_code == 201:
         tweet_id = response.json().get('data').get('id')
         twitter_url = f"https://twitter.com/{twitter_username}/status/{tweet_id}"
@@ -72,7 +74,7 @@ def get_facebook_page_access_token(user_access_token, page_id):
         'fields': 'access_token',
         'access_token': user_access_token
     }
-    response = requests.get(url, params=params)
+    response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
     response.raise_for_status()
     return response.json()['access_token']
 
@@ -89,7 +91,7 @@ def upload_image_to_facebook(page_id, image_path, access_token):
     }
 
     url = f"https://graph.facebook.com/v19.0/{page_id}/photos"
-    response = requests.post(url, files=files, data=data)
+    response = requests.post(url, files=files, data=data, timeout=REQUEST_TIMEOUT)
 
     if response.status_code == 200:
         return response.json()
@@ -104,7 +106,7 @@ def post_to_facebook_with_image(page_id, message, media_object_id, access_token)
         'attached_media': json.dumps([{'media_fbid': media_object_id}]),
         'access_token': access_token
     }
-    response = requests.post(url, json=payload)
+    response = requests.post(url, json=payload, timeout=REQUEST_TIMEOUT)
     if response.status_code == 200:
         post_id = response.json().get('id')
         fb_url = f"https://www.facebook.com/{post_id}"
@@ -115,7 +117,7 @@ def post_to_facebook_with_image(page_id, message, media_object_id, access_token)
 
 def get_instagram_permalink(media_id, access_token):
     permalink_url = f"https://graph.facebook.com/{media_id}?fields=permalink&access_token={access_token}"
-    permalink_response = requests.get(permalink_url)
+    permalink_response = requests.get(permalink_url, timeout=REQUEST_TIMEOUT)
     permalink_data = permalink_response.json()
     if 'permalink' in permalink_data:
         return permalink_data['permalink'], None
@@ -133,7 +135,7 @@ def post_to_instagram(image_url, caption, user_id, access_token):
         'caption': caption,
         'access_token': access_token
     }
-    response = requests.post(upload_url, data=payload)
+    response = requests.post(upload_url, data=payload, timeout=REQUEST_TIMEOUT)
     response_data = response.json()
     if 'id' not in response_data:
         raise Exception("Failed to upload image to Instagram.")
@@ -146,7 +148,7 @@ def post_to_instagram(image_url, caption, user_id, access_token):
         'creation_id': container_id,
         'access_token': access_token
     }
-    publish_response = requests.post(publish_url, data=publish_payload)
+    publish_response = requests.post(publish_url, data=publish_payload, timeout=REQUEST_TIMEOUT)
     publish_data = publish_response.json()
     if 'id' not in publish_data:
         raise Exception("Failed to publish image on Instagram.")

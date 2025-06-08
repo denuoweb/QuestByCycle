@@ -19,7 +19,7 @@ from urllib.parse import urlparse, urljoin
 from app.models import db, User, Game
 from app.forms import (LoginForm, RegistrationForm, ForgotPasswordForm,
                        ResetPasswordForm, UpdatePasswordForm, MastodonLoginForm)
-from app.utils import send_email, log_user_ip
+from app.utils import send_email, log_user_ip, REQUEST_TIMEOUT
 from app.activitypub_utils import create_activitypub_actor
 
 auth_bp = Blueprint('auth', __name__)
@@ -202,7 +202,11 @@ def mastodon_login():
             "website": request.host_url.rstrip('/')
         }
         try:
-            response = requests.post(app_registration_url, data=data)
+            response = requests.post(
+                app_registration_url,
+                data=data,
+                timeout=REQUEST_TIMEOUT,
+            )
             response.raise_for_status()
             app_data = response.json()
         except Exception as e:
@@ -249,7 +253,11 @@ def mastodon_callback():
         "scope": "read write follow"
     }
     try:
-        token_response = requests.post(token_url, data=data)
+        token_response = requests.post(
+            token_url,
+            data=data,
+            timeout=REQUEST_TIMEOUT,
+        )
         token_response.raise_for_status()
         token_data = token_response.json()
     except Exception as e:
@@ -263,7 +271,11 @@ def mastodon_callback():
     verify_url = f"https://{instance}/api/v1/accounts/verify_credentials"
     headers = {"Authorization": f"Bearer {access_token}"}
     try:
-        verify_response = requests.get(verify_url, headers=headers)
+        verify_response = requests.get(
+            verify_url,
+            headers=headers,
+            timeout=REQUEST_TIMEOUT,
+        )
         verify_response.raise_for_status()
         mastodon_user = verify_response.json()
     except Exception as e:
