@@ -9,7 +9,7 @@
         {{ form.evidence.label }}<br>
         {{ form.evidence(size=32) }}
         {% for error in form.evidence.errors %}
-            <span style="color: red;">[{{ error }}]</span>
+            <span class="text-danger">[{{ error }}]</span>
         {% endfor %}
     </p>
     <p>{{ form.submit() }}</p>

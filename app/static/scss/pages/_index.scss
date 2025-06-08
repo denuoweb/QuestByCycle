@@ -114,3 +114,12 @@
   .wh-tab-button { padding: 8px 15px; font-size: .9rem; }
   .calendar-container { height: 350px; }
 }
+
+/* Table column and header alignment */
+.quest-table col:nth-child(2),
+.quest-table col:nth-child(3) { width: 12%; }
+.quest-table col:nth-child(4) { width: 14%; }
+
+.quest-table-header { vertical-align: middle; text-align: center; }
+.quest-table-header.title { text-align: left; }
+.quest-stats-cell { text-align: center; }
