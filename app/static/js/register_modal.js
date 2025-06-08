@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="alert alert-info">This email is already registered. Enter your password to log in.</div>  
     <div class="form-group">  
       <label for="existingUserPassword">Password</label>  
-      <input type="password" id="existingUserPassword" class="form-control">  
+      <input type="password" id="existingUserPassword" class="form-control" autocomplete="current-password">
       <div id="loginError" class="text-danger mt-1" style="display: none;"></div>  
     </div>  
     <div class="form-group">  
