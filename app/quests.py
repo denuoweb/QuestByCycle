@@ -932,14 +932,10 @@ def delete_submission(submission_id):
     Args:
         submission_id (int): The ID of the submission.
     """
-    submission = QuestSubmission.query.get(submission_id)
+    submission = QuestSubmission.query.get_or_404(submission_id)
 
-    if not current_user.is_admin:
-        if submission.user_id != current_user.id:
-            return
-
-    if not submission:
-        return
+    if not current_user.is_admin and submission.user_id != current_user.id:
+        return jsonify({"success": False, "message": "Permission denied"}), 403
 
     user_quest = UserQuest.query.filter_by(
         user_id=submission.user_id, quest_id=submission.quest_id
