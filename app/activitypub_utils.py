@@ -342,7 +342,52 @@ def inbox(username):
                 pass
         return ('', 202)
 
-    # TODO: handle Announce, Undo, etc.
+    # 6) Handle Announce activities (boosts)
+    if typ == 'Announce' and sender:
+        obj_id = activity.get('object', {}).get('id', '')
+        if '/submissions/' in obj_id:
+            try:
+                sid = int(obj_id.rsplit('/', 1)[1])
+                sub = QuestSubmission.query.get(sid)
+                if sub:
+                    db.session.add(Notification(
+                        user_id=sub.user_id,
+                        type='announce',
+                        payload={
+                            'actor_id': sender.id,
+                            'actor_name': sender.display_name or sender.username,
+                            'submission_id': sid
+                        }
+                    ))
+                    db.session.commit()
+            except ValueError:
+                pass
+        return ('', 202)
+
+    # 7) Handle Undo activities (unlikes/unfollows)
+    if typ == 'Undo' and sender:
+        obj = activity.get('object', {}) or {}
+        if obj.get('type') == 'Like':
+            target = obj.get('object', {}).get('id', '')
+            if '/submissions/' in target:
+                try:
+                    quest_id = int(target.rsplit('/', 1)[0].split('/')[-1])
+                    like = QuestLike.query.filter_by(
+                        user_id=sender.id,
+                        quest_id=quest_id
+                    ).first()
+                    if like:
+                        db.session.delete(like)
+                        db.session.commit()
+                except ValueError:
+                    pass
+            return ('', 202)
+        if obj.get('type') == 'Follow' and obj.get('object') == user.activitypub_id:
+            if sender in user.followers:
+                user.followers.remove(sender)
+                db.session.commit()
+            return ('', 202)
+
     return ('', 202)
 
 
