@@ -11,6 +11,8 @@
   justify-content: space-between;
   position: relative;  // <==== Ensure context for absolute dropdowns
   z-index: 1000;
+  max-width: 95%;
+  margin: 0 auto;
 
   .navbar-brand {
     font-family: 'Arial', sans-serif;
