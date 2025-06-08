@@ -290,6 +290,12 @@ def index(game_id, quest_id, user_id):
     if user_id is None and current_user.is_authenticated:
         user_id = current_user.id
 
+    # Allow overriding game selection via query parameter so links like
+    # /?game_id=X properly switch the active game after actions such as login
+    query_game_id = request.args.get('game_id', type=int)
+    if query_game_id is not None:
+        game_id = query_game_id
+
     # Check if we should prompt custom-game join modal
     show_login       = request.args.get('show_login') == '1'
     show_join_custom = request.args.get('show_join_custom') == '1'
