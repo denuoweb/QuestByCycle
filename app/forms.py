@@ -51,7 +51,7 @@ class CSRFProtectForm(FlaskForm):
 class RegistrationForm(FlaskForm):
     """User registration form."""
     email = StringField("Email", validators=[DataRequired(), Email()])
-    password = PasswordField("Password", validators=[DataRequired()])
+    password = PasswordField("Password", validators=[DataRequired()], render_kw={"autocomplete": "new-password"})
     confirm_password = PasswordField(
         "Confirm Password",
         validators=[
@@ -61,6 +61,7 @@ class RegistrationForm(FlaskForm):
                 message="Passwords must match."
             )
         ],
+        render_kw={"autocomplete": "new-password"},
     )
     accept_license = BooleanField("I agree to the ", validators=[DataRequired()])
     submit = SubmitField("Register")
@@ -80,7 +81,11 @@ class MastodonLoginForm(FlaskForm):
 class LoginForm(FlaskForm):
     """User login form."""
     email = StringField("Email", validators=[DataRequired(), Email()])
-    password = PasswordField("Password", validators=[DataRequired()])
+    password = PasswordField(
+        "Password",
+        validators=[DataRequired()],
+        render_kw={"autocomplete": "current-password"},
+    )
     remember_me = BooleanField("Remember Me", default=True)
     submit = SubmitField("Sign In")
 
@@ -98,19 +103,35 @@ class ForgotPasswordForm(FlaskForm):
 
 class UpdatePasswordForm(FlaskForm):
     """Update password form."""
-    current_password = PasswordField("Current Password", validators=[DataRequired()])
-    new_password = PasswordField("New Password", validators=[DataRequired(), Length(min=8)])
+    current_password = PasswordField(
+        "Current Password",
+        validators=[DataRequired()],
+        render_kw={"autocomplete": "current-password"},
+    )
+    new_password = PasswordField(
+        "New Password",
+        validators=[DataRequired(), Length(min=8)],
+        render_kw={"autocomplete": "new-password"},
+    )
     confirm_password = PasswordField(
-        "Confirm New Password", validators=[DataRequired(), EqualTo("new_password")]
+        "Confirm New Password",
+        validators=[DataRequired(), EqualTo("new_password")],
+        render_kw={"autocomplete": "new-password"},
     )
     submit = SubmitField("Update Password")
 
 
 class ResetPasswordForm(FlaskForm):
     """Reset password form."""
-    password = PasswordField("New Password", validators=[DataRequired()])
+    password = PasswordField(
+        "New Password",
+        validators=[DataRequired()],
+        render_kw={"autocomplete": "new-password"},
+    )
     confirm_password = PasswordField(
-        "Confirm Password", validators=[DataRequired(), EqualTo("password")]
+        "Confirm Password",
+        validators=[DataRequired(), EqualTo("password")],
+        render_kw={"autocomplete": "new-password"},
     )
     submit = SubmitField("Reset Password")
 
@@ -119,7 +140,11 @@ class AddUserForm(FlaskForm):
     """Add a new user (admin functionality)."""
     username = StringField("Username", validators=[DataRequired()])
     email = StringField("Email", validators=[DataRequired(), Email()])
-    password = PasswordField("Password", validators=[DataRequired()])
+    password = PasswordField(
+        "Password",
+        validators=[DataRequired()],
+        render_kw={"autocomplete": "new-password"},
+    )
     submit = SubmitField("Add User")
 
 
