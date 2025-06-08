@@ -512,7 +512,8 @@ async function fetchSubmissions(questId) {
         user_profile_picture: sub.user_profile_picture,
         twitter_url:         sub.twitter_url,
         fb_url:              sub.fb_url,
-        instagram_url:       sub.instagram_url
+        instagram_url:       sub.instagram_url,
+        quest_id:            questId
       }));
 
     distributeImages(gallery);

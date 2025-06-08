@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.showSubmissionDetail = function(image) {
     const modal = $('#submissionDetailModal');
     modal.dataset.submissionId = image.id;
+    modal.dataset.questId = image.quest_id || '';
 
     const me      = Number(modal.dataset.currentUserId);
     const isOwner = Number(image.user_id) === me;
@@ -51,6 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
           if (!j.success) throw new Error(j.message || 'Delete failed');
           closeModal('submissionDetailModal');
           resetModalContent();
+          if (modal.dataset.questId) {
+            refreshQuestDetailModal(modal.dataset.questId);
+          }
           alert('Submission deleted successfully.');
         })
         .catch(e => alert('Error deleting submission: ' + e.message));
