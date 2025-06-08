@@ -23,6 +23,11 @@
 @import 'components/buttons';
 @import 'components/forms';
 @import 'components/modals';
+@import 'components/join_custom_game_modal';
+@import 'components/loading_modal';
+@import 'components/all_submissions_modal';
+@import 'components/quest_detail_modal';
+@import 'components/leaderboard_modal';
 @import 'components/sponsors-modal';
 @import 'components/user_profile_modal';
 @import 'components/badges';
@@ -37,6 +42,7 @@
 @import 'pages/profile';
 @import 'pages/quest';
 @import 'pages/submission';
+@import 'pages/submit_photo';
 
 // 6. UTILS
 @import 'utils/animations';
