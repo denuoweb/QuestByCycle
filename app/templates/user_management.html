@@ -78,14 +78,5 @@
     </div>
 </div>
 
-<script>
-document.getElementById('gameFilter').addEventListener('change', function() {
-    var gameId = this.value;
-    if (gameId) {
-        window.location.href = '/admin/user_management/game/' + gameId;
-    } else {
-        window.location.href = '/admin/user_management';
-    }
-});
-</script>
+<script src="{{ url_for('static', filename='js/user_management.js') }}"></script>
 {% endblock %}
