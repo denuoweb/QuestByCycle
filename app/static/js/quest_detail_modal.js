@@ -50,6 +50,38 @@ function openQuestDetailModal(questId) {
     });
 }
 
+function refreshQuestDetailModal(questId) {
+  fetch(`/quests/detail/${questId}/user_completion`, { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(data => {
+      const { quest, userCompletion, canVerify, nextEligibleTime } = data;
+      if (
+        !populateQuestDetails(
+          quest,
+          userCompletion.completions,
+          canVerify,
+          questId,
+          nextEligibleTime
+        )
+      ) {
+        console.error('populateQuestDetails – required element missing');
+        return;
+      }
+
+      ensureDynamicElementsExistAndPopulate(
+        quest,
+        userCompletion.completions,
+        nextEligibleTime,
+        canVerify
+      );
+
+      fetchSubmissions(questId);
+    })
+    .catch(err => {
+      console.error('Failed to refresh quest detail modal:', err);
+    });
+}
+
 
 function lazyLoadImages() {
     const images = document.querySelectorAll('img.lazyload');
@@ -404,7 +436,7 @@ async function submitQuestDetails(event, questId) {
     updateScoreboard(data.total_points);
     updateSocialLinks(data);
 
-    openQuestDetailModal(questId);
+    refreshQuestDetailModal(questId);
     event.target.reset();
   } catch (err) {
     console.error('Submission error:', err);
