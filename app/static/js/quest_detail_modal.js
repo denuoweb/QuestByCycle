@@ -338,233 +338,156 @@ function verifyQuest(questId) {
     }
 }
 
-function updateTwitterLink(url) {
-    const twitterLink = document.getElementById('twitter-link');
-    if (twitterLink) {
-        console.debug('Twitter link element found, setting href:', url);
-        twitterLink.href = url;
-        twitterLink.style.display = 'block';
+function toggleLink(el, url) {
+    if (!el) return;
+    if (url && url.trim()) {
+        el.href = url;
+        el.style.display = 'inline';
     } else {
-        console.debug('Twitter link element not found');
+        el.style.display = 'none';
     }
 }
 
-function setTwitterLink(url) {
-    const twitterLink = document.getElementById('twitterLink');
-    if (twitterLink) {
-        if (url) {
-            twitterLink.href = url;
-            twitterLink.textContent = 'Link to Twitter';
-        } else {
-            twitterLink.href = '#';
-            twitterLink.textContent = 'Link Unavailable';
-        }
-    }
+function updateScoreboard(totalPoints) {
+    if (!totalPoints) return;
+    const el = document.getElementById('total-points');
+    if (el) el.innerText = `Total Completed Points: ${totalPoints}`;
 }
 
-function updateFacebookLink(url) {
-    const facebookLink = document.getElementById('facebook-link');
-    if (facebookLink) {
-        console.debug('Facebook link element found, setting href:', url);
-        facebookLink.href = url;
-        facebookLink.style.display = 'block';
-    } else {
-        console.debug('Facebook link element not found');
-    }
-}
-
-function setFacebookLink(url) {
-    const facebookLink = document.getElementById('facebookLink');
-    if (facebookLink) {
-        if (url) {
-            facebookLink.href = url;
-            facebookLink.textContent = 'Link to Facebook';
-        } else {
-            facebookLink.href = '#';
-            facebookLink.textContent = 'Link Unavailable';
-        }
-    }
-}
-
-function updateInstagramLink(url) {
-    const instagramLink = document.getElementById('instagram-link');
-    if (instagramLink) {
-        console.debug('Instagram link element found, setting href:', url);
-        instagramLink.href = url;
-        instagramLink.style.display = 'block';
-    } else {
-        console.debug('Instagram link element not found');
-    }
-}
-
-function setInstagramLink(url) {
-    const instagramLink = document.getElementById('instagramLink');
-    if (instagramLink) {
-        if (url) {
-            instagramLink.href = url;
-            instagramLink.textContent = 'Link to Instagram';
-        } else {
-            instagramLink.href = '#';
-            instagramLink.textContent = 'Link Unavailable';
-        }
-    }
+function updateSocialLinks(data) {
+    toggleLink(document.getElementById('twitterLink'), data.twitter_url);
+    toggleLink(document.getElementById('facebookLink'), data.fb_url);
+    toggleLink(document.getElementById('instagramLink'), data.instagram_url);
 }
 
 let isSubmitting = false;
 
-function submitQuestDetails(event, questId) {
+async function submitQuestDetails(event, questId) {
   event.preventDefault();
   if (isSubmitting) return;
   isSubmitting = true;
+  const submitBtn = event.target.querySelector('[type="submit"]');
+  if (submitBtn) submitBtn.disabled = true;
 
-  const fileInput = event.target.querySelector('input[type="file"]');
-  const file      = fileInput ? fileInput.files[0] : null;
-  if (file && file.type.startsWith('video/') && file.size > 10 * 1024 * 1024) {
-    alert('Video must be 10 MB or smaller.');
-    isSubmitting = false;
-    return;
-  }
+  try {
+    const fileInput = event.target.querySelector('input[type="file"]');
+    const file      = fileInput ? fileInput.files[0] : null;
+    if (file && file.type.startsWith('video/') && file.size > 10 * 1024 * 1024) {
+      alert('Video must be 10 MB or smaller.');
+      return;
+    }
 
-  const formData = new FormData(event.target);
-  formData.append('user_id', CURRENT_USER_ID);
+    const formData = new FormData(event.target);
+    formData.append('user_id', CURRENT_USER_ID);
 
-  fetch(`/quests/quest/${questId}/submit`, {
-    method:      'POST',
-    body:        formData,
-    credentials: 'same-origin',
-    headers:     { 'X-CSRFToken': CSRF_TOKEN }
-  })
-    .then(res => {
-      if (!res.ok) {
-        if (res.status === 403)
-          return res.json().then(d => {
-            // special-case message when game is over
-            if (
-              d.message ===
-              'This quest cannot be completed outside of the game dates'
-            ) {
-              throw new Error(
-                'The game has ended and you can no longer submit quests. Join a new game in the game dropdown menu.'
-              );
-            }
-            throw new Error(d.message || `Server responded with status ${res.status}`);
-          });
-        throw new Error(`Server responded with status ${res.status}`);
-      }
-      return res.json();
-    })
-    .then(data => {
-      if (!data.success) throw new Error(data.message);
-
-      /* --- scoreboard & social links --- */
-      if (data.total_points) {
-        const el = document.getElementById('total-points');
-        if (el) el.innerText = `Total Completed Points: ${data.total_points}`;
-      }
-      if (data.twitter_url)   updateTwitterLink(data.twitter_url);
-      if (data.fb_url)        updateFacebookLink(data.fb_url);
-      if (data.instagram_url) updateInstagramLink(data.instagram_url);
-
-      /* Refresh modal with new data and clear the form */
-      openQuestDetailModal(questId);
-      event.target.reset();
-    })
-    .catch(err => {
-      console.error('Submission error:', err);
-      alert(`Error during submission: ${err.message}`);
-    })
-    .finally(() => {
-      isSubmitting = false;
+    const res = await fetch(`/quests/quest/${questId}/submit`, {
+      method:      'POST',
+      body:        formData,
+      credentials: 'same-origin',
+      headers:     { 'X-CSRFToken': CSRF_TOKEN }
     });
+
+    if (!res.ok) {
+      if (res.status === 403) {
+        const d = await res.json();
+        if (d.message === 'This quest cannot be completed outside of the game dates') {
+          throw new Error('The game has ended and you can no longer submit quests. Join a new game in the game dropdown menu.');
+        }
+        throw new Error(d.message || `Server responded with status ${res.status}`);
+      }
+      throw new Error(`Server responded with status ${res.status}`);
+    }
+
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
+
+    updateScoreboard(data.total_points);
+    updateSocialLinks(data);
+
+    openQuestDetailModal(questId);
+    event.target.reset();
+  } catch (err) {
+    console.error('Submission error:', err);
+    alert(`Error during submission: ${err.message}`);
+  } finally {
+    isSubmitting = false;
+    if (submitBtn) submitBtn.disabled = false;
+  }
 }
 
 /**********************************************************************
  *  2. fetchSubmissions                                               *
  **********************************************************************/
-function fetchSubmissions(questId) {
-  fetch(`/quests/quest/${questId}/submissions`, {
-    method:      'GET',
-    credentials: 'same-origin'
-  })
-    .then(res => {
-      if (!res.ok) throw new Error(`Server responded with status ${res.status}`);
-      return res.json();
-    })
-    .then(submissions => {
-      /* top three social links in the modal header */
-      const twitterLink   = document.getElementById('twitterLink');
-      const facebookLink  = document.getElementById('facebookLink');
-      const instagramLink = document.getElementById('instagramLink');
-
-      if (submissions && submissions.length) {
-        const s              = submissions[0];   // newest submission
-        const imgEl          = document.getElementById('submissionImage');
-        const vidEl          = document.getElementById('submissionVideo');
-        const vidSrc         = document.getElementById('submissionVideoSource');
-        const commentEl      = document.getElementById('submissionComment');
-        const profileLink    = document.getElementById('submitterProfileLink');
-        const profileImg     = document.getElementById('submitterProfileImage');
-        const profileCaption = document.getElementById('submitterProfileCaption');
-
-        if (s.video_url) {
-          imgEl.hidden = true;
-          vidEl.hidden = false;
-          vidSrc.src   = s.video_url;
-          vidEl.load();
-        } else {
-          vidEl.hidden = true;
-          imgEl.hidden = false;
-          imgEl.src    = s.image_url || '/static/images/default-placeholder.webp';
-        }
-        commentEl.textContent = s.comment || 'No comment provided.';
-
-        profileLink.href   = `/profile/${s.user_id}`;
-        profileImg.src     = s.user_profile_picture || '/static/images/default_profile.png';
-        profileCaption.textContent =
-          s.user_display_name || s.user_username || `User ${s.user_id}`;
-
-        /* social links visibility */
-        const toggle = (el, url) => {
-          if (url && url.trim()) {
-            el.href = url;
-            el.style.display = 'inline';
-          } else {
-            el.style.display = 'none';
-          }
-        };
-        toggle(twitterLink,   s.twitter_url);
-        toggle(facebookLink,  s.fb_url);
-        toggle(instagramLink, s.instagram_url);
-      } else {
-        twitterLink.style.display = facebookLink.style.display =
-          instagramLink.style.display = 'none';
-      }
-
-      /* build thumbnails for all submissions */
-      const gallery = submissions
-        .slice()                       // clone
-        .reverse()                     // newest first
-        .map(sub => ({
-          id:                  sub.id,
-          url:                 sub.image_url || sub.video_url,
-          video_url:           sub.video_url,
-          alt:                 'Submission Image',
-          comment:             sub.comment,
-          user_id:             sub.user_id,
-          user_display_name:   sub.user_display_name,
-          user_username:       sub.user_username,
-          user_profile_picture: sub.user_profile_picture,
-          twitter_url:         sub.twitter_url,
-          fb_url:              sub.fb_url,
-          instagram_url:       sub.instagram_url
-        }));
-
-      distributeImages(gallery);
-    })
-    .catch(err => {
-      console.error('Failed to fetch submissions:', err);
-      alert('Could not load submissions. Please try again.');
+async function fetchSubmissions(questId) {
+  try {
+    const res = await fetch(`/quests/quest/${questId}/submissions`, {
+      method:      'GET',
+      credentials: 'same-origin'
     });
+    if (!res.ok) throw new Error(`Server responded with status ${res.status}`);
+    const submissions = await res.json();
+
+    const twitterLink   = document.getElementById('twitterLink');
+    const facebookLink  = document.getElementById('facebookLink');
+    const instagramLink = document.getElementById('instagramLink');
+
+    if (submissions && submissions.length) {
+      const s              = submissions[0];   // newest submission
+      const imgEl          = document.getElementById('submissionImage');
+      const vidEl          = document.getElementById('submissionVideo');
+      const vidSrc         = document.getElementById('submissionVideoSource');
+      const commentEl      = document.getElementById('submissionComment');
+      const profileLink    = document.getElementById('submitterProfileLink');
+      const profileImg     = document.getElementById('submitterProfileImage');
+      const profileCaption = document.getElementById('submitterProfileCaption');
+
+      if (s.video_url) {
+        imgEl.hidden = true;
+        vidEl.hidden = false;
+        vidSrc.src   = s.video_url;
+        vidEl.load();
+      } else {
+        vidEl.hidden = true;
+        imgEl.hidden = false;
+        imgEl.src    = s.image_url || '/static/images/default-placeholder.webp';
+      }
+      commentEl.textContent = s.comment || 'No comment provided.';
+
+      profileLink.href   = `/profile/${s.user_id}`;
+      profileImg.src     = s.user_profile_picture || '/static/images/default_profile.png';
+      profileCaption.textContent =
+        s.user_display_name || s.user_username || `User ${s.user_id}`;
+
+      updateSocialLinks(s);
+    } else {
+      [twitterLink, facebookLink, instagramLink].forEach(el => {
+        if (el) el.style.display = 'none';
+      });
+    }
+
+    const gallery = submissions
+      .slice()                       // clone
+      .reverse()                     // newest first
+      .map(sub => ({
+        id:                  sub.id,
+        url:                 sub.image_url || sub.video_url,
+        video_url:           sub.video_url,
+        alt:                 'Submission Image',
+        comment:             sub.comment,
+        user_id:             sub.user_id,
+        user_display_name:   sub.user_display_name,
+        user_username:       sub.user_username,
+        user_profile_picture: sub.user_profile_picture,
+        twitter_url:         sub.twitter_url,
+        fb_url:              sub.fb_url,
+        instagram_url:       sub.instagram_url
+      }));
+
+    distributeImages(gallery);
+  } catch (err) {
+    console.error('Failed to fetch submissions:', err);
+    alert('Could not load submissions. Please try again.');
+  }
 }
 
 function isValidImageUrl(url) {
