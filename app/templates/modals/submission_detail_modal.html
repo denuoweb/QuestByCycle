@@ -1,4 +1,4 @@
-<div id="submissionDetailModal" class="modal" data-current-user-id="{{ current_user.id }}">
+<div id="submissionDetailModal" class="modal" data-current-user-id="{{ current_user.id }}" data-is-admin="{{ current_user.is_admin }}">
   <div class="modal-content">
 
     <!-- ── TOP BAR: Submitted by + Like + Close ── -->
@@ -44,6 +44,9 @@
       </video>
       <button id="editPhotoBtn" class="btn btn-outline-secondary btn-sm mt-2" hidden>
         Change Photo
+      </button>
+      <button id="deleteSubmissionBtn" class="btn btn-danger btn-sm mt-2 ms-2" hidden>
+        Delete
       </button>
 
       <!-- hidden file-picker + controls -->
