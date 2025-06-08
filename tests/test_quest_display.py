@@ -1,6 +1,5 @@
 import pytest
-from datetime import datetime, timedelta
-from pytz import utc
+from datetime import datetime, timedelta, timezone
 
 from app import create_app, db
 from app.models import Game, User, Quest, QuestSubmission, Badge
@@ -33,8 +32,8 @@ def test_prepare_quests_hides_unbadged_empty(app):
 
         game = Game(
             title="Test Game",
-            start_date=datetime.now(utc) - timedelta(days=1),
-            end_date=datetime.now(utc) + timedelta(days=1),
+            start_date=datetime.now(timezone.utc) - timedelta(days=1),
+            end_date=datetime.now(timezone.utc) + timedelta(days=1),
             admin_id=admin.id,
         )
         db.session.add(game)
@@ -54,7 +53,7 @@ def test_prepare_quests_hides_unbadged_empty(app):
         db.session.add(sub)
         db.session.commit()
 
-        quests, _ = _prepare_quests(game, admin.id, [], datetime.now(utc))
+        quests, _ = _prepare_quests(game, admin.id, [], datetime.now(timezone.utc))
         ids = [q.id for q in quests]
         assert q1.id not in ids
         assert q2.id in ids
@@ -69,8 +68,8 @@ def test_prepare_quests_hides_badgeless_image(app):
 
         game = Game(
             title="Test Game2",
-            start_date=datetime.now(utc) - timedelta(days=1),
-            end_date=datetime.now(utc) + timedelta(days=1),
+            start_date=datetime.now(timezone.utc) - timedelta(days=1),
+            end_date=datetime.now(timezone.utc) + timedelta(days=1),
             admin_id=admin.id,
         )
         db.session.add(game)
@@ -92,7 +91,7 @@ def test_prepare_quests_hides_badgeless_image(app):
         db.session.add(sub)
         db.session.commit()
 
-        quests, _ = _prepare_quests(game, admin.id, [], datetime.now(utc))
+        quests, _ = _prepare_quests(game, admin.id, [], datetime.now(timezone.utc))
         ids = [q.id for q in quests]
         assert q1.id not in ids
         assert q2.id in ids
@@ -108,8 +107,8 @@ def test_prepare_user_data_hides_badgeless_image(app):
 
         game = Game(
             title="Test Game3",
-            start_date=datetime.now(utc) - timedelta(days=1),
-            end_date=datetime.now(utc) + timedelta(days=1),
+            start_date=datetime.now(timezone.utc) - timedelta(days=1),
+            end_date=datetime.now(timezone.utc) + timedelta(days=1),
             admin_id=admin.id,
         )
         db.session.add(game)

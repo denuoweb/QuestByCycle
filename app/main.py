@@ -19,7 +19,9 @@ from sqlalchemy.orm import joinedload
 from typing import Any, List
 from datetime import datetime, timedelta
 from PIL import Image, ExifTags, UnidentifiedImageError
-from pytz import utc
+from datetime import timezone
+
+UTC = timezone.utc
 from app.models import (db, Game, User, Quest, Badge, UserQuest, QuestSubmission,
                         QuestLike, ShoutBoardMessage, ProfileWallMessage,
                         user_games)
@@ -283,7 +285,7 @@ def index(game_id, quest_id, user_id):
     forgot_form = ForgotPasswordForm()
     reset_form = ResetPasswordForm()
 
-    now = datetime.now(utc)
+    now = datetime.now(UTC)
 
     if user_id is None and current_user.is_authenticated:
         user_id = current_user.id
