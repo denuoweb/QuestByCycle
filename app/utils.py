@@ -56,16 +56,25 @@ def sanitize_html(html_content):
     return bleach.clean(html_content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
 
 
+# Allowed extensions for image and video uploads
 MAX_POINTS_INT = 2**63 - 1
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'mov'}
 # Videos are limited to 10 MB for uploads
 MAX_VIDEO_BYTES = 10 * 1024 * 1024
 # Default timeout for outgoing HTTP requests in seconds
 REQUEST_TIMEOUT = 5
 
-def allowed_file(filename):
+def allowed_image_file(filename):
+    """Return True if the filename has an allowed image extension."""
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
+
+
+def allowed_video_file(filename):
+    """Return True if the filename has an allowed video extension."""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_VIDEO_EXTENSIONS
 
 
 def save_leaderboard_image(image_file):
@@ -74,7 +83,7 @@ def save_leaderboard_image(image_file):
     
     try:
         ext = image_file.filename.rsplit('.', 1)[-1].lower()
-        if ext not in ALLOWED_EXTENSIONS:
+        if ext not in ALLOWED_IMAGE_EXTENSIONS:
             raise ValueError("File extension not allowed.")
         filename = secure_filename(f"{uuid.uuid4()}.{ext}")
         rel_path = os.path.join('images', 'leaderboard', filename)
@@ -166,7 +175,7 @@ def save_bicycle_picture(bicycle_picture_file, old_filename=None):
             os.remove(old_path)  # Remove the old file
 
     ext = bicycle_picture_file.filename.rsplit('.', 1)[-1].lower()
-    if ext not in ALLOWED_EXTENSIONS:
+    if ext not in ALLOWED_IMAGE_EXTENSIONS:
         raise ValueError("File extension not allowed.")
     
     filename = secure_filename(f"{uuid.uuid4()}.{ext}")
@@ -180,7 +189,9 @@ def save_bicycle_picture(bicycle_picture_file, old_filename=None):
 
 def save_submission_image(submission_image_file):
     try:
-        ext = submission_image_file.filename.rsplit('.', 1)[-1]
+        ext = submission_image_file.filename.rsplit('.', 1)[-1].lower()
+        if ext not in ALLOWED_IMAGE_EXTENSIONS:
+            raise ValueError("File extension not allowed.")
         filename = secure_filename(f"{uuid.uuid4()}.{ext}")
         uploads_dir = os.path.join(current_app.static_folder, 'images', 'verifications')
         
@@ -216,7 +227,9 @@ def save_submission_video(submission_video_file):
             raise ValueError("Video exceeds 10 MB limit")
 
         # temporary path for the original upload
-        ext = submission_video_file.filename.rsplit('.', 1)[-1]
+        ext = submission_video_file.filename.rsplit('.', 1)[-1].lower()
+        if ext not in ALLOWED_VIDEO_EXTENSIONS:
+            raise ValueError("File extension not allowed.")
         tmp_dir = os.path.join(current_app.static_folder, 'videos', 'tmp')
         os.makedirs(tmp_dir, exist_ok=True)
         orig_name = secure_filename(f"{uuid.uuid4()}_orig.{ext}")
@@ -308,7 +321,7 @@ def public_media_url(path):
 
 def save_sponsor_logo(image_file, old_filename=None):
     # Check if the uploaded file has a valid filename
-    if image_file and allowed_file(image_file.filename):
+    if image_file and allowed_image_file(image_file.filename):
         # Secure the filename and generate a unique identifier to avoid collisions
         ext = image_file.filename.rsplit('.', 1)[-1].lower()
         filename = secure_filename(f"{uuid.uuid4()}.{ext}")

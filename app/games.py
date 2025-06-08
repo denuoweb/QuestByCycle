@@ -15,7 +15,7 @@ from app.forms import GameForm
 from app.utils import (
     save_leaderboard_image,
     generate_smoggy_images,
-    allowed_file,
+    allowed_image_file,
     send_social_media_liaison_email,
 )
 from io import BytesIO
@@ -102,7 +102,7 @@ def create_game():
         )
         if 'leaderboard_image' in request.files:
             image_file = request.files['leaderboard_image']
-            if image_file and allowed_file(image_file.filename):
+            if image_file and allowed_image_file(image_file.filename):
                 try:
                     filename = save_leaderboard_image(image_file)
                     game.leaderboard_image = filename
@@ -173,7 +173,7 @@ def update_game(game_id):
         if ('leaderboard_image' in request.files and
                 request.files['leaderboard_image'].filename):
             image_file = request.files['leaderboard_image']
-            if image_file and allowed_file(image_file.filename):
+            if image_file and allowed_image_file(image_file.filename):
                 try:
                     filename = save_leaderboard_image(image_file)
                     game.leaderboard_image = filename

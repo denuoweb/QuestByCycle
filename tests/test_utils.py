@@ -45,3 +45,16 @@ def test_save_submission_video_invalid(app, tmp_path):
 
     with pytest.raises(ValueError):
         save_submission_video(file)
+
+
+def test_save_submission_image_invalid_extension(app, tmp_path):
+    """Uploading a non-image file should raise a ValueError."""
+    from io import BytesIO
+    from werkzeug.datastructures import FileStorage
+    from app.utils import save_submission_image
+
+    fake_file = BytesIO(b"{}")
+    file = FileStorage(stream=fake_file, filename="bad.json", content_type="application/json")
+
+    with pytest.raises(ValueError):
+        save_submission_image(file)

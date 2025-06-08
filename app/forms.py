@@ -342,7 +342,12 @@ class QuestSubmissionForm(FlaskForm):
 
 class PhotoForm(FlaskForm):
     """Form for photo uploads."""
-    photo = FileField(validators=[DataRequired()])
+    photo = FileField(
+        validators=[
+            DataRequired(),
+            FileAllowed(["jpg", "jpeg", "png", "mp4", "webm", "mov"], "Images or videos only!")
+        ]
+    )
 
 
 class ShoutBoardForm(FlaskForm):
