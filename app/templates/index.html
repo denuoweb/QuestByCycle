@@ -94,10 +94,12 @@
                                 <!-- Recent Activity Tab -->  
                                 <div class="wh-tab-content active" id="wh-recent-activity-tab">
                                     {% if current_user.is_admin %}
-                                        <button type="button" class="btn btn-primary mb-2"
-                                                onclick="openModal('shoutBoardModal')">
-                                            New Shout
-                                        </button>
+                                        <div class="admin-new-shout">
+                                            <button type="button" class="btn btn-primary"
+                                                    onclick="openModal('shoutBoardModal')">
+                                                New Shout
+                                            </button>
+                                        </div>
                                     {% endif %}
                                     <div class="shout-messages-container">
                                         {% set pinned_activities = activities | selectattr('is_pinned') | list %}
@@ -120,7 +122,7 @@
                                                                 <form action="{{ url_for('main.pin_message',
                                                                                         game_id=selected_game_id,
                                                                                         message_id=activity.id) }}"
-                                                                    method="post">
+                                                                    class="pin-form" method="post">
                                                                     {{ form.csrf_token }}
                                                                     <button type="submit" class="blue_button">
                                                                         {{ 'Unpin' if activity.is_pinned else 'Pin' }}
@@ -167,7 +169,7 @@
                                                             <form action="{{ url_for('main.pin_message',
                                                                                     game_id=selected_game_id,
                                                                                     message_id=activity.id) }}"
-                                                                method="post">
+                                                                class="pin-form" method="post">
                                                                 {{ form.csrf_token }}
                                                                 <button type="submit" class="blue_button">
                                                                     {{ 'Unpin' if activity.is_pinned else 'Pin' }}
