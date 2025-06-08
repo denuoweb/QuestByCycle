@@ -65,7 +65,7 @@
 
     async function loadBadges() {
         try {
-            const response = await fetch('/badges/badges');
+            const response = await fetch('/badges');
             if (!response.ok) throw new Error('Failed to fetch badges');
             const data = await response.json();
             badges = data.badges || [];

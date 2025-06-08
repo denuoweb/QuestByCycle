@@ -4,13 +4,13 @@
 window.allBadges = window.allBadges || [];
 
 /**
- * Load all badges from the server endpoint (/badges/badges) if not already cached.
+ * Load all badges from the server endpoint (/badges) if not already cached.
  * Calls the provided callback with the badge array.
  */
 function loadAllBadges(callback) {
   const gameHolder = document.getElementById("game_IdHolder");
   const selectedGameId = gameHolder ? gameHolder.getAttribute("data-game-id") : null;
-  let fetchUrl = '/badges/badges';
+  let fetchUrl = '/badges';
   if (selectedGameId && !isNaN(parseInt(selectedGameId,10)) && selectedGameId !== "0") {
     fetchUrl += `?game_id=${selectedGameId}`;
   }
