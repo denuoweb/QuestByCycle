@@ -437,10 +437,26 @@ def deliver_activity(activity, sender):
     Send an ActivityPub activity to all recipients' inboxes.
     """
     recipients = activity.get('to', []) + activity.get('cc', [])
+    local_domain = current_app.config.get('LOCAL_DOMAIN')
     for recipient in recipients:
+        parsed = urlparse(recipient)
+        if not parsed.scheme or not parsed.netloc:
+            current_app.logger.warning(
+                "Skipping invalid ActivityPub recipient %s", recipient
+            )
+            continue
+
+        if local_domain and parsed.netloc == local_domain:
+            current_app.logger.debug(
+                "Skipping local ActivityPub delivery to %s", recipient
+            )
+            continue
+
         inbox_url = recipient.rstrip('/') + '/inbox'
         try:
-            headers = sign_activitypub_request(sender, 'POST', inbox_url, json.dumps(activity))
+            headers = sign_activitypub_request(
+                sender, 'POST', inbox_url, json.dumps(activity)
+            )
             resp = requests.post(
                 inbox_url,
                 json=activity,
@@ -449,7 +465,9 @@ def deliver_activity(activity, sender):
             )
             resp.raise_for_status()
         except Exception as e:
-            current_app.logger.error(f"Failed to deliver to {inbox_url}: {e}")
+            current_app.logger.error(
+                f"Failed to deliver to {inbox_url}: {e}"
+            )
 
 
 def post_activitypub_create_activity(submission, user, quest):
