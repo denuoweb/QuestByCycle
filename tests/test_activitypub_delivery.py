@@ -1,0 +1,54 @@
+import pytest
+from unittest.mock import patch
+
+from app import create_app, db
+from app.models import User
+from app.activitypub_utils import deliver_activity, generate_activitypub_keys
+
+
+@pytest.fixture
+def app():
+    app = create_app({
+        "TESTING": True,
+        "WTF_CSRF_ENABLED": False,
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+        "LOCAL_DOMAIN": "example.com",
+    })
+    ctx = app.app_context()
+    ctx.push()
+    db.create_all()
+    yield app
+    db.session.remove()
+    db.drop_all()
+    ctx.pop()
+
+
+def test_deliver_activity_skips_invalid_and_local(app):
+    public, private = generate_activitypub_keys()
+    user = User(
+        username="sender",
+        email="s@example.com",
+        license_agreed=True,
+        email_verified=True,
+        activitypub_id="https://example.com/users/sender",
+        public_key=public,
+        private_key=private,
+    )
+    db.session.add(user)
+    db.session.commit()
+
+    activity = {
+        "@context": "https://www.w3.org/ns/activitystreams",
+        "type": "Create",
+        "to": [
+            "https:///users/bad",
+            "https://example.com/users/local",
+            "https://remote.test/users/remote",
+        ],
+    }
+
+    with patch("app.activitypub_utils.requests.post") as mock_post:
+        deliver_activity(activity, user)
+        mock_post.assert_called_once()
+        called_url = mock_post.call_args[0][0]
+        assert called_url == "https://remote.test/users/remote/inbox"
