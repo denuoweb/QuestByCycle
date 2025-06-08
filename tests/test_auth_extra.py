@@ -4,8 +4,7 @@ import pytest
 from flask import url_for
 from app import create_app, db
 from app.models import User
-from datetime import datetime
-from pytz import utc
+from datetime import datetime, timezone
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text
 
@@ -44,7 +43,7 @@ def client(app):
 def normal_user(app):
     u = User(username="norm", email="norm@e.com", email_verified=True, license_agreed=True)
     u.set_password("pw")
-    u.created_at = datetime.now(utc)
+    u.created_at = datetime.now(timezone.utc)
     db.session.add(u)
     db.session.commit()
     return u
@@ -53,7 +52,7 @@ def normal_user(app):
 def admin_user(app):
     u = User(username="admin", email="admin@e.com", email_verified=True, license_agreed=True, is_admin=True)
     u.set_password("pw")
-    u.created_at = datetime.now(utc)
+    u.created_at = datetime.now(timezone.utc)
     db.session.add(u)
     db.session.commit()
     return u

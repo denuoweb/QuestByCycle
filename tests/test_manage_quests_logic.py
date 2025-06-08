@@ -1,6 +1,6 @@
 import pytest
 from datetime import datetime, timedelta
-from pytz import utc
+from datetime import timezone
 
 from app import create_app, db
 from app.models import Game, Quest, User
@@ -32,7 +32,7 @@ def client(app):
 def admin_user(app):
     user = User(username="admin", email="admin@example.com", is_admin=True, license_agreed=True, email_verified=True)
     user.set_password("pw")
-    user.created_at = datetime.now(utc)
+    user.created_at = datetime.now(timezone.utc)
     db.session.add(user)
     db.session.commit()
     return user
@@ -55,8 +55,8 @@ def login_as(client, user):
 def create_game(title, admin_id):
     game = Game(
         title=title,
-        start_date=datetime.now(utc) - timedelta(days=1),
-        end_date=datetime.now(utc) + timedelta(days=1),
+        start_date=datetime.now(timezone.utc) - timedelta(days=1),
+        end_date=datetime.now(timezone.utc) + timedelta(days=1),
         admin_id=admin_id,
     )
     return game

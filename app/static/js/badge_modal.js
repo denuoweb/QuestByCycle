@@ -9,12 +9,12 @@ window.allBadges = window.allBadges || [];
 async function fetchAllBadges() {
   const gameHolder = document.getElementById("game_IdHolder");
   const selectedGameId = gameHolder ? gameHolder.getAttribute("data-game-id") : null;
-  let fetchUrl = '/badges';
+  const url = new URL('/badges', window.location.origin);
   if (selectedGameId && !isNaN(parseInt(selectedGameId, 10)) && selectedGameId !== "0") {
-    fetchUrl += `?game_id=${selectedGameId}`;
+    url.searchParams.set('game_id', selectedGameId);
   }
 
-  const response = await fetch(fetchUrl, { credentials: 'same-origin' });
+  const response = await fetch(url, { credentials: 'same-origin' });
   if (!response.ok) {
     throw new Error('Error fetching badges');
   }

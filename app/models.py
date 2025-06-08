@@ -3,8 +3,7 @@
 import random
 import string
 import jwt
-from pytz import utc
-from datetime import datetime
+from datetime import datetime, timezone
 from time import time
 from flask import current_app  # pylint: disable=import-error
 from flask_sqlalchemy import SQLAlchemy  # pylint: disable=import-error
@@ -12,7 +11,9 @@ from flask_login import UserMixin  # pylint: disable=import-error
 from werkzeug.security import generate_password_hash, check_password_hash  # pylint: disable=import-error
 from sqlalchemy.exc import IntegrityError  # pylint: disable=import-error
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT
-from sqlalchemy import DateTime 
+from sqlalchemy import DateTime
+
+UTC = timezone.utc
 
 db = SQLAlchemy()
 
@@ -27,7 +28,7 @@ user_badges = db.Table('user_badges',
 user_games = db.Table('user_games',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('game_id', db.Integer, db.ForeignKey('game.id'), primary_key=True),
-    db.Column('joined_at', db.DateTime(timezone=True), default=lambda: datetime.now(utc))
+    db.Column('joined_at', db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
 )
 
 game_participants = db.Table('game_participants',
@@ -74,7 +75,7 @@ class UserQuest(db.Model):
     points_awarded = db.Column(db.Integer, default=0)
     completed_at = db.Column(
         db.DateTime(timezone=True),
-        default=lambda: datetime.now(utc)
+        default=lambda: datetime.now(UTC)
     )
     quest = db.relationship("Quest", back_populates="user_quests")
 
@@ -87,7 +88,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(512))
     is_admin = db.Column(db.Boolean, default=False)
     is_super_admin = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(utc))
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
     license_agreed = db.Column(db.Boolean, nullable=False)
     user_quests = db.relationship(
         'UserQuest', backref='user', lazy='dynamic',
@@ -301,7 +302,7 @@ class Notification(db.Model):
     type = db.Column(db.String, nullable=False)  # e.g. 'follow', 'submission'
     payload = db.Column(db.JSON, nullable=False)     # the raw activity or summary
     is_read = db.Column(db.Boolean, default=False)
-    timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(utc))
+    timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     user = db.relationship('User', back_populates='notifications')
 
@@ -311,7 +312,7 @@ class UserIP(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ip_address = db.Column(db.String(45), nullable=False)
-    timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(utc))
+    timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     user = db.relationship('User', backref='ip_addresses')
 
@@ -320,7 +321,7 @@ class ActivityStore(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     json = db.Column(db.JSON, nullable=False)
-    published = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(utc), nullable=False)
+    published = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
 
 
 class Quest(db.Model):
@@ -390,12 +391,12 @@ class Game(db.Model):
     start_date = db.Column(
         DateTime(timezone=True),           # ← make it timezone-aware
         nullable=False,
-        default=lambda: datetime.now(utc)   # ← callable default at runtime
+        default=lambda: datetime.now(UTC)   # ← callable default at runtime
     )
     end_date = db.Column(
         DateTime(timezone=True),
         nullable=False,
-        default=lambda: datetime.now(utc)
+        default=lambda: datetime.now(UTC)
     )
     admin_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     admins = db.relationship(
@@ -436,7 +437,7 @@ class Game(db.Model):
     is_demo = db.Column(db.Boolean, default=False)
     social_media_liaison_email = db.Column(db.String(255), nullable=True)  
     social_media_email_frequency = db.Column(db.String(50), default='weekly', nullable=True)  
-    last_social_media_email_sent = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(utc), nullable=True)
+    last_social_media_email_sent = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=True)
 
     @staticmethod
     def generate_unique_code():
@@ -498,7 +499,7 @@ class ShoutBoardMessage(db.Model):
         nullable=False
     )
     timestamp = db.Column(
-        db.DateTime(timezone=True), index=True, default=lambda: datetime.now(utc)
+        db.DateTime(timezone=True), index=True, default=lambda: datetime.now(UTC)
     )
     is_pinned = db.Column(db.Boolean, default=False)
 
@@ -518,7 +519,7 @@ class QuestSubmission(db.Model):
     video_url = db.Column(db.String(500), nullable=True)
     comment = db.Column(db.String(1000), nullable=True)
     timestamp = db.Column(
-        db.DateTime(timezone=True), index=True, default=lambda: datetime.now(utc)
+        db.DateTime(timezone=True), index=True, default=lambda: datetime.now(UTC)
     )
     twitter_url = db.Column(db.String(1024), nullable=True)
     fb_url = db.Column(db.String(1024), nullable=True)
@@ -550,7 +551,7 @@ class ProfileWallMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
     timestamp = db.Column(
-        db.DateTime(timezone=True), default=lambda: datetime.now(utc), index=True
+        db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
     )
     user_id = db.Column(
         db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'),
@@ -603,7 +604,7 @@ class SubmissionLike(db.Model):
     )
     timestamp     = db.Column(
         db.DateTime(timezone=True),
-        default=lambda: datetime.now(utc),
+        default=lambda: datetime.now(UTC),
         nullable=False
     )
 
@@ -640,7 +641,7 @@ class SubmissionReply(db.Model):
     content       = db.Column(db.String(1000), nullable=False)
     timestamp     = db.Column(
         db.DateTime(timezone=True),
-        default=lambda: datetime.now(utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
         index=True
     )

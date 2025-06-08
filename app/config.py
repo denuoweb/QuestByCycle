@@ -1,5 +1,5 @@
 import os
-import toml
+import tomli
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -56,9 +56,11 @@ def _get_env_integer(key: str, default: int):
 # 4. Load the TOML file into a dictionary. If it is missing, error out.
 # -----------------------------------------------------------------------------
 if TOML_PATH.exists():
-    _toml_config = toml.load(TOML_PATH)
+    with open(TOML_PATH, "rb") as f:
+        _toml_config = tomli.load(f)
 elif DEFAULT_TOML_PATH.exists():
-    _toml_config = toml.load(DEFAULT_TOML_PATH)
+    with open(DEFAULT_TOML_PATH, "rb") as f:
+        _toml_config = tomli.load(f)
 else:
     _toml_config = {}
 
