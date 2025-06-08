@@ -24,7 +24,7 @@ def app():
     ctx.pop()
 
 
-def test_liaison_email_respects_upload_to_socials(app, monkeypatch):
+def test_liaison_email_lists_all_submissions(app, monkeypatch):
     captured = {}
 
     def fake_send_email(to, subject, html_content, inline_images=None):
@@ -68,4 +68,7 @@ def test_liaison_email_respects_upload_to_socials(app, monkeypatch):
         assert send_social_media_liaison_email(game.id)
         html = captured.get("html", "")
         assert "sharer" in html
-        assert "private" not in html
+        assert "private" in html
+        assert html.index("sharer") < html.index("private")
+        assert "Submissions opted for social sharing" in html
+        assert "Submissions not opted for social sharing" in html
