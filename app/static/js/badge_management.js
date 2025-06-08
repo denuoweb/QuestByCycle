@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadBadges() {
-    fetch('/badges/badges')
+    fetch('/badges')
         .then(response => response.json())
         .then(data => {
             const badgesBody = document.getElementById('badgesBody');
