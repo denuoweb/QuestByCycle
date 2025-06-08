@@ -163,7 +163,7 @@ class GameForm(FlaskForm):
         "Game Description", validators=[DataRequired(), Length(max=1000)]
     )
     description2 = StringField(
-        "Quest Rules", validators=[DataRequired(), Length(max=1000)]
+        "Quest Rules", validators=[DataRequired(), Length(max=4500)]
     )
     start_date = DateField("Start Date", format="%Y-%m-%d", validators=[DataRequired()])
     end_date = DateField("End Date", format="%Y-%m-%d", validators=[DataRequired()])
