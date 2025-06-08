@@ -55,7 +55,8 @@ const updateGameName = async () => {
   if (!header) return;
 
   try {
-    const r = await fetch(`/games/get_game/${gameId}`, { credentials: 'same-origin' });
+    const url = new URL(`/games/get_game/${gameId}`, window.location.origin);
+    const r = await fetch(url, { credentials: 'same-origin' });
     if (!r.ok) throw new Error('Network response was not ok');
     const data = await r.json();
     header.textContent = data.name || 'Game Not Found';
