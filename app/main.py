@@ -18,7 +18,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from typing import Any, List
 from datetime import datetime, timedelta
-from PIL import Image, ExifTags
+from PIL import Image, ExifTags, UnidentifiedImageError
 from pytz import utc
 from app.models import (db, Game, User, Quest, Badge, UserQuest, QuestSubmission,
                         QuestLike, ShoutBoardMessage, ProfileWallMessage,
@@ -929,9 +929,16 @@ def resize_image():
             img_io.seek(0)
             return send_file(img_io, mimetype='image/webp')
 
+    except UnidentifiedImageError:
+        current_app.logger.error(
+            "Unsupported image format encountered: %s", full_image_path
+        )
+        return jsonify({"error": "Unsupported image format"}), 415
     except Exception as exc:
-        current_app.logger.error("Exception occurred during image processing: %s", exc)
-        return
+        current_app.logger.error(
+            "Exception occurred during image processing: %s", exc
+        )
+        return jsonify({"error": "Image processing failed"}), 500
 
 
 @main_bp.route('/sw.js')
