@@ -4,8 +4,7 @@ from urllib.parse import urlparse, parse_qs
 from app import create_app, db
 from app.models import User
 from flask import url_for
-from datetime import datetime
-from pytz import utc
+from datetime import datetime, timezone
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text
 
@@ -49,7 +48,7 @@ def user_existing(app):
         email_verified=True,
     )
     u.set_password("secret")
-    u.created_at = datetime.now(utc)
+    u.created_at = datetime.now(timezone.utc)
     db.session.add(u)
     db.session.commit()
     return u

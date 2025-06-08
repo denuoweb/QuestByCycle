@@ -1,6 +1,5 @@
 import pytest
-from datetime import datetime, timedelta
-from pytz import utc
+from datetime import datetime, timedelta, timezone
 
 from app import create_app, db
 from app.models import Game, Quest, User, QuestSubmission
@@ -41,8 +40,8 @@ def test_liaison_email_lists_all_submissions(app, monkeypatch):
 
         game = Game(
             title="Test Game",
-            start_date=datetime.now(utc) - timedelta(days=1),
-            end_date=datetime.now(utc) + timedelta(days=1),
+            start_date=datetime.now(timezone.utc) - timedelta(days=1),
+            end_date=datetime.now(timezone.utc) + timedelta(days=1),
             admin_id=admin.id,
             social_media_liaison_email="liaison@example.com",
         )
@@ -61,8 +60,8 @@ def test_liaison_email_lists_all_submissions(app, monkeypatch):
         db.session.add_all([sharer, nonsharer])
         db.session.commit()
 
-        sub1 = QuestSubmission(quest_id=quest.id, user_id=sharer.id, timestamp=datetime.now(utc))
-        sub2 = QuestSubmission(quest_id=quest.id, user_id=nonsharer.id, timestamp=datetime.now(utc))
+        sub1 = QuestSubmission(quest_id=quest.id, user_id=sharer.id, timestamp=datetime.now(timezone.utc))
+        sub2 = QuestSubmission(quest_id=quest.id, user_id=nonsharer.id, timestamp=datetime.now(timezone.utc))
         db.session.add_all([sub1, sub2])
         db.session.commit()
 

@@ -9,13 +9,14 @@ import smtplib
 from flask import current_app, request, url_for
 from .models import db, Quest, Badge, Game, UserQuest, User, ShoutBoardMessage, QuestSubmission, UserIP
 from werkzeug.utils import secure_filename
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from PIL import Image
-from pytz import utc
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image    import MIMEImage
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
+
+UTC = timezone.utc
 from textwrap import dedent
 
 ALLOWED_TAGS = [
@@ -360,7 +361,7 @@ def save_sponsor_logo(image_file, old_filename=None):
 
 
 def can_complete_quest(user_id, quest_id):
-    now = datetime.now(utc)
+    now = datetime.now(UTC)
     quest = Quest.query.get(quest_id)
     
     if not quest:
@@ -403,7 +404,7 @@ def can_complete_quest(user_id, quest_id):
 
 
 def getLastRelevantCompletionTime(user_id, quest_id):
-    now = datetime.now(utc)
+    now = datetime.now(UTC)
     quest = Quest.query.get(quest_id)
     
     if not quest:
@@ -702,8 +703,8 @@ def send_email(to: str,
 
 
 def generate_demo_game():
-    current_quarter = (datetime.now(utc).month - 1) // 3 + 1
-    year = datetime.now(utc).year
+    current_quarter = (datetime.now(UTC).month - 1) // 3 + 1
+    year = datetime.now(UTC).year
     title = f"Demo Game - Q{current_quarter} {year}"
 
     existing_game = Game.query.filter_by(is_demo=True, title=title).first()
@@ -794,7 +795,7 @@ def generate_demo_game():
             user_id=admin_id,
             game_id=demo_game.id,
             is_pinned=True,
-            timestamp=datetime.now(utc)
+            timestamp=datetime.now(UTC)
         )
         db.session.add(pinned_message)
         db.session.commit()
@@ -908,7 +909,7 @@ def send_social_media_liaison_email(
     cutoff_time = game.last_social_media_email_sent or game.start_date
     # Ensure cutoff_time is timezone‐aware; if naive, make it UTC for comparison
     if cutoff_time.tzinfo is None or cutoff_time.tzinfo.utcoffset(cutoff_time) is None:
-        cutoff_time = cutoff_time.replace(tzinfo=utc)
+        cutoff_time = cutoff_time.replace(tzinfo=UTC)
 
     # 4) Fetch all new quest submissions since cutoff_time
     try:
@@ -959,7 +960,7 @@ def send_social_media_liaison_email(
 
     # 5) Start constructing the HTML email
     #    Use dedent to remove leading indentation
-    now = datetime.now(utc)
+    now = datetime.now(UTC)
     header_title = "Recent submissions" if fallback_used else "New submissions"
     html_header = dedent(f"""\
         <h1>{header_title} for "{sanitize_html(game.title)}"</h1>
@@ -1096,7 +1097,7 @@ def send_social_media_liaison_email(
 def _ensure_aware(dt):
     if dt is None:
         return None
-    return dt if dt.tzinfo else dt.replace(tzinfo=utc)
+    return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
 
 
 def check_and_send_liaison_emails():
@@ -1105,7 +1106,7 @@ def check_and_send_liaison_emails():
       'minute', 'daily', 'weekly', or 'monthly'.
     """
     try:
-        now = datetime.now(utc)
+        now = datetime.now(UTC)
 
         # Build your thresholds in one place
         interval_map = {

@@ -38,7 +38,7 @@ tweepy                = "4.15.0"
 openai                = "1.82.0"
 httpx                 = "0.28.1"
 httpcore              = "1.0.9"
-pytz                  = "2025.2"
+# pytz replaced by Python's zoneinfo
 toml                  = "0.10.2"
 
 # ───── Development & testing ───────────────────────────────────────────
