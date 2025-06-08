@@ -174,7 +174,11 @@ def create_app(config_overrides=None):
     @login_manager.user_loader
     def load_user(user_id):
         from app.models import User
-        return User.query.get(int(user_id))
+        try:
+            return User.query.get(int(user_id))
+        except (TypeError, ValueError):
+            logger.error("Invalid user_id in session: %s", user_id)
+            return None
 
     @app.errorhandler(404)
     def not_found_error(error):
