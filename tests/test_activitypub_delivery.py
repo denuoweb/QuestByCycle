@@ -3,7 +3,11 @@ from unittest.mock import patch
 
 from app import create_app, db
 from app.models import User
-from app.activitypub_utils import deliver_activity, generate_activitypub_keys
+from app.activitypub_utils import (
+    deliver_activity,
+    generate_activitypub_keys,
+    sign_activitypub_request,
+)
 
 
 @pytest.fixture
@@ -52,3 +56,26 @@ def test_deliver_activity_skips_invalid_and_local(app):
         mock_post.assert_called_once()
         called_url = mock_post.call_args[0][0]
         assert called_url == "https://remote.test/users/remote/inbox"
+
+
+def test_sign_request_returns_string(app):
+    public, private = generate_activitypub_keys()
+    user = User(
+        username="header",
+        email="header@example.com",
+        license_agreed=True,
+        email_verified=True,
+        activitypub_id="https://example.com/users/header",
+        public_key=public,
+        private_key=private,
+    )
+    db.session.add(user)
+    db.session.commit()
+
+    headers = sign_activitypub_request(
+        user,
+        "POST",
+        "https://remote.test/inbox",
+        "{}",
+    )
+    assert isinstance(headers["Signature"], str)

@@ -100,12 +100,12 @@ def sign_activitypub_request(actor, method, url, body):
     signature = rsa.sign(signing_string, priv, 'SHA-256')
     sig_hex = signature.hex()
     key_id = f"{actor.activitypub_id}#main-key"
-    signature_header = (
-        f'keyId="{key_id}",'  
-        'algorithm="rsa-sha256",'
-        'headers="(request-target) host date",'
+    signature_header = ", ".join([
+        f'keyId="{key_id}"',
+        'algorithm="rsa-sha256"',
+        'headers="(request-target) host date"',
         f'signature="{sig_hex}"'
-    )
+    ])
     return {
         'Date': date_header,
         'Host': parsed.netloc,
