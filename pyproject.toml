@@ -19,7 +19,7 @@ flask-login           = "0.6.3"
 
 # ───── Data layer ──────────────────────────────────────────────────────
 sqlalchemy            = "2.0.41"
-psycopg2-binary       = "2.9.10"
+psycopg = {version = "3.2.9", extras = ["binary"]}
 
 # ───── Forms, validation, security ─────────────────────────────────────
 wtforms               = "3.2.1"
