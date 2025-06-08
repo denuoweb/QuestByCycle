@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(j => {
           if (!j.success) throw new Error(j.message || 'Delete failed');
           closeModal('submissionDetailModal');
+          resetModalContent();
           alert('Submission deleted successfully.');
         })
         .catch(e => alert('Error deleting submission: ' + e.message));
