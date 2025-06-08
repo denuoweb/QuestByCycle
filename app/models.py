@@ -374,7 +374,7 @@ class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(250), nullable=False)
     description = db.Column(db.String(1000))
-    description2 = db.Column(db.String(1000))
+    description2 = db.Column(db.String(4500))
     start_date = db.Column(
         DateTime(timezone=True),           # ← make it timezone-aware
         nullable=False,
