@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const me      = Number(modal.dataset.currentUserId);
     const isOwner = Number(image.user_id) === me;
+    const isAdmin = modal.dataset.isAdmin === 'True' || modal.dataset.isAdmin === 'true';
 
 
     // ── NEW: grab your photo-edit controls ──
@@ -17,9 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const photoInput        = $('#submissionPhotoInput');
     const savePhotoBtn      = $('#savePhotoBtn');
     const cancelPhotoBtn    = $('#cancelPhotoBtn');
+    const deleteBtn         = $('#deleteSubmissionBtn');
 
-    // show/hide the “Change Photo” button
+    // show/hide the “Change Photo” button and delete button
     editPhotoBtn.hidden      = !isOwner;
+    deleteBtn.hidden         = !(isOwner || isAdmin);
     photoEditControls.hidden = true;
 
     // wire the click to reveal the file picker
@@ -33,6 +36,23 @@ document.addEventListener('DOMContentLoaded', () => {
       photoInput.value         = '';
       photoEditControls.hidden = true;
       editPhotoBtn.hidden      = false;
+    });
+
+    // delete the submission with confirmation
+    deleteBtn.addEventListener('click', () => {
+      if (!confirm('Are you sure you want to delete this submission?')) return;
+      const id = modal.dataset.submissionId;
+      fetch(`/quests/quest/delete_submission/${id}`, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-Token': csrf() }
+      })
+        .then(r => r.json())
+        .then(j => {
+          if (!j.success) throw new Error(j.message || 'Delete failed');
+          closeModal('submissionDetailModal');
+          alert('Submission deleted successfully.');
+        })
+        .catch(e => alert('Error deleting submission: ' + e.message));
     });
 
     // save → upload to server
