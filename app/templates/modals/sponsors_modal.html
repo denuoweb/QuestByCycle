@@ -7,10 +7,10 @@
         <div class="modal-body">
             <input type="hidden" class="game-id" value="">
 
-            <div class="d-flex flex-column align-items-center">
+            <div class="row justify-content-center row-cols-1 row-cols-md-2 g-4">
                 {% for tier in ['Gold', 'Silver', 'Bronze', 'Other'] %}
                     {% for sponsor in game.sponsors if sponsor.tier == tier %}
-                        <div class="col-md-8 mb-4">
+                        <div class="col">
                             <div class="card shadow-lg {% if tier == 'Gold' %}border-warning{% elif tier == 'Silver' %}border-secondary{% elif tier == 'Bronze' %}border-danger{% else %}border-primary{% endif %}">
                                 <div class="card-header {% if tier == 'Gold' %}bg-warning text-dark{% elif tier == 'Silver' %}bg-secondary text-white{% elif tier == 'Bronze' %}bg-danger text-white{% else %}bg-primary text-white{% endif %} text-center">
                                     <h3 class="card-title font-weight-bold">{{ sponsor.name }}</h3>
