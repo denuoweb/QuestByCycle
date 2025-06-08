@@ -7,6 +7,7 @@
 
 /* — Outer Container — */
 #whats-happening-step .game-item {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -149,6 +150,20 @@
 .like-section .like-count {
   font-size: 0.9rem;
   color: #555;
+}
+
+/* Admin-only pin button overlay */
+.pin-form {
+  position: absolute;
+  top: pxToRem(8);
+  right: pxToRem(8);
+}
+
+/* Admin new shout button overlay */
+.admin-new-shout {
+  position: absolute;
+  top: pxToRem(8);
+  right: pxToRem(8);
 }
 
 /* — Quest Title Wrapping — */
