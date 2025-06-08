@@ -23,7 +23,7 @@ REMEMBER_COOKIE_DURATION_DAYS = 7
 OPENAI_API_KEY = ""
 
 [flask]
-SQLALCHEMY_DATABASE_URI = "postgresql://username:password@localhost/databasename"
+SQLALCHEMY_DATABASE_URI = "postgresql+psycopg://username:password@localhost/databasename"
 DEBUG = true
 
 [mail]
