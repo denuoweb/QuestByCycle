@@ -14,6 +14,7 @@ body {
 
 .content-wrap {
   flex: 1;
+  overflow-y: auto;
   background: url('/static/images/header-bg.jpg') stretch;
 }
 
