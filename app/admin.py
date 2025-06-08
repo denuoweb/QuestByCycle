@@ -335,8 +335,7 @@ def delete_user(user_id):
         return redirect(url_for('admin.user_management'))
 
     try:
-        db.session.delete(user)
-        db.session.commit()
+        user.delete_user()
         flash('User deleted successfully.', 'success')
     except Exception as e:
         db.session.rollback()
