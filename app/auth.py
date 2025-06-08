@@ -809,8 +809,7 @@ def delete_account():
     """
     user = current_user
     try:
-        db.session.delete(user)
-        db.session.commit()
+        user.delete_user()
         flash('Your account has been deleted.', 'success')
         logout_user()
         return redirect(url_for('main.index'))
