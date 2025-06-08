@@ -601,3 +601,11 @@ function distributeImages(images) {
 
     lazyLoadImages();
 }
+
+function toggleContent(element) {
+    const contents = element.querySelectorAll("span, img");
+    contents.forEach(content => {
+        content.classList.toggle("hidden");
+    });
+}
+

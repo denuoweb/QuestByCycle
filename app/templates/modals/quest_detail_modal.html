@@ -77,13 +77,6 @@
     </div>
 </div>
 
-<script>
-    function toggleContent(element) {
-        const contents = element.querySelectorAll('span, img');
-        contents.forEach(content => {
-            content.classList.toggle('hidden');
-        });
-    }
-</script>
+<script src="{{ url_for('static', filename='js/quest_detail_modal.js') }}"></script>
 
     <!-- styles moved to SCSS -->
