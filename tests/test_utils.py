@@ -2,7 +2,7 @@ import pytest
 from flask import url_for
 
 from app import create_app
-from app.utils import public_media_url
+from app.utils import public_media_url, allowed_image_file
 
 @pytest.fixture
 def app():
@@ -58,3 +58,9 @@ def test_save_submission_image_invalid_extension(app, tmp_path):
 
     with pytest.raises(ValueError):
         save_submission_image(file)
+
+
+def test_allowed_image_file_heif():
+    """HEIF and HEIC images should be recognized as valid."""
+    assert allowed_image_file("photo.heif")
+    assert allowed_image_file("image.HEIC")

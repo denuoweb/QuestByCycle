@@ -58,7 +58,10 @@ def sanitize_html(html_content):
 
 # Allowed extensions for image and video uploads
 MAX_POINTS_INT = 2**63 - 1
-ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+# Include common formats plus HEIF/HEIC for modern mobile devices
+ALLOWED_IMAGE_EXTENSIONS = {
+    'png', 'jpg', 'jpeg', 'gif', 'webp', 'heif', 'heic'
+}
 ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'mov'}
 # Videos are limited to 10 MB for uploads
 MAX_VIDEO_BYTES = 10 * 1024 * 1024
