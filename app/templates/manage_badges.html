@@ -28,7 +28,7 @@
         <button class="button" onclick="toggleForm('bulkUploadForm')">Bulk Upload Badges from CSV and Image Files</button>
     </div>
     <!-- Forms to be toggled -->
-    <div id="uploadForm" class="form-container" style="display:none;">
+    <div id="uploadForm" class="form-container d-none">
         <h2>Upload Badge Images</h2>
         <h5>Uploaded folder of images match their filename to existing Badges (Badge Name: Nature Lover)(Uploaded image: nature_lover.png)</h5>
         <form method="post" enctype="multipart/form-data" action="/badges/upload_images">
@@ -38,7 +38,7 @@
         </form>
     </div>
 
-    <div id="addBadgeForm" class="form-container" style="display:none;">
+    <div id="addBadgeForm" class="form-container d-none">
         <p><h2>Add a Category Badge</h2></p>
         <h5>Added Category Badges are awarded upon completing the set of Quests with the same Category one time.</h5>
         <div class="badge-form">
@@ -61,7 +61,7 @@
         </div>
     </div>
 
-    <div id="bulkUploadForm" class="form-container" style="display:none;">
+    <div id="bulkUploadForm" class="form-container d-none">
         <h2>Bulk Upload Badges from a CSV file</h2>
         <h5>Uploaded images match their filename to Badge Name</h5>
         <form method="post" enctype="multipart/form-data" action="/badges/bulk_upload">

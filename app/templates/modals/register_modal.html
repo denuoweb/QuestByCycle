@@ -1,5 +1,5 @@
 <!-- modals/register_modal.html -->
-<div id="registerModal" class="modal">
+<div id="registerModal" class="modal register-modal">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Register</h5>
@@ -33,7 +33,7 @@
             {{ register_form.email.label }}
             {{ register_form.email(class="form-control", id="registerEmail") }}
             {% for err in register_form.email.errors %}
-              <span style="color: red;">[{{ err }}]</span>
+              <span class="text-danger">[{{ err }}]</span>
             {% endfor %}
           </div>
   
@@ -41,7 +41,7 @@
             {{ register_form.password.label }}
             {{ register_form.password(class="form-control", id="registerPassword") }}
             {% for err in register_form.password.errors %}
-              <span style="color: red;">[{{ err }}]</span>
+              <span class="text-danger">[{{ err }}]</span>
             {% endfor %}
           </div>
   
@@ -49,12 +49,12 @@
             {{ register_form.confirm_password.label }}
             {{ register_form.confirm_password(class="form-control") }}
             {% for err in register_form.confirm_password.errors %}
-              <span style="color: red;">[{{ err }}]</span>
+              <span class="text-danger">[{{ err }}]</span>
             {% endfor %}
           </div>
   
           <div class="form-group">
-            <div class="d-inline-flex align-items-center" style="gap: .5rem;">
+            <div class="d-inline-flex align-items-center gap-half">
               {{ register_form.accept_license(class="form-check-input") }}
               <label class="form-check-label"
                      for="{{ register_form.accept_license.id }}">
@@ -62,11 +62,11 @@
               </label>
             </div>
             {% for err in register_form.accept_license.errors %}
-              <div class="text-danger" style="margin-top: .25rem;">
+              <div class="text-danger mt-quarter">
                 [{{ err }}]
               </div>
             {% endfor %}
-            <div style="margin-top: .5rem;">
+            <div class="mt-half">
               <a href="javascript:void(0)"
                  onclick="openModal('termsModal')">Terms of Service</a>, and
               <a href="javascript:void(0)"
