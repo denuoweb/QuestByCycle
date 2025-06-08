@@ -913,7 +913,6 @@ def send_social_media_liaison_email(
             .filter(
                 Quest.game_id == game_id,
                 QuestSubmission.timestamp > cutoff_time,
-                User.upload_to_socials.is_(True),
             )
             .order_by(QuestSubmission.timestamp.asc())  # Chronological order (oldest first)
             .all()
@@ -935,7 +934,6 @@ def send_social_media_liaison_email(
                 .join(User, User.id == QuestSubmission.user_id)
                 .filter(
                     Quest.game_id == game_id,
-                    User.upload_to_socials.is_(True),
                 )
                 .order_by(QuestSubmission.timestamp.desc())
                 .limit(last_limit)
@@ -966,8 +964,10 @@ def send_social_media_liaison_email(
     html_parts = [html_header]
     inline_images: list[tuple[str, bytes, str]] = []
 
-    # 6) Loop over each submission
-    for idx, sub in enumerate(submissions, start=1):
+    social_submissions = [s for s in submissions if s.submitter.upload_to_socials]
+    nonsocial_submissions = [s for s in submissions if not s.submitter.upload_to_socials]
+
+    def append_submission(sub, idx):
         # 6a) Safely extract quest.title and user.username
         quest = sub.quest
         user = sub.submitter
@@ -1032,6 +1032,17 @@ def send_social_media_liaison_email(
 
         # 6d) Close this submission’s <div>
         html_parts.append("</div>")
+
+    if social_submissions:
+        html_parts.append("<h2>Submissions opted for social sharing</h2>")
+        for idx, sub in enumerate(social_submissions, start=1):
+            append_submission(sub, idx)
+
+    if nonsocial_submissions:
+        html_parts.append("<hr>")
+        html_parts.append("<h2>Submissions not opted for social sharing</h2>")
+        for idx, sub in enumerate(nonsocial_submissions, start=1):
+            append_submission(sub, idx)
 
     # 7) Combine parts into a single HTML body
     html_body = "<html><body>\n" + "\n".join(html_parts) + "\n</body></html>"
