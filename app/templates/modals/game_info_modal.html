@@ -7,42 +7,36 @@
         </div>
         {% if game %}
         <div class="modal-body">
-            <!-- Game Info Content -->
-            <div class="game-info-section">
-                <div class="game-info-card">
-                    <div class="game-title-section">
-                        <h1>{{ game.title }}</h1>
-                        <p>{{ game.description|safe }}</p>
-                        <p>{{ game.description2|safe }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="game-info-section">
-                <div class="game-info-card">
-                    <strong>Start Date:</strong>
+            <h2 class="text-center mb-3">{{ game.title }}</h2>
+            <p>{{ game.description|safe }}</p>
+            <p>{{ game.description2|safe }}</p>
+
+            <ul class="list-group mt-4">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="fw-bold">Start Date</span>
                     <span>{{ game.start_date.strftime('%Y-%m-%d') }}</span>
-                </div>
-                <div class="game-info-card">
-                    <strong>End Date:</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="fw-bold">End Date</span>
                     <span>{{ game.end_date.strftime('%Y-%m-%d') }}</span>
-                </div>
-                <div class="game-info-card">
-                    <strong>Game Goal:</strong>
+                </li>
+                <li class="list-group-item">
+                    <span class="fw-bold">Game Goal</span><br>
                     <span>{{ game.game_goal }}</span>
-                </div>
-                <div class="game-info-card">
-                    <strong>Details:</strong>
+                </li>
+                <li class="list-group-item">
+                    <span class="fw-bold">Details</span><br>
                     <span>{{ game.details|safe }}</span>
-                </div>
-                <div class="game-info-card">
-                    <strong>Awards:</strong>
+                </li>
+                <li class="list-group-item">
+                    <span class="fw-bold">Awards</span><br>
                     <span>{{ game.awards|safe }}</span>
-                </div>
-                <div class="game-info-card">
-                    <strong>Beyond:</strong>
+                </li>
+                <li class="list-group-item">
+                    <span class="fw-bold">Beyond</span><br>
                     <span>{{ game.beyond|safe }}</span>
-                </div>
-            </div>
+                </li>
+            </ul>
         </div>
         {% else %}
         <span>No game selected</span>
