@@ -11,7 +11,8 @@ function refreshCSRFToken() {
 setInterval(refreshCSRFToken, 900000);
 
 function updateMeter(gameId) {
-    fetch(`games/get_game_points/${gameId}`)
+    // Ensure we request the absolute endpoint and include cookies
+    fetch(`/games/get_game_points/${gameId}`, { credentials: 'same-origin' })
         .then(response => response.json())
         .then(data => {
             const totalPoints = data.total_game_points;
