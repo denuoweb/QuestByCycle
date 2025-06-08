@@ -53,18 +53,21 @@ def login_as(client, user):
 
 
 def create_game(title, admin_id):
-    return Game(
+    game = Game(
         title=title,
         start_date=datetime.now(utc) - timedelta(days=1),
         end_date=datetime.now(utc) + timedelta(days=1),
         admin_id=admin_id,
     )
+    return game
 
 
 def test_get_quests_per_game(client, admin_user):
     # create two games with different quests
     game1 = create_game("Game 1", admin_user.id)
     game2 = create_game("Game 2", admin_user.id)
+    game1.admins.append(admin_user)
+    game2.admins.append(admin_user)
     db.session.add_all([game1, game2])
     db.session.commit()
 
@@ -90,6 +93,7 @@ def test_get_quests_per_game(client, admin_user):
 
 def test_manage_page_requires_admin(client, admin_user):
     game = create_game("Game", admin_user.id)
+    game.admins.append(admin_user)
     db.session.add(game)
     db.session.commit()
 

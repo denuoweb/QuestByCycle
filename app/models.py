@@ -35,6 +35,13 @@ game_participants = db.Table('game_participants',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
 )
 
+# Association table for assigning admins to games
+game_admins = db.Table(
+    'game_admins',
+    db.Column('game_id', db.Integer, db.ForeignKey('game.id'), primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
+)
+
 followers = db.Table('followers',
     db.Column('follower_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('followee_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
@@ -273,6 +280,11 @@ class User(UserMixin, db.Model):
         )
         return total_score
 
+    def is_admin_for_game(self, game_id):
+        """Return True if the user is an admin for the given game."""
+        game = Game.query.get(game_id)
+        return bool(game and (self in game.admins or self.is_super_admin))
+
 
     @property
     def unread_notifications_count(self):
@@ -386,6 +398,10 @@ class Game(db.Model):
         default=lambda: datetime.now(utc)
     )
     admin_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    admins = db.relationship(
+        'User', secondary=game_admins,
+        backref=db.backref('admin_games', lazy='dynamic')
+    )
     quests = db.relationship(
         'Quest', back_populates='game',
         cascade="all, delete-orphan", lazy='dynamic'

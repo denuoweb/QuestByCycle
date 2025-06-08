@@ -47,6 +47,7 @@ def test_liaison_email_lists_all_submissions(app, monkeypatch):
             social_media_liaison_email="liaison@example.com",
         )
         db.session.add(game)
+        game.admins.append(admin)
         db.session.commit()
 
         quest = Quest(title="Quest 1", points=1, game=game)
