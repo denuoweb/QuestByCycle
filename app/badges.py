@@ -7,7 +7,8 @@ import csv
 from flask import Blueprint, current_app, render_template, flash, redirect, url_for, jsonify, request
 from flask_login import login_required, current_user
 from .forms import BadgeForm
-from .utils import save_badge_image, allowed_file
+# ``allowed_file`` is defined below for validating uploads
+from .utils import save_badge_image
 from .models import db, Quest, Badge, UserQuest, Game
 from werkzeug.utils import secure_filename
 
