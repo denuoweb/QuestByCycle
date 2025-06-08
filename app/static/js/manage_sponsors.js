@@ -28,6 +28,5 @@
             descriptionEditor.root.innerHTML = descriptionTextarea.value;
         }
     });
-</script>
 
 
