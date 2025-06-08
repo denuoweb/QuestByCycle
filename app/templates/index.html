@@ -121,7 +121,7 @@
                                                                                         game_id=selected_game_id,
                                                                                         message_id=activity.id) }}"
                                                                     method="post">
-                                                                    {{ form.hidden_tag() }}
+                                                                    {{ form.csrf_token }}
                                                                     <button type="submit" class="blue_button">
                                                                         {{ 'Unpin' if activity.is_pinned else 'Pin' }}
                                                                     </button>
@@ -168,7 +168,7 @@
                                                                                     game_id=selected_game_id,
                                                                                     message_id=activity.id) }}"
                                                                 method="post">
-                                                                {{ form.hidden_tag() }}
+                                                                {{ form.csrf_token }}
                                                                 <button type="submit" class="blue_button">
                                                                     {{ 'Unpin' if activity.is_pinned else 'Pin' }}
                                                                 </button>
