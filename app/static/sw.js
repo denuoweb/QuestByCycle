@@ -76,16 +76,20 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const cacheKeys = await caches.keys();
+      let isUpdate = false;
       await Promise.all(
         cacheKeys.map((key) => {
           if (key !== CACHE_NAME) {
             console.log(`Deleting old cache: ${key}`);
+            isUpdate = true;
             return caches.delete(key);
           }
         })
       );
       await clients.claim();
-      notifyClientsAboutUpdate();
+      if (isUpdate) {
+        notifyClientsAboutUpdate();
+      }
     })()
   );
 });
