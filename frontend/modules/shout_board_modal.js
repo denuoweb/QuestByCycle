@@ -10,9 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* -------------------- initialise Quill once -------------------- */
   if (window.Quill) {
-    quill = initQuill('#shoutQuillEditor', '#shoutMessageInput', {
-      placeholder: 'Write an announcement…'
-    });
+    const editorEl = document.querySelector('#shoutQuillEditor');
+    const hiddenEl = document.querySelector('#shoutMessageInput');
+    if (editorEl && hiddenEl) {
+      quill = initQuill(editorEl, hiddenEl, {
+        placeholder: 'Write an announcement…'
+      });
+    }
   } else {
     console.error('Quill library not found  shoutboard editor will not work.');
   }

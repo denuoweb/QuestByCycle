@@ -1,10 +1,11 @@
 import { initQuill } from './quill_common.js';
     document.addEventListener('DOMContentLoaded', function() {
-        const descriptionEditor = initQuill('#description', '#description-textarea');
-        const descriptionTextarea = document.getElementById('description-textarea');
+        const editorEl   = document.querySelector('#description');
+        const hiddenEl   = document.querySelector('#description-textarea');
 
-        if (descriptionEditor && descriptionTextarea) {
-            descriptionEditor.root.innerHTML = descriptionTextarea.value;
+        if (editorEl && hiddenEl) {
+            const descriptionEditor = initQuill(editorEl, hiddenEl);
+            if (descriptionEditor) descriptionEditor.root.innerHTML = hiddenEl.value;
         }
     });
 
