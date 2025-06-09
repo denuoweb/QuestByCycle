@@ -56,42 +56,48 @@ export function initLayout() {
   let deferredPrompt = null;
   const leaderboardLink = document.getElementById('leaderboardNavbarLink');
 
-  if (isSafari) {
-    manualInstall.hidden = false;
-  } else {
-    manualInstall.hidden = true;
+  if (manualInstall) {
+    if (isSafari) {
+      manualInstall.hidden = false;
+    } else {
+      manualInstall.hidden = true;
+    }
   }
 
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installButton.hidden = false;
+  if (installButton) {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installButton.hidden = false;
 
-    installButton.addEventListener('click', () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then(() => {
-        deferredPrompt = null;
-        installButton.hidden = true;
+      installButton.addEventListener('click', () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+          installButton.hidden = true;
+        });
       });
     });
-  });
 
-  if (!window.beforeinstallprompt) {
-    installButton.hidden = true;
-    if (!isSafari) manualInstall.hidden = true;
-  }
+    if (!window.beforeinstallprompt) {
+      installButton.hidden = true;
+      if (!isSafari && manualInstall) manualInstall.hidden = true;
+    }
 
-  window.addEventListener('appinstalled', () => {
-    installButton.hidden = true;
-    manualInstall.hidden = true;
-  });
-
-  if (navigator.getInstalledRelatedApps) {
-    navigator.getInstalledRelatedApps().then((apps) => {
-      if (apps.length) installButton.hidden = true;
+    window.addEventListener('appinstalled', () => {
+      installButton.hidden = true;
+      if (manualInstall) manualInstall.hidden = true;
     });
+
+    if (navigator.getInstalledRelatedApps) {
+      navigator.getInstalledRelatedApps().then((apps) => {
+        if (apps.length) installButton.hidden = true;
+      });
+    }
   }
+
+
 
   window.handleGameSelection = function (opt) {
     const val = opt.value;
