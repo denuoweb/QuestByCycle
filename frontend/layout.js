@@ -99,18 +99,6 @@ export function initLayout() {
 
 
 
-  window.handleGameSelection = function (opt) {
-    const val = opt.value;
-    if (val === 'join_custom_game') {
-      if (typeof window.openModal === 'function') {
-        window.openModal('joinCustomGameModal');
-      } else {
-        window.location.href = '/?show_join_custom=1';
-      }
-    } else {
-      window.location.href = val;
-    }
-  };
 
   if (leaderboardLink) {
     leaderboardLink.addEventListener('click', (e) => {
@@ -139,3 +127,18 @@ export function initLayout() {
     }
   });
 }
+
+export function handleGameSelection(opt) {
+  const val = opt.value;
+  if (val === 'join_custom_game') {
+    if (typeof window.openModal === 'function') {
+      window.openModal('joinCustomGameModal');
+    } else {
+      window.location.href = '/?show_join_custom=1';
+    }
+  } else {
+    window.location.href = val;
+  }
+}
+
+window.handleGameSelection = handleGameSelection;
