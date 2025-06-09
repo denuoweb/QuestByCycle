@@ -319,10 +319,11 @@ def login():
 
                                                           
     if request.method == 'GET':
-                                     
+        show_login_flag = 0 if next_page else 1
+
         return redirect(
             url_for('main.index',
-                    show_login=1,
+                    show_login=show_login_flag,
                     show_join_custom=show_join,
                     game_id=game_id,
                     quest_id=quest_id,
