@@ -61,5 +61,6 @@ def send_push():
             current_app.logger.error("Web push failed: %s", exc)
             errors.append(str(exc))
     if errors:
-        return jsonify(success=False, errors=errors), 500
+        current_app.logger.error("Errors occurred during web push: %s", errors)
+        return jsonify(success=False, error="An internal error occurred while sending notifications."), 500
     return jsonify(success=True)
