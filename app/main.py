@@ -28,10 +28,9 @@ from sqlalchemy.orm import joinedload
 from typing import Any, List
 from datetime import datetime, timedelta
 from PIL import Image, UnidentifiedImageError
-from datetime import timezone
+from app.constants import UTC, FREQUENCY_DELTA
 from urllib.parse import urlparse, parse_qs
 
-UTC = timezone.utc
 from app.models import (db, Game, User, Quest, Badge, UserQuest, QuestSubmission,
                         QuestLike, ShoutBoardMessage, ProfileWallMessage,
                         user_games)
@@ -119,11 +118,6 @@ def _prepare_quests(game, user_id, user_quests, now):
     Returns a list of quests and sorted activities.
     """
     quests = Quest.query.filter_by(game_id=game.id, enabled=True).all() if game else []
-    period_start_map = {
-        'daily': timedelta(days=1),
-        'weekly': timedelta(weeks=1),
-        'monthly': timedelta(days=30)
-    }
     completed_quests = UserQuest.query.filter(UserQuest.completions > 0).order_by(UserQuest.completed_at.desc()).all()
 
     for quest in quests:
@@ -138,7 +132,7 @@ def _prepare_quests(game, user_id, user_quests, now):
         quest.completion_timestamps = []
 
         if user_id:
-            period_start = now - period_start_map.get(quest.frequency, timedelta(days=1))
+            period_start = now - FREQUENCY_DELTA.get(quest.frequency, timedelta(days=1))
             submissions = QuestSubmission.query.filter(
                 QuestSubmission.user_id == user_id,
                 QuestSubmission.quest_id == quest.id,
@@ -158,12 +152,7 @@ def _prepare_quests(game, user_id, user_quests, now):
             else:
                 last_submission = max(submissions, key=lambda x: x.timestamp, default=None)
                 if last_submission:
-                    increment_map = {
-                        'daily': timedelta(days=1),
-                        'weekly': timedelta(weeks=1),
-                        'monthly': timedelta(days=30)
-                    }
-                    quest.next_eligible_time = last_submission.timestamp + increment_map.get(quest.frequency, timedelta(days=1))
+                    quest.next_eligible_time = last_submission.timestamp + FREQUENCY_DELTA.get(quest.frequency, timedelta(days=1))
 
                                                                   
     pinned_messages = ShoutBoardMessage.query.filter_by(is_pinned=True, game_id=game.id).order_by(

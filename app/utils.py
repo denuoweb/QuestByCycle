@@ -19,14 +19,13 @@ from .models import (
     UserIP,
 )
 from werkzeug.utils import secure_filename
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from app.constants import UTC, FREQUENCY_DELTA
 from PIL import Image, ExifTags, UnidentifiedImageError
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
-
-UTC = timezone.utc
 from textwrap import dedent
 
 ALLOWED_TAGS = {
@@ -69,16 +68,23 @@ MAX_VIDEO_BYTES = 10 * 1024 * 1024
                                                        
 REQUEST_TIMEOUT = 5
 
-def allowed_image_file(filename):
+
+def allowed_file(filename: str, allowed_extensions: set[str]) -> bool:
+    """Return True if ``filename`` has an allowed extension."""
+    return (
+        '.' in filename
+        and filename.rsplit('.', 1)[1].lower() in allowed_extensions
+    )
+
+
+def allowed_image_file(filename: str) -> bool:
     """Return True if the filename has an allowed image extension."""
-    return '.' in filename and\
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
+    return allowed_file(filename, ALLOWED_IMAGE_EXTENSIONS)
 
 
-def allowed_video_file(filename):
+def allowed_video_file(filename: str) -> bool:
     """Return True if the filename has an allowed video extension."""
-    return '.' in filename and\
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_VIDEO_EXTENSIONS
+    return allowed_file(filename, ALLOWED_VIDEO_EXTENSIONS)
 
 
 def correct_image_orientation(img: Image.Image) -> Image.Image:
@@ -368,12 +374,7 @@ def can_complete_quest(user_id, quest_id):
         return False, None                        
     
                                                                    
-    period_start_map = {
-        'daily': timedelta(days=1),
-        'weekly': timedelta(weeks=1),
-        'monthly': timedelta(days=30)                             
-    }
-    period_start = now - period_start_map.get(quest.frequency, timedelta(days=1))
+    period_start = now - FREQUENCY_DELTA.get(quest.frequency, timedelta(days=1))
                                              
     completions_within_period = QuestSubmission.query.filter(
         QuestSubmission.user_id == user_id,
@@ -393,12 +394,7 @@ def can_complete_quest(user_id, quest_id):
 
         if first_completion_in_period:
                                                                                           
-            increment_map = {
-                'daily': timedelta(days=1),
-                'weekly': timedelta(weeks=1),
-                'monthly': timedelta(days=30)
-            }
-            next_eligible_time = first_completion_in_period.timestamp + increment_map.get(quest.frequency, timedelta(days=1))
+            next_eligible_time = first_completion_in_period.timestamp + FREQUENCY_DELTA.get(quest.frequency, timedelta(days=1))
 
     return can_verify, next_eligible_time
 
@@ -411,14 +407,7 @@ def getLastRelevantCompletionTime(user_id, quest_id):
         return None                        
 
                                                                 
-    period_start_map = {
-        'daily': now - timedelta(days=1),
-        'weekly': now - timedelta(weeks=1),
-        'monthly': now - timedelta(days=30)
-    }
-    
-                                                              
-    period_start = period_start_map.get(quest.frequency, now)                                                 
+    period_start = now - FREQUENCY_DELTA.get(quest.frequency, timedelta(0))
 
 
                                                                
