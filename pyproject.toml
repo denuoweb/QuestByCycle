@@ -38,6 +38,7 @@ openai                = "1.82.0"
 httpx                 = "0.28.1"
 httpcore              = "1.0.9"
 tomli                 = "^2.0.1"
+pywebpush            = "^1.14.0"
 
 
 

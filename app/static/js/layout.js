@@ -45,6 +45,11 @@ document.addEventListener('DOMContentLoaded', function() {
           if (Notification.permission === 'default') {
             Notification.requestPermission();
           }
+
+        if ('sync' in registration) {
+          registration.sync.register('sync-requests').catch(function(err) {
+            console.error('Background sync registration failed:', err);
+          });
         }
       })
       .catch(function(err) {
@@ -143,6 +148,18 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('showLeaderboardModal not defined');
       }
     });
+  }
+
+  // --------------------------------------------------------------
+  // 5.5) Adjust body padding for window controls overlay
+  // --------------------------------------------------------------
+  if ('windowControlsOverlay' in navigator) {
+    function updateOverlayPadding() {
+      var rect = navigator.windowControlsOverlay.getTitlebarAreaRect();
+      document.body.style.paddingTop = rect.height + 'px';
+    }
+    navigator.windowControlsOverlay.addEventListener('geometrychange', updateOverlayPadding);
+    updateOverlayPadding();
   }
 
   // --------------------------------------------------------------
