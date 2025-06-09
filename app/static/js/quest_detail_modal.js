@@ -43,8 +43,9 @@ function openQuestDetailModal(questId) {
         canVerify
       );
 
-      fetchSubmissions(questId);
       openModal('questDetailModal');
+      lazyLoadImages();
+      fetchSubmissions(questId);
     })
     .catch(err => {
       console.error('Error opening quest detail modal:', err);
@@ -77,6 +78,7 @@ function refreshQuestDetailModal(questId) {
         canVerify
       );
 
+      lazyLoadImages();
       fetchSubmissions(questId);
     })
     .catch(err => {
@@ -160,7 +162,9 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
     }
 
     const badgeImagePath = quest.badge && quest.badge.image ? `/static/images/badge_images/${quest.badge.image}` : PLACEHOLDER_IMAGE;
-    elements['modalQuestBadgeImage'].src = badgeImagePath;
+    elements['modalQuestBadgeImage'].setAttribute('data-src', badgeImagePath);
+    elements['modalQuestBadgeImage'].src = PLACEHOLDER_IMAGE;
+    elements['modalQuestBadgeImage'].classList.add('lazyload');
     elements['modalQuestBadgeImage'].alt = quest.badge && quest.badge.name ? `Badge: ${quest.badge.name}` : 'Default Badge';
 
     elements['modalQuestCompletions'].innerText = `Total Completions: ${userCompletionCount}`;
