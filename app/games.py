@@ -62,6 +62,21 @@ def sanitize_html(html_content):
     return bleach.clean(html_content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
 
 
+def serialize_game(game):
+    """Return a dictionary representation of a ``Game``."""
+    return {
+        "id": game.id,
+        "title": game.title,
+        "name": game.title,
+        "description": game.description,
+        "start_date": game.start_date.isoformat() if game.start_date else None,
+        "end_date": game.end_date.isoformat() if game.end_date else None,
+        "game_goal": game.game_goal,
+        "is_public": game.is_public,
+        "allow_joins": game.allow_joins,
+    }
+
+
 games_bp = Blueprint('games', __name__)
 
 
@@ -497,8 +512,6 @@ def generate_qr_for_game(game_id):
 
 @games_bp.route('/get_game/<int:game_id>', methods=['GET'])
 def get_game(game_id):
-    """
-    Retrieve the game with the given game_id and return its title as JSON.
-    """
+    """Return basic information about a game as JSON."""
     game = Game.query.get_or_404(game_id)
-    return jsonify(name=game.title)
+    return jsonify(serialize_game(game))
