@@ -47,7 +47,6 @@
   > "UPLOAD A PHOTO TO COMPLETE THE QUEST: 'VISIT LOCAL BUSINESSES BY BIKE AND FIND A QR CODE AT THEIR SHOP TO SHOW YOU WERE THERE'"
   
 - On the screen for creating or editing a game, please increase the number of characters for the Quest Instructions editable area to 4500 characters *(Completed)*
-- Modify Quill for Task Detail and Game Instruction modal, and recent activity *(Completed)*
 - Delete Button on shout board not working.
 - After Validating a Task, the Total Posts Variable Doesn't Change on the Task List
 - Get loading modal working for task submissions *(Completed)*
@@ -65,5 +64,4 @@
 - Sponsors link at bottom
 - Add Additional Comment When Submitting a Task Item That Uses QR Verification
 - Implement Notification Alert
-- Modify Quill for Task Detail and Game Instruction modal, and recent activity
 
