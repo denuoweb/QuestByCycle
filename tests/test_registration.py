@@ -142,7 +142,11 @@ def test_register_with_next_param(client):
         "confirm_password": "safepwd",
         "accept_license": "y",
     }
-    resp = client.post("/auth/register?next=/dashboard", data=data, follow_redirects=False)
+    resp = client.post(
+        "/auth/register?next=/dashboard",
+        data=data,
+        follow_redirects=False,
+    )
     assert resp.status_code == 302
     assert resp.headers["Location"].endswith("/dashboard")
 
@@ -189,7 +193,11 @@ def test_register_db_failure(client, monkeypatch):
     and redirect back into the registration modal (show_register=1).
     """
                                              
-    monkeypatch.setattr(db.session, "commit", lambda: (_ for _ in ()).throw(SQLAlchemyError("fail")))
+    monkeypatch.setattr(
+        db.session,
+        "commit",
+        lambda: (_ for _ in ()).throw(SQLAlchemyError("fail")),
+    )
 
     data = {
         "email": "err@example.com",

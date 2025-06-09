@@ -30,7 +30,13 @@ def client(app):
 
 @pytest.fixture
 def admin_user(app):
-    user = User(username="admin", email="admin@example.com", is_admin=True, license_agreed=True, email_verified=True)
+    user = User(
+        username="admin",
+        email="admin@example.com",
+        is_admin=True,
+        license_agreed=True,
+        email_verified=True,
+    )
     user.set_password("pw")
     user.created_at = datetime.now(timezone.utc)
     db.session.add(user)

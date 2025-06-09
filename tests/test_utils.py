@@ -54,7 +54,11 @@ def test_save_submission_image_invalid_extension(app, tmp_path):
     from app.utils import save_submission_image
 
     fake_file = BytesIO(b"{}")
-    file = FileStorage(stream=fake_file, filename="bad.json", content_type="application/json")
+    file = FileStorage(
+        stream=fake_file,
+        filename="bad.json",
+        content_type="application/json",
+    )
 
     with pytest.raises(ValueError):
         save_submission_image(file)

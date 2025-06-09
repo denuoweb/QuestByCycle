@@ -11,22 +11,62 @@ import mimetypes
 def post_to_social_media(image_url, image_path, status, game):
     twitter_url, fb_url, instagram_url = None, None, None
 
-    if game.twitter_api_key and game.twitter_api_secret and game.twitter_access_token and game.twitter_access_token_secret:
-        media_id, error = upload_media_to_twitter(image_path, game.twitter_api_key, game.twitter_api_secret, game.twitter_access_token, game.twitter_access_token_secret)
+    if (
+        game.twitter_api_key
+        and game.twitter_api_secret
+        and game.twitter_access_token
+        and game.twitter_access_token_secret
+    ):
+        media_id, error = upload_media_to_twitter(
+            image_path,
+            game.twitter_api_key,
+            game.twitter_api_secret,
+            game.twitter_access_token,
+            game.twitter_access_token_secret,
+        )
         if not error:
-            twitter_url, error = post_to_twitter(status, media_id, game.twitter_username, game.twitter_api_key, game.twitter_api_secret, game.twitter_access_token, game.twitter_access_token_secret)
+            twitter_url, error = post_to_twitter(
+                status,
+                media_id,
+                game.twitter_username,
+                game.twitter_api_key,
+                game.twitter_api_secret,
+                game.twitter_access_token,
+                game.twitter_access_token_secret,
+            )
 
     if game.facebook_access_token and game.facebook_page_id:
-        page_access_token = get_facebook_page_access_token(game.facebook_access_token, game.facebook_page_id)
-        media_response = upload_image_to_facebook(game.facebook_page_id, image_path, page_access_token)
+        page_access_token = get_facebook_page_access_token(
+            game.facebook_access_token,
+            game.facebook_page_id,
+        )
+        media_response = upload_image_to_facebook(
+            game.facebook_page_id,
+            image_path,
+            page_access_token,
+        )
         if media_response and 'id' in media_response:
             image_id = media_response['id']
-            fb_url, error = post_to_facebook_with_image(game.facebook_page_id, status, image_id, page_access_token)
+            fb_url, error = post_to_facebook_with_image(
+                game.facebook_page_id,
+                status,
+                image_id,
+                page_access_token,
+            )
 
 
     if game.instagram_user_id and game.instagram_access_token:
-        public_image_url = url_for('static', filename=image_url, _external=True)
-        instagram_url, error = post_to_instagram(public_image_url, status, game.instagram_user_id, game.instagram_access_token)
+        public_image_url = url_for(
+            'static',
+            filename=image_url,
+            _external=True,
+        )
+        instagram_url, error = post_to_instagram(
+            public_image_url,
+            status,
+            game.instagram_user_id,
+            game.instagram_access_token,
+        )
 
     return twitter_url, fb_url, instagram_url
 
@@ -35,8 +75,19 @@ def authenticate_twitter(api_key, api_secret, access_token, access_token_secret)
     return OAuth1Session(api_key, api_secret, access_token, access_token_secret)
 
 
-def upload_media_to_twitter(file_path, api_key, api_secret, access_token, access_token_secret):
-    twitter = authenticate_twitter(api_key, api_secret, access_token, access_token_secret)
+def upload_media_to_twitter(
+    file_path,
+    api_key,
+    api_secret,
+    access_token,
+    access_token_secret,
+):
+    twitter = authenticate_twitter(
+        api_key,
+        api_secret,
+        access_token,
+        access_token_secret,
+    )
     url = "https://upload.twitter.com/1.1/media/upload.json"
 
     with open(file_path, 'rb') as file:
@@ -50,7 +101,15 @@ def upload_media_to_twitter(file_path, api_key, api_secret, access_token, access
             return None, response.text
 
 
-def post_to_twitter(status, media_ids, twitter_username, api_key, api_secret, access_token, access_token_secret):
+def post_to_twitter(
+    status,
+    media_ids,
+    twitter_username,
+    api_key,
+    api_secret,
+    access_token,
+    access_token_secret,
+):
     url = "https://api.twitter.com/2/tweets"
     payload = {
         "text": status,
@@ -58,7 +117,12 @@ def post_to_twitter(status, media_ids, twitter_username, api_key, api_secret, ac
             "media_ids": [media_ids]
         }
     }
-    twitter = authenticate_twitter(api_key, api_secret, access_token, access_token_secret)
+    twitter = authenticate_twitter(
+        api_key,
+        api_secret,
+        access_token,
+        access_token_secret,
+    )
     response = twitter.post(url, json=payload, timeout=REQUEST_TIMEOUT)
     if response.status_code == 201:
         tweet_id = response.json().get('data').get('id')
@@ -148,7 +212,11 @@ def post_to_instagram(image_url, caption, user_id, access_token):
         'creation_id': container_id,
         'access_token': access_token
     }
-    publish_response = requests.post(publish_url, data=publish_payload, timeout=REQUEST_TIMEOUT)
+    publish_response = requests.post(
+        publish_url,
+        data=publish_payload,
+        timeout=REQUEST_TIMEOUT,
+    )
     publish_data = publish_response.json()
     if 'id' not in publish_data:
         raise Exception("Failed to publish image on Instagram.")

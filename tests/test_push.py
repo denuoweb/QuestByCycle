@@ -26,7 +26,12 @@ def client(app):
 
 
 def login(client):
-    user = User(username="u", email="u@example.com", password_hash="x", license_agreed=True)
+    user = User(
+        username="u",
+        email="u@example.com",
+        password_hash="x",
+        license_agreed=True,
+    )
     db.session.add(user)
     db.session.commit()
     with client.session_transaction() as sess:
