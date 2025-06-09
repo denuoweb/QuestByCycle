@@ -1,3 +1,5 @@
+import { showLeaderboardModal } from './modules/leaderboard_modal.js';
+
 export function initLayout() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker
@@ -104,11 +106,7 @@ export function initLayout() {
     leaderboardLink.addEventListener('click', (e) => {
       e.preventDefault();
       const gameId = leaderboardLink.getAttribute('data-game-id') || 0;
-      if (typeof window.showLeaderboardModal === 'function') {
-        window.showLeaderboardModal(gameId);
-      } else {
-        console.error('showLeaderboardModal not defined');
-      }
+      showLeaderboardModal(gameId);
     });
   }
 
