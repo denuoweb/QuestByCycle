@@ -129,8 +129,8 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
     }
 
     elements['modalQuestTitle'].innerText = `${quest.title}${completeText}`;
-    elements['modalQuestDescription'].innerHTML = quest.description;
-    elements['modalQuestTips'].innerHTML = quest.tips || 'No tips available';
+    elements['modalQuestDescription'].textContent = quest.description;
+    elements['modalQuestTips'].textContent = quest.tips || 'No tips available';
     elements['modalQuestPoints'].innerText = `${quest.points}`;
     elements['modalQuestCategory'].innerText = quest.category || 'No category set';
     
