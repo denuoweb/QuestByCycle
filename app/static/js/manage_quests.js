@@ -198,7 +198,7 @@
         } else if (field.type === "textarea") {
             inputElement = document.createElement("textarea");
             inputElement.name = field.name;
-            inputElement.innerHTML = currentValue;
+            inputElement.value = currentValue;
         } else {
             inputElement = document.createElement("input");
             inputElement.type = field.type;

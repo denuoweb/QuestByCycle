@@ -63,7 +63,7 @@ async function ensureBadgeCache() {
 function buildTaskListHTML(taskNames) {
   if (!taskNames) return '';
   const tasks = taskNames.split(',');
-  return `<ul>${tasks.map(task => `<li>${task.trim()}</li>`).join('')}</ul>`;
+  return `<ul>${tasks.map(task => `<li>${escapeHTML(task.trim())}</li>`).join('')}</ul>`;
 }
 
 function findBadgeById(badgeId) {
@@ -98,7 +98,7 @@ function populateBadgeModal(badge, requiredCount, currentUserCompletions, taskLi
 
   let badgeSpecificText = '';
   if (taskId) {
-    const taskLink = `<a href="#" onclick="openQuestDetailModal('${taskId}')">${taskNames}</a>`;
+    const taskLink = `<a href="#" onclick="openQuestDetailModal('${taskId}')">${escapeHTML(taskNames)}</a>`;
     badgeSpecificText = `<p>Completion Requirement: ${requiredCount > 1 ? requiredCount + ' times' : requiredCount + ' time'}</p>` +
                         `<p>Your Total Completions: ${currentUserCompletions}</p>` +
                         `<p>${earned ? 'You have earned this badge.' : 'Complete ' + taskLink + ' to earn this badge.'}</p>`;
@@ -113,14 +113,14 @@ function populateBadgeModal(badge, requiredCount, currentUserCompletions, taskLi
   if (earned) {
     modalImage.style.filter = 'none';
     modalImage.oncontextmenu = null;
-    modalText.innerHTML = `<p><strong>Awarded!</strong></p>${badgeSpecificText}<p>${descriptionText}</p>`;
+    modalText.innerHTML = `<p><strong>Awarded!</strong></p>${badgeSpecificText}<p>${escapeHTML(descriptionText)}</p>`;
   } else {
     modalImage.style.filter = 'grayscale(100%) opacity(0.5)';
     modalImage.oncontextmenu = e => {
       e.preventDefault();
       return false;
     };
-    modalText.innerHTML = `<p><strong>Not Awarded Yet</strong></p>${badgeSpecificText}<p>${descriptionText}</p>`;
+    modalText.innerHTML = `<p><strong>Not Awarded Yet</strong></p>${badgeSpecificText}<p>${escapeHTML(descriptionText)}</p>`;
   }
 }
 

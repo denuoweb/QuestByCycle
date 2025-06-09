@@ -264,37 +264,10 @@ Our platform leverages AI to generate new quests for users. This functionality i
 
 ## Static Assets
 
-### CSS
+### CSS and JavaScript
 
-Stylesheets are located in `app/static/css` and include:
-
-- `atom-one-dark.min.css`
-- `bootstrap.min.css`
-- `highlight.min.js`
-- `katex.min.css`
-- `quill.snow.css`
-
-### JavaScript
-
-JavaScript files are located in `app/static/js` and include:
-
-- `admin_dashboard.js`
-- `all_submissions_modal.js`
-- `badge_management.js`
-- `bootstrap.min.js`
-- `generated_quest.js`
-- `highlight.min.js`
-- `index_management.js`
-- `jquery-3.6.0.min.js`
-- `katex.min.js`
-- `leaderboard_modal.js`
-- `modal_common.js`
-- `popper.min.js`
-- `quill.min.js`
-- `submission_detail_modal.js`
-- `quest_detail_modal.js`
-- `user_management.js`
-- `user_profile_modal.js`
+Third-party libraries (Bootstrap, jQuery, Quill, KaTeX, Font Awesome, and Highlight.js) are now loaded directly from public CDNs.  
+Only project specific assets remain under `app/static`.
 
 ### Images and Videos
 
