@@ -556,7 +556,9 @@ def user_profile(user_id):
     user_quests = UserQuest.query.filter(UserQuest.user_id == user.id, UserQuest.completions > 0).all()
     badges = user.badges
     participated_games = user.participated_games
-    quest_submissions = user.quest_submissions
+    quest_submissions = (
+        user.quest_submissions.order_by(QuestSubmission.timestamp.desc()).all()
+    )
     profile_messages = ProfileWallMessage.query.filter_by(user_id=user_id).order_by(
         ProfileWallMessage.timestamp.desc()).all()
 
