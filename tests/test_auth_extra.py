@@ -5,8 +5,6 @@ from flask import url_for
 from app import create_app, db
 from app.models import User
 from datetime import datetime, timezone
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import text
 
 @pytest.fixture
 def app():
@@ -99,7 +97,6 @@ def test_successful_login_redirects_admin_dashboard(client, admin_user):
 @pytest.mark.parametrize("ajax", [False, True])
 def test_login_exception_paths(client, normal_user, monkeypatch, ajax):
                                             
-    from app.auth import login_user
     monkeypatch.setattr("app.auth.login_user", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("boom")))
     data = {"email": normal_user.email, "password": "pw"}
     headers = {"X-Requested-With": "XMLHttpRequest"} if ajax else {}

@@ -10,9 +10,8 @@ import csv
 import os
 import qrcode
 import requests
-from datetime import datetime, timezone
+from datetime import datetime
 from io import BytesIO
-from sqlalchemy.exc import IntegrityError
 from flask import (
     Blueprint,
     current_app,
@@ -53,7 +52,7 @@ from .models import (
     User, UserQuest, SubmissionLike, SubmissionReply,
     Notification
 )
-from app.constants import UTC, FREQUENCY_DELTA
+from app.constants import UTC
 
 quests_bp = Blueprint("quests", __name__, template_folder="templates")
 
@@ -150,7 +149,7 @@ def add_quest(game_id):
             db.session.rollback()
             if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
                 return jsonify(success=False, message="An error occurred"), 500
-            flash(f"An error occured.", "error")
+            flash("An error occured.", "error")
 
         return redirect(url_for("quests.manage_game_quests", game_id=game_id,
             in_admin_dashboard=True))
@@ -369,7 +368,7 @@ def update_quest(quest_id):
     try:
         db.session.commit()
         return jsonify({"success": True, "message": "Quest updated successfully"})
-    except Exception as error:                                
+    except Exception:                                
         db.session.rollback()
         return
 
@@ -675,7 +674,6 @@ def generate_qr(quest_id):
     response.headers["Content-Type"] = "text/html"
     return response
 
-import requests                                             
 
 def post_to_mastodon_status(image_path, status_text, user):
     """
@@ -1021,7 +1019,7 @@ def delete_all_quests(game_id):
     Args:
         game_id (int): The ID of the game.
     """
-    game = Game.query.get_or_404(game_id)
+    Game.query.get_or_404(game_id)
 
     if not current_user.is_admin_for_game(game_id):
         return (
@@ -1038,7 +1036,7 @@ def delete_all_quests(game_id):
         Quest.query.filter_by(game_id=game_id).delete(synchronize_session=False)
         db.session.commit()
         return jsonify({"success": True, "message": "All quests deleted successfully."}), 200
-    except Exception as error:                                
+    except Exception:                                
         db.session.rollback()
         return
 

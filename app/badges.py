@@ -215,7 +215,7 @@ def delete_badge(badge_id):
         db.session.delete(badge)
         db.session.commit()
         return jsonify({'success': True, 'message': 'Badge deleted successfully'})
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return
 
@@ -307,7 +307,7 @@ def bulk_upload():
                 flash(f'Image for badge "{badge_name}" not found.', 'warning')
                 print(f'Image for badge "{badge_name}" not found.')
 
-    except Exception as e:
+    except Exception:
         flash('Error processing CSV file.', 'danger')
         return redirect(url_for('badges.manage_badges'))
 

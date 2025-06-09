@@ -6,7 +6,6 @@ from app.models import User
 from flask import url_for
 from datetime import datetime, timezone
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import text
 
 @pytest.fixture
 def app():
@@ -56,7 +55,6 @@ def user_existing(app):
                                                       
 
 def test_register_get_shows_form(client):
-    from urllib.parse import parse_qs, urlparse
     from flask import url_for
 
     resp = client.get("/auth/register", follow_redirects=False)
@@ -72,7 +70,6 @@ def test_register_get_shows_form(client):
                                                                
 
 def test_register_post_missing_data(client):
-    from urllib.parse import urlparse, parse_qs
     from flask import url_for
 
                                                          
@@ -88,7 +85,6 @@ def test_register_post_missing_data(client):
                                                         
 
 def test_register_post_without_license(client):
-    from urllib.parse import urlparse, parse_qs
     from flask import url_for
 
     data = {
@@ -153,7 +149,6 @@ def test_register_with_next_param(client):
                                                                         
 
 def test_register_with_game_id(client):
-    from urllib.parse import urlparse, parse_qs
 
     data = {
         "email": "gamer@example.com",

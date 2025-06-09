@@ -81,7 +81,7 @@ def create_quest():
         try:
             db.session.commit()
             return jsonify({"success": True, "message": "Quest created successfully"}), 201
-        except Exception as e:
+        except Exception:
             db.session.rollback()
             return
 
