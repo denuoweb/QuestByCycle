@@ -53,7 +53,7 @@ function closeModal(modalId) {
 }
 
 // Reset all modal content and settings to the initial state
-function resetModalContent() {
+export function resetModalContent() {
     const twitterLink = document.getElementById('twitterLink');
     if (twitterLink) {
         twitterLink.style.display = 'none';
@@ -429,4 +429,5 @@ window.openForgotPasswordModal = openForgotPasswordModal;
 window.openResetPasswordModal = openResetPasswordModal;
 window.fetchAndShowModal = fetchAndShowModal;
 window.submitFormJson = submitFormJson;
+window.resetModalContent = resetModalContent;
 
