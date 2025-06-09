@@ -19,25 +19,19 @@ document.addEventListener('DOMContentLoaded', () => {
     emailErr.style.display   = 'none';
     successDiv.style.display = 'none';
 
-    fetch(form.action, {
-      method: 'POST',
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
-      body: new FormData(form),
-      credentials: 'same-origin'
-    })
-    .then(r => r.json().then(json => ({ status: r.status, json })))
-    .then(({ json }) => {
-      if (json.success) {
-        successDiv.textContent   = json.message;
-        successDiv.style.display = 'block';
-        btn.disabled             = true;
-      } else {
-        emailErr.textContent   = json.error || 'An error occurred.';
-        emailErr.style.display = 'block';
-      }
-    })
-    .catch(_ => {
-      form.submit();
-    });
+    submitFormJson(form)
+      .then(({ json }) => {
+        if (json.success) {
+          successDiv.textContent   = json.message;
+          successDiv.style.display = 'block';
+          btn.disabled             = true;
+        } else {
+          emailErr.textContent   = json.error || 'An error occurred.';
+          emailErr.style.display = 'block';
+        }
+      })
+      .catch(() => {
+        form.submit();
+      });
   });
 });

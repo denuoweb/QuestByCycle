@@ -376,6 +376,18 @@ async function fetchAndShowModal(url, modalId) {
   }
 }
 
+// Submit a form via AJAX and return the JSON response
+async function submitFormJson(form) {
+  const res = await fetch(form.action, {
+    method: form.method || 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    body: new FormData(form),
+    credentials: 'same-origin'
+  });
+  const json = await res.json();
+  return { status: res.status, json };
+}
+
 // wire up any [data-modal-url] triggers
 document.addEventListener('click', e => {
   const button = e.target.closest('[data-modal-url]');
