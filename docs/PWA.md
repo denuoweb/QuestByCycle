@@ -7,6 +7,8 @@ This application exposes basic Progressive Web App (PWA) features and can also b
 - The PWA manifest at `app/static/manifest.json` is available from `/manifest.json`.
 - The manifest enables the `window-controls-overlay` display mode for desktop browsers using `display_override`.
 - The service worker is registered from the root path: `/sw.js`.
+- Background sync ensures actions performed while offline are sent when
+  connectivity returns.
 - The manifest includes a `share_target` entry so the site can receive shared
   images and text via the Web Share Target API. Shared data is POSTed to the
   route `/share-target`.

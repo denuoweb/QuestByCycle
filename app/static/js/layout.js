@@ -21,6 +21,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           });
         });
+        if ('sync' in registration) {
+          registration.sync.register('sync-requests').catch(function(err) {
+            console.error('Background sync registration failed:', err);
+          });
+        }
       })
       .catch(function(err) {
         console.error('Service Worker registration failed:', err);
