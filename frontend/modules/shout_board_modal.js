@@ -35,6 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const plainText = quill.getText().trim();
+    if (plainText.length > 500) {
+      alert('Message must be 500 characters or fewer.');
+      return;
+    }
+
     document.getElementById('shoutMessageInput').value = html;
 
     const data = new FormData(formEl);
