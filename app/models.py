@@ -131,7 +131,7 @@ class User(UserMixin, db.Model):
     bike_picture = db.Column(db.String(200), nullable=True)
     bike_description = db.Column(db.String(500), nullable=True)
     upload_to_socials = db.Column(db.Boolean, default=True)
-    upload_to_mastodon = db.Column(db.Boolean, default=True)
+    upload_to_mastodon = db.Column(db.Boolean, default=False)
     show_carbon_game = db.Column(db.Boolean, default=True)
     onboarded = db.Column(db.Boolean, default=False, nullable=True)
     selected_game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=True)

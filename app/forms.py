@@ -310,7 +310,9 @@ class ProfileForm(FlaskForm):
         validators=[Optional(), Length(max=500)],
     )
     upload_to_socials = BooleanField("Upload Activities to Social Media", default=True)
-    upload_to_mastodon = BooleanField("Upload Activities to Social Media", default=True)
+    upload_to_mastodon = BooleanField(
+        "Upload Activities to Social Media", default=False
+    )
     show_carbon_game = BooleanField("Show Carbon Reduction Game", default=True)
     riding_preferences = SelectMultipleField(
         "Riding Preferences",
