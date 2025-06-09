@@ -519,9 +519,11 @@ def get_quest_submissions(quest_id):
             "user_id"            : sub.user_id,
             "user_display_name"  : user.display_name or user.username,
             "user_username"      : user.username,
-            "user_profile_picture":
+            "user_profile_picture": (
                 url_for('static', filename=user.profile_picture)
-                if user.profile_picture else url_for('static', filename="images/default_profile.png"),
+                if user.profile_picture
+                else url_for('static', filename=current_app.config['PLACEHOLDER_IMAGE'])
+            ),
             "twitter_url"        : sub.twitter_url,
             "fb_url"             : sub.fb_url,
             "instagram_url"      : sub.instagram_url,
@@ -558,7 +560,7 @@ def quest_user_completion(quest_id):
             "image": badge.image,
         }
         if badge
-        else {"name": "Default", "image": "default_badge.png"}
+        else {"name": "Default", "image": current_app.config["PLACEHOLDER_IMAGE"]}
     )
 
     quest_info = {
@@ -956,7 +958,7 @@ def get_all_submissions():
             "user_profile_picture": (
                 url_for('static', filename=submission.user.profile_picture)
                 if submission.user.profile_picture
-                else url_for('static', filename="images/default_profile.png")
+                else url_for('static', filename=current_app.config['PLACEHOLDER_IMAGE'])
             ),
             "image_url": public_media_url(submission.image_url),
             "video_url": public_media_url(submission.video_url),
@@ -1057,7 +1059,7 @@ def get_submission(submission_id):
     if user.profile_picture:
         pic_url = url_for('static', filename=user.profile_picture)
     else:
-        pic_url = url_for('static', filename='images/default_profile.png')
+        pic_url = url_for('static', filename=current_app.config['PLACEHOLDER_IMAGE'])
 
     display_name = user.display_name or user.username
 

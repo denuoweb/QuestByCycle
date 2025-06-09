@@ -67,7 +67,7 @@
                                 </div>
                                 <div class="profile-header position-relative">
                                     <div class="profile-photo-full">
-                                        <img src="{{ url_for('static', filename=profile.profile_picture or 'images/default_profile_picture.png') }}"
+                                    <img src="{{ url_for('static', filename=profile.profile_picture) if profile.profile_picture else placeholder_image }}"
                                              alt="Profile Picture"
                                              class="img-fluid full-width-profile-img">
                                     </div>

@@ -1,3 +1,5 @@
+const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
+
 function showAllSubmissionsModal(gameId) {
     fetch(`/quests/quest/all_submissions?game_id=${gameId}`)
         .then(response => response.json())
@@ -26,7 +28,7 @@ function displayAllSubmissions(submissions, isAdmin) {
         card.className = 'submission-card';
 
         const img = document.createElement('img');
-        img.src = submission.image_url || 'path/to/default/image.png';
+        img.src = submission.image_url || PLACEHOLDER_IMAGE;
         img.alt = 'Quest Submission';
         img.className = 'submission-image';
 

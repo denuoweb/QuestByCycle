@@ -40,7 +40,7 @@ def webfinger():
     if user.profile_picture:
         avatar_url = f"https://{host}/static/{user.profile_picture}"
     else:
-        avatar_url = f"https://{host}/static/images/default_profile_picture.png"
+        avatar_url = f"https://{host}/static/{current_app.config['PLACEHOLDER_IMAGE']}"
 
     jrd = {
         "subject": f"acct:{userpart}@{host}",

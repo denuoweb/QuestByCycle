@@ -10,7 +10,7 @@
           <span class="submitter-profile-frame--inline">
             <img
               id="submitterProfileImage"
-              src="/static/images/default_profile.png"
+              src="{{ placeholder_image }}"
               alt="Submitter Profile"
             >
           </span>
@@ -32,12 +32,12 @@
     <div id="submissionImageContainer" class="mb-4">
       <span class="submitter-profile-frame">
         <img id="submitterProfileImageOverlay"
-             src="/static/images/default_profile.png"
+             src="{{ placeholder_image }}"
              alt="Submitter Profile">
       </span>
       <img id="submissionImage"
            class="verification-image"
-           src="/static/images/default_badge.png"
+           src="{{ placeholder_image }}"
            alt="Submission Detail">
       <video id="submissionVideo" class="verification-video" controls hidden>
         <source id="submissionVideoSource" src="" type="video/mp4">

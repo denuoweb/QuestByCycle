@@ -106,6 +106,10 @@ def create_app(config_overrides=None):
         "TASKCSV": inscopeconfig["main"]["TASKCSV"],
         "LOCAL_DOMAIN": inscopeconfig["main"]["LOCAL_DOMAIN"],
         "FFMPEG_PATH": inscopeconfig["main"].get("FFMPEG_PATH", "ffmpeg"),
+        "PLACEHOLDER_IMAGE": inscopeconfig["main"].get(
+            "PLACEHOLDER_IMAGE",
+            "images/default-placeholder.webp",
+        ),
         "MAIL_SERVER": inscopeconfig["mail"]["MAIL_SERVER"],
         "MAIL_PORT": inscopeconfig["mail"]["MAIL_PORT"],
         "MAIL_USE_SSL": inscopeconfig["mail"]["MAIL_USE_SSL"],
@@ -218,7 +222,13 @@ def create_app(config_overrides=None):
     @app.context_processor
     def inject_logout_form():
         from app.forms import LogoutForm
-        return dict(logout_form=LogoutForm())
+        placeholder_url = url_for(
+            'static', filename=current_app.config['PLACEHOLDER_IMAGE']
+        )
+        return dict(
+            logout_form=LogoutForm(),
+            placeholder_image=placeholder_url,
+        )
 
 
     @app.context_processor
