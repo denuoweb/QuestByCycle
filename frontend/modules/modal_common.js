@@ -1,4 +1,5 @@
 let topZIndex = 3000;
+let scrollY = 0;
 
 function openModal(modalId) {
   const modal = document.getElementById(modalId);
@@ -10,6 +11,9 @@ function openModal(modalId) {
   // hoist & reveal
   document.body.appendChild(modal);
   document.querySelector('.container')?.classList.add('modal-open');
+  scrollY = window.scrollY || window.pageYOffset;
+  document.body.style.top = `-${scrollY}px`;
+  document.body.style.position = 'fixed';
   modal.classList.add('active');
   modal.style.display = 'flex';
   topZIndex += 10;
@@ -39,6 +43,9 @@ function closeModal(modalId) {
   if (!document.querySelector('.modal[style*="display: flex"]')) {
     document.body.classList.remove('body-no-scroll');
     document.querySelector('.container')?.classList.remove('modal-open');
+    document.body.style.position = '';
+    document.body.style.top = '';
+    window.scrollTo(0, scrollY);
   }
 
   // mimic bootstrap event

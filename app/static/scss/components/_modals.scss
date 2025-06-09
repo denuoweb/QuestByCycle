@@ -104,6 +104,8 @@
 // 8. Prevent body scroll when modal is open
 .body-no-scroll {
   overflow: hidden !important;
+  position: fixed;
+  width: 100%;
 }
 
 // 9. Fade‐in keyframes
