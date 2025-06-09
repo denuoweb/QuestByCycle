@@ -24,6 +24,7 @@ def test_manifest_route(client):
     assert resp.mimetype == 'application/json'
     data = resp.get_json()
     assert data.get('name') == 'QuestByCycle'
+    assert 'file_handlers' in data
 
 
 def test_launch_handler_is_object(client):

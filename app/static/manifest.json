@@ -36,6 +36,15 @@
         "sizes": "180x180",
         "type": "image/png"
       }
+    ],
+    "file_handlers": [
+      {
+        "action": "/",
+        "name": "Image files",
+        "accept": {
+          "image/*": [".png", ".jpg", ".jpeg", ".webp"]
+        }
+      }
     ]
   }
   
