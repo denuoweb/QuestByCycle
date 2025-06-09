@@ -1,3 +1,7 @@
+let leaderboardData = null;
+let leaderboardMetric = 'points';
+let leaderboardBody;
+
 function showLeaderboardModal(selectedGameId) {
     const leaderboardContent = document.getElementById('leaderboardModalContent');
     if (!leaderboardContent) {
@@ -14,9 +18,13 @@ function showLeaderboardModal(selectedGameId) {
         })
         .then(data => {
             leaderboardContent.innerHTML = '';
+            leaderboardData = data;
+            leaderboardMetric = 'points';
             appendGameSelector(leaderboardContent, data, selectedGameId);
             appendCompletionMeter(leaderboardContent, data, selectedGameId);
-            appendLeaderboardTable(leaderboardContent, data);
+            appendMetricToggle(leaderboardContent);
+            appendLeaderboardTable(leaderboardContent);
+            updateLeaderboardRows();
             openModal('leaderboardModal');
         })
         .catch(error => {
@@ -53,37 +61,50 @@ function appendGameSelector(parentElement, data, selectedGameId) {
     }
 }
 
-function appendLeaderboardTable(parentElement, data) {
-    if (data.top_users && data.top_users.length > 0) {
-        const table = document.createElement('table');
-        table.className = 'table table-striped';
+function appendMetricToggle(parentElement) {
+    const toggleDiv = document.createElement('div');
+    toggleDiv.className = 'form-check form-switch my-3';
 
-        const thead = document.createElement('thead');
-        const headerRow = document.createElement('tr');
-        ['Rank', 'Player', 'Points'].forEach(text => {
-            const th = document.createElement('th');
-            th.textContent = text;
-            headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
+    const toggleInput = document.createElement('input');
+    toggleInput.className = 'form-check-input';
+    toggleInput.type = 'checkbox';
+    toggleInput.id = 'metricToggle';
 
-        const tbody = document.createElement('tbody');
-        data.top_users.forEach((user, index) => {
-            const row = document.createElement('tr');
-            appendTableCell(row, index + 1);
-            const displayName = user.display_name || user.username;  // Use display name or fallback to username
-            appendTableCell(row, displayName, true, user.user_id);
-            appendTableCell(row, user.total_points);
-            tbody.appendChild(row);
-        });
-        table.appendChild(tbody);
-        parentElement.appendChild(table);
-    } else {
-        const p = document.createElement('p');
-        p.textContent = 'Join a game to see the leaderboard!';
-        parentElement.appendChild(p);
-    }
+    const toggleLabel = document.createElement('label');
+    toggleLabel.className = 'form-check-label';
+    toggleLabel.htmlFor = 'metricToggle';
+    toggleLabel.textContent = 'Show Completed Quests';
+
+    toggleInput.addEventListener('change', () => {
+        leaderboardMetric = toggleInput.checked ? 'quests' : 'points';
+        updateLeaderboardRows();
+    });
+
+    toggleDiv.appendChild(toggleInput);
+    toggleDiv.appendChild(toggleLabel);
+    parentElement.appendChild(toggleDiv);
+}
+
+function appendLeaderboardTable(parentElement) {
+    const table = document.createElement('table');
+    table.className = 'table table-striped';
+
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    ['Rank', 'Player', 'Points'].forEach((text, idx) => {
+        const th = document.createElement('th');
+        if (idx === 2) {
+            th.id = 'leaderboardMetricHeader';
+        }
+        th.textContent = text;
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    leaderboardBody = document.createElement('tbody');
+    table.appendChild(leaderboardBody);
+    parentElement.appendChild(table);
 }
 
 function appendTableCell(row, content, isLink = false, userId = null) {
@@ -154,5 +175,43 @@ function updateMeterBackground(percent, selectedGameId) {
     const completionMeter = document.getElementById('completionMeter');
     const imageIndex = 9 - Math.min(Math.floor(percent / 10), 9); // Invert the index for the clearest image at 100%
     completionMeter.style.backgroundImage = `url('/static/images/leaderboard/smoggy_skyline_${selectedGameId}_${imageIndex}.png')`;
+}
+
+function updateLeaderboardRows() {
+    if (!leaderboardData || !leaderboardBody) return;
+    if (!leaderboardData.top_users || leaderboardData.top_users.length === 0) {
+        leaderboardBody.innerHTML = '';
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 3;
+        cell.textContent = 'Join a game to see the leaderboard!';
+        row.appendChild(cell);
+        leaderboardBody.appendChild(row);
+        return;
+    }
+
+    leaderboardBody.innerHTML = '';
+    const header = document.getElementById('leaderboardMetricHeader');
+    if (header) {
+        header.textContent = leaderboardMetric === 'quests' ? 'Quests Completed' : 'Points';
+    }
+
+    const users = [...leaderboardData.top_users];
+    users.sort((a, b) => {
+        if (leaderboardMetric === 'quests') {
+            return b.completed_quests - a.completed_quests;
+        }
+        return b.total_points - a.total_points;
+    });
+
+    users.forEach((user, index) => {
+        const row = document.createElement('tr');
+        appendTableCell(row, index + 1);
+        const displayName = user.display_name || user.username;
+        appendTableCell(row, displayName, true, user.user_id);
+        const value = leaderboardMetric === 'quests' ? user.completed_quests : user.total_points;
+        appendTableCell(row, value);
+        leaderboardBody.appendChild(row);
+    });
 }
 
