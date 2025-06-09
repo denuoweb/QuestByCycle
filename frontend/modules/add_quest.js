@@ -5,8 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const descriptionEl = document.querySelector('#description-editor');
   const tipsEl        = document.querySelector('#tips-editor');
 
-  const quillDescription = (descriptionEl && window.Quill) ? initQuill(descriptionEl) : null;
-  const quillTips        = (tipsEl && window.Quill) ? initQuill(tipsEl) : null;
+  const quillDescription = (descriptionEl && window.Quill)
+    ? initQuill(descriptionEl, '#description')
+    : null;
+  const quillTips = (tipsEl && window.Quill)
+    ? initQuill(tipsEl, '#tips')
+    : null;
   if ((!window.Quill) && (descriptionEl || tipsEl)) {
     console.error('Quill library not found  quest editor will not work.');
   }
