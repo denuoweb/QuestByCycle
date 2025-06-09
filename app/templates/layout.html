@@ -72,6 +72,7 @@
   <script src="{{ url_for('static', filename='js/3rd/katex.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/3rd/quill.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/quill_common.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
 </head>
 
 <body data-user-id="{{ current_user.id if current_user.is_authenticated else 'none' }}">
@@ -312,7 +313,6 @@
      data-messages='{{ get_flashed_messages(with_categories=true) | tojson }}'>
 </div>
 
-<script src="{{ url_for('static', filename='js/utils.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/modal_common.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/layout.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/push.js') }}" defer></script>
