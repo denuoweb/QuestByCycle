@@ -1,8 +1,6 @@
-import { computePosition, offset, flip } from 'https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.6.10/+esm';
 
 document.addEventListener('DOMContentLoaded', function () {
     const submitPhotoForm = document.getElementById('submitPhotoForm');
-    const floatingModal = document.getElementById('floating-modal');
     let isSubmitting = false;
 
     // Handle form submission
@@ -24,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        showFloatingModal();
+        showLoadingModal();
 
         const formData = new FormData(submitPhotoForm);
 
@@ -59,24 +57,10 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .finally(() => {
             isSubmitting = false;
-            hideFloatingModal();
+            hideLoadingModal();
         });
     });
 
-    function showFloatingModal() {
-        floatingModal.style.display = 'block';
-        computePosition(submitPhotoForm, floatingModal, {
-            placement: 'top',
-            middleware: [offset(10), flip()]
-        }).then(({ x, y }) => {
-            floatingModal.style.left = `${x}px`;
-            floatingModal.style.top = `${y}px`;
-        });
-    }
-
-    function hideFloatingModal() {
-        floatingModal.style.display = 'none';
-    }
 
     function displayFlashMessage(message, category) {
         const flashMessagesDiv = document.getElementById('flash-messages');

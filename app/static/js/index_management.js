@@ -95,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
     contactForm.addEventListener('submit', async e => {
       e.preventDefault();
       const formData = new FormData(contactForm);
+      showLoadingModal();
       try {
         const r = await fetch(contactForm.action, {
           method: 'POST',
@@ -110,6 +111,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch {
         alert('Failed to send your message. Please try again.');
+      } finally {
+        hideLoadingModal();
       }
     });
   }
