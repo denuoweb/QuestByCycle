@@ -63,7 +63,7 @@ async function ensureBadgeCache() {
 function buildTaskListHTML(taskNames) {
   if (!taskNames) return '';
   const tasks = taskNames.split(',');
-  return `<ul>${tasks.map(task => `<li>${task.trim()}</li>`).join('')}</ul>`;
+  return `<ul>${tasks.map(task => `<li>${escapeHTML(task.trim())}</li>`).join('')}</ul>`;
 }
 
 function findBadgeById(badgeId) {
