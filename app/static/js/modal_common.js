@@ -127,18 +127,7 @@ function openRegisterModalWithOptions(options = {}) {
     closeModal('loginModal');
     openModal('registerModal');
   }
-  
 
-function handleGameSelection(selectElement) {
-    const selectedValue = selectElement.value;
-
-    // Open the "Join Custom Game" modal if selected
-    if (selectedValue === 'join_custom_game') {
-        openModal('joinCustomGameModal');
-    } else {
-        window.location.href = selectedValue;
-    }
-}
 
 function openLoginModalWithGame({ gameId, questId = '' }) {
     const loginForm       = document.getElementById('loginForm');

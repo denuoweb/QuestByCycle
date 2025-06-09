@@ -95,7 +95,11 @@ document.addEventListener('DOMContentLoaded', function() {
   window.handleGameSelection = function(opt) {
     var val = opt.value;
     if (val === 'join_custom_game') {
-      openModal('joinCustomGameModal');
+      if (typeof openModal === 'function') {
+        openModal('joinCustomGameModal');
+      } else {
+        window.location.href = '/?show_join_custom=1';
+      }
     } else {
       window.location.href = val;
     }
