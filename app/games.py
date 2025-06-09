@@ -64,6 +64,22 @@ def sanitize_html(html_content):
 
 games_bp = Blueprint('games', __name__, url_prefix='/games')
 
+def serialize_game(game):
+    """Return a dictionary representation of a ``Game``."""
+    return {
+        "id": game.id,
+        "title": game.title,
+        "name": game.title,
+        "description": game.description,
+        "start_date": game.start_date.isoformat() if game.start_date else None,
+        "end_date": game.end_date.isoformat() if game.end_date else None,
+        "game_goal": game.game_goal,
+        "is_public": game.is_public,
+        "allow_joins": game.allow_joins,
+    }
+
+
+games_bp = Blueprint('games', __name__)
 
 @games_bp.route('/create_game', methods=['GET', 'POST'])
 @login_required
@@ -497,16 +513,5 @@ def generate_qr_for_game(game_id):
 
 @games_bp.route('/get_game/<int:game_id>', methods=['GET'])
 def get_game(game_id):
-    game = Game.query.get(game_id)
-    if not game:
-        return jsonify(error="Game not found"), 404
-
-    try:
-        return jsonify(
-            id=game.id,
-            name=game.name or '',
-            game_goal=game.goal
-        )
-    except Exception:
-        current_app.logger.exception("Error in get_game")
-        return jsonify(error="Internal server error"), 500
+    game = Game.query.get_or_404(game_id)
+    return jsonify(serialize_game(game))
