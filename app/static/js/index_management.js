@@ -116,15 +116,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const quillEditorContainer = document.getElementById('quill-editor');
   if (quillEditorContainer) {
-    const quill = new Quill('#quill-editor', {
-      theme: 'snow',
+    const quill = initQuill('#quill-editor', '#message-input', {
       placeholder: 'Write a message...',
       modules: { toolbar: [[{ header: [1, 2, false] }], ['bold', 'italic', 'underline'], ['link'], [{ list: 'ordered' }, { list: 'bullet' }], ['clean']] }
     });
-    document.querySelector('form').onsubmit = () => {
-      document.querySelector('#message-input').value = quill.root.innerHTML;
-      return true;
-    };
+    document.querySelector('form').onsubmit = () => true;
   }
 
   document.querySelectorAll('.activity-message').forEach(el => {

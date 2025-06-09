@@ -215,22 +215,7 @@
             cell.innerHTML = '';
             cell.appendChild(editor);
             
-            const quill = new Quill(editor, {
-                theme: 'snow',
-                modules: {
-                    toolbar: [
-                        [{ 'font': [] }, { 'size': [] }],
-                        ['bold', 'italic', 'underline', 'strike'],
-                        [{ 'color': [] }, { 'background': [] }],
-                        [{ 'script': 'sub'}, { 'script': 'super' }],
-                        [{ 'header': 1 }, { 'header': 2 }, { 'header': 3 }, { 'header': 4 }, { 'header': 5 }, { 'header': 6 }, 'blockquote', 'code-block'],
-                        [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
-                        [{ 'direction': 'rtl' }, { 'align': [] }],
-                        ['link', 'image', 'video', 'formula'],
-                        ['clean']
-                    ]
-                }
-            });
+            const quill = initQuill(editor);
 
             quill.root.innerHTML = currentValue;
             cell.__quill = quill;
@@ -453,42 +438,12 @@
             const tipsEditorContainer = card.querySelector('.quill-editor-container[data-name="tips"]');
 
             if (descriptionEditorContainer && !descriptionEditorContainer.__quill) {
-                const quillDescription = new Quill(descriptionEditorContainer, {
-                    theme: 'snow',
-                    modules: {
-                        toolbar: [
-                            [{ 'font': [] }, { 'size': [] }],
-                            ['bold', 'italic', 'underline', 'strike'],
-                            [{ 'color': [] }, { 'background': [] }],
-                            [{ 'script': 'sub'}, { 'script': 'super' }],
-                            [{ 'header': 1 }, { 'header': 2 }, { 'header': 3 }, { 'header': 4 }, { 'header': 5 }, { 'header': 6 }, 'blockquote', 'code-block'],
-                            [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
-                            [{ 'direction': 'rtl' }, { 'align': [] }],
-                            ['link', 'image', 'video', 'formula'],
-                            ['clean']
-                        ]
-                    }
-                });
+                const quillDescription = initQuill(descriptionEditorContainer);
                 descriptionEditorContainer.__quill = quillDescription;
             }
 
             if (tipsEditorContainer && !tipsEditorContainer.__quill) {
-                const quillTips = new Quill(tipsEditorContainer, {
-                    theme: 'snow',
-                    modules: {
-                        toolbar: [
-                            [{ 'font': [] }, { 'size': [] }],
-                            ['bold', 'italic', 'underline', 'strike'],
-                            [{ 'color': [] }, { 'background': [] }],
-                            [{ 'script': 'sub'}, { 'script': 'super' }],
-                            [{ 'header': 1 }, { 'header': 2 }, { 'header': 3 }, { 'header': 4 }, { 'header': 5 }, { 'header': 6 }, 'blockquote', 'code-block'],
-                            [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
-                            [{ 'direction': 'rtl' }, { 'align': [] }],
-                            ['link', 'image', 'video', 'formula'],
-                            ['clean']
-                        ]
-                    }
-                });
+                const quillTips = initQuill(tipsEditorContainer);
                 tipsEditorContainer.__quill = quillTips;
             }
         }

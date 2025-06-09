@@ -5,13 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalId   = 'shoutBoardModal';
   const formEl    = document.getElementById('shoutBoardForm');
   const submitBtn = document.getElementById('shoutSubmitBtn');
-  let   quill     = null;
+  let quill = null;
 
   /* -------------------- initialise Quill once -------------------- */
   if (window.Quill) {
-    quill = new Quill('#shoutQuillEditor', {
-      theme       : 'snow',
-      placeholder : 'Write an announcement…'
+    quill = initQuill('#shoutQuillEditor', '#shoutMessageInput', {
+      placeholder: 'Write an announcement…'
     });
   } else {
     console.error('Quill library not found  shoutboard editor will not work.');
