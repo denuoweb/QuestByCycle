@@ -1,5 +1,7 @@
 import { initLayout } from './layout.js';
 import './utils.js';
+// Ensure global helpers are loaded before any module uses them
+import './modules/quill_common.js';
 
 // Import all modularized scripts so Vite bundles them
 import './modules/add_quest.js';
@@ -24,7 +26,6 @@ import './modules/modal_common.js';
 import './modules/notifications.js';
 import './modules/push.js';
 import './modules/quest_detail_modal.js';
-import './modules/quill_common.js';
 import './modules/register_modal.js';
 import './modules/reset_password_modal.js';
 import './modules/shout_board_modal.js';

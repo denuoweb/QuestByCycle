@@ -620,4 +620,8 @@ function toggleContent(element) {
 }
 
 
+// Expose globally for inline handlers
+window.openQuestDetailModal = openQuestDetailModal;
+window.refreshQuestDetailModal = refreshQuestDetailModal;
+
 export {};

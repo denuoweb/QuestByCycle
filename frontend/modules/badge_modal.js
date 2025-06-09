@@ -166,4 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ensureBadgeCache();
 });
 
+// Expose globally for inline handlers
+window.openBadgeModal = openBadgeModal;
+
 export {};
