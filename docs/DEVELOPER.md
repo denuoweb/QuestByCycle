@@ -328,7 +328,7 @@ Before deploying to production, ensure the following settings in `config.toml`:
         script-src 'self' 'unsafe-inline' https://code.jquery.com https://cdnjs.cloudflare.com https://stackpath.bootstrapcdn.com https://cdn.jsdelivr.net https://code.jquery.com https://cdnjs.cloudflare.com https://www.googletagmanager.com;
         style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
         img-src 'self' data:;
-        font-src 'self' data: https://cdn.jsdelivr.net;
+        font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
         connect-src 'self' https://www.google-analytics.com https://questbycycle.org wss://questbycycle.org;
         frame-src 'self';
         object-src 'none';
