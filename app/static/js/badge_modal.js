@@ -9,8 +9,8 @@ window.allBadges = window.allBadges || [];
 async function fetchAllBadges() {
   const gameHolder = document.getElementById("game_IdHolder");
   const selectedGameId = gameHolder ? gameHolder.getAttribute("data-game-id") : null;
-  // Avoid a redirect by hitting the route with the trailing slash
-  const url = new URL('/badges/', window.location.origin);
+  // Hit the badge endpoint directly without a trailing slash
+  const url = new URL('/badges', window.location.origin);
   if (selectedGameId && !isNaN(parseInt(selectedGameId, 10)) && selectedGameId !== "0") {
     url.searchParams.set('game_id', selectedGameId);
   }
