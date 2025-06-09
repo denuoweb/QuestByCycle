@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pwdError.style.display = 'none';
     forgotDiv.innerHTML   = '';
 
-    submitFormJson(form)
+    window.submitFormJson(form)
       .then(({ json }) => {
         if (json.success) {
           window.location.href = json.redirect;
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
             a.href      = 'javascript:void(0)';
             a.textContent = 'Forgot password?';
             a.className = 'd-block mt-1';
-            a.onclick   = openForgotPasswordModal;
+            a.onclick   = window.openForgotPasswordModal;
             forgotDiv.appendChild(a);
           }
         }

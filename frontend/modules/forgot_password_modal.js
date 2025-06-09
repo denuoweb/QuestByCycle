@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     emailErr.style.display   = 'none';
     successDiv.style.display = 'none';
 
-    submitFormJson(form)
+    window.submitFormJson(form)
       .then(({ json }) => {
         if (json.success) {
           successDiv.textContent   = json.message;
