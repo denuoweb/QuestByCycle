@@ -10,31 +10,24 @@ document.addEventListener('DOMContentLoaded', () => {
     pwdError.style.display = 'none';
     forgotDiv.innerHTML   = '';
 
-    const data = new FormData(form);
-    fetch(form.action, {
-      method: 'POST',
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },
-      credentials: 'same-origin',
-      body: data
-    })
-    .then(r => r.json().then(payload => ({ status: r.status, payload })))
-    .then(({ payload }) => {
-      if (payload.success) {
-        window.location.href = payload.redirect;
-      } else {
-        pwdError.textContent = payload.error;
-        pwdError.style.display = 'block';
-        if (payload.show_forgot) {
-          const a = document.createElement('a');
-          a.href      = 'javascript:void(0)';
-          a.textContent = 'Forgot password?';
-          a.className = 'd-block mt-1';
-          a.onclick   = openForgotPasswordModal;
-          forgotDiv.appendChild(a);
+    submitFormJson(form)
+      .then(({ json }) => {
+        if (json.success) {
+          window.location.href = json.redirect;
+        } else {
+          pwdError.textContent = json.error;
+          pwdError.style.display = 'block';
+          if (json.show_forgot) {
+            const a = document.createElement('a');
+            a.href      = 'javascript:void(0)';
+            a.textContent = 'Forgot password?';
+            a.className = 'd-block mt-1';
+            a.onclick   = openForgotPasswordModal;
+            forgotDiv.appendChild(a);
+          }
         }
-      }
-    })
-    .catch(() => form.submit());
+      })
+      .catch(() => form.submit());
   });
 
   // email-exists check
