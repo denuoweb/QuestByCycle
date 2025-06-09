@@ -1,14 +1,36 @@
+
 const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
 
+let submissionsPage = 0;
+let submissionsGameId = null;
+let submissionsIsAdmin = false;
+let submissionsHasMore = false;
+
+
 function showAllSubmissionsModal(gameId) {
-    fetch(`/quests/quest/all_submissions?game_id=${gameId}`)
+    submissionsPage = 0;
+    submissionsGameId = gameId;
+
+    const container = document.getElementById('allSubmissionsContainer');
+    if (container) container.innerHTML = '';
+
+    openModal('allSubmissionsModal');
+    fetchSubmissions();
+}
+
+function fetchSubmissions() {
+    const offset = submissionsPage * 10;
+    fetch(`/quests/quest/all_submissions?game_id=${submissionsGameId}&offset=${offset}&limit=10`)
         .then(response => response.json())
         .then(data => {
             if (data.error) {
                 throw new Error(data.error);
             }
-            displayAllSubmissions(data.submissions, data.is_admin);
-            openModal('allSubmissionsModal'); // Ensure this is the last modal opened if stacking
+            submissionsIsAdmin = data.is_admin;
+            submissionsHasMore = data.has_more;
+            displayAllSubmissions(data.submissions, submissionsIsAdmin, submissionsPage > 0);
+            toggleLoadMoreButton(submissionsHasMore);
+            submissionsPage += 1;
         })
         .catch(error => {
             console.error('Error fetching all submissions:', error);
@@ -16,13 +38,15 @@ function showAllSubmissionsModal(gameId) {
         });
 }
 
-function displayAllSubmissions(submissions, isAdmin) {
+function displayAllSubmissions(submissions, isAdmin, append = false) {
     const container = document.getElementById('allSubmissionsContainer');
     if (!container) {
         console.error('allSubmissionsContainer element not found.');
         return;  // Exit if the container element is not found
     }
-    container.innerHTML = ''; // Clear previous submissions
+    if (!append) {
+        container.innerHTML = ''; // Clear previous submissions
+    }
     submissions.forEach(submission => {
         const card = document.createElement('div');
         card.className = 'submission-card';
@@ -131,3 +155,19 @@ function deleteSubmission(submissionId) {
             alert('Error during deletion: ' + error.message);
         });
 }
+
+function toggleLoadMoreButton(show) {
+    const btn = document.getElementById('loadMoreSubmissions');
+    if (btn) {
+        btn.style.display = show ? 'block' : 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('loadMoreSubmissions');
+    if (btn) {
+        btn.addEventListener('click', () => {
+            fetchSubmissions();
+        });
+    }
+});

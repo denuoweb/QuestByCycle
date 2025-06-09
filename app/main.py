@@ -17,7 +17,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import joinedload
 from typing import Any, List
 from datetime import datetime, timedelta
-from PIL import Image, ExifTags, UnidentifiedImageError
+from PIL import Image, UnidentifiedImageError
 from datetime import timezone
 
 UTC = timezone.utc
@@ -31,6 +31,7 @@ from app.utils import (
     save_bicycle_picture,
     send_email,
     sanitize_html,
+    correct_image_orientation,
 )
 from .config import load_config
 
@@ -674,6 +675,8 @@ def _coerce_to_list(raw: Any) -> List[str]:
     return []
 
 
+
+
 @main_bp.route('/profile/<int:user_id>/edit', methods=['POST'])
 @login_required
 def edit_profile(user_id):
@@ -868,26 +871,7 @@ def resize_image():
             return jsonify({'error': 'File not found'}), 404
 
         with Image.open(full_image_path) as img:
-                                                       
-            orientation_tag = None
-            for tag, value in ExifTags.TAGS.items():
-                if value == 'Orientation':
-                    orientation_tag = tag
-                    break
-
-            try:
-                exif = img._getexif()
-                if exif is not None and orientation_tag in exif:
-                    orientation_value = exif.get(orientation_tag)
-                    if orientation_value == 3:
-                        img = img.rotate(180, expand=True)
-                    elif orientation_value == 6:
-                        img = img.rotate(-90, expand=True)
-                    elif orientation_value == 8:
-                        img = img.rotate(90, expand=True)
-            except (AttributeError, KeyError, IndexError):
-                pass
-
+            img = correct_image_orientation(img)
             ratio = width / float(img.width)
             height = int(img.height * ratio)
             img_resized = img.resize((width, height), Image.Resampling.LANCZOS)
