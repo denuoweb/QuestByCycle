@@ -295,6 +295,7 @@ def submit_quest(quest_id):
         total_points = sum(
             ut.points_awarded for ut in UserQuest.query.filter_by(user_id=current_user.id)
         )
+        total_completion_count = QuestSubmission.query.filter_by(quest_id=quest_id).count()
 
                                                          
         activity = None
@@ -310,6 +311,7 @@ def submit_quest(quest_id):
         return jsonify({
             "success": True,
             "new_completion_count": user_quest.completions,
+            "total_completion_count": total_completion_count,
             "total_points": total_points,
             "image_url": public_media_url(image_url),
             "video_url": public_media_url(video_url),

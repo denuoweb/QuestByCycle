@@ -288,7 +288,7 @@
                     </thead>
                     <tbody id="questTableBody">
                         {% for quest in quests %}
-                        <tr class="quest-row" data-category="{{ quest.category or 'Not Set' }}">
+                        <tr class="quest-row" data-category="{{ quest.category or 'Not Set' }}" data-quest-id="{{ quest.id }}">
                             <td class="quest-title-cell">
                                 <button
                                 type="button"
