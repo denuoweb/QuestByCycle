@@ -341,7 +341,14 @@
     {% include 'modals/generate_AI_quest_modal.html' %}
     {% include 'modals/sponsors_modal.html' %}
     {% include 'modals/reset_password_modal.html' %}
+
+{% endblock %}
+
+{% block extra_styles %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/3rd/fontawesome/all.min.css') }}">
+{% endblock %}
+
+{% block extra_scripts %}
     <script src="{{ url_for('static', filename='js/shout_board_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
     <script src="{{ url_for('static', filename='js/badge_modal.js') }}"></script>
@@ -353,5 +360,4 @@
     <script src="{{ url_for('static', filename='js/user_profile_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/index_management.js') }}"></script>
     <script src="{{ url_for('static', filename='js/generated_quest.js') }}"></script>
-
 {% endblock %}
