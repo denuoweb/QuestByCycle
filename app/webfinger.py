@@ -1,13 +1,21 @@
 from flask import Blueprint, current_app, request, abort, Response, json
 from app.models import db, User
 from urllib.parse import unquote
-import re
+import string
 
 webfinger_bp = Blueprint('webfinger', __name__)
 
-USERNAME_RE = re.compile(
-    r'^[A-Za-z0-9_]+(?:[A-Za-z0-9_.-]*[A-Za-z0-9_])?$'
-)
+ALLOWED_USERNAME_CHARS = set(string.ascii_letters + string.digits + '_.-')
+BOUNDARY_USERNAME_CHARS = set(string.ascii_letters + string.digits + '_')
+
+
+def valid_username(name: str) -> bool:
+    """Return True if ``name`` is a syntactically valid username."""
+    if not name or len(name) > 64:
+        return False
+    if name[0] not in BOUNDARY_USERNAME_CHARS or name[-1] not in BOUNDARY_USERNAME_CHARS:
+        return False
+    return all(c in ALLOWED_USERNAME_CHARS for c in name)
 
 @webfinger_bp.route('/.well-known/webfinger', methods=['GET'])
 def webfinger():
@@ -25,7 +33,7 @@ def webfinger():
     if host != current_app.config['LOCAL_DOMAIN'].lower():
         abort(404)
 
-    if not USERNAME_RE.match(userpart) or len(userpart) > 64:
+    if not valid_username(userpart):
         abort(400, "Invalid username syntax")
 
     user = User.query.filter(
