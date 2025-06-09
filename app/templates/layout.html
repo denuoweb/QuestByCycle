@@ -60,6 +60,8 @@
   <link rel="preload" href="{{ url_for('static', filename='css/atom-one-dark.min.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='css/atom-one-dark.min.css') }}"></noscript>
 
+  {# Block for page-specific stylesheets #}
+  {% block extra_styles %}{% endblock %}
 
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta name="current-user-id" content="{{ current_user.id }}">
@@ -318,6 +320,8 @@
 <script src="{{ url_for('static', filename='js/push.js') }}" defer></script>
 
 <script src="{{ url_for('static', filename='js/flash_modal.js') }}" defer></script>
+
+{% block extra_scripts %}{% endblock %}
 
 </body>
 </html>

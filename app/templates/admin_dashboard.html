@@ -70,11 +70,13 @@
 {% include 'modals/leaderboard_modal.html' %}
 {% include 'modals/delete_game_modal.html' %}
 
+{% endblock %}
+
+{% block extra_scripts %}
 <script src="{{ url_for('static', filename='js/all_submissions_modal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/game_info_modal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/user_profile_modal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/leaderboard_modal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/index_management.js') }}"></script>
 <script src="{{ url_for('static', filename='js/delete_game_modal.js') }}"></script>
-
 {% endblock %}
