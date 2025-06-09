@@ -1,4 +1,3 @@
-import { initQuill } from './quill_common.js';
 import { showLoadingModal, hideLoadingModal } from './loading_modal.js';
 import { showLeaderboardModal } from './leaderboard_modal.js';
 const refreshCSRFToken = async () => {
@@ -123,25 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const quillEditorContainer = document.getElementById('quill-editor');
-  if (quillEditorContainer) {
-    if (window.Quill) {
-      const quill = initQuill(quillEditorContainer, '#message-input', {
-        placeholder: 'Write a message...',
-        modules: {
-          toolbar: [
-            [{ header: [1, 2, false] }],
-            ['bold', 'italic', 'underline'],
-            ['link'],
-            [{ list: 'ordered' }, { list: 'bullet' }],
-            ['clean']
-          ]
-        }
-      });
-      document.querySelector('form').onsubmit = () => true;
-    } else {
-      console.error('Quill library not found  message editor will not work.');
-    }
+  const messageInput = document.getElementById('message-input');
+  if (messageInput) {
+    document.querySelector('form').onsubmit = () => true;
   }
 
   document.querySelectorAll('.activity-message').forEach(el => {

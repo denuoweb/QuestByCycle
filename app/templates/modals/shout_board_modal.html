@@ -11,8 +11,7 @@
       <form id="shoutBoardForm" action="{{ url_for('main.shout_board', game_id=selected_game_id) }}"
             method="post">
         {{ form.hidden_tag() }}
-        <input type="hidden" name="message" id="shoutMessageInput">
-        <div id="shoutQuillEditor"></div>
+        <textarea id="shoutMessageInput" name="message" class="form-control" rows="4"></textarea>
       </form>
     </div>
 

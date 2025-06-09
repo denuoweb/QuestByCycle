@@ -13,13 +13,11 @@
         </div>
         <div class="form-group">
             <label for="description">Game Description</label>
-            <div id="description" class="quill-editor"></div>
-            <textarea name="description" id="description-textarea" hidden>{{ form.description.data }}</textarea>
+            {{ form.description(class_="form-control", id="description") }}
         </div>
         <div class="form-group">
             <label for="description2">Quest Instructions</label>
-            <div id="description2" class="quill-editor"></div>
-            <textarea name="description2" id="description2-textarea" hidden>{{ form.description2.data }}</textarea>
+            {{ form.description2(class_="form-control", id="description2") }}
         </div>
         <div class="form-group">
             <label for="start_date">Start Date</label>
@@ -35,18 +33,15 @@
         </div>
         <div class="form-group">
             <label for="details">Game Details</label>
-            <div id="details" class="quill-editor"></div>
-            <textarea name="details" id="details-textarea" hidden>{{ form.details.data }}</textarea>
+            {{ form.details(class_="form-control", id="details") }}
         </div>
         <div class="form-group">
             <label for="awards">Awards Information</label>
-            <div id="awards" class="quill-editor"></div>
-            <textarea name="awards" id="awards-textarea" hidden>{{ form.awards.data }}</textarea>
+            {{ form.awards(class_="form-control", id="awards") }}
         </div>
         <div class="form-group">
             <label for="beyond">Beyond the Game</label>
-            <div id="beyond" class="quill-editor"></div>
-            <textarea name="beyond" id="beyond-textarea" hidden>{{ form.beyond.data }}</textarea>
+            {{ form.beyond(class_="form-control", id="beyond") }}
         </div>
         <div class="form-group">
             <label for="leaderboard_image">Leaderboard Background Image (height: 400px; .png only)</label>
