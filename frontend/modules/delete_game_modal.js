@@ -1,3 +1,5 @@
+import { openModal } from './modal_common.js';
+
 let deleteInterval;
 
 export function openDeleteGameModal(gameId) {
