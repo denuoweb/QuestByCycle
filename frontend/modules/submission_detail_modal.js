@@ -1,3 +1,5 @@
+import { resetModalContent } from './modal_common.js';
+
 document.addEventListener('DOMContentLoaded', () => {
 
   const $    = s => document.querySelector(s);
