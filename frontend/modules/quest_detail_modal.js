@@ -16,7 +16,7 @@ window.PLACEHOLDER_IMAGE = PLACEHOLDER_IMAGE;
 /* ------------------------------------------------------------------ */
 /*  OPEN QUEST DETAIL MODAL                                           */
 /* ------------------------------------------------------------------ */
-function openQuestDetailModal(questId) {
+export function openQuestDetailModal(questId) {
   resetModalContent();
 
   fetch(`/quests/detail/${questId}/user_completion`, { credentials: 'same-origin' })

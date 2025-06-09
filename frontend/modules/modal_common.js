@@ -1,7 +1,7 @@
 let topZIndex = 3000;
 let scrollY = 0;
 
-function openModal(modalId) {
+export function openModal(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) {
     console.error(`Modal ${modalId} not found`);
@@ -106,12 +106,12 @@ function updateModalHiddenFields(modalId, options) {
     }
 }
 
-function openLoginModalWithOptions(options) {
+export function openLoginModalWithOptions(options) {
     updateModalHiddenFields('loginModal', options);
     openModal('loginModal');
 }
 
-function openRegisterModalWithOptions(options = {}) {
+export function openRegisterModalWithOptions(options = {}) {
     // 1) rewrite the <form> action so a full‐page POST carries the same ?game_id…etc
     const form = document.getElementById('registerForm');
     const base = form.getAttribute('action').split('?')[0];
@@ -136,7 +136,7 @@ function openRegisterModalWithOptions(options = {}) {
   }
 
 
-function openLoginModalWithGame({ gameId, questId = '' }) {
+export function openLoginModalWithGame({ gameId, questId = '' }) {
     const loginForm       = document.getElementById('loginForm');
     const loginGameId     = document.getElementById('loginGameId');
     const loginQuestId    = document.getElementById('loginQuestId');
@@ -202,7 +202,7 @@ function openLoginModalWithGame({ gameId, questId = '' }) {
   }
 
 // Call this to show the Forgot Password modal and pre-fill its email
-function openForgotPasswordModal() {
+export function openForgotPasswordModal() {
     const loginEmailVal   = document.getElementById('loginEmail')?.value || '';
     const forgotEmailInput = document.getElementById('forgotEmail');
     if (forgotEmailInput) {
@@ -219,7 +219,7 @@ function openForgotPasswordModal() {
 }
 
 // Opens the Reset-Password modal, injecting the token from the URL
-function openResetPasswordModal(token) {
+export function openResetPasswordModal(token) {
     const form    = document.getElementById('resetForm');
     const input   = document.getElementById('resetToken');
     // Read the base action URL that Flask already rendered
