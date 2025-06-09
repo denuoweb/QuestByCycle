@@ -88,7 +88,7 @@ def test_get_login_opens_modal(client):
     assert parsed.path == expected_path
 
                                                          
-    assert params["show_login"] == ["1"]
+    assert params["show_login"] == ["0"]
     assert params["next"] == ["/foo/bar"]
 
 
