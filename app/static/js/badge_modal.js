@@ -2,6 +2,24 @@
 
 // Cache all badges in a global variable once loaded
 window.allBadges = window.allBadges || [];
+const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
+
+/**
+ * Validate that a given URL is a safe image source.
+ * @param {string} url - The URL to validate.
+ * @returns {string} - The validated URL or the placeholder image.
+*/
+function validateImageUrl(url) {
+  try {
+    const parsedUrl = new URL(url, window.location.origin);
+    if (parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:') {
+      return url;
+    }
+  } catch (e) {
+    // Invalid URL
+  }
+  return PLACEHOLDER_IMAGE;
+}
 
 /**
  * Fetch badges from the server. Updates the global cache and returns it.
@@ -55,7 +73,7 @@ function getBadgeFromElement(element) {
     id: element.getAttribute('data-badge-id'),
     name: element.getAttribute('data-badge-name') || 'Badge',
     description: element.getAttribute('data-badge-description') || '',
-    image: element.getAttribute('data-badge-image') || 'static/images/default_badge.png'
+    image: element.getAttribute('data-badge-image') || PLACEHOLDER_IMAGE
   };
 }
 
@@ -74,7 +92,7 @@ function populateBadgeModal(badge, requiredCount, currentUserCompletions, taskLi
   const modalText  = document.getElementById('badgeModalText');
 
   modalTitle.textContent = badge.name;
-  modalImage.src = badge.image || 'static/images/default_badge.png';
+  modalImage.src = validateImageUrl(badge.image) || PLACEHOLDER_IMAGE;
 
   let badgeSpecificText = '';
   if (taskId) {

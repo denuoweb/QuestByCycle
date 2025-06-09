@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const $    = s => document.querySelector(s);
   const csrf = () => document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
 
   window.showSubmissionDetail = function(image) {
     const modal = $('#submissionDetailModal');
@@ -135,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // set picture & caption
-    el.profileImg.src        = image.user_profile_picture || '/static/images/default_profile.png';
+    el.profileImg.src        = image.user_profile_picture || PLACEHOLDER_IMAGE;
     el.profileImgOverlay.src = el.profileImg.src;
     el.profileCap.textContent = image.user_display_name || image.user_username || '—';
 
@@ -147,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el.imgOverlay.parentElement.onclick = el.profileLink.onclick;
 
     // submission image & comment
-    const placeholder = '/static/images/default-placeholder.webp';
+    const placeholder = PLACEHOLDER_IMAGE;
     if (image.video_url) {
       el.img.hidden = true;
       el.video.hidden = false;

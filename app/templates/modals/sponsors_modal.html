@@ -19,7 +19,7 @@
                                     <img class="card-img-top" src="{{ url_for('static', filename=sponsor.logo) }}" alt="{{ sponsor.name }} logo">
                                 {% else %}
                                     <!-- Optionally render a default image if a sponsor logo is missing -->
-                                    <img class="card-img-top" src="{{ url_for('static', filename='images/default_logo.png') }}" alt="Default logo">
+                                    <img class="card-img-top" src="{{ placeholder_image }}" alt="Default logo">
                                 {% endif %}
                                 <div class="card-body bg-light">
                                     <p class="card-text">{{ sponsor.description | safe }}</p>

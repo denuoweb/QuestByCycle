@@ -10,6 +10,7 @@ function meta(name) {
 /*  Current user ID and CSRF token pulled from <meta> tags.           */
 const CURRENT_USER_ID = Number(meta('current-user-id') || 0);
 const CSRF_TOKEN      = meta('csrf-token');
+const PLACEHOLDER_IMAGE = meta('placeholder-image');
 
 /* ------------------------------------------------------------------ */
 /*  OPEN QUEST DETAIL MODAL                                           */
@@ -157,7 +158,7 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
             break;
     }
 
-    const badgeImagePath = quest.badge && quest.badge.image ? `/static/images/badge_images/${quest.badge.image}` : '/static/images/badge_images/default_badge.png';
+    const badgeImagePath = quest.badge && quest.badge.image ? `/static/images/badge_images/${quest.badge.image}` : PLACEHOLDER_IMAGE;
     elements['modalQuestBadgeImage'].src = badgeImagePath;
     elements['modalQuestBadgeImage'].alt = quest.badge && quest.badge.name ? `Badge: ${quest.badge.name}` : 'Default Badge';
 
@@ -481,12 +482,12 @@ async function fetchSubmissions(questId) {
       } else {
         vidEl.hidden = true;
         imgEl.hidden = false;
-        imgEl.src    = s.image_url || '/static/images/default-placeholder.webp';
+        imgEl.src    = s.image_url || PLACEHOLDER_IMAGE;
       }
       commentEl.textContent = s.comment || 'No comment provided.';
 
       profileLink.href   = `/profile/${s.user_id}`;
-      profileImg.src     = s.user_profile_picture || '/static/images/default_profile.png';
+      profileImg.src     = s.user_profile_picture || PLACEHOLDER_IMAGE;
       profileCaption.textContent =
         s.user_display_name || s.user_username || `User ${s.user_id}`;
 
@@ -502,7 +503,7 @@ async function fetchSubmissions(questId) {
       .reverse()                     // newest first
       .map(sub => ({
         id:                  sub.id,
-        url:                 sub.image_url || (sub.video_url ? null : '/static/images/default-placeholder.webp'),
+        url:                 sub.image_url || (sub.video_url ? null : PLACEHOLDER_IMAGE),
         video_url:           sub.video_url,
         alt:                 'Submission Image',
         comment:             sub.comment,
@@ -551,8 +552,8 @@ function distributeImages(images) {
     const rawFallbackRaw =
         document.getElementById('questDetailModal')
                 .getAttribute('data-placeholder-url') ||
-        '/static/images/default-placeholder.webp';
-    const rawFallback = isValidImageUrl(rawFallbackRaw) ? rawFallbackRaw : '/static/images/default-placeholder.webp';
+        PLACEHOLDER_IMAGE;
+    const rawFallback = isValidImageUrl(rawFallbackRaw) ? rawFallbackRaw : PLACEHOLDER_IMAGE;
 
     const isLocal   = url => url.startsWith('/static/');
     const localPath = url => url.replace(/^\/static\//, '');    // “images/foo.webp”

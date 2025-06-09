@@ -1,7 +1,11 @@
+
+const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
+
 let submissionsPage = 0;
 let submissionsGameId = null;
 let submissionsIsAdmin = false;
 let submissionsHasMore = false;
+
 
 function showAllSubmissionsModal(gameId) {
     submissionsPage = 0;
@@ -48,7 +52,7 @@ function displayAllSubmissions(submissions, isAdmin, append = false) {
         card.className = 'submission-card';
 
         const img = document.createElement('img');
-        img.src = submission.image_url || 'path/to/default/image.png';
+        img.src = submission.image_url || PLACEHOLDER_IMAGE;
         img.alt = 'Quest Submission';
         img.className = 'submission-image';
 

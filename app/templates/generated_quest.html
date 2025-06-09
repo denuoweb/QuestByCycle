@@ -70,7 +70,7 @@
         <input type="file" class="form-control" id="badge_image_filename" name="badge_image_filename">
         <button type="button" class="btn btn-secondary" id="generateAIImage">Generate AI Badge</button>
         <div id="aiBadgeContainer" class="mt-half">
-            <img id="aiBadgeImage" src="static/images/default_badge.png" alt="AI Generated Badge" class="d-none w-100" >
+            <img id="aiBadgeImage" src="{{ placeholder_image }}" alt="AI Generated Badge" class="d-none w-100" >
             <input type="hidden" id="aiBadgeFilename" name="ai_badge_filename" value="">
         </div>
     </div>

@@ -85,6 +85,10 @@ def load_config():
             "TASKCSV": _get_env("TASKCSV", _toml_config["main"]["TASKCSV"]),
             "LOCAL_DOMAIN": _get_env("LOCAL_DOMAIN", _toml_config["main"]["LOCAL_DOMAIN"]),
             "FFMPEG_PATH": _get_env("FFMPEG_PATH", _toml_config["main"].get("FFMPEG_PATH", "ffmpeg")),
+            "PLACEHOLDER_IMAGE": _get_env(
+                "PLACEHOLDER_IMAGE",
+                _toml_config["main"].get("PLACEHOLDER_IMAGE", "images/default-placeholder.webp"),
+            ),
         },
         "encryption": {
             "DEFAULT_SUPER_ADMIN_USERNAME": _get_env(
