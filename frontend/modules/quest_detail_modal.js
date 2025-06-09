@@ -392,6 +392,16 @@ function updateScoreboard(totalPoints) {
     if (el) el.innerText = `Total Completed Points: ${totalPoints}`;
 }
 
+function updateQuestRowCounts(questId, personalCount, totalCount) {
+    const row = document.querySelector(`#questTableBody tr[data-quest-id="${questId}"]`);
+    if (!row) return;
+    const cells = row.querySelectorAll('.quest-stats-cell');
+    if (cells.length >= 2) {
+        cells[0].innerText = personalCount;
+        cells[1].innerText = totalCount;
+    }
+}
+
 function updateSocialLinks(data) {
     toggleLink(document.getElementById('twitterLink'), data.twitter_url);
     toggleLink(document.getElementById('facebookLink'), data.fb_url);
@@ -445,6 +455,7 @@ async function submitQuestDetails(event, questId) {
 
     updateScoreboard(data.total_points);
     updateSocialLinks(data);
+    updateQuestRowCounts(questId, data.new_completion_count, data.total_completion_count);
 
     refreshQuestDetailModal(questId);
     event.target.reset();
