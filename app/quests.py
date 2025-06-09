@@ -925,26 +925,38 @@ def delete_submission(submission_id):
 
 @quests_bp.route("/quest/all_submissions", methods=["GET"])
 def get_all_submissions():
-    """
-    Get all submissions for a given game, joined with quest and user details.
+    """Return paginated submissions for a game.
 
     Query Parameters:
         game_id (int): The ID of the game.
+        offset  (int): Starting index for pagination (default 0).
+        limit   (int): Number of submissions to return (default 10).
     """
+
     game_id = request.args.get("game_id", type=int)
+    offset = request.args.get("offset", 0, type=int)
+    limit = request.args.get("limit", 10, type=int)
 
     if game_id is None:
         return
 
-    submissions = (
-        QuestSubmission.query.join(Quest, QuestSubmission.quest_id == Quest.id)
+    limit = max(1, min(limit, 100))
+
+    query = (
+        QuestSubmission.query
+        .join(Quest, QuestSubmission.quest_id == Quest.id)
         .join(User, QuestSubmission.user_id == User.id)
         .filter(Quest.game_id == game_id)
-        .all()
+        .order_by(QuestSubmission.timestamp.desc())
     )
 
+    submissions = query.offset(offset).limit(limit + 1).all()
+
+    has_more = len(submissions) > limit
+    submissions = submissions[:limit]
+
     if not submissions:
-        return jsonify({"submissions": []})
+        return jsonify({"submissions": [], "has_more": False, "is_admin": current_user.is_admin})
 
     submissions_data = [
         {
@@ -970,7 +982,11 @@ def get_all_submissions():
     ]
 
     return jsonify(
-        {"submissions": submissions_data, "is_admin": current_user.is_admin}
+        {
+            "submissions": submissions_data,
+            "is_admin": current_user.is_admin,
+            "has_more": has_more,
+        }
     )
 
 
