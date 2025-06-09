@@ -161,7 +161,7 @@ function deleteBadge(badgeId) {
     fetch(`/badges/delete/${badgeId}`, {
         method: 'DELETE',
         headers: {
-            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-CSRFToken': getCSRFToken(),
         },
     })
     .then(response => response.json())
@@ -184,7 +184,7 @@ function uploadImages() {
         method: 'POST',
         body: formData,
         headers: {
-            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-CSRFToken': getCSRFToken(),
         },
     })
     .then(response => response.json())

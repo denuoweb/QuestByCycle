@@ -31,7 +31,7 @@
             method: 'POST',
             body: formData,
             headers: {
-                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-CSRF-Token': getCSRFToken(),
                 'Accept': 'application/json'
             },
         })
@@ -88,7 +88,7 @@
                     fetch(`/quests/game/${game_Id}/delete_all`, {
                         method: 'DELETE',
                         headers: {
-                            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'X-CSRF-Token': getCSRFToken(),
                             'Accept': 'application/json',
                         },
                     })
@@ -282,7 +282,7 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-CSRF-Token': getCSRFToken(),
             },
             body: JSON.stringify(questData),
         })
@@ -361,7 +361,7 @@
         fetch(`/quests/quest/${questId}/delete`, {
             method: 'DELETE',
             headers: {
-                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-CSRF-Token': getCSRFToken(),
                 'Accept': 'application/json',
             },
         })
@@ -391,7 +391,7 @@
             method: 'POST',
             body: formData,
             headers: {
-                'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-CSRF-Token': getCSRFToken(),
                 'Accept': 'application/json',
             },
         })

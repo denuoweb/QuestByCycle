@@ -141,7 +141,7 @@ function deleteSubmission(submissionId) {
     fetch(`/quests/quest/delete_submission/${submissionId}`, {
         method: 'DELETE',
         headers: {
-            'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            'X-CSRF-Token': getCSRFToken()
         }
     })
         .then(response => response.json())
