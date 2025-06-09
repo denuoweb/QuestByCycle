@@ -1,15 +1,15 @@
-# pylint: disable=too-few-public-methods, import-error, useless-super-delegation, broad-except
+                                                                                              
 
 import random
 import string
 import jwt
 from datetime import datetime, timezone
 from time import time
-from flask import current_app  # pylint: disable=import-error
-from flask_sqlalchemy import SQLAlchemy  # pylint: disable=import-error
-from flask_login import UserMixin  # pylint: disable=import-error
-from werkzeug.security import generate_password_hash, check_password_hash  # pylint: disable=import-error
-from sqlalchemy.exc import IntegrityError  # pylint: disable=import-error
+from flask import current_app                                
+from flask_sqlalchemy import SQLAlchemy                                
+from flask_login import UserMixin                                
+from werkzeug.security import generate_password_hash, check_password_hash                                
+from sqlalchemy.exc import IntegrityError                                
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 from sqlalchemy import DateTime
 
@@ -17,9 +17,9 @@ UTC = timezone.utc
 
 db = SQLAlchemy()
 
-# -----------------------------------------------------------------------------
-# Association Tables
-# -----------------------------------------------------------------------------
+                                                                               
+                    
+                                                                               
 user_badges = db.Table('user_badges',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
     db.Column('badge_id', db.Integer, db.ForeignKey('badge.id'), primary_key=True)
@@ -36,7 +36,7 @@ game_participants = db.Table('game_participants',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
 )
 
-# Association table for assigning admins to games
+                                                 
 game_admins = db.Table(
     'game_admins',
     db.Column('game_id', db.Integer, db.ForeignKey('game.id'), primary_key=True),
@@ -48,9 +48,9 @@ followers = db.Table('followers',
     db.Column('followee_id', db.Integer, db.ForeignKey('user.id'), primary_key=True)
 )
 
-# -----------------------------------------------------------------------------
-# Models
-# -----------------------------------------------------------------------------
+                                                                               
+        
+                                                                               
 class Badge(db.Model):
     """Model representing a badge."""
     id = db.Column(db.Integer, primary_key=True)
@@ -120,9 +120,9 @@ class User(UserMixin, db.Model):
         'QuestSubmission', backref='submitter', lazy='dynamic',
         cascade='all, delete-orphan'
     )
-    # Use an ARRAY column in PostgreSQL but fall back to JSON for other
-    # backends (e.g. SQLite during tests). ``with_variant`` allows SQLAlchemy
-    # to use the appropriate type per dialect.
+                                                                       
+                                                                             
+                                              
     riding_preferences = db.Column(
         db.JSON().with_variant(ARRAY(TEXT), "postgresql"),
         nullable=True,
@@ -137,13 +137,13 @@ class User(UserMixin, db.Model):
     onboarded = db.Column(db.Boolean, default=False, nullable=True)
     selected_game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=True)
 
-    # Fields for linking a Mastodon account
+                                           
     mastodon_id = db.Column(db.String(64), nullable=True)
     mastodon_username = db.Column(db.String(64), nullable=True)
     mastodon_instance = db.Column(db.String(128), nullable=True)
     mastodon_access_token = db.Column(db.String(512), nullable=True)
     
-    # Fields for the local ActivityPub actor (native QuestByCycle account)
+                                                                          
     activitypub_id = db.Column(db.String(256), nullable=True)
     public_key = db.Column(db.Text, nullable=True)
     private_key = db.Column(db.Text, nullable=True)
@@ -289,7 +289,7 @@ class User(UserMixin, db.Model):
 
     @property
     def unread_notifications_count(self):
-        # import here to avoid circular self-import at module load time
+                                                                       
         from app.models import Notification
         return Notification.query.filter_by(
             user_id=self.id,
@@ -299,8 +299,8 @@ class User(UserMixin, db.Model):
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    type = db.Column(db.String, nullable=False)  # e.g. 'follow', 'submission'
-    payload = db.Column(db.JSON, nullable=False)     # the raw activity or summary
+    type = db.Column(db.String, nullable=False)                               
+    payload = db.Column(db.JSON, nullable=False)                                  
     is_read = db.Column(db.Boolean, default=False)
     timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
@@ -389,9 +389,9 @@ class Game(db.Model):
     description = db.Column(db.String(1000))
     description2 = db.Column(db.String(4500))
     start_date = db.Column(
-        DateTime(timezone=True),           # ← make it timezone-aware
+        DateTime(timezone=True),                                     
         nullable=False,
-        default=lambda: datetime.now(UTC)   # ← callable default at runtime
+        default=lambda: datetime.now(UTC)                                  
     )
     end_date = db.Column(
         DateTime(timezone=True),
@@ -613,7 +613,7 @@ class SubmissionLike(db.Model):
                             name='uq_submission_user_like'),
     )
 
-    # NO cascade here on the "many" side:
+                                         
     submission = db.relationship(
         'QuestSubmission',
         back_populates='likes'
@@ -658,7 +658,7 @@ QuestSubmission.likes = db.relationship(
     back_populates='submission',
     lazy='dynamic',
     cascade='all, delete-orphan',
-    single_parent=True          # this tells SQLAlchemy this child belongs to exactly one parent
+    single_parent=True                                                                          
 )
 
 

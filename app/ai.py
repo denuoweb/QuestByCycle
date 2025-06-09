@@ -107,10 +107,10 @@ def generate_badge_image():
         n=1
     )
 
-    # Fetch the generated image URL from the response
+                                                     
     generated_image_url = response.data[0].url
 
-    # Fetch the image from the generated URL
+                                            
     image_response = requests.get(
         generated_image_url,
         timeout=REQUEST_TIMEOUT,
@@ -118,7 +118,7 @@ def generate_badge_image():
     if image_response.status_code != 200:
         return jsonify({'error': 'Failed to fetch generated image'}), 500
 
-    # Convert the image to a format that can be saved
+                                                     
     image = Image.open(BytesIO(image_response.content))
     filename = save_badge_image(image)
 
@@ -253,7 +253,7 @@ def generate_quest_prompt(description):
 
 def parse_generated_text(response_text):
     try:
-        # Define the patterns for each field
+                                            
         field_patterns = {
             "Category": r"Category: (.*)",
             "Title": r"Title: (.*)",
@@ -275,13 +275,13 @@ def parse_generated_text(response_text):
             else:
                 raise ValueError(f"{field} field is missing or not correctly formatted")
 
-        # Convert Points and Completion Limit to integers
+                                                         
         quest_details['Points'] = int(quest_details['Points'])
         quest_details['Completion Limit'] = int(quest_details['Completion Limit'])
 
-        # Ensure the frequency is one of the allowed options, default to 'Monthly' if not
+                                                                                         
         if quest_details['Frequency'].lower() not in {'daily', 'weekly', 'monthly'}:
-            quest_details['Frequency'] = 'Monthly'  # Default to 'Monthly'
+            quest_details['Frequency'] = 'Monthly'                        
 
         return quest_details
     except (IndexError, ValueError) as e:

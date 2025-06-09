@@ -17,7 +17,7 @@ def app():
     ctx = app.app_context()
     ctx.push()
 
-    # ensure clean slate
+                        
     try:
         db.drop_all()
     except Exception:
@@ -45,11 +45,11 @@ def test_register_mail_server_sends_verification_and_modal(client):
         "accept_license": "y",
     }
     resp = client.post("/auth/register", data=data, follow_redirects=False)
-    # Should redirect into the custom-join modal
+                                                
     assert resp.status_code == 302
     loc = resp.headers["Location"]
     assert "show_join_custom=1" in loc
-    # login flag is not included on success
+                                           
 
 def test_register_next_overrides_quest(client):
     data = {

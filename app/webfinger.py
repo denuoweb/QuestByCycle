@@ -32,11 +32,11 @@ def webfinger():
         db.func.lower(User.username) == userpart.lower()
     ).first_or_404()
 
-    # Your only public HTML profile is at /users/<username>
+                                                           
     actor_url   = f"https://{host}/users/{user.username}"
     profile_url = actor_url
 
-    # Build avatar URL from your saved profile_picture path
+                                                           
     if user.profile_picture:
         avatar_url = f"https://{host}/static/{user.profile_picture}"
     else:

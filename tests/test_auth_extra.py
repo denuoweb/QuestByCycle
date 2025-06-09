@@ -1,4 +1,4 @@
-# tests/test_auth_extra.py
+                          
 
 import pytest
 from flask import url_for
@@ -19,7 +19,7 @@ def app():
     ctx = app.app_context()
     ctx.push()
 
-    # ensure clean slate
+                        
     try:
         db.drop_all()
     except Exception:
@@ -75,13 +75,13 @@ def test_login_redirect_if_authenticated_next_unsafe(client, normal_user):
     assert resp.headers["Location"].endswith(expected)
 
 def test_unverified_email_non_ajax(client, app, normal_user):
-    # mark user as unverified
+                             
     normal_user.email_verified = False
     db.session.commit()
     data = {"email": normal_user.email, "password": "pw"}
     resp = client.post("/auth/login", data=data, follow_redirects=False)
     assert resp.status_code == 302
-    # should log in successfully and redirect to index with join modal closed
+                                                                             
     assert resp.headers["Location"].endswith(url_for("main.index", show_join_custom=0, _external=False))
 
 def test_successful_login_redirects_to_quest(client, normal_user):
@@ -98,7 +98,7 @@ def test_successful_login_redirects_admin_dashboard(client, admin_user):
 
 @pytest.mark.parametrize("ajax", [False, True])
 def test_login_exception_paths(client, normal_user, monkeypatch, ajax):
-    # force an exception during login_user()
+                                            
     from app.auth import login_user
     monkeypatch.setattr("app.auth.login_user", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("boom")))
     data = {"email": normal_user.email, "password": "pw"}
