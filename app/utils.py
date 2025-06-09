@@ -326,31 +326,17 @@ def save_submission_video(submission_video_file):
         raise
 
 
-def public_media_url(path):
-    """Return a publicly accessible URL for a stored media path."""
+
+
+def public_media_url(path: str | None) -> str | None:
+    "Return a publicly accessible URL for a stored media path."
     if not path:
         return None
-
-                             
-    if path.startswith(('http://', 'https://')):
+    if path.startswith(("http://", "https://", "/static/")):
         return path
-
-                                                                       
-                                                                     
-                                                                   
-                      
-
-    if path.startswith('/static/'):
-        return path
-
-                                                    
-    path = path.lstrip('/')
-
-    if path.startswith('static/'):
-        path = path[len('static/') :]
-
-    return url_for('static', filename=path)
-
+    filename = path.lstrip("/")
+    filename = filename.removeprefix("static/")
+    return url_for("static", filename=filename)
 
 def save_sponsor_logo(image_file, old_filename=None):
     if not image_file or not image_file.filename:
