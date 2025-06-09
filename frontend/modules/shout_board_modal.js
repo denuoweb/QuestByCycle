@@ -1,4 +1,3 @@
-import { initQuill } from './quill_common.js';
 /* ------------------------------------------------------------------ */
 /*  SHOUT‑BOARD ADMIN MODAL                                           */
 /* ------------------------------------------------------------------ */
@@ -6,47 +5,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalId   = 'shoutBoardModal';
   const formEl    = document.getElementById('shoutBoardForm');
   const submitBtn = document.getElementById('shoutSubmitBtn');
-  let quill = null;
-
-  /* -------------------- initialise Quill once -------------------- */
-  if (window.Quill) {
-    const editorEl = document.querySelector('#shoutQuillEditor');
-    const hiddenEl = document.querySelector('#shoutMessageInput');
-    if (editorEl && hiddenEl) {
-      quill = initQuill(editorEl, hiddenEl, {
-        placeholder: 'Write an announcement…'
-      });
-    }
-  } else {
-    console.error('Quill library not found  shoutboard editor will not work.');
-  }
+  const messageInput = document.getElementById('shoutMessageInput');
 
   /* clear editor every time the modal opens */
   window.addEventListener('openModal', e => {
-    if (e.detail !== modalId) return;
-    if (quill) quill.setText('');
+    if (e.detail === modalId && messageInput) messageInput.value = '';
   });
 
   /* ----------------------- handle submit ------------------------ */
   submitBtn.addEventListener('click', () => {
-    if (!quill) {
-      alert('Editor not ready  please refresh.');
-      return;
-    }
-
-    const html = quill.root.innerHTML.trim();
-    if (html === '' || html === '<p><br></p>') {
+    const text = messageInput ? messageInput.value.trim() : '';
+    if (!text) {
       alert('Please enter a message.');
       return;
     }
-
-    const plainText = quill.getText().trim();
-    if (plainText.length > 500) {
+    if (text.length > 500) {
       alert('Message must be 500 characters or fewer.');
       return;
     }
-
-    document.getElementById('shoutMessageInput').value = html;
 
     const data = new FormData(formEl);
     fetch(formEl.action, {

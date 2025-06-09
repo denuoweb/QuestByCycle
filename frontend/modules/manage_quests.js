@@ -1,4 +1,3 @@
-import { initQuill } from './quill_common.js';
 
     let game_Id = null;
     const VerificationTypes = {
@@ -67,8 +66,6 @@ import { initQuill } from './quill_common.js';
         processBadge(card);
         processEditableFields(card, originalData);
         setupEditAndCancelButtons(card, questId, originalData);
-
-        initializeQuillEditors(card);
     }
 
     function deleteAllQuests() {
@@ -215,21 +212,7 @@ import { initQuill } from './quill_common.js';
         cell.innerHTML = '';
         cell.appendChild(inputElement);
 
-        // Initialize Quill editor for description and tips
-        if (field.name === "description" || field.name === "tips") {
-            const editor = document.createElement('div');
-            editor.className = 'quill-editor';
-            cell.innerHTML = '';
-            cell.appendChild(editor);
-            
-            if (window.Quill) {
-                const quill = initQuill(editor);
-                quill.root.innerHTML = currentValue;
-                cell.__quill = quill;
-            } else {
-                console.error('Quill library not found  quest editing will not work.');
-            }
-        }
+        // Textareas handle editing for description and tips
     }
 
     function setupEditAndCancelButtons(card, questId, originalData) {
@@ -277,16 +260,7 @@ import { initQuill } from './quill_common.js';
             questData[input.name] = value;
         });
 
-        // Get the Quill editor contents
-        const descriptionEditor = card.querySelector('.quill-editor-container[data-name="description"]').__quill;
-        const tipsEditor = card.querySelector('.quill-editor-container[data-name="tips"]').__quill;
 
-        const descriptionContent = descriptionEditor.root.innerHTML.trim();
-        const tipsContent = tipsEditor.root.innerHTML.trim();
-
-        // Add the Quill editor contents to questData
-        questData['description'] = descriptionContent;
-        questData['tips'] = tipsContent;
 
         fetch(`/quests/quest/${questId}/update`, {
             method: 'POST',
@@ -340,8 +314,8 @@ import { initQuill } from './quill_common.js';
                 card.innerHTML = `
                     <div class="card-body">
                         <h5 class="card-title editable" data-name="title">${quest.title}</h5>
-                        <div class="card-text editable quill-editor-container" data-name="description">${quest.description}</div>
-                        <div class="card-text editable quill-editor-container" data-name="tips">${quest.tips || ''}</div>
+                        <div class="card-text editable" data-name="description">${quest.description}</div>
+                        <div class="card-text editable" data-name="tips">${quest.tips || ''}</div>
                         <p class="card-text"><strong>Points:</strong> <span class="editable" data-name="points">${quest.points}</span></p>
                         <p class="card-text"><strong>Completion Limit:</strong> <span class="editable" data-name="completion_limit">${quest.completion_limit}</span></p>
                         <p class="card-text"><strong>Enabled:</strong> <span class="editable" data-name="enabled">${quest.enabled ? 'Yes' : 'No'}</span></p>
@@ -362,7 +336,6 @@ import { initQuill } from './quill_common.js';
                 questsBody.appendChild(card);
             });
 
-            initializeQuillEditors();
         })
         .catch(error => console.error('Failed to load quests:', error));
     }
@@ -442,25 +415,6 @@ import { initQuill } from './quill_common.js';
         });
     }
 
-    function initializeQuillEditors(card) {
-        if (card) {
-            const descriptionEditorContainer = card.querySelector('.quill-editor-container[data-name="description"]');
-            const tipsEditorContainer = card.querySelector('.quill-editor-container[data-name="tips"]');
 
-            if (window.Quill) {
-                if (descriptionEditorContainer && !descriptionEditorContainer.__quill) {
-                    const quillDescription = initQuill(descriptionEditorContainer);
-                    descriptionEditorContainer.__quill = quillDescription;
-                }
-
-                if (tipsEditorContainer && !tipsEditorContainer.__quill) {
-                    const quillTips = initQuill(tipsEditorContainer);
-                    tipsEditorContainer.__quill = quillTips;
-                }
-            } else {
-                console.error('Quill library not found  quest editing will not work.');
-            }
-        }
-    }
 
 

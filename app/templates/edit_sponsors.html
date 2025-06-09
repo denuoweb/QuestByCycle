@@ -21,8 +21,7 @@
         </div>
         <div class="form-group">
             {{ form.description.label(class="form-control-label") }}
-            <div id="description" class="quill-editor"></div>
-            <textarea name="description" id="description-textarea" hidden>{{ form.description.data }}</textarea>
+            {{ form.description(class="form-control", id="description") }}
         </div>
         <div class="form-group">
             {{ form.tier.label(class="form-control-label") }}
