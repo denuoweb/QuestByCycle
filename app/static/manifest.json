@@ -7,6 +7,11 @@
     "theme_color": "#D0E6B5",
     "background_color": "#f0f0f0",
     "display": "standalone",
+    "handle_links": "preferred",
+    "display_override": ["window-controls-overlay", "standalone"],
+    "launch_handler": {
+        "client_mode": "focus-existing"
+    },
     "icons": [
       {
         "src": "/static/icons/icon_48x48.webp",
@@ -32,6 +37,36 @@
         "src": "/static/icons/apple-touch-icon-180x180.png",
         "sizes": "180x180",
         "type": "image/png"
+      }
+    ],
+    "share_target": {
+      "action": "/share-target",
+      "method": "POST",
+      "enctype": "multipart/form-data",
+      "params": {
+        "title": "title",
+        "text": "text",
+        "files": [
+          {
+            "name": "file",
+            "accept": ["image/*"]
+          }
+        ]
+      }
+    }
+  "protocol_handlers": [
+    {
+      "protocol": "web+questbycycle",
+      "url": "/protocol-handler?url=%s"
+    }
+  ]
+    "file_handlers": [
+      {
+        "action": "/",
+        "name": "Image files",
+        "accept": {
+          "image/*": [".png", ".jpg", ".jpeg", ".webp"]
+        }
       }
     ]
   }
