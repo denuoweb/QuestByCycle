@@ -49,5 +49,10 @@ facebook_page_id = ""
 instagram_access_token = ""
 instagram_user_id = ""
 
+[push]
+VAPID_PUBLIC_KEY = ""
+VAPID_PRIVATE_KEY = ""
+VAPID_ADMIN_EMAIL = "push@example.com"
+
 [twa]
 SHA256_CERT_FINGERPRINT = ""
