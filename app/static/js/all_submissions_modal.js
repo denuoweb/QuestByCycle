@@ -1,5 +1,7 @@
 
-const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
+var PLACEHOLDER_IMAGE = window.PLACEHOLDER_IMAGE ||
+    document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
+window.PLACEHOLDER_IMAGE = PLACEHOLDER_IMAGE;
 
 let submissionsPage = 0;
 let submissionsGameId = null;
