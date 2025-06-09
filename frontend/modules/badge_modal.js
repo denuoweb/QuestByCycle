@@ -170,4 +170,3 @@ document.addEventListener('DOMContentLoaded', () => {
 // Expose globally for inline handlers
 window.openBadgeModal = openBadgeModal;
 
-export {};

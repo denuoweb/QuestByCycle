@@ -430,4 +430,3 @@ window.openResetPasswordModal = openResetPasswordModal;
 window.fetchAndShowModal = fetchAndShowModal;
 window.submitFormJson = submitFormJson;
 
-export {};

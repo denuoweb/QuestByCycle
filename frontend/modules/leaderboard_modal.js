@@ -156,4 +156,3 @@ function updateMeterBackground(percent, selectedGameId) {
     completionMeter.style.backgroundImage = `url('/static/images/leaderboard/smoggy_skyline_${selectedGameId}_${imageIndex}.png')`;
 }
 
-export {};

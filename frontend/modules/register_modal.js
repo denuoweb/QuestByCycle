@@ -99,4 +99,3 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginError').style.display = 'none';  
   });  
 });
-export {};

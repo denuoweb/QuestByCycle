@@ -1,3 +1,4 @@
+import { initQuill } from './quill_common.js';
 const quillDescription = initQuill('#description-editor');
 const quillTips = initQuill('#tips-editor');
 
@@ -15,4 +16,3 @@ document.getElementById('quest-form')?.addEventListener('submit', e => {
   document.getElementById('tips').value = tipsContent;
 });
 
-export {};

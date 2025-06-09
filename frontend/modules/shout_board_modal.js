@@ -1,3 +1,4 @@
+import { initQuill } from './quill_common.js';
 /* ------------------------------------------------------------------ */
 /*  SHOUT‑BOARD ADMIN MODAL                                           */
 /* ------------------------------------------------------------------ */
@@ -63,4 +64,3 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   });
 });
-export {};

@@ -1,3 +1,4 @@
+import { initQuill } from './quill_common.js';
     document.addEventListener('DOMContentLoaded', function() {
         const descriptionEditor = initQuill('#description', '#description-textarea');
         const descriptionTextarea = document.getElementById('description-textarea');
@@ -9,4 +10,3 @@
 
 
 
-export {};

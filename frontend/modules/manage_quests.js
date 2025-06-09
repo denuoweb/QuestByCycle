@@ -1,3 +1,4 @@
+import { initQuill } from './quill_common.js';
     const game_Id = document.getElementById('game_Data').dataset.gameId;
     const VerificationTypes = {
         qr_code: "QR Code",
@@ -450,4 +451,3 @@
     }
 
 
-export {};

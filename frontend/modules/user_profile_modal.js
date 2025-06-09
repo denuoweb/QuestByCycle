@@ -509,4 +509,3 @@ function deleteAccount() {
 // Expose globally for inline handlers
 window.showUserProfileModal = showUserProfileModal;
 
-export {};

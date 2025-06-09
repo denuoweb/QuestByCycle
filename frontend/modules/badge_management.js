@@ -209,4 +209,3 @@ function uploadImages() {
     })
     .catch(error => console.error('Error uploading images:', error));
 }
-export {};

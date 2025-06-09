@@ -8,4 +8,3 @@ function hideLoadingModal() {
     document.getElementById('loadingModal').style.display = 'none';
 }
 
-export {};
