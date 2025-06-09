@@ -923,6 +923,12 @@ def service_worker():
     return response
 
 
+@main_bp.route('/manifest.json')
+def manifest():
+    """Serve the PWA manifest from the application root."""
+    return current_app.send_static_file('manifest.json')
+
+
 @main_bp.route('/offline.html')
 def offline_page():
     """Return the offline fallback page."""
