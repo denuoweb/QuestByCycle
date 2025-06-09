@@ -1,5 +1,6 @@
 import { initQuill } from './quill_common.js';
-    const game_Id = document.getElementById('game_Data').dataset.gameId;
+
+    let game_Id = null;
     const VerificationTypes = {
         qr_code: "QR Code",
         photo: "Photo Upload",
@@ -11,6 +12,11 @@ import { initQuill } from './quill_common.js';
     let badges = [];  // Define badges globally
 
     document.addEventListener('DOMContentLoaded', async function() {
+        const gameEl = document.getElementById('game_Data');
+        if (!gameEl) {
+            return;
+        }
+        game_Id = gameEl.dataset.gameId;
         await loadBadges();
         loadQuests(game_Id);
     });
