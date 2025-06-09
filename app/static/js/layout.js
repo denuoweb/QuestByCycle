@@ -27,7 +27,9 @@ document.addEventListener('DOMContentLoaded', function() {
           registration.sync
             .register('sync-notifications')
             .catch(function(err) {
-              console.error('Sync registration failed:', err);
+              if (err && err.name !== 'NotAllowedError') {
+                console.error('Sync registration failed:', err);
+              }
             });
         }
 
@@ -36,7 +38,9 @@ document.addEventListener('DOMContentLoaded', function() {
           registration.periodicSync
             .register('periodic-notifications', { minInterval: 24 * 60 * 60 * 1000 })
             .catch(function(err) {
-              console.error('Periodic sync registration failed:', err);
+              if (err && err.name !== 'NotAllowedError') {
+                console.error('Periodic sync registration failed:', err);
+              }
             });
         }
 
@@ -49,7 +53,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if ('sync' in registration) {
           registration.sync.register('sync-requests').catch(function(err) {
-            console.error('Background sync registration failed:', err);
+            if (err && err.name !== 'NotAllowedError') {
+              console.error('Background sync registration failed:', err);
+            }
           });
         }
       })
