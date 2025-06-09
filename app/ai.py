@@ -1,14 +1,11 @@
-"""
-Create quest with AI help related routes.
-"""
-import bleach
+"""Create quest with AI help related routes."""
 import requests
 import string
 import re
 from flask import Blueprint, jsonify, render_template, request, current_app
 from flask_login import login_required
 from app.forms import QuestForm
-from app.utils import save_badge_image, REQUEST_TIMEOUT
+from app.utils import save_badge_image, REQUEST_TIMEOUT, sanitize_html
 from .models import db, Quest, Badge
 from werkzeug.datastructures import MultiDict
 from openai import OpenAI
@@ -16,43 +13,6 @@ from io import BytesIO
 from PIL import Image
 
 ai_bp = Blueprint('ai', __name__, template_folder='templates')
-
-ALLOWED_TAGS = [
-    'a', 'b', 'i', 'u', 'em', 'strong', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'blockquote', 'code', 'pre', 'br', 'div', 'span', 'ul', 'ol', 'li', 'hr',
-    'sub', 'sup', 's', 'strike', 'font', 'img', 'video', 'figure'
-]
-
-ALLOWED_ATTRIBUTES = {
-    '*': ['class', 'id'],
-    'a': ['href', 'title', 'target'],
-    'img': ['src', 'alt', 'width', 'height'],
-    'video': ['src', 'width', 'height', 'controls'],
-    'p': ['class'],
-    'span': ['class'],
-    'div': ['class'],
-    'h1': ['class'],
-    'h2': ['class'],
-    'h3': ['class'],
-    'h4': ['class'],
-    'h5': ['class'],
-    'h6': ['class'],
-    'blockquote': ['class'],
-    'code': ['class'],
-    'pre': ['class'],
-    'ul': ['class'],
-    'ol': ['class'],
-    'li': ['class'],
-    'hr': ['class'],
-    'sub': ['class'],
-    'sup': ['class'],
-    's': ['class'],
-    'strike': ['class'],
-    'font': ['color', 'face', 'size']
-}
-
-def sanitize_html(html_content):
-    return bleach.clean(html_content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
 
 @ai_bp.route('/generate_quest', methods=['POST'])
 @login_required

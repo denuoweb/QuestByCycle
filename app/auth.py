@@ -3,7 +3,6 @@
 Authentication module for handling login, registration, and related routes.
 """
 
-import bleach
 import uuid
 import requests
 from datetime import datetime
@@ -21,53 +20,10 @@ from urllib.parse import urlparse, urljoin
 from app.models import db, User, Game
 from app.forms import (LoginForm, RegistrationForm, ForgotPasswordForm,
                        ResetPasswordForm, UpdatePasswordForm, MastodonLoginForm)
-from app.utils import send_email, log_user_ip, REQUEST_TIMEOUT
+from app.utils import send_email, log_user_ip, REQUEST_TIMEOUT, sanitize_html
 from app.activitypub_utils import create_activitypub_actor
 
 auth_bp = Blueprint('auth', __name__)
-
-ALLOWED_TAGS = [
-    'a', 'b', 'i', 'u', 'em', 'strong', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'blockquote', 'code', 'pre', 'br', 'div', 'span', 'ul', 'ol', 'li', 'hr',
-    'sub', 'sup', 's', 'strike', 'font', 'img', 'video', 'figure'
-]
-
-ALLOWED_ATTRIBUTES = {
-    '*': ['class', 'id'],
-    'a': ['href', 'title', 'target'],
-    'img': ['src', 'alt', 'width', 'height'],
-    'video': ['src', 'width', 'height', 'controls'],
-    'p': ['class'],
-    'span': ['class'],
-    'div': ['class'],
-    'h1': ['class'],
-    'h2': ['class'],
-    'h3': ['class'],
-    'h4': ['class'],
-    'h5': ['class'],
-    'h6': ['class'],
-    'blockquote': ['class'],
-    'code': ['class'],
-    'pre': ['class'],
-    'ul': ['class'],
-    'ol': ['class'],
-    'li': ['class'],
-    'hr': ['class'],
-    'sub': ['class'],
-    'sup': ['class'],
-    's': ['class'],
-    'strike': ['class'],
-    'font': ['color', 'face', 'size']
-}
-
-
-def sanitize_html(html_content):
-    """
-    Sanitize HTML content using allowed tags and attributes.
-    """
-    return bleach.clean(
-        html_content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES
-    )
 
 
 def _generate_username(email):

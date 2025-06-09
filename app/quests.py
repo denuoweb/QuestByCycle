@@ -8,9 +8,9 @@ submission handling, and related operations in the application.
 import base64
 import csv
 import os
-import bleach
 import qrcode
-import requests 
+import requests
+import bleach
 from datetime import datetime, timezone
 from io import BytesIO
 from sqlalchemy.exc import IntegrityError
@@ -42,6 +42,7 @@ from app.utils import (
     save_submission_video,
     public_media_url,
     update_user_score,
+    sanitize_html,
 )
 from app.activitypub_utils import (
     post_activitypub_create_activity, 
@@ -58,47 +59,6 @@ from datetime import timezone
 UTC = timezone.utc
 
 quests_bp = Blueprint("quests", __name__, template_folder="templates")
-
-ALLOWED_TAGS = [
-    "a", "b", "i", "u", "em", "strong", "p", "h1", "h2", "h3", "h4", "h5",
-    "h6", "blockquote", "code", "pre", "br", "div", "span", "ul", "ol", "li",
-    "hr", "sub", "sup", "s", "strike", "font", "img", "video", "figure"
-]
-
-ALLOWED_ATTRIBUTES = {
-    "*": ["class", "id"],
-    "a": ["href", "title", "target"],
-    "img": ["src", "alt", "width", "height"],
-    "video": ["src", "width", "height", "controls"],
-    "p": ["class"],
-    "span": ["class"],
-    "div": ["class"],
-    "h1": ["class"],
-    "h2": ["class"],
-    "h3": ["class"],
-    "h4": ["class"],
-    "h5": ["class"],
-    "h6": ["class"],
-    "blockquote": ["class"],
-    "code": ["class"],
-    "pre": ["class"],
-    "ul": ["class"],
-    "ol": ["class"],
-    "li": ["class"],
-    "hr": ["class"],
-    "sub": ["class"],
-    "sup": ["class"],
-    "s": ["class"],
-    "strike": ["class"],
-    "font": ["color", "face", "size"],
-}
-
-
-def sanitize_html(html_content):
-    """Sanitize HTML content using bleach with allowed tags and attributes."""
-    return bleach.clean(
-        html_content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES
-    )
 
 
 @quests_bp.route("/<int:game_id>/manage_quests", methods=["GET"])
