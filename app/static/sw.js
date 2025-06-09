@@ -1,5 +1,5 @@
 // The version of the cache
-const VERSION = "v4"; // Update this version number when changes are made
+const VERSION = "v5"; // Update this version number when changes are made
 const CACHE_NAME = `questbycycle-${VERSION}`;
 
 // List of static resources to cache
@@ -54,6 +54,75 @@ const APP_STATIC_RESOURCES = [
   // Images (Add specific files if needed)
   "/static/images/",
 ];
+
+// -------------------- Background Sync Helpers --------------------
+const DB_NAME = "questbycycle-sync";
+const STORE_NAME = "queued";
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = (event) => {
+      event.target.result.createObjectStore(STORE_NAME, { autoIncrement: true });
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function queueRequest(data) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).add(data);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function iterateRequests(callback) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const cursorReq = store.openCursor();
+    cursorReq.onsuccess = async (event) => {
+      const cursor = event.target.result;
+      if (cursor) {
+        await callback(cursor.value, cursor.key);
+        cursor.continue();
+      } else {
+        resolve();
+      }
+    };
+    cursorReq.onerror = () => reject(cursorReq.error);
+  });
+}
+
+async function deleteRequest(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function processQueue() {
+  await iterateRequests(async (req, key) => {
+    try {
+      await fetch(req.url, {
+        method: req.method,
+        headers: req.headers,
+        body: req.body,
+      });
+      await deleteRequest(key);
+    } catch (err) {
+      console.error("Background sync failed for", req.url, err);
+    }
+  });
+}
 
 // Install event
 self.addEventListener("install", (event) => {
@@ -117,6 +186,32 @@ function shouldCacheRequest(request) {
 
 // Fetch event with offline fallback
 self.addEventListener("fetch", (event) => {
+  // Queue non-GET requests when offline
+  if (["POST", "PUT", "DELETE"].includes(event.request.method)) {
+    event.respondWith(
+      (async () => {
+        try {
+          return await fetch(event.request.clone());
+        } catch (err) {
+          const headers = {};
+          for (const [k, v] of event.request.headers.entries()) {
+            headers[k] = v;
+          }
+          const body = await event.request.clone().text();
+          await queueRequest({ url: event.request.url, method: event.request.method, headers, body });
+          if ("sync" in self.registration) {
+            await self.registration.sync.register("sync-requests");
+          }
+          return new Response(JSON.stringify({ queued: true }), {
+            status: 202,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+      })()
+    );
+    return;
+  }
+
   if (event.request.mode === "navigate") {
     event.respondWith(
       caches.match(event.request).then((cachedResponse) => {
@@ -145,6 +240,13 @@ self.addEventListener("fetch", (event) => {
       }
     })()
   );
+});
+
+// Triggered when network becomes available
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-requests") {
+    event.waitUntil(processQueue());
+  }
 });
 
 // Handle messages from clients
