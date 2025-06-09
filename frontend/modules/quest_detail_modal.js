@@ -8,9 +8,9 @@ function meta(name) {
 }
 
 /*  Current user ID and CSRF token pulled from <meta> tags.           */
-var CURRENT_USER_ID = Number(meta('current-user-id') || 0);
-var CSRF_TOKEN      = getCSRFToken();
-var PLACEHOLDER_IMAGE = window.PLACEHOLDER_IMAGE || meta('placeholder-image');
+const CURRENT_USER_ID = Number(meta('current-user-id') || 0);
+const CSRF_TOKEN = getCSRFToken();
+const PLACEHOLDER_IMAGE = window.PLACEHOLDER_IMAGE || meta('placeholder-image');
 window.PLACEHOLDER_IMAGE = PLACEHOLDER_IMAGE;
 
 /* ------------------------------------------------------------------ */

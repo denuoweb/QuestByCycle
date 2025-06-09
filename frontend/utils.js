@@ -20,6 +20,8 @@ export function escapeHTML(str) {
 }
 
 // backwards compatibility
-window.getCSRFToken = getCSRFToken;
-window.fetchJson = fetchJson;
-window.escapeHTML = escapeHTML;
+if (typeof window !== 'undefined') {
+  window.getCSRFToken = getCSRFToken;
+  window.fetchJson = fetchJson;
+  window.escapeHTML = escapeHTML;
+}

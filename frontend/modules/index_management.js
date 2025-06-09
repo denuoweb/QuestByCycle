@@ -24,10 +24,13 @@ const updateMeter = async gameId => {
     const remainingPoints = gameGoal - totalPoints;
     const heightPercent   = Math.min((totalPoints / gameGoal) * 100, 100);
 
-    document.getElementById('meterBar').style.height = `${heightPercent}%`;
+    const meterBar = document.getElementById('meterBar');
+    const label = document.querySelector('.meter-label');
+    if (meterBar) meterBar.style.height = `${heightPercent}%`;
     document.documentElement.style.setProperty('--meter-fill-height', `${heightPercent}%`);
-    document.querySelector('.meter-label').innerText =
-      `Remaining Reduction: ${remainingPoints} / ${gameGoal}`;
+    if (label) {
+      label.innerText = `Remaining Reduction: ${remainingPoints} / ${gameGoal}`;
+    }
   } catch (err) {
     console.error('Failed to update meter:', err);
   }
