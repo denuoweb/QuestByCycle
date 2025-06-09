@@ -20,7 +20,7 @@ from .models import (
 )
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
-from PIL import Image
+from PIL import Image, ExifTags, UnidentifiedImageError
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
@@ -91,6 +91,23 @@ def allowed_video_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_VIDEO_EXTENSIONS
 
 
+def correct_image_orientation(img: Image.Image) -> Image.Image:
+    """Return a copy of ``img`` with EXIF orientation applied if present."""
+    tag = next((t for t, v in ExifTags.TAGS.items() if v == "Orientation"), None)
+    if not tag:
+        return img
+    try:
+        exif = img._getexif()
+        if exif:
+            orientation = exif.get(tag)
+            rotation = {3: 180, 6: -90, 8: 90}.get(orientation)
+            if rotation:
+                img = img.rotate(rotation, expand=True)
+    except Exception:
+        pass
+    return img
+
+
 def save_image_file(
     image_file,
     subpath,
@@ -119,7 +136,17 @@ def save_image_file(
     filename = secure_filename(f"{uuid.uuid4()}.{ext}")
     upload_dir = os.path.join(current_app.static_folder, subpath)
     os.makedirs(upload_dir, exist_ok=True)
-    image_file.save(os.path.join(upload_dir, filename))
+    file_path = os.path.join(upload_dir, filename)
+    image_file.save(file_path)
+
+    # Normalize orientation for common image types
+    try:
+        with Image.open(file_path) as img:
+            corrected = correct_image_orientation(img)
+            if corrected is not img:
+                corrected.save(file_path)
+    except UnidentifiedImageError:
+        pass
 
     if old_filename:
         old_path = os.path.join(current_app.static_folder, old_filename)
