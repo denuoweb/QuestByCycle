@@ -22,6 +22,8 @@
         <form id="submitPhotoForm" method="post" enctype="multipart/form-data" action="{{ url_for('quests.submit_photo', quest_id=quest.id) }}">
             {{ form.csrf_token }}
             <input type="file" name="photo" accept="image/*,video/*" capture="camera" required>
+            <label for="verificationComment" class="epic-label">Add a Comment (optional)</label>
+            <textarea id="verificationComment" name="verificationComment" class="epic-textarea" placeholder="Add an optional comment..."></textarea>
             <button type="submit">Submit</button>
         </form>
     </div>

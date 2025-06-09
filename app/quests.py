@@ -746,6 +746,7 @@ def submit_photo(quest_id):
 
         photo = request.files.get("photo")
         video = request.files.get("video")
+        comment = sanitize_html(request.form.get("verificationComment", ""))
 
                                                                              
                                                                            
@@ -790,7 +791,7 @@ def submit_photo(quest_id):
             user_id=current_user.id,
             image_url=image_url,
             video_url=video_url if video else None,
-            comment="",                                          
+            comment=comment,
             twitter_url=twitter_url,
             fb_url=fb_url,
             instagram_url=instagram_url,
