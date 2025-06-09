@@ -166,6 +166,11 @@ function shouldCacheRequest(request) {
 
 // Fetch event with offline fallback
 self.addEventListener("fetch", (event) => {
+  const requestUrl = new URL(event.request.url);
+  // Skip cross-origin requests entirely so the browser handles them.
+  if (requestUrl.origin !== self.location.origin) {
+    return;
+  }
   // Queue non-GET requests when offline
   if (["POST", "PUT", "DELETE"].includes(event.request.method)) {
     event.respondWith(
@@ -216,7 +221,8 @@ self.addEventListener("fetch", (event) => {
         return networkResponse;
       } catch (error) {
         console.error("Fetch failed; returning offline page instead.", error);
-        return caches.match("/offline.html");
+        const offlineResponse = await caches.match("/offline.html");
+        return offlineResponse || Response.error();
       }
     })()
   );
