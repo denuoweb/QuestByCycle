@@ -304,6 +304,7 @@
      data-messages='{{ get_flashed_messages(with_categories=true) | tojson }}'>
 </div>
 
+<script src="{{ url_for('static', filename='js/modal_common.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/layout.js') }}" defer></script>
 
 <script src="{{ url_for('static', filename='js/flash_modal.js') }}" defer></script>
