@@ -29,6 +29,7 @@ from typing import Any, List
 from datetime import datetime, timedelta
 from PIL import Image, UnidentifiedImageError
 from datetime import timezone
+from urllib.parse import urlparse, parse_qs
 
 UTC = timezone.utc
 from app.models import (db, Game, User, Quest, Badge, UserQuest, QuestSubmission,
@@ -963,3 +964,23 @@ def assetlinks():
         response=json.dumps(data),
         mimetype="application/json",
     )
+
+
+@main_bp.route('/protocol-handler')
+def protocol_handler():
+    """Handle custom web+questbycycle protocol links."""
+    url_param = request.args.get('url', '')
+    if url_param.startswith('web+questbycycle:'):
+        remainder = url_param.split(':', 1)[1]
+        quest_id = None
+        if remainder.isdigit():
+            quest_id = int(remainder)
+        else:
+            parsed = urlparse(remainder)
+            qid = parse_qs(parsed.query).get('id', [None])[0]
+            if qid and qid.isdigit():
+                quest_id = int(qid)
+        if quest_id:
+            return redirect(url_for('quests.quest_details', quest_id=quest_id))
+    current_app.logger.warning('Invalid custom protocol URL: %s', url_param)
+    return redirect(url_for('main.index'))

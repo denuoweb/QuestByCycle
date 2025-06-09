@@ -45,7 +45,7 @@ function openQuestDetailModal(questId) {
 
       openModal('questDetailModal');
       lazyLoadImages();
-      fetchSubmissions(questId);
+      fetchQuestSubmissions(questId);
     })
     .catch(err => {
       console.error('Error opening quest detail modal:', err);
@@ -79,7 +79,7 @@ function refreshQuestDetailModal(questId) {
       );
 
       lazyLoadImages();
-      fetchSubmissions(questId);
+      fetchQuestSubmissions(questId);
     })
     .catch(err => {
       console.error('Failed to refresh quest detail modal:', err);
@@ -458,9 +458,9 @@ async function submitQuestDetails(event, questId) {
 }
 
 /**********************************************************************
- *  2. fetchSubmissions                                               *
+ *  2. fetchQuestSubmissions                                          *
  **********************************************************************/
-async function fetchSubmissions(questId) {
+async function fetchQuestSubmissions(questId) {
   try {
     const res = await fetch(`/quests/quest/${questId}/submissions`, {
       method:      'GET',
