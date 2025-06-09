@@ -45,28 +45,39 @@ function setCategoryOptions(currentCategory) {
         .then(response => response.json())
         .then(data => {
             const categories = data.categories || [];
-            
-            // Build the <option> elements
-            let options = categories.map(category => {
-                let selected = (category === currentCategory) ? 'selected' : '';
-                return `<option value="${category}" ${selected}>${category}</option>`;
+            const select = document.createElement('select');
+            select.className = 'form-control badge-category-select';
+
+            const noneOption = document.createElement('option');
+            noneOption.value = 'none';
+            noneOption.textContent = 'None';
+            if (!currentCategory || currentCategory === 'none') {
+                noneOption.selected = true;
+            }
+            select.appendChild(noneOption);
+
+            categories.forEach(category => {
+                const opt = document.createElement('option');
+                opt.value = category;
+                opt.textContent = category;
+                if (category === currentCategory) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
             });
 
-            // Add a "None" option at the beginning
-            let selectedNone = (!currentCategory || currentCategory === 'none') ? 'selected' : '';
-            options.unshift(`<option value="none" ${selectedNone}>None</option>`);
-
-            // Return a fully formed <select> element
-            return `<select class="form-control badge-category-select">
-                        ${options.join('')}
-                    </select>`;
+            return select;
         })
         .catch(error => {
             console.error('Error fetching categories:', error);
-            // Fallback: Display "None" if there's an error
-            return `<select class="form-control badge-category-select">
-                        <option value="none" selected>None</option>
-                    </select>`;
+            const select = document.createElement('select');
+            select.className = 'form-control badge-category-select';
+            const noneOption = document.createElement('option');
+            noneOption.value = 'none';
+            noneOption.textContent = 'None';
+            noneOption.selected = true;
+            select.appendChild(noneOption);
+            return select;
         });
 }
 
@@ -84,33 +95,37 @@ function editBadge(badgeId) {
     const imageContainer = row.querySelector('.badge-image-manage');
 
     // 1) Replace the name cell
-    nameCell.innerHTML = `
-        <input type="text"
-               value="${nameCell.innerText.trim()}"
-               class="form-control badge-name-input">
-    `;
+    nameCell.textContent = '';
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.value = nameCell.innerText.trim();
+    nameInput.className = 'form-control badge-name-input';
+    nameCell.appendChild(nameInput);
 
     // 2) Replace the description cell
-    descriptionCell.innerHTML = `
-        <textarea class="form-control badge-description-textarea">
-            ${descriptionCell.innerText.trim()}
-        </textarea>
-    `;
+    descriptionCell.textContent = '';
+    const descTextarea = document.createElement('textarea');
+    descTextarea.className = 'form-control badge-description-textarea';
+    descTextarea.value = descriptionCell.innerText.trim();
+    descriptionCell.appendChild(descTextarea);
 
     // 3) Replace or remove the existing <img>
     //    Then inject a file input
     if (imageContainer) {
         // Clear out existing content (be it "No Image" text or <img> tag)
-        imageContainer.innerHTML = `
-            <input type="file" class="form-control-file badge-image-input">
-        `;
+        imageContainer.textContent = '';
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.className = 'form-control-file badge-image-input';
+        imageContainer.appendChild(fileInput);
     } else {
         console.error('Could not find badge-image-manage cell');
     }
 
     // 4) Call setCategoryOptions(...) to build the <select> for Category
-    setCategoryOptions(categoryCell.innerText.trim()).then(categoryHtml => {
-        categoryCell.innerHTML = categoryHtml;
+    setCategoryOptions(categoryCell.innerText.trim()).then(selectEl => {
+        categoryCell.textContent = '';
+        categoryCell.appendChild(selectEl);
 
         // 5) Change the button label to "Save" and hook up the saveBadge call
         const editButton = row.querySelector('button.edit-badge');
