@@ -38,5 +38,11 @@
             "sizes": "180x180",
             "type": "image/png"
         }
+    ],
+    "protocol_handlers": [
+        {
+            "protocol": "web+questbycycle",
+            "url": "/protocol-handler?url=%s"
+        }
     ]
 }
