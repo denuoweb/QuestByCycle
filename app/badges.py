@@ -1,7 +1,7 @@
 """
 Badge related routes.
 """
-import bleach
+from markupsafe import escape
 import os
 import csv
 from flask import Blueprint, current_app, render_template, flash, redirect, url_for, jsonify, request
@@ -14,12 +14,8 @@ from werkzeug.utils import secure_filename
 
 badges_bp = Blueprint('badges', __name__, template_folder='templates')
 
-ALLOWED_TAGS = []
-
-ALLOWED_ATTRIBUTES = {}
-
-def sanitize_html(html_content):
-    return bleach.clean(html_content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+def sanitize_html(html_content: str) -> str:
+    return escape(html_content)
 
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'csv'}

@@ -4,7 +4,7 @@ import subprocess
 import shutil
 import csv
 import io
-import bleach
+from html_sanitizer import Sanitizer
 import smtplib
 from flask import current_app, request, url_for
 from .models import (
@@ -29,42 +29,31 @@ from sqlalchemy.exc import SQLAlchemyError, OperationalError
 UTC = timezone.utc
 from textwrap import dedent
 
-ALLOWED_TAGS = [
+ALLOWED_TAGS = {
     'a', 'b', 'i', 'u', 'em', 'strong', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
     'blockquote', 'code', 'pre', 'br', 'div', 'span', 'ul', 'ol', 'li', 'hr',
     'sub', 'sup', 's', 'strike', 'font', 'img', 'video', 'figure'
-]
-
-ALLOWED_ATTRIBUTES = {
-    '*': ['class', 'id'],
-    'a': ['href', 'title', 'target'],
-    'img': ['src', 'alt', 'width', 'height'],
-    'video': ['src', 'width', 'height', 'controls'],
-    'p': ['class'],
-    'span': ['class'],
-    'div': ['class'],
-    'h1': ['class'],
-    'h2': ['class'],
-    'h3': ['class'],
-    'h4': ['class'],
-    'h5': ['class'],
-    'h6': ['class'],
-    'blockquote': ['class'],
-    'code': ['class'],
-    'pre': ['class'],
-    'ul': ['class'],
-    'ol': ['class'],
-    'li': ['class'],
-    'hr': ['class'],
-    'sub': ['class'],
-    'sup': ['class'],
-    's': ['class'],
-    'strike': ['class'],
-    'font': ['color', 'face', 'size']
 }
 
-def sanitize_html(html_content):
-    return bleach.clean(html_content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+_ATTRS = {
+    'a': {'href', 'title', 'target', 'rel', 'class', 'id'},
+    'img': {'src', 'alt', 'width', 'height', 'class', 'id'},
+    'video': {'src', 'width', 'height', 'controls', 'class', 'id'},
+    'font': {'color', 'face', 'size', 'class', 'id'},
+}
+for _tag in ALLOWED_TAGS:
+    _ATTRS.setdefault(_tag, set()).update({'class', 'id'})
+
+SANITIZER = Sanitizer({
+    'tags': ALLOWED_TAGS,
+    'attributes': _ATTRS,
+    'empty': {'br', 'hr', 'img'},
+    'separate': {'a', 'p', 'li'},
+    'whitespace': {'br'},
+})
+
+def sanitize_html(html_content: str) -> str:
+    return SANITIZER.sanitize(html_content)
 
 
                                                 

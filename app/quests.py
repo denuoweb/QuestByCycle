@@ -10,7 +10,6 @@ import csv
 import os
 import qrcode
 import requests
-import bleach
 from datetime import datetime, timezone
 from io import BytesIO
 from sqlalchemy.exc import IntegrityError
@@ -1116,7 +1115,7 @@ def update_submission_comment(submission_id):
         abort(403, description="Permission denied: cannot edit another user's comment.")
 
     data = request.get_json() or {}
-    new_comment = bleach.clean(data.get('comment', ''), tags=[], strip=True)
+    new_comment = sanitize_html(data.get('comment', ''))
     sub.comment = new_comment
 
     MAX_LEN = 1000

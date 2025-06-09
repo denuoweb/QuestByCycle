@@ -32,7 +32,7 @@ This project relies on a variety of open source libraries. The badges below link
 [![email-validator](https://img.shields.io/badge/email--validator-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/JoshData/python-email-validator)
 [![cryptography](https://img.shields.io/badge/cryptography-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/pyca/cryptography)
 [![PyJWT](https://img.shields.io/badge/PyJWT-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/jpadilla/pyjwt)
-[![Bleach](https://img.shields.io/badge/bleach-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/mozilla/bleach)
+[![html-sanitizer](https://img.shields.io/badge/html--sanitizer-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/matthiask/html-sanitizer)
 
 ### Infrastructure & Runtime
 
