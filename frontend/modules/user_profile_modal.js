@@ -506,4 +506,7 @@ function deleteAccount() {
       alert('Failed to delete account. Please try again.');
     });
 }
+// Expose globally for inline handlers
+window.showUserProfileModal = showUserProfileModal;
+
 export {};

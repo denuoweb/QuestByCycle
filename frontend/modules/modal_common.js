@@ -411,4 +411,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+// Expose globally for inline handlers
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.openLoginModalWithOptions = openLoginModalWithOptions;
+window.openRegisterModalWithOptions = openRegisterModalWithOptions;
+window.openLoginModalWithGame = openLoginModalWithGame;
+window.registerFromLogin = registerFromLogin;
+window.openForgotPasswordModal = openForgotPasswordModal;
+window.openResetPasswordModal = openResetPasswordModal;
+window.fetchAndShowModal = fetchAndShowModal;
+window.submitFormJson = submitFormJson;
+
 export {};
