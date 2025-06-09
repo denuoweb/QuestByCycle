@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const form       = document.getElementById('resetForm');
+    const form = document.getElementById('resetForm');
+    if (!form) return;
+
     const errDiv     = document.getElementById('resetError');
     const successDiv = document.getElementById('resetSuccess');
     const btn        = document.getElementById('resetButton');

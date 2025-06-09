@@ -1,8 +1,11 @@
-document.addEventListener('DOMContentLoaded', () => {  
-  const emailInput = document.getElementById('registerEmail');  
-  const registerForm = emailInput.closest('form');  
-  const formGroup = emailInput.closest('.form-group');  
-  const checkUrlBase = "{{ url_for('auth.check_email') }}";  
+document.addEventListener('DOMContentLoaded', () => {
+  const emailInput = document.getElementById('registerEmail');
+  if (!emailInput) return; // Modal not included on this page
+
+  const registerForm = emailInput.closest('form');
+  const formGroup = emailInput.closest('.form-group');
+  const modal = document.getElementById('registerModal');
+  const checkUrlBase = modal?.dataset.checkUrl || '/auth/check_email';
     
   // Create a hidden login section to show when email exists  
   const loginSection = document.createElement('div');  

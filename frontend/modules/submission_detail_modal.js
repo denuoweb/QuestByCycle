@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   const $    = s => document.querySelector(s);
+  const modal = $('#submissionDetailModal');
+  if (!modal) return; // Modal not included
+
   const csrf = () => getCSRFToken();
   const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
 
