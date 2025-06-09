@@ -36,15 +36,15 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from datetime import timedelta
 from logging.handlers import RotatingFileHandler
 
-# ----------------------
-# Flask extension instances:
-# ----------------------
+                        
+                            
+                        
 login_manager = LoginManager()
 csrf = CSRFProtect()
 
-# ----------------------
-# Logging setup:
-# ----------------------
+                        
+                
+                        
 if not os.path.exists("logs"):
     os.mkdir("logs")
 
@@ -58,9 +58,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ----------------------
-# URL‐for override:
-# ----------------------
+                        
+                   
+                        
 _original_url_for = _helpers.url_for
 
 def _url_for(*args, **kwargs):
@@ -79,16 +79,16 @@ def _url_for(*args, **kwargs):
 
 _helpers.url_for = _url_for
 
-# ----------------------
-# Application factory:
-# ----------------------
+                        
+                      
+                        
 def create_app(config_overrides=None):
     app = Flask(__name__)
 
-    # 1. Load merged configuration:
+                                   
     inscopeconfig = load_config()
 
-    # 2. Populate app.config with the merged values:
+                                                    
     app.config.update({
         "SECRET_KEY": inscopeconfig["encryption"]["SECRET_KEY"],
         "SQLALCHEMY_DATABASE_URI": inscopeconfig["flask"]["SQLALCHEMY_DATABASE_URI"],
@@ -145,17 +145,17 @@ def create_app(config_overrides=None):
         app.config.setdefault("SERVER_NAME", inscopeconfig["main"]["LOCAL_DOMAIN"])
         app.config.setdefault("PREFERRED_URL_SCHEME", "http")
 
-    # 3. Initialize extensions
+                              
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
 
-    # 4. Database setup and super‐admin creation
+                                                
     with app.app_context():
         db.create_all()
         create_super_admin(app)
 
-    # 5. Register blueprints
+                            
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(ai_bp, url_prefix="/ai")

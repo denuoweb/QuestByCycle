@@ -3,7 +3,7 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.schedulers.base import STATE_RUNNING
 
-# Import your email‐sending utility function directly
+                                                     
 from app.utils import check_and_send_liaison_emails
 
 def create_scheduler(app):

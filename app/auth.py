@@ -1,4 +1,4 @@
-# pylint: disable=import-error
+                              
 """
 Authentication module for handling login, registration, and related routes.
 """
@@ -57,7 +57,7 @@ def _send_verification_email(user):
     elif raw_code:
         params['custom_game_code'] = raw_code
     else:
-        # No explicit game → show the join_custom modal on landing
+                                                                  
         params['show_join_custom'] = 1
 
     if raw_next:
@@ -92,15 +92,15 @@ def _join_game_if_provided(user):
     Additionally, set the user's selected_game_id to that game.
     Checks both request.args and request.form.
     """
-    # Try to get game_id from query parameters
+                                              
     game_id = request.args.get('game_id')
-    # If not found, try to get it from form data (this applies to POST requests)
+                                                                                
     if not game_id:
         game_id = request.form.get('game_id')
     
     if game_id is not None:
         try:
-            # Ensure game_id is treated as an integer
+                                                     
             game_id = int(game_id)
         except ValueError:
             current_app.logger.error("Invalid game_id provided: %s", game_id)
@@ -108,10 +108,10 @@ def _join_game_if_provided(user):
 
         game = Game.query.get(game_id)
         if game:
-            # If not already joined, add the game to the user's participated games.
+                                                                                   
             if game not in user.participated_games:
                 user.participated_games.append(game)
-            # Set the user's selected game to this game.
+                                                        
             user.selected_game_id = game.id
             try:
                 db.session.commit()
@@ -151,7 +151,7 @@ def mastodon_login():
         state = uuid.uuid4().hex
         session['mastodon_state'] = state
         session['mastodon_instance'] = instance
-        # Dynamic app registration with Mastodon
+                                                
         app_registration_url = f"https://{instance}/api/v1/apps"
         data = {
             "client_name": "QuestByCycle",
@@ -225,7 +225,7 @@ def mastodon_callback():
     if not access_token:
         flash("Access token not found in response.", "danger")
         return redirect(url_for('auth.login'))
-    # Get Mastodon account details.
+                                   
     verify_url = f"https://{instance}/api/v1/accounts/verify_credentials"
     headers = {"Authorization": f"Bearer {access_token}"}
     try:
@@ -243,30 +243,30 @@ def mastodon_callback():
     mastodon_username = mastodon_user.get("username")
     display_name = mastodon_user.get("display_name") or mastodon_username
     mastodon_actor_url = mastodon_user.get("url")
-    # Look up an existing user by Mastodon ID and instance.
+                                                           
     user = User.query.filter_by(mastodon_id=mastodon_id, mastodon_instance=instance).first()
     if user:
         user.mastodon_access_token = access_token
-        user.activitypub_id = mastodon_actor_url  # <-- Use Mastodon actor URL
+        user.activitypub_id = mastodon_actor_url                              
         db.session.commit()
         login_user(user)
         flash("Logged in via Mastodon. Your federated identity is managed by your Mastodon account.", "success")
     else:
-        # If a logged-in user wishes to link their Mastodon account:
+                                                                    
         if current_user.is_authenticated:
             current_user.mastodon_id = mastodon_id
             current_user.mastodon_username = mastodon_username
             current_user.mastodon_instance = instance
             current_user.mastodon_access_token = access_token
-            current_user.activitypub_id = mastodon_actor_url  # <-- Use Mastodon actor URL
+            current_user.activitypub_id = mastodon_actor_url                              
             db.session.commit()
             flash("Mastodon account linked successfully. You will federate via your Mastodon account.", "success")
         else:
-            # Otherwise, create a new user using Mastodon data.
+                                                               
             username = mastodon_username
             new_user = User(
                 username=username,
-                email=f"{username}@{instance}",  # Placeholder email
+                email=f"{username}@{instance}",                     
                 license_agreed=True,
                 email_verified=True,
                 display_name=display_name,
@@ -274,9 +274,9 @@ def mastodon_callback():
                 mastodon_username=mastodon_username,
                 mastodon_instance=instance,
                 mastodon_access_token=access_token,
-                activitypub_id=mastodon_actor_url  # <-- Use Mastodon actor URL
+                activitypub_id=mastodon_actor_url                              
             )
-            new_user.set_password(uuid.uuid4().hex)  # Random password for OAuth-only accounts
+            new_user.set_password(uuid.uuid4().hex)                                           
             db.session.add(new_user)
             try:
                 db.session.commit()
@@ -314,14 +314,14 @@ def login():
     show_join  = request.values.get('show_join_custom')
     next_page  = request.values.get('next')
 
-    # If already logged in, just bounce out
+                                           
     if current_user.is_authenticated:
-        # For AJAX you might want to return JSON too; here we just do redirect.
+                                                                               
         return redirect(next_page or url_for('main.index'))
 
-    # GET → redirect to index with modal flags (unchanged)
+                                                          
     if request.method == 'GET':
-        # … your existing GET logic …
+                                     
         return redirect(
             url_for('main.index',
                     show_login=1,
@@ -331,18 +331,18 @@ def login():
                     next=next_page)
         )
 
-    # POST from login form:
+                           
     form    = LoginForm()
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-    # 1) Missing fields → validation error
+                                          
     if not form.validate_on_submit():
         msg = 'Please enter both email and password.'
         if is_ajax:
             return jsonify({
                 'success': False,
                 'error': msg,
-                # you may or may not want to surface a forgot link here:
+                                                                        
                 'show_forgot': False
             }), 400
         flash(msg, 'warning')
@@ -355,16 +355,16 @@ def login():
                     next=next_page)
         )
 
-    # 2) Authenticate
+                     
     user = User.query.filter_by(email=form.email.data.lower()).first()
     if not user or not user.check_password(form.password.data):
-        # Bad credentials
+                         
         msg = 'Invalid email or password.'
         if is_ajax:
             return jsonify({
                 'success': False,
                 'error': msg,
-                # allow the front-end to inject a “Forgot password?” link
+                                                                         
                 'show_forgot': True
             }), 401
         flash(msg, 'danger')
@@ -377,7 +377,7 @@ def login():
                     next=next_page)
         )
 
-    # 3) Email-not-verified → unchanged from your code
+                                                      
     if current_app.config.get('MAIL_SERVER') and not user.email_verified:
         _send_verification_email(user)
         warning = 'Please verify your email. A new link has been sent.'
@@ -397,13 +397,13 @@ def login():
                     next=next_page)
         )
 
-    # 4) Success!
+                 
     login_user(user, remember=form.remember_me.data)
     log_user_ip(user)
     if game_id:
         _join_game_if_provided(user)
 
-    # Decide redirect target
+                            
     target = next_page if next_page and _is_safe_url(next_page) else url_for('main.index',
                                                                             game_id=game_id,
                                                                             show_join_custom=0)
@@ -452,21 +452,21 @@ def logout():
 def register():
     form = RegistrationForm()
 
-    # pull context from args OR form
+                                    
     game_id          = request.args.get('game_id')          or request.form.get('game_id')
     custom_game_code = request.args.get('custom_game_code') or request.form.get('custom_game_code')
     quest_id         = request.args.get('quest_id')         or request.form.get('quest_id')
     next_page        = request.args.get('next')             or request.form.get('next')
 
-    # GET → open register modal
+                               
     if request.method == 'GET':
-        # If the QR link carried next=/17, extract game_id=17
+                                                             
         if not game_id and next_page:
             parsed = urlparse(next_page)
-            if parsed.netloc in (urlparse(request.host_url).netloc, '') \
+            if parsed.netloc in (urlparse(request.host_url).netloc, '')\
                and parsed.path.lstrip('/').isdigit():
                 game_id = parsed.path.lstrip('/')
-                # bypass the "join custom" modal by default
+                                                           
                 custom_game_code = ''
 
         return redirect(
@@ -479,7 +479,7 @@ def register():
                     _external=True)
         )
 
-    # POST validation errors → back to register modal
+                                                     
     if not form.validate_on_submit():
         flash('Please correct the errors in the registration form.', 'warning')
         return redirect(url_for('main.index',
@@ -500,7 +500,7 @@ def register():
                                 next=next_page,
                                 _external=True))
 
-    # Create user
+                 
     email = sanitize_html(form.email.data or "").lower()
     if User.query.filter_by(email=email).first():
         flash('Email already registered. Please use a different email.', 'warning')
@@ -533,22 +533,22 @@ def register():
                                 next=next_page,
                                 _external=True))
 
-    # Auto-login & email verification
+                                     
     create_activitypub_actor(user)
     _auto_verify_and_login(user)
-    ### Remove auto verify and login and resume below at some point
-    #if current_app.config.get('MAIL_SERVER'):
-    #    if custom_game_code:
-    #        # stash custom code into form for the email step
-    #        request.form = request.form.copy()
-    #        request.form['custom_game_code'] = custom_game_code
-    #    _send_verification_email(user)
+                                                                   
+                                              
+                             
+                                                             
+                                               
+                                                                
+                                       
 
-    # If they came with a game_id, join it now
+                                              
     if game_id:
         _join_game_if_provided(user)
 
-    # Success: redirect according to context
+                                            
     if next_page and _is_safe_url(next_page):
         return redirect(next_page)
 
@@ -565,7 +565,7 @@ def register():
                                 next=next_page,
                                 _external=True))
 
-    # No game specified → show join-custom modal
+                                                
     return redirect(url_for('main.index',
                             show_join_custom=1,
                             _external=True))
@@ -611,10 +611,10 @@ def forgot_password():
 
                 flash(error_msg, 'warning')
 
-            # on normal POST, go back to login so they can try again or see the flash
+                                                                                     
             return redirect(url_for('auth.login'))
 
-        # form validation failed (e.g. empty or invalid email)
+                                                              
         field_errors = form.email.errors
         error_msg    = field_errors[0] if field_errors else 'Invalid email.'
         if is_ajax:
@@ -623,11 +623,11 @@ def forgot_password():
                 'error': error_msg
             }), 400
 
-        # re-render the old page if you still support it; or redirect
+                                                                     
         flash(error_msg, 'danger')
         return redirect(url_for('auth.login'))
 
-    # If someone GETs /forgot_password, just redirect to index so modal can open if desired.
+                                                                                            
     return redirect(url_for('main.index', show_login=0))
 
 
@@ -674,7 +674,7 @@ def verify_email(token):
     elif gid and gid.isdigit():
         params['game_id'] = gid
     else:
-        # No forwarded game → show join picker:
+                                               
         params['show_join_custom'] = 1
 
     return redirect(url_for('main.index', **params))
@@ -714,11 +714,11 @@ def reset_password(token):
     form    = ResetPasswordForm()
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-    # Always funnel GETs back to index so your JS can pop open the modal
+                                                                        
     if request.method == 'GET':
         return redirect(url_for('main.index', show_reset=1, token=token))
 
-    # On POST, check form validation
+                                    
     if not form.validate_on_submit():
         error = form.password.errors[0] if form.password.errors else 'Invalid input.'
         if is_ajax:
@@ -726,7 +726,7 @@ def reset_password(token):
         flash(error, 'danger')
         return redirect(url_for('main.index', show_reset=1, token=token))
 
-    # Verify token => find user
+                               
     user = User.verify_reset_token(token)
     if not user:
         msg = 'The reset link is invalid or has expired.'
@@ -735,14 +735,14 @@ def reset_password(token):
         flash(msg, 'danger')
         return redirect(url_for('main.index'))
 
-    # Set new password and commit
+                                 
     user.set_password(form.password.data)
     db.session.commit()
 
-    # *** NEW: automatically log them in ***
+                                            
     login_user(user)
 
-    # Prepare success response
+                              
     success_msg = 'Your password has been reset and you are now logged in.'
     if is_ajax:
         return jsonify({
@@ -751,7 +751,7 @@ def reset_password(token):
             'redirect': url_for('main.index')
         }), 200
 
-    # Fallback for non-AJAX: flash + redirect to index
+                                                      
     flash(success_msg, 'success')
     return redirect(url_for('main.index'))
 
@@ -769,7 +769,7 @@ def delete_account():
         flash('Your account has been deleted.', 'success')
         logout_user()
         return redirect(url_for('main.index'))
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:                                
         db.session.rollback()
         current_app.logger.error(f"Error deleting user: {exc}")
         flash('An error occurred while deleting your account.', 'error')
@@ -782,6 +782,6 @@ def check_email():
     AJAX endpoint: given ?email=<address>, return JSON { exists: true|false }.
     """
     email = (request.args.get('email') or '').strip().lower()
-    # Query for existence of a user with that email
+                                                   
     exists = User.query.filter_by(email=email).first() is not None
     return jsonify({ 'exists': exists })

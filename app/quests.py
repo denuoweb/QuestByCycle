@@ -1,4 +1,4 @@
-# pylint: disable=too-many-lines, import-error
+                                              
 """
 Module: quests
 This module contains all routes and helper functions for quest management,
@@ -98,7 +98,7 @@ def add_quest(game_id):
         return redirect(url_for("main.index", game_id=game_id))
 
     form = QuestForm()
-    form.game_id.data = game_id  # Set the game_id field in the form
+    form.game_id.data = game_id                                     
 
     if form.validate_on_submit():
         badge_id = (
@@ -149,7 +149,7 @@ def add_quest(game_id):
                     redirectUrl=url_for("quests.manage_game_quests", game_id=game_id)
                 )
             flash("Quest added successfully!", "success")
-        except Exception:  # pylint: disable=broad-except
+        except Exception:                                
             db.session.rollback()
             if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
                 return jsonify(success=False, message="An error occurred"), 500
@@ -175,7 +175,7 @@ def submit_quest(quest_id):
     game = Game.query.get_or_404(quest.game_id)
     now = datetime.now(UTC)
 
-    # Check if the quest is within game dates.
+                                              
     if game.start_date > now or now > game.end_date:
         return jsonify({
             "success": False,
@@ -195,7 +195,7 @@ def submit_quest(quest_id):
     video_file = request.files.get("video")
     comment = sanitize_html(request.form.get("verificationComment", ""))
 
-    # Debug logging of incoming files and parameters
+                                                    
     current_app.logger.debug(
         "submit_quest called: verification_type=%s, image_file=%s, video_file=%s",
         verification_type,
@@ -203,7 +203,7 @@ def submit_quest(quest_id):
         getattr(video_file, "filename", None),
     )
 
-    # Handle different verification types.
+                                          
     if verification_type == "qr_code":
         return jsonify({
             "success": True,
@@ -252,14 +252,14 @@ def submit_quest(quest_id):
         display_name = current_user.display_name or current_user.username
         status_text = f"{display_name} completed '{quest.title}'! #QuestByCycle"
 
-        # Post to social media (Twitter, Facebook, Instagram) if enabled.
+                                                                         
         twitter_url, fb_url, instagram_url = (None, None, None)
         if image_url and current_user.upload_to_socials:
             twitter_url, fb_url, instagram_url = post_to_social_media(
                 image_url, image_path, status_text, game
             )
 
-        # Hybrid cross-post: Post to Mastodon if the user is linked.
+                                                                    
         mastodon_url = None
         if image_url and current_user.upload_to_mastodon and current_user.mastodon_access_token:
             mastodon_url = post_to_mastodon_status(image_path, status_text, current_user)
@@ -300,7 +300,7 @@ def submit_quest(quest_id):
             ut.points_awarded for ut in UserQuest.query.filter_by(user_id=current_user.id)
         )
 
-        # Create and deliver ActivityPub Create activity.
+                                                         
         activity = None
         if image_url or video_url:
             activity = post_activitypub_create_activity(new_submission, current_user, quest)
@@ -322,7 +322,7 @@ def submit_quest(quest_id):
             "fb_url": fb_url,
             "instagram_url": instagram_url,
             "mastodon_url": mastodon_url,
-            "activity": activity  # For debugging, shows the constructed ActivityPub activity
+            "activity": activity                                                             
         })
     except Exception as error:
         current_app.logger.error("Quest submission failed: %s", error)
@@ -372,7 +372,7 @@ def update_quest(quest_id):
     try:
         db.session.commit()
         return jsonify({"success": True, "message": "Quest updated successfully"})
-    except Exception as error:  # pylint: disable=broad-except
+    except Exception as error:                                
         db.session.rollback()
         return
 
@@ -395,7 +395,7 @@ def delete_quest(quest_id):
     try:
         db.session.commit()
         return jsonify({"success": True, "message": "Quest deleted successfully"})
-    except Exception as error:  # pylint: disable=broad-except
+    except Exception as error:                                
         db.session.rollback()
         current_app.logger.error(f"Failed to delete quest {quest_id}: {error}")
         return
@@ -525,14 +525,14 @@ def get_quest_submissions(quest_id):
             "twitter_url"        : sub.twitter_url,
             "fb_url"             : sub.fb_url,
             "instagram_url"      : sub.instagram_url,
-            "verification_type"  : quest.verification_type      # ← UPDATE ►
+            "verification_type"  : quest.verification_type                  
         })
     return jsonify(submissions_data)
 
 
 @quests_bp.route("/detail/<int:quest_id>/user_completion")
 @login_required
-# pylint: disable=too-many-locals, too-many-return-statements, too-many-statements
+                                                                                  
 def quest_user_completion(quest_id):
     """
     Get quest details and user completion data for a specific quest.
@@ -676,7 +676,7 @@ def generate_qr(quest_id):
     response.headers["Content-Type"] = "text/html"
     return response
 
-import requests  # Make sure requests is imported at the top
+import requests                                             
 
 def post_to_mastodon_status(image_path, status_text, user):
     """
@@ -685,10 +685,10 @@ def post_to_mastodon_status(image_path, status_text, user):
     This function first uploads the image to the Mastodon media endpoint,
     then posts a status (with the media attached) to the Mastodon statuses endpoint.
     """
-    instance = user.mastodon_instance  # e.g. "mastodon.social"
+    instance = user.mastodon_instance                          
     access_token = user.mastodon_access_token
-    # Debug prints
-    # Step 1: Upload the media.
+                  
+                               
     media_upload_url = f"https://{instance}/api/v1/media"
     headers = {"Authorization": f"Bearer {access_token}"}
     with open(image_path, "rb") as image_file:
@@ -705,7 +705,7 @@ def post_to_mastodon_status(image_path, status_text, user):
     if not media_id:
         return None
 
-    # Step 2: Post the status with the media attached.
+                                                      
     statuses_url = f"https://{instance}/api/v1/statuses"
     payload = {"status": status_text, "media_ids[]": media_id}
     status_response = requests.post(
@@ -750,9 +750,9 @@ def submit_photo(quest_id):
         photo = request.files.get("photo")
         video = request.files.get("video")
 
-        # If the "photo" field contains a video (common from mobile devices),
-        # treat it as a video upload. The form only has a single file input
-        # named "photo", so video files will appear in this field.
+                                                                             
+                                                                           
+                                                                  
         if photo and not video and photo.mimetype.startswith("video/"):
             video = photo
             photo = None
@@ -775,15 +775,15 @@ def submit_photo(quest_id):
         display_name = current_user.display_name or current_user.username
         status_text = f"{display_name} completed '{quest.title}'! #QuestByCycle"
 
-        # Debug prints before posting to Mastodon:
-        # Post to other social media if enabled.
+                                                  
+                                                
         twitter_url, fb_url, instagram_url = (None, None, None)
         if image_url and current_user.upload_to_socials:
             twitter_url, fb_url, instagram_url = post_to_social_media(
                 image_url, media_path, status_text, game
             )
 
-        # Post to Mastodon if the user is linked.
+                                                 
         mastodon_url = None
         if image_url and current_user.upload_to_mastodon and current_user.mastodon_access_token:
             mastodon_url = post_to_mastodon_status(media_path, status_text, current_user)
@@ -793,7 +793,7 @@ def submit_photo(quest_id):
             user_id=current_user.id,
             image_url=image_url,
             video_url=video_url if video else None,
-            comment="",  # Adjust if you wish to include comments
+            comment="",                                          
             twitter_url=twitter_url,
             fb_url=fb_url,
             instagram_url=instagram_url,
@@ -914,7 +914,7 @@ def delete_submission(submission_id):
         check_and_revoke_badges(submission.user_id, game_id=quest.game_id)
         db.session.commit()
 
-    # Explicitly remove likes and replies so they do not linger
+                                                               
     SubmissionLike.query.filter_by(submission_id=submission.id).delete()
     SubmissionReply.query.filter_by(submission_id=submission.id).delete()
 
@@ -1023,7 +1023,7 @@ def delete_all_quests(game_id):
         Quest.query.filter_by(game_id=game_id).delete(synchronize_session=False)
         db.session.commit()
         return jsonify({"success": True, "message": "All quests deleted successfully."}), 200
-    except Exception as error:  # pylint: disable=broad-except
+    except Exception as error:                                
         db.session.rollback()
         return
 
@@ -1053,7 +1053,7 @@ def get_submission(submission_id):
     sub = QuestSubmission.query.get_or_404(submission_id)
     user = User.query.get(sub.user_id)
 
-    # build the public URL for their profile pic (or use the default)
+                                                                     
     if user.profile_picture:
         pic_url = url_for('static', filename=user.profile_picture)
     else:
@@ -1093,7 +1093,7 @@ def update_submission_comment(submission_id):
     """
     sub = QuestSubmission.query.get_or_404(submission_id)
 
-    # Only the owner may edit
+                             
     if sub.user_id != current_user.id:
         abort(403, description="Permission denied: cannot edit another user's comment.")
 
@@ -1129,7 +1129,7 @@ def submission_like(submission_id):
 
             post_activitypub_like_activity(sub, current_user)
 
-            # ── NEW: notify the submission’s owner ───────────────
+                                                                   
             if sub.user_id != current_user.id:
                 db.session.add(Notification(
                     user_id   = sub.user_id,
@@ -1188,7 +1188,7 @@ def submission_replies(submission_id):
         if not content:
             return jsonify(success=False, message="Empty reply"), 400
 
-        # enforce max 10 replies
+                                
         existing_count = SubmissionReply.query.filter_by(
             submission_id=submission_id
         ).count()
@@ -1218,7 +1218,7 @@ def submission_replies(submission_id):
         ))
         db.session.commit()
 
-    # ActivityPub Create(Note)
+                              
     post_activitypub_comment_activity(reply, current_user)
 
     return jsonify(
@@ -1237,11 +1237,11 @@ def submission_replies(submission_id):
 @login_required
 def update_submission_photo(submission_id):
     sub = QuestSubmission.query.get_or_404(submission_id)
-    # only owner can replace
+                            
     if sub.user_id != current_user.id:
         abort(403)
 
-    # expect multipart/form-data
+                                
     photo = request.files.get('photo')
     video = request.files.get('video')
     if photo and photo.filename:

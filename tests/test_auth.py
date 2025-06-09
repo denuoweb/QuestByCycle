@@ -1,4 +1,4 @@
-# tests/test_auth.py
+                    
 import pytest
 from urllib.parse import urlparse, parse_qs
 
@@ -20,7 +20,7 @@ def app():
     ctx = app.app_context()
     ctx.push()
 
-    # ensure clean slate
+                        
     try:
         db.drop_all()
     except Exception:
@@ -50,7 +50,7 @@ def user_normal(app):
         email_verified=True,
     )
     u.set_password("secret")
-    # Fix created_at to avoid timezone errors
+                                             
     u.created_at = datetime.now(timezone.utc)
     db.session.add(u)
     db.session.commit()
@@ -76,7 +76,7 @@ def test_get_login_opens_modal(client):
         "/auth/login?game_id=10&quest_id=20&next=/foo/bar",
         follow_redirects=False,
     )
-    # Expect a redirect into the index, with game_id & quest_id encoded in the path
+                                                                                   
     assert resp.status_code == 302
     loc = resp.headers["Location"]
     parsed = urlparse(loc)
@@ -84,19 +84,19 @@ def test_get_login_opens_modal(client):
 
     from flask import url_for
 
-    # Build the expected path, including game_id and quest_id
+                                                             
     with client.application.test_request_context():
         expected_path = url_for("main.index", game_id="10", quest_id="20")
     assert parsed.path == expected_path
 
-    # Only show_login and next remain in the query string
+                                                         
     assert params["show_login"] == ["1"]
     assert params["next"] == ["/foo/bar"]
 
 
 
 @pytest.mark.parametrize("headers,status_code,error,show_forgot", [
-    ({}, 302, None, None),  # normal POST → redirect + flash
+    ({}, 302, None, None),                                  
     ({"X-Requested-With": "XMLHttpRequest"}, 400,
      "Please enter both email and password.", False),
 ])
@@ -120,24 +120,24 @@ def test_post_invalid_email(client, ajax):
         assert body["error"] == "Invalid email or password."
         assert body["show_forgot"] is True
     else:
-        # Non-AJAX should redirect back into login modal with show_login=1
+                                                                          
         assert resp.status_code == 302
         from flask import url_for
 
-        # Compute the expected redirect path within an app/request context
+                                                                          
         with client.application.test_request_context():
             expected = url_for("main.index", show_login=1)
 
-        # Location should start with '?show_login=1' on the index path
+                                                                      
         location = resp.headers["Location"]
         assert location.startswith(expected), f"Got {location}, expected to start with {expected}"
 
 
 def test_unverified_email_flow(client, user_unverified, app):
-    # Turn on MAIL_SERVER so that email_verified is enforced
+                                                            
     app.config["MAIL_SERVER"] = "smtp.test"
     data = {"email": user_unverified.email, "password": "secret"}
-    # AJAX case
+               
     resp = client.post(
         "/auth/login",
         data=data,
@@ -170,7 +170,7 @@ def test_successful_login_defaults_to_index(client, user_normal, ajax):
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
-        # Default redirect should include the join modal flag
+                                                             
         assert body["redirect"] == url_for("main.index", show_join_custom=0, _external=False)
     else:
         assert resp.status_code == 302
@@ -180,6 +180,6 @@ def test_successful_login_defaults_to_index(client, user_normal, ajax):
 def test_successful_login_with_next_param(client, user_normal):
     data = {"email": user_normal.email, "password": "secret", "remember_me": "y"}
     resp = client.post("/auth/login?next=/profile", data=data, follow_redirects=False)
-    # Should redirect straight to /profile
+                                          
     assert resp.status_code == 302
     assert resp.headers["Location"].endswith("/profile")

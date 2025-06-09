@@ -1,13 +1,13 @@
-# pylint: disable=too-few-public-methods, too-many-lines, import-error
+                                                                      
 """
 Module: forms
 This module contains WTForms definitions for various forms used throughout the application.
 """
 
-# Standard library imports
+                          
 import os
 
-# Third-party imports
+                     
 from flask import current_app
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
@@ -33,21 +33,21 @@ from wtforms.validators import (
     ValidationError,
 )
 
-# Local application imports
+                           
 from app.models import Badge
 
-# -----------------------------------------------------------------------------
-# CSRF Protection Form
-# -----------------------------------------------------------------------------
+                                                                               
+                      
+                                                                               
 class CSRFProtectForm(FlaskForm):
     """Form used solely for CSRF protection."""
-    # Added a dummy field to avoid an empty class body and suppress the 'unnecessary pass' warning.
+                                                                                                   
     csrf_token = HiddenField()
 
 
-# -----------------------------------------------------------------------------
-# Registration & Authentication Forms
-# -----------------------------------------------------------------------------
+                                                                               
+                                     
+                                                                               
 class RegistrationForm(FlaskForm):
     """User registration form."""
     email = StringField("Email", validators=[DataRequired(), Email()])
@@ -66,7 +66,7 @@ class RegistrationForm(FlaskForm):
     accept_license = BooleanField("I agree to the ", validators=[DataRequired()])
     submit = SubmitField("Register")
 
-    def validate_accept_license(self, field):  # pylint: disable=no-self-use
+    def validate_accept_license(self, field):                               
         """Ensure the user agrees to the terms."""
         if not field.data:
             raise ValidationError(
@@ -153,9 +153,9 @@ class DeleteUserForm(FlaskForm):
     submit = SubmitField("Delete Account")
 
 
-# -----------------------------------------------------------------------------
-# Game and Quest Forms
-# -----------------------------------------------------------------------------
+                                                                               
+                      
+                                                                               
 class GameForm(FlaskForm):
     """Form for creating or editing a game."""
     title = StringField("Game Title", validators=[DataRequired()])
@@ -274,7 +274,7 @@ class QuestForm(FlaskForm):
         """Helper method to retrieve the current application's root path."""
         return current_app.root_path
 
-    def validate_completion_limit(self, field):  # pylint: disable=no-self-use
+    def validate_completion_limit(self, field):                               
         """Ensure completion limit is within valid values."""
         valid_completion_limits = set(range(1, 11))
         if field.data not in valid_completion_limits:
@@ -290,9 +290,9 @@ class QuestImportForm(FlaskForm):
     submit = SubmitField("Import Quests")
 
 
-# -----------------------------------------------------------------------------
-# Profile, Bike, and Messaging Forms
-# -----------------------------------------------------------------------------
+                                                                               
+                                    
+                                                                               
 class ProfileForm(FlaskForm):
     """Form for updating a user's profile."""
     display_name = StringField("Player/Team Name", validators=[Optional()])

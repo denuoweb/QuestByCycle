@@ -20,10 +20,10 @@ from urllib.parse import urlparse
 from flask import Blueprint, current_app, request, abort, jsonify, url_for
 from app.models import User, ActivityStore, QuestLike, db, Notification, QuestSubmission
 
-# Blueprint for ActivityPub endpoints
+                                     
 ap_bp = Blueprint('activitypub', __name__)
 
-# JSON-LD context combining core and Mastodon extensions
+                                                        
 AS_CONTEXT = [
     "https://www.w3.org/ns/activitystreams",
     {
@@ -40,21 +40,21 @@ def discover_remote_inbox(actor_uri):
     perform WebFinger + actor fetch and return the declared inbox URL.
     Cache it on your Actor/ForeignActor model so you never repeat discovery.
     """
-    from app.models import ForeignActor, db  # your model for remote actors
+    from app.models import ForeignActor, db                                
 
-    # If we already have it cached, return it
+                                             
     fa = ForeignActor.query.filter_by(actor_uri=actor_uri).first()
     if fa and fa.inbox_url:
         return fa.inbox_url
 
-    # 1) WebFinger
+                  
     parsed = urlparse(actor_uri)
     webfinger_url = f"{parsed.scheme}://{parsed.netloc}/.well-known/webfinger"
     params = {'resource': f"acct:{parsed.path.strip('/')}"}
     wf = requests.get(webfinger_url, params=params, timeout=REQUEST_TIMEOUT)
     wf.raise_for_status()
     data = wf.json()
-    # find the link rel="self" with type application/activity+json
+                                                                  
     self_link = next(
         link for link in data.get('links', [])
         if link.get('rel') == 'self'
@@ -62,18 +62,18 @@ def discover_remote_inbox(actor_uri):
     )
     canonical_actor = self_link['href']
 
-    # 2) Actor document GET
+                           
     resp = requests.get(canonical_actor, timeout=REQUEST_TIMEOUT)
     resp.raise_for_status()
     actor_doc = resp.json()
 
-    # 3) Extract inbox URL
-    inbox = actor_doc.get('inbox') \
+                          
+    inbox = actor_doc.get('inbox')\
          or actor_doc.get('endpoints', {}).get('inbox')
     if not inbox:
         raise ValueError("Remote actor did not declare an inbox endpoint")
 
-    # Save to DB
+                
     if not fa:
         fa = ForeignActor(actor_uri=actor_uri, canonical_uri=canonical_actor)
     fa.inbox_url = inbox
@@ -123,18 +123,18 @@ def verify_http_signature(actor, headers, body):
     if not sig_header:
         abort(401, 'Missing Signature header')
 
-    # Parse the incoming Signature header
+                                         
     parts = dict(item.strip().split('=', 1) for item in sig_header.split(','))
     signature = bytes.fromhex(parts.get('signature', '').strip('"'))
 
-    # Load public key
+                     
     pub = rsa.PublicKey.load_pkcs1(actor.public_key.encode('utf-8'))
 
-    # Reconstruct the signing string
+                                    
     parsed = urlparse(request.url)
     path = parsed.path + (f"?{parsed.query}" if parsed.query else "")
     request_target = f"{request.method.lower()} {path}"
-    host = request.host  # includes port if non-standard
+    host = request.host                                 
     date = headers.get('Date')
     if not date:
         abort(401, 'Missing Date header')
@@ -146,7 +146,7 @@ def verify_http_signature(actor, headers, body):
     ]
     signing_string = "\n".join(signing_components).encode('utf-8')
 
-    # Verify
+            
     try:
         rsa.verify(signing_string, signature, pub)
     except rsa.VerificationError:
@@ -214,7 +214,7 @@ def inbox(username):
     Uses ActivityPub discovery (WebFinger + actor document) to fetch and
     cache the remote actor’s declared inbox URL, preventing any SSRF.
     """
-    # 0) Load our local user
+                            
     user       = User.query.filter_by(username=username).first_or_404()
     activity   = request.get_json(force=True, silent=True) or {}
     typ        = activity.get('type')
@@ -222,7 +222,7 @@ def inbox(username):
     actor_host = urlparse(actor_uri).netloc
     our_host   = request.host
 
-    # 1) Verify signature on remote requests only
+                                                 
     if actor_host and actor_host != our_host:
         verify_http_signature(user, request.headers, request.get_data())
     else:
@@ -230,10 +230,10 @@ def inbox(username):
             "Skipping signature check for local actor %s", actor_uri
         )
 
-    # 2) Look up the sending User (if any)
+                                          
     sender = User.query.filter_by(activitypub_id=actor_uri).first()
 
-    # 3) Handle Follow → auto-accept via discovered inbox URL
+                                                             
     if typ == 'Follow':
         accept = {
             '@context': AS_CONTEXT,
@@ -243,10 +243,10 @@ def inbox(username):
         }
 
         try:
-            # Perform WebFinger + actor document fetch (cached)
+                                                               
             remote_inbox = discover_remote_inbox(actor_uri)
 
-            # Sign against the discovered inbox URL
+                                                   
             hdrs = sign_activitypub_request(
                 user,
                 'POST',
@@ -254,7 +254,7 @@ def inbox(username):
                 json.dumps(accept)
             )
 
-            # POST back to the declared inbox; SSL verification enabled
+                                                                       
             requests.post(
                 remote_inbox,
                 json=accept,
@@ -267,11 +267,11 @@ def inbox(username):
                 "Auto-accept failed for %s: %s", actor_uri, e
             )
 
-        # Record them as a follower locally
+                                           
         if sender and sender not in user.followers:
             user.followers.append(sender)
 
-        # Create a local notification for the follow
+                                                    
         if sender:
             name = sender.display_name or sender.username
             db.session.add(Notification(
@@ -286,17 +286,17 @@ def inbox(username):
 
         return ('', 202)
 
-    # 4) Handle remote Create activities
+                                        
     if typ == 'Create' and actor_host != our_host:
         obj = activity.get('object', {}) or {}
-        # existing submission Create handling …
+                                               
 
-        # New: handle remote replies
+                                    
         if obj.get('type') == 'Note' and obj.get('inReplyTo'):
             in_to = obj['inReplyTo']
             if '/submissions/' in in_to:
                 sid = int(in_to.rsplit('/',1)[1])
-                # record SubmissionReply locally
+                                                
                 from app.models import SubmissionReply
                 reply = SubmissionReply(
                     submission_id=sid,
@@ -305,7 +305,7 @@ def inbox(username):
                 )
                 db.session.add(reply)
                 db.session.commit()
-                # notify submission owner
+                                         
                 sub = QuestSubmission.query.get(sid)
                 if sub:
                     db.session.add(Notification(
@@ -322,12 +322,12 @@ def inbox(username):
                     db.session.commit()
         return ('', 202)
 
-    # 5) Handle Like activities
+                               
     if typ == 'Like' and sender:
         obj_id = activity.get('object', {}).get('id', '')
         if '/submissions/' in obj_id:
             try:
-                # Extract quest_id from the URL path
+                                                    
                 quest_id = int(obj_id.rsplit('/', 1)[0].split('/')[-1])
                 if not QuestLike.query.filter_by(
                     user_id=sender.id,
@@ -342,7 +342,7 @@ def inbox(username):
                 pass
         return ('', 202)
 
-    # 6) Handle Announce activities (boosts)
+                                            
     if typ == 'Announce' and sender:
         obj_id = activity.get('object', {}).get('id', '')
         if '/submissions/' in obj_id:
@@ -364,7 +364,7 @@ def inbox(username):
                 pass
         return ('', 202)
 
-    # 7) Handle Undo activities (unlikes/unfollows)
+                                                   
     if typ == 'Undo' and sender:
         obj = activity.get('object', {}) or {}
         if obj.get('type') == 'Like':
@@ -474,7 +474,7 @@ def post_activitypub_create_activity(submission, user, quest):
     """
     Build, store, deliver—and notify local followers of—an ActivityPub Create activity.
     """
-    # 1) build the Submission object
+                                    
     if submission.video_url:
         media_type = 'video/mp4'
         media_url = submission.video_url
@@ -494,7 +494,7 @@ def post_activitypub_create_activity(submission, user, quest):
         'published':    submission.timestamp.isoformat()
     }
 
-    # 2) build the Create activity
+                                  
     activity = {
         '@context': AS_CONTEXT,
         'id':        f"{user.activitypub_id}/activities/{submission.id}",
@@ -508,7 +508,7 @@ def post_activitypub_create_activity(submission, user, quest):
         ]
     }
 
-    # 3) persist to our outbox
+                              
     stored = ActivityStore(
         user_id   = user.id,
         json      = activity,
@@ -517,7 +517,7 @@ def post_activitypub_create_activity(submission, user, quest):
     db.session.add(stored)
     db.session.commit()
 
-    # 4) notify EACH local follower
+                                   
     actor_name = user.display_name or user.username
     for follower in user.followers:
         db.session.add(Notification(
@@ -533,7 +533,7 @@ def post_activitypub_create_activity(submission, user, quest):
         ))
     db.session.commit()
 
-    # 5) fan out to remote inboxes
+                                  
     deliver_activity(activity, user)
 
     return activity
@@ -542,7 +542,7 @@ def post_activitypub_create_activity(submission, user, quest):
 @ap_bp.route('/<username>/followers', methods=['GET'])
 def followers(username):
     user = User.query.filter_by(username=username).first_or_404()
-    # for simplicity, return an empty list or load from your Follower model
+                                                                           
     return jsonify({
         "@context": AS_CONTEXT,
         "id": f"{user.activitypub_id}/followers",
@@ -555,7 +555,7 @@ def followers(username):
 @ap_bp.route('/<username>/following', methods=['GET'])
 def following(username):
     user = User.query.filter_by(username=username).first_or_404()
-    # likewise, return who this actor follows
+                                             
     return jsonify({
         "@context": AS_CONTEXT,
         "id": f"{user.activitypub_id}/following",
@@ -580,7 +580,7 @@ def post_activitypub_like_activity(submission, user):
       'object' : {'id': object_id, 'type': obj_type},
       'to'     : [submission_attributed_actor := submission.user.activitypub_id]
     }
-    # Persist to outbox if desired, then fan-out:
+                                                 
     deliver_activity(activity, user)
     return activity
 

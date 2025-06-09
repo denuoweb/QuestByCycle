@@ -67,27 +67,27 @@ def sanitize_html(html_content):
     return bleach.clean(html_content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
 
 
-# Allowed extensions for image and video uploads
+                                                
 MAX_POINTS_INT = 2**63 - 1
-# Include common formats plus HEIF/HEIC for modern mobile devices
+                                                                 
 ALLOWED_IMAGE_EXTENSIONS = {
     'png', 'jpg', 'jpeg', 'gif', 'webp', 'heif', 'heic'
 }
 ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'mov'}
-# Videos are limited to 10 MB for uploads
+                                         
 MAX_VIDEO_BYTES = 10 * 1024 * 1024
-# Default timeout for outgoing HTTP requests in seconds
+                                                       
 REQUEST_TIMEOUT = 5
 
 def allowed_image_file(filename):
     """Return True if the filename has an allowed image extension."""
-    return '.' in filename and \
+    return '.' in filename and\
            filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
 
 
 def allowed_video_file(filename):
     """Return True if the filename has an allowed video extension."""
-    return '.' in filename and \
+    return '.' in filename and\
            filename.rsplit('.', 1)[1].lower() in ALLOWED_VIDEO_EXTENSIONS
 
 
@@ -132,7 +132,7 @@ def save_image_file(
 def save_leaderboard_image(image_file):
     try:
         return save_image_file(image_file, os.path.join('images', 'leaderboard'))
-    except Exception as e:  # rethrow as ValueError for API consistency
+    except Exception as e:                                             
         raise ValueError(f"Failed to save image: {str(e)}") from e
 
 def create_smog_effect(image, smog_level):
@@ -157,17 +157,17 @@ def update_user_score(user_id):
         if not user:
             return False
 
-        # Calculate the total points awarded to the user
+                                                        
         total_points = sum(quest.points_awarded for quest in user.user_quests if quest.points_awarded is not None)
 
-        # Update user score, ensuring it doesn't exceed a predefined maximum
+                                                                            
         user.score = min(total_points, MAX_POINTS_INT)
 
-        # Commit changes to the database
+                                        
         db.session.commit()
         return True
     except Exception as e:
-        db.session.rollback()  # Rollback in case of any exception
+        db.session.rollback()                                     
         return False
 
 
@@ -218,7 +218,7 @@ def save_submission_video(submission_video_file):
     and again after compression to ensure storage limits are respected.
     """
     try:
-        # initial size check before saving
+                                          
         submission_video_file.seek(0, os.SEEK_END)
         size = submission_video_file.tell()
         submission_video_file.seek(0)
@@ -230,7 +230,7 @@ def save_submission_video(submission_video_file):
         if size > MAX_VIDEO_BYTES:
             raise ValueError("Video exceeds 10 MB limit")
 
-        # temporary path for the original upload
+                                                
         ext = submission_video_file.filename.rsplit('.', 1)[-1].lower()
         if ext not in ALLOWED_VIDEO_EXTENSIONS:
             raise ValueError("File extension not allowed.")
@@ -241,20 +241,20 @@ def save_submission_video(submission_video_file):
         current_app.logger.debug("Saving original upload to %s", orig_path)
         submission_video_file.save(orig_path)
 
-        # final path for the compressed mp4
+                                           
         uploads_dir = os.path.join(current_app.static_folder, 'videos', 'verifications')
         os.makedirs(uploads_dir, exist_ok=True)
         final_name = secure_filename(f"{uuid.uuid4()}.mp4")
         final_path = os.path.join(uploads_dir, final_name)
 
-        # determine ffmpeg binary
+                                 
         ffmpeg_bin = current_app.config.get('FFMPEG_PATH') or shutil.which('ffmpeg')
         if not ffmpeg_bin or (not os.path.isabs(ffmpeg_bin) and shutil.which(ffmpeg_bin) is None):
             raise FileNotFoundError(
                 "ffmpeg executable not found. Install ffmpeg or set FFMPEG_PATH"
             )
 
-        # run ffmpeg to compress and scale
+                                          
         ffmpeg_cmd = [
             ffmpeg_bin, '-i', orig_path,
             '-vf', "scale='min(1280,iw)':-2",
@@ -277,11 +277,11 @@ def save_submission_video(submission_video_file):
             current_app.logger.debug("Removed temporary upload %s", orig_path)
             raise ValueError("Invalid or corrupted video file") from e
 
-        # cleanup original upload
+                                 
         os.remove(orig_path)
         current_app.logger.debug("Removed temporary upload %s", orig_path)
 
-        # final size check
+                          
         final_size = os.path.getsize(final_path)
         current_app.logger.debug("Compressed video size: %s bytes", final_size)
         if final_size > MAX_VIDEO_BYTES:
@@ -302,19 +302,19 @@ def public_media_url(path):
     if not path:
         return None
 
-    # Already an absolute URL
+                             
     if path.startswith(('http://', 'https://')):
         return path
 
-    # Paths may be stored with or without the leading "static/" segment
-    # and may include a leading slash. Handle these variants to avoid
-    # generating URLs like "/static//images/..." or duplicating the
-    # "static" prefix.
+                                                                       
+                                                                     
+                                                                   
+                      
 
     if path.startswith('/static/'):
         return path
 
-    # Remove any leading slash before further checks
+                                                    
     path = path.lstrip('/')
 
     if path.startswith('static/'):
@@ -342,23 +342,23 @@ def can_complete_quest(user_id, quest_id):
     quest = Quest.query.get(quest_id)
     
     if not quest:
-        return False, None  # Quest does not exist
+        return False, None                        
     
-    # Determine the start of the relevant period based on frequency
+                                                                   
     period_start_map = {
         'daily': timedelta(days=1),
         'weekly': timedelta(weeks=1),
-        'monthly': timedelta(days=30)  # Approximation for monthly
+        'monthly': timedelta(days=30)                             
     }
     period_start = now - period_start_map.get(quest.frequency, timedelta(days=1))
-    # Count completions in the defined period
+                                             
     completions_within_period = QuestSubmission.query.filter(
         QuestSubmission.user_id == user_id,
         QuestSubmission.quest_id == quest_id,
         QuestSubmission.timestamp >= period_start
     ).count()
 
-    # Check if the user can verify the quest again
+                                                  
     can_verify = completions_within_period < quest.completion_limit
     next_eligible_time = None
     if not can_verify:
@@ -369,7 +369,7 @@ def can_complete_quest(user_id, quest_id):
         ).order_by(QuestSubmission.timestamp.asc()).first()
 
         if first_completion_in_period:
-            # Calculate when the user is eligible next, based on the first completion time
+                                                                                          
             increment_map = {
                 'daily': timedelta(days=1),
                 'weekly': timedelta(weeks=1),
@@ -385,20 +385,20 @@ def getLastRelevantCompletionTime(user_id, quest_id):
     quest = Quest.query.get(quest_id)
     
     if not quest:
-        return None  # Quest does not exist
+        return None                        
 
-    # Start of the period calculation must reflect the frequency
+                                                                
     period_start_map = {
         'daily': now - timedelta(days=1),
         'weekly': now - timedelta(weeks=1),
         'monthly': now - timedelta(days=30)
     }
     
-    # Get the period start time based on the quest's frequency
-    period_start = period_start_map.get(quest.frequency, now)  # Default to now if frequency is not recognized
+                                                              
+    period_start = period_start_map.get(quest.frequency, now)                                                 
 
 
-    # Fetch the last completion that affects the current period
+                                                               
     last_relevant_completion = QuestSubmission.query.filter(
         QuestSubmission.user_id == user_id,
         QuestSubmission.quest_id == quest_id,
@@ -422,15 +422,15 @@ def check_and_award_badges(user_id, quest_id, game_id):
     if not user_quest:
         return
 
-    # --- Quest-Specific Badge Awarding ---
+                                           
     if quest.badge and user_quest.completions >= quest.badge_awarded:
-        # Check for an existing award message for this quest badge in this game.
+                                                                                
         existing_award = ShoutBoardMessage.query.filter_by(
             user_id=user_id,
             game_id=game_id
         ).filter(ShoutBoardMessage.message.contains(f"data-badge-id='{quest.badge.id}'")).first()
         if not existing_award:
-            # Award the quest-specific badge.
+                                             
             user.badges.append(quest.badge)
             msg = (
                 f" earned the badge"
@@ -453,23 +453,23 @@ def check_and_award_badges(user_id, quest_id, game_id):
             db.session.add(sbm)
             db.session.commit()
 
-    # --- Category-Based Badge Awarding ---
+                                           
     if quest.category and game_id:
-        # Get all quests in the category for the specified game.
+                                                                
         category_quests = Quest.query.filter_by(category=quest.category, game_id=game_id).all()
         if not category_quests:
             return
-        # Determine which of those quests the user has completed at least once.
+                                                                               
         completed_quests = [
             ut.quest for ut in user.user_quests
             if ut.quest.category == quest.category and ut.quest.game_id == game_id and ut.completions >= 1
         ]
-        # Only award if the user has at least one completion for every quest.
+                                                                             
         if len(completed_quests) == len(category_quests):
-            # Retrieve all badges for this category.
+                                                    
             category_badges = Badge.query.filter_by(category=quest.category).all()
             for badge in category_badges:
-                # Check for an existing award message for this category badge in this game.
+                                                                                           
                 existing_award = ShoutBoardMessage.query.filter_by(
                     user_id=user_id,
                     game_id=game_id
@@ -517,7 +517,7 @@ def check_and_revoke_badges(user_id, game_id=None):
     badges_to_remove = []
     for badge in user.badges:
         if badge.category:
-            # Category badge: restrict to quests in this category for the current game.
+                                                                                       
             current_category_quests = Quest.query.filter_by(category=badge.category, game_id=game_id).all()
             completed_quests = {
                 ut.quest for ut in user.user_quests
@@ -526,7 +526,7 @@ def check_and_revoke_badges(user_id, game_id=None):
             if set(current_category_quests) != set(completed_quests):
                 badges_to_remove.append(badge)
         else:
-            # Quest-specific badge: revoke if for any awarding quest the user's completions are below threshold.
+                                                                                                                
             all_met = True
             for quest in badge.quests:
                 user_quest = UserQuest.query.filter_by(user_id=user_id, quest_id=quest.id).first()
@@ -538,7 +538,7 @@ def check_and_revoke_badges(user_id, game_id=None):
 
     for badge in badges_to_remove:
         user.badges.remove(badge)
-        # Delete any associated shoutboard award message in the specified game.
+                                                                               
         messages = ShoutBoardMessage.query.filter_by(user_id=user_id, game_id=game_id).all()
         for message in messages:
             if f"data-badge-id='{badge.id}'" in message.message:
@@ -629,18 +629,18 @@ def send_email(to: str,
     bool
         True if the message was sent without raising; False otherwise.
     """
-    # Build a multipart/related mail so HTML can reference inline parts
+                                                                       
     msg_root        = MIMEMultipart('related')
     msg_root['Subject'] = subject
     msg_root['From']    = current_app.config['MAIL_DEFAULT_SENDER']
     msg_root['To']      = to
 
-    # The HTML part goes into a multipart/alternative container
+                                                               
     alt_part = MIMEMultipart('alternative')
     msg_root.attach(alt_part)
     alt_part.attach(MIMEText(html_content, 'html'))
 
-    # Attach all requested inline images
+                                        
     inline_images = inline_images or []
     for cid, data, subtype in inline_images:
         img = MIMEImage(data, _subtype=subtype)
@@ -648,7 +648,7 @@ def send_email(to: str,
         img.add_header('Content-Disposition', 'inline', filename=f'{cid}.{subtype}')
         msg_root.attach(img)
 
-    # ---------- SMTP plumbing (unchanged except for message variable) --------
+                                                                               
     try:
         mail_server   = current_app.config.get('MAIL_SERVER')
         mail_port     = current_app.config.get('MAIL_PORT')
@@ -674,7 +674,7 @@ def send_email(to: str,
         current_app.logger.info('Email sent successfully to %s.', to)
         return True
 
-    except Exception as exc:          # pylint: disable=broad-except
+    except Exception as exc:                                        
         current_app.logger.error('Failed to send email: %s', exc)
         return False
 
@@ -686,7 +686,7 @@ def generate_demo_game():
 
     existing_game = Game.query.filter_by(is_demo=True, title=title).first()
     if existing_game:
-        return  # Just return, do nothing if the game already exists
+        return                                                      
 
     description = """
     Welcome to the newest Demo Game! Embark on a quest to create a more sustainable future while enjoying everyday activities, having fun, and fostering teamwork in the real-life battle against climate change.
@@ -738,7 +738,7 @@ def generate_demo_game():
         Stay tuned for prizes...
         """,
         beyond="Visit your local bike club!",
-        admin_id=1,  # Assuming admin_id=1 is the system admin
+        admin_id=1,                                           
         is_demo=True,
         twitter_username=current_app.config['TWITTER_USERNAME'],
         twitter_api_key=current_app.config['TWITTER_API_KEY'],
@@ -753,7 +753,7 @@ def generate_demo_game():
         instagram_user_id=current_app.config['INSTAGRAM_USER_ID'],
         is_public=True,
         allow_joins=True,
-        leaderboard_image="leaderboard_image.png"  # Assuming the image is stored in the static folder
+        leaderboard_image="leaderboard_image.png"                                                     
     )
     db.session.add(demo_game)
     admin_user = User.query.get(1)
@@ -761,12 +761,12 @@ def generate_demo_game():
         demo_game.admins.append(admin_user)
     db.session.commit()
 
-    # Import quests and badges for the demo game
+                                                
     import_quests_and_badges_from_csv(demo_game.id, os.path.join(current_app.static_folder, 'defaultquests.csv'))
 
-    # Add pinned message from admin
+                                   
     try:
-        admin_id = 1  # Assuming admin_id=1 is the system admin
+        admin_id = 1                                           
         pinned_message = ShoutBoardMessage(
             message="Get on your Bicycle this Quarter!",
             user_id=admin_id,
@@ -790,7 +790,7 @@ def import_quests_and_badges_from_csv(game_id, csv_path):
                 badge_name = sanitize_html(row['badge_name'])
                 badge_description = sanitize_html(row['badge_description'])
                 
-                # Generate the badge image filename if it's not provided
+                                                                        
                 if 'badge_image_filename' in row and row['badge_image_filename']:
                     badge_image_filename = row['badge_image_filename']
                 else:
@@ -806,7 +806,7 @@ def import_quests_and_badges_from_csv(game_id, csv_path):
                     badge = Badge(
                         name=badge_name,
                         description=badge_description,
-                        image=badge_image_filename  # Store the filename, not the full path
+                        image=badge_image_filename                                         
                     )
                     db.session.add(badge)
                     db.session.flush()
@@ -830,12 +830,12 @@ def import_quests_and_badges_from_csv(game_id, csv_path):
 
 
 def log_user_ip(user):
-    # Check if this IP address is already stored for this user
+                                                              
     ip_address = request.remote_addr
     existing_ip = UserIP.query.filter_by(user_id=user.id, ip_address=ip_address).first()
 
     if not existing_ip:
-        # Only log the IP if it's not already stored
+                                                    
         new_ip = UserIP(user_id=user.id, ip_address=ip_address)
         db.session.add(new_ip)
         db.session.commit()
@@ -861,10 +861,10 @@ def send_social_media_liaison_email(
     
     Returns True if an email was sent, False otherwise.
     """
-    # 1) Retrieve the Game record (with a possible row‐level lock to avoid race conditions)
+                                                                                           
     try:
-        # If you want to lock the row: uncomment the next line
-        # game = Game.query.with_for_update().get(game_id)
+                                                              
+                                                          
         game = Game.query.get(game_id)
     except Exception as e:
         current_app.logger.error(f"Database error while fetching Game id={game_id}: {e}")
@@ -874,7 +874,7 @@ def send_social_media_liaison_email(
         current_app.logger.warning(f"No Game found with id={game_id}. Aborting social media email.")
         return False
 
-    # 2) Verify that the liaison email is configured
+                                                    
     liaison_email = game.social_media_liaison_email
     if not liaison_email:
         current_app.logger.warning(
@@ -882,13 +882,13 @@ def send_social_media_liaison_email(
         )
         return False
 
-    # 3) Determine cutoff_time: either last email sent or game start_date
+                                                                         
     cutoff_time = game.last_social_media_email_sent or game.start_date
-    # Ensure cutoff_time is timezone‐aware; if naive, make it UTC for comparison
+                                                                                
     if cutoff_time.tzinfo is None or cutoff_time.tzinfo.utcoffset(cutoff_time) is None:
         cutoff_time = cutoff_time.replace(tzinfo=UTC)
 
-    # 4) Fetch all new quest submissions since cutoff_time
+                                                          
     try:
         submissions = (
             QuestSubmission.query
@@ -898,7 +898,7 @@ def send_social_media_liaison_email(
                 Quest.game_id == game_id,
                 QuestSubmission.timestamp > cutoff_time,
             )
-            .order_by(QuestSubmission.timestamp.asc())  # Chronological order (oldest first)
+            .order_by(QuestSubmission.timestamp.asc())                                      
             .all()
         )
     except Exception as e:
@@ -923,7 +923,7 @@ def send_social_media_liaison_email(
                 .limit(last_limit)
                 .all()
             )
-            submissions.reverse()  # send oldest first
+            submissions.reverse()                     
             if submissions:
                 fallback_used = True
                 current_app.logger.info(
@@ -935,8 +935,8 @@ def send_social_media_liaison_email(
     if not submissions:
         return False
 
-    # 5) Start constructing the HTML email
-    #    Use dedent to remove leading indentation
+                                          
+                                                 
     now = datetime.now(UTC)
     header_title = "Recent submissions" if fallback_used else "New submissions"
     html_header = dedent(f"""\
@@ -952,28 +952,28 @@ def send_social_media_liaison_email(
     nonsocial_submissions = [s for s in submissions if not s.submitter.upload_to_socials]
 
     def append_submission(sub, idx):
-        # 6a) Safely extract quest.title and user.username
+                                                          
         quest = sub.quest
         user = sub.submitter
 
         safe_quest_title = sanitize_html(quest.title) if quest and quest.title else "(Untitled Quest)"
         safe_username = sanitize_html(user.username) if user and user.username else "(Unknown User)"
 
-        # Format the individual‐submission header
+                                                 
         html_parts.append(dedent(f"""\
             <div style="margin-bottom:1.5rem">
               <h3>{idx}. Quest: {safe_quest_title}</h3>
               <p>User: {safe_username} &nbsp;|&nbsp; Submitted: {sub.timestamp:%Y-%m-%d %H:%M %Z}</p>
         """))
 
-        # 6b) Include comment if present
+                                        
         if sub.comment:
             sanitized_comment = sanitize_html(sub.comment).replace("\n", "<br>")
             html_parts.append(f"<p><i>{sanitized_comment}</i></p>")
 
-        # 6c) Include image if present
+                                      
         if sub.image_url:
-            # Validate that image_url is a relative path without dangerous segments
+                                                                                   
             rel_path = sub.image_url.strip("/\\")
             if ".." in rel_path:
                 current_app.logger.warning(
@@ -983,7 +983,7 @@ def send_social_media_liaison_email(
                 image_path = os.path.join(current_app.static_folder, rel_path)
                 try:
                     with Image.open(image_path) as img:
-                        # Ensure both dimensions are bounded to 600px
+                                                                     
                         max_size = (600, 600)
                         img.thumbnail(max_size, Image.Resampling.LANCZOS)
 
@@ -993,7 +993,7 @@ def send_social_media_liaison_email(
 
                         cid = f"submission_{sub.id}"
                         inline_images.append((cid, img_bytes, "jpeg"))
-                        # Display at up to 300×300 in email
+                                                           
                         html_parts.append(
                             f'<img src="cid:{cid}" alt="submission image" '
                             f'style="max-width:300px;max-height:300px"><br>'
@@ -1003,9 +1003,9 @@ def send_social_media_liaison_email(
                         f"Could not open or process image for submission id={sub.id} at {image_path}: {e}. "
                         f"Falling back to public URL."
                     )
-                    # Fallback: link to the static URL
+                                                      
                     try:
-                        # We need a request context for url_for
+                                                               
                         with current_app.test_request_context():
                             public_url = url_for("static", filename=rel_path, _external=True)
                         html_parts.append(f'<img src="{public_url}" alt="submission image"><br>')
@@ -1014,7 +1014,7 @@ def send_social_media_liaison_email(
                             f"Failed to generate public URL for image '{rel_path}': {ue}"
                         )
 
-        # 6d) Close this submission’s <div>
+                                           
         html_parts.append("</div>")
 
     if social_submissions:
@@ -1028,13 +1028,13 @@ def send_social_media_liaison_email(
         for idx, sub in enumerate(nonsocial_submissions, start=1):
             append_submission(sub, idx)
 
-    # 7) Combine parts into a single HTML body
+                                              
     html_body = "<html><body>\n" + "\n".join(html_parts) + "\n</body></html>"
 
-    # 8) Prepare subject line
+                             
     subject = f"New submissions for \"{game.title}\" – {now:%Y-%m-%d %H:%M %Z}"
 
-    # 9) Attempt to send the email
+                                  
     try:
         sent = send_email(
             to=liaison_email,
@@ -1046,7 +1046,7 @@ def send_social_media_liaison_email(
         current_app.logger.error(f"Exception when sending email to '{liaison_email}': {e}")
         return False
 
-    # 10) If sent successfully, update last_social_media_email_sent
+                                                                   
     if sent:
         try:
             if not fallback_used:
@@ -1065,7 +1065,7 @@ def send_social_media_liaison_email(
             current_app.logger.error(
                 f"Email sent, but failed to update last_social_media_email_sent for game_id={game_id}: {db_err}"
             )
-            # We still return True, since the email was sent.
+                                                             
         return True
     else:
         current_app.logger.warning(f"send_email returned False for game_id={game_id}, no DB update performed.")
@@ -1085,7 +1085,7 @@ def check_and_send_liaison_emails():
     try:
         now = datetime.now(UTC)
 
-        # Build your thresholds in one place
+                                            
         interval_map = {
             'hourly':  timedelta(hours=1),
             'daily':   timedelta(days=1),
@@ -1099,26 +1099,26 @@ def check_and_send_liaison_emails():
             freq = (game.social_media_email_frequency or 'weekly').lower()
             threshold = interval_map.get(freq, timedelta(days=1))
 
-            # coerce both dates to tz-aware UTC
+                                               
             started = _ensure_aware(game.start_date)
             last    = _ensure_aware(game.last_social_media_email_sent) or started
 
-            # first send: only if we've passed at least one threshold since start
+                                                                                 
             if not game.last_social_media_email_sent:
                 if now - started >= threshold:
                     send_social_media_liaison_email(game.id)
                 continue
 
-            # subsequent sends
+                              
             if now - last >= threshold:
                 send_social_media_liaison_email(game.id)
 
     except OperationalError as exc:
         current_app.logger.exception("DB error in liaison email job: %s", exc)
-        db.session.rollback()        # safety first
+        db.session.rollback()                      
     except SQLAlchemyError:
         db.session.rollback()
-        raise                       # let apscheduler log the traceback
+        raise                                                          
     finally:
-        # <-- THIS is the important line
-        db.session.remove()          # close / return the connection
+                                        
+        db.session.remove()                                         
