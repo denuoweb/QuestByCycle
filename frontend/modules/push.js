@@ -1,5 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+  if (
+    typeof window === 'undefined' ||
+    typeof navigator === 'undefined' ||
+    !('serviceWorker' in navigator) ||
+    !('PushManager' in window)
+  ) {
     return;
   }
 
