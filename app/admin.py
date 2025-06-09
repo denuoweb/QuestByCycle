@@ -1,7 +1,6 @@
 """
 Admin and Admin Dashboard related routes.
 """
-import os
 import logging
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
@@ -9,7 +8,6 @@ from app.models import db, User, Game, Sponsor, user_games, QuestSubmission, Use
 from app.forms import SponsorForm
 from app.utils import save_sponsor_logo, sanitize_html
 from app.decorators import require_admin, require_super_admin
-from werkzeug.utils import secure_filename
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -118,22 +116,6 @@ def user_details(user_id):
     if not user:
         return
 
-    user_details = {
-        'id': user.id,
-        'username': user.username,
-        'email': user.email,
-        'is_admin': user.is_admin,
-        'is_super_admin': user.is_super_admin,
-        'created_at': user.created_at,
-        'license_agreed': user.license_agreed,
-        'score': user.score,
-        'display_name': user.display_name,
-        'profile_picture': user.profile_picture,
-        'age_group': user.age_group,
-        'interests': user.interests,
-        'email_verified': user.email_verified,
-        'participated_games': user.get_participated_games()
-    }
     return render_template('user_details.html', user=user)
 
 

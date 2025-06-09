@@ -195,7 +195,7 @@ def update_user_score(user_id):
                                         
         db.session.commit()
         return True
-    except Exception as e:
+    except Exception:
         db.session.rollback()                                     
         return False
 
@@ -788,7 +788,7 @@ def generate_demo_game():
         )
         db.session.add(pinned_message)
         db.session.commit()
-    except Exception as e:
+    except Exception:
         db.session.rollback()
 
     return demo_game
@@ -837,7 +837,7 @@ def import_quests_and_badges_from_csv(game_id, csv_path):
                 )
                 db.session.add(quest)
             db.session.commit()
-    except Exception as e:
+    except Exception:
         db.session.rollback()
 
 

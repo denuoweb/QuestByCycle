@@ -1,10 +1,5 @@
 import pytest
-from flask import url_for
 from app import create_app, db
-from app.models import User
-from datetime import datetime, timezone
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import text
 
 @pytest.fixture
 def app():

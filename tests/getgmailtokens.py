@@ -1,5 +1,4 @@
 from google_auth_oauthlib.flow import InstalledAppFlow
-import json
 
 SCOPES = ['https://mail.google.com/']
 

@@ -4,7 +4,6 @@ from .utils import REQUEST_TIMEOUT, sanitize_html
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import current_user, login_required
 from .models import db, ProfileWallMessage, User, Notification
-from .main import user_profile
 from sqlalchemy.exc import IntegrityError
 from app.activitypub_utils import sign_activitypub_request
 from urllib.parse import urlparse
@@ -39,7 +38,7 @@ def _deliver_follow_activity(actor_url, activity, sender_id):
 @profile_bp.route('/<int:user_id>/messages', methods=['POST'])
 @login_required
 def post_profile_message(user_id):
-    user = User.query.get_or_404(user_id)
+    User.query.get_or_404(user_id)
     data = request.get_json()
     content = sanitize_html(data.get('content'))
 

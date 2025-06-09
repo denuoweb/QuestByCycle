@@ -169,7 +169,7 @@ def webfinger():
         return jsonify({'error': 'Invalid acct format'}), 400
     if domain != current_app.config.get('LOCAL_DOMAIN'):
         return jsonify({'error': 'User not found'}), 404
-    user = User.query.filter_by(username=username).first_or_404()
+    User.query.filter_by(username=username).first_or_404()
     actor_url = f"https://{domain}/users/{username}"
     resp = {
         'subject': resource,
@@ -585,7 +585,7 @@ def post_activitypub_like_activity(submission, user):
       'type'   : 'Like',
       'actor'  : actor_id,
       'object' : {'id': object_id, 'type': obj_type},
-      'to'     : [submission_attributed_actor := submission.user.activitypub_id]
+      'to'     : [submission.user.activitypub_id]
     }
                                                  
     deliver_activity(activity, user)

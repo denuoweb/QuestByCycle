@@ -15,7 +15,6 @@ from flask import (
 )
 from urllib.parse import urlparse, urlunparse
 from flask_login import LoginManager, current_user
-from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.exceptions import HTTPException
 
 from app.auth import auth_bp

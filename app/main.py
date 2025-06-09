@@ -32,7 +32,7 @@ from app.constants import UTC, FREQUENCY_DELTA
 from urllib.parse import urlparse, parse_qs
 
 from app.models import (db, Game, User, Quest, Badge, UserQuest, QuestSubmission,
-                        QuestLike, ShoutBoardMessage, ProfileWallMessage,
+                        ShoutBoardMessage, ProfileWallMessage,
                         user_games)
 from app.forms import (ProfileForm, ShoutBoardForm, ContactForm, BikeForm,
                        LoginForm, RegistrationForm, ForgotPasswordForm, ResetPasswordForm)
@@ -347,7 +347,7 @@ def index(game_id, quest_id, user_id):
                     .filter(
                         Game.is_demo.is_(True),
                         Game.start_date <= now,
-                        (Game.end_date == None) | (Game.end_date >= now)
+                        (Game.end_date.is_(None) | (Game.end_date >= now))
                     )
                     .order_by(Game.start_date.desc())
                     .first())

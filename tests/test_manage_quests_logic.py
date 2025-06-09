@@ -4,7 +4,7 @@ from datetime import timezone
 
 from app import create_app, db
 from app.models import Game, Quest, User
-
+from flask_login import login_user
 
 @pytest.fixture
 def app():
@@ -36,9 +36,6 @@ def admin_user(app):
     db.session.add(user)
     db.session.commit()
     return user
-
-
-from flask_login import login_user
 
 
 def login_as(client, user):
