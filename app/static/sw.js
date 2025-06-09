@@ -9,7 +9,6 @@ const APP_STATIC_RESOURCES = [
   "/offline.html",
 
   // CSS Files
-  "/static/css/all.min.css",
   "/static/css/atom-one-dark.min.css",
   "/static/css/bootstrap.min.css",
   "/static/css/bootstrap.min.css.map",
