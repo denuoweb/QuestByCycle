@@ -26,7 +26,6 @@ wtforms               = "3.2.1"
 email-validator       = "2.2.0"
 cryptography          = "45.0.2"
 pyjwt                 = "2.10.1"
-bleach                = "6.2.0"
 
 
 gunicorn              = "23.0.0"
@@ -45,6 +44,7 @@ tomli                 = "^2.0.1"
 pytest                = "^8.3.5"
 python-dotenv = "^1.1.0"
 rsa = "^4.9.1"
+html-sanitizer = "2.5.0"
 
 [tool.poetry.group.dev.dependencies]
 libsass               = "^0.23.0"
