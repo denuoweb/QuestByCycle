@@ -62,7 +62,7 @@ def sanitize_html(html_content):
     return bleach.clean(html_content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
 
 
-games_bp = Blueprint('games', __name__, url_prefix='/games')
+games_bp = Blueprint('games', __name__)
 
 def serialize_game(game):
     """Return a dictionary representation of a ``Game``."""
@@ -79,7 +79,69 @@ def serialize_game(game):
     }
 
 
-games_bp = Blueprint('games', __name__)
+def populate_game_from_form(game, form):
+    """Populate ``game`` instance with sanitized form data."""
+    sanitized_fields = [
+        "title",
+        "description",
+        "description2",
+        "details",
+        "awards",
+        "beyond",
+        "twitter_username",
+        "twitter_api_key",
+        "twitter_api_secret",
+        "twitter_access_token",
+        "twitter_access_token_secret",
+        "facebook_app_id",
+        "facebook_app_secret",
+        "facebook_access_token",
+        "facebook_page_id",
+        "instagram_user_id",
+        "instagram_access_token",
+        "social_media_liaison_email",
+    ]
+
+    raw_fields = [
+        "start_date",
+        "end_date",
+        "game_goal",
+        "is_public",
+        "allow_joins",
+        "social_media_email_frequency",
+    ]
+
+    for field in sanitized_fields:
+        if hasattr(form, field):
+            setattr(game, field, sanitize_html(getattr(form, field).data))
+
+    for field in raw_fields:
+        if hasattr(form, field):
+            setattr(game, field, getattr(form, field).data)
+
+
+def process_leaderboard_upload(game, defer=False):
+    """Save leaderboard image from the request and optionally generate variants."""
+    if (
+        "leaderboard_image" not in request.files
+        or not request.files["leaderboard_image"].filename
+    ):
+        return False
+
+    image_file = request.files["leaderboard_image"]
+    if not image_file or not allowed_image_file(image_file.filename):
+        raise ValueError("Invalid file type for leaderboard image")
+
+    filename = save_leaderboard_image(image_file)
+    game.leaderboard_image = filename
+
+    if not defer:
+        image_path = os.path.join(current_app.root_path, "static", filename)
+        generate_smoggy_images(image_path, game.id)
+
+    return True
+
+
 
 @games_bp.route('/create_game', methods=['GET', 'POST'])
 @login_required
@@ -94,50 +156,17 @@ def create_game():
     if not form.admins.data:
         form.admins.data = [current_user.id]
     if form.validate_on_submit():
-        game = Game(
-            title=sanitize_html(form.title.data),
-            description=sanitize_html(form.description.data),
-            description2=sanitize_html(form.description2.data),
-            start_date=form.start_date.data,
-            end_date=form.end_date.data,
-            game_goal=form.game_goal.data,
-            details=sanitize_html(form.details.data),
-            awards=sanitize_html(form.awards.data),
-            beyond=sanitize_html(form.beyond.data),
-            twitter_username=sanitize_html(form.twitter_username.data),
-            twitter_api_key=sanitize_html(form.twitter_api_key.data),
-            twitter_api_secret=sanitize_html(form.twitter_api_secret.data),
-            twitter_access_token=sanitize_html(form.twitter_access_token.data),
-            twitter_access_token_secret=sanitize_html(
-                form.twitter_access_token_secret.data
-            ),
-            facebook_app_id=sanitize_html(form.facebook_app_id.data),
-            facebook_app_secret=sanitize_html(form.facebook_app_secret.data),
-            facebook_access_token=sanitize_html(form.facebook_access_token.data),
-            facebook_page_id=sanitize_html(form.facebook_page_id.data),
-            is_public=form.is_public.data,
-            allow_joins=form.allow_joins.data,
-            social_media_liaison_email = sanitize_html(form.social_media_liaison_email.data),
-            social_media_email_frequency = form.social_media_email_frequency.data,
-            admin_id=(form.admins.data[0] if form.admins.data else current_user.id)
-        )
-        game.admins = User.query.filter(User.id.in_(form.admins.data or [current_user.id])).all()
-        if 'leaderboard_image' in request.files:
-            image_file = request.files['leaderboard_image']
-            if image_file and allowed_image_file(image_file.filename):
-                try:
-                    filename = save_leaderboard_image(image_file)
-                    game.leaderboard_image = filename
-                except ValueError as error:
-                    flash(f'Error saving leaderboard image: {error}', 'error')
-                    return render_template(
-                        'create_game.html', title='Create Game', form=form
-                    )
-            else:
-                flash('Invalid file type for leaderboard image', 'error')
-                return render_template(
-                    'create_game.html', title='Create Game', form=form
-                )
+        game = Game()
+        populate_game_from_form(game, form)
+        game.admin_id = form.admins.data[0] if form.admins.data else current_user.id
+        game.admins = User.query.filter(
+            User.id.in_(form.admins.data or [current_user.id])
+        ).all()
+        try:
+            process_leaderboard_upload(game, defer=True)
+        except ValueError as error:
+            flash(f'Error saving leaderboard image: {error}', 'error')
+            return render_template('create_game.html', title='Create Game', form=form)
 
         db.session.add(game)
         try:
@@ -172,56 +201,21 @@ def update_game(game_id):
     ]
     form.admins.data = [admin.id for admin in game.admins]
     if form.validate_on_submit():
-        game.title = sanitize_html(form.title.data)
-        game.description = sanitize_html(form.description.data)
-        game.description2 = sanitize_html(form.description2.data)
-        game.start_date = form.start_date.data
-        game.end_date = form.end_date.data
-        game.game_goal = form.game_goal.data
-        game.details = sanitize_html(form.details.data)
-        game.awards = sanitize_html(form.awards.data)
-        game.beyond = sanitize_html(form.beyond.data)
-        game.twitter_username = sanitize_html(form.twitter_username.data)
-        game.twitter_api_key = sanitize_html(form.twitter_api_key.data)
-        game.twitter_api_secret = sanitize_html(form.twitter_api_secret.data)
-        game.twitter_access_token = sanitize_html(form.twitter_access_token.data)
-        game.twitter_access_token_secret = sanitize_html(
-            form.twitter_access_token_secret.data
-        )
-        game.facebook_app_id = sanitize_html(form.facebook_app_id.data)
-        game.facebook_app_secret = sanitize_html(form.facebook_app_secret.data)
-        game.facebook_access_token = sanitize_html(form.facebook_access_token.data)
-        game.facebook_page_id = sanitize_html(form.facebook_page_id.data)
-        game.instagram_user_id = sanitize_html(form.instagram_user_id.data)
-        game.instagram_access_token = sanitize_html(form.instagram_access_token.data)
-        game.is_public = form.is_public.data
-        game.allow_joins = form.allow_joins.data
-        game.social_media_liaison_email = sanitize_html(form.social_media_liaison_email.data)  
-        game.social_media_email_frequency = form.social_media_email_frequency.data
+        populate_game_from_form(game, form)
         game.admins = User.query.filter(User.id.in_(form.admins.data)).all()
         if form.admins.data:
             game.admin_id = form.admins.data[0]
-        
-        if ('leaderboard_image' in request.files and
-                request.files['leaderboard_image'].filename):
-            image_file = request.files['leaderboard_image']
-            if image_file and allowed_image_file(image_file.filename):
-                try:
-                    filename = save_leaderboard_image(image_file)
-                    game.leaderboard_image = filename
 
-                    image_path = os.path.join(
-                        current_app.root_path, 'static', game.leaderboard_image
-                    )
-                    generate_smoggy_images(image_path, game.id)
-                except ValueError as error:
-                    flash(f'Error saving leaderboard image: {error}', 'error')
-                    return render_template(
-                        'update_game.html',
-                        form=form,
-                        game_id=game_id,
-                        leaderboard_image=game.leaderboard_image
-                    )
+        try:
+            process_leaderboard_upload(game)
+        except ValueError as error:
+            flash(f'Error saving leaderboard image: {error}', 'error')
+            return render_template(
+                'update_game.html',
+                form=form,
+                game_id=game_id,
+                leaderboard_image=game.leaderboard_image
+            )
 
         try:
             db.session.commit()
