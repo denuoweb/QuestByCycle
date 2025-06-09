@@ -2,7 +2,9 @@
 
 // Cache all badges in a global variable once loaded
 window.allBadges = window.allBadges || [];
-const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
+var PLACEHOLDER_IMAGE = window.PLACEHOLDER_IMAGE ||
+    document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
+window.PLACEHOLDER_IMAGE = PLACEHOLDER_IMAGE;
 
 /**
  * Validate that a given URL is a safe image source.
