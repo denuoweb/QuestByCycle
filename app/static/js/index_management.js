@@ -43,28 +43,35 @@ const previewFile = () => {
   reader.readAsDataURL(file);
 };
 
-// New function to update the game name in the header using the game ID from the hidden element
-const updateGameName = async () => {
-  const holder = document.getElementById('game_IdHolder');
-  if (!holder) return;
+function updateGameName() {
+  const gameHolder = document.getElementById("game_IdHolder");
+  const gameNameHeader = document.getElementById("gameNameHeader");
+  if (!gameHolder || !gameNameHeader) return;
 
-  const gameId = Number(holder.dataset.gameId);
-  if (!gameId) return;
+  const gameId = gameHolder.getAttribute("data-game-id");
 
-  const header = document.getElementById('gameNameHeader');
-  if (!header) return;
+  fetch(`/games/get_game/${gameId}`)
+    .then(response => {
+      if (!response.ok) {
+        console.error(
+          `Failed fetching game name; URL returned status ${response.status} (${response.statusText})`
+        );
+        // show a user-friendly message in the header
+        gameNameHeader.textContent = "Error Loading Game";
+        // still throw so downstream .catch() will run
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      gameNameHeader.textContent = data.name || "Game Not Found";
+    })
+    .catch(error => {
+      console.error("Error retrieving game name:", error);
+      gameNameHeader.textContent = "Error Loading Game";
+    });
+}
 
-  try {
-    const url = new URL(`/games/get_game/${gameId}`, window.location.origin);
-    const r = await fetch(url, { credentials: 'same-origin' });
-    if (!r.ok) throw new Error('Network response was not ok');
-    const data = await r.json();
-    header.textContent = data.title || data.name || 'Game Not Found';
-  } catch (err) {
-    console.error('Error retrieving game name:', err);
-    header.textContent = 'Error Loading Game';
-  }
-};
 
 document.addEventListener('DOMContentLoaded', () => {
   const leaderboardButton = document.getElementById('leaderboardButton');
