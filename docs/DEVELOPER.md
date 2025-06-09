@@ -268,12 +268,10 @@ Our platform leverages AI to generate new quests for users. This functionality i
 
 Stylesheets are located in `app/static/css` and include:
 
-- `all.min.css`
 - `atom-one-dark.min.css`
 - `bootstrap.min.css`
 - `highlight.min.js`
 - `katex.min.css`
-- `main1.css`
 - `quill.snow.css`
 
 ### JavaScript
