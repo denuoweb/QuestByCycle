@@ -53,9 +53,7 @@ from .models import (
     User, UserQuest, SubmissionLike, SubmissionReply,
     Notification
 )
-from datetime import timezone
-
-UTC = timezone.utc
+from app.constants import UTC, FREQUENCY_DELTA
 
 quests_bp = Blueprint("quests", __name__, template_folder="templates")
 

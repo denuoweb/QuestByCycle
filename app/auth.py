@@ -13,9 +13,7 @@ from flask import (Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
-from datetime import timezone
-
-UTC = timezone.utc
+from app.constants import UTC
 from urllib.parse import urlparse, urljoin
 from app.models import db, User, Game
 from app.forms import (LoginForm, RegistrationForm, ForgotPasswordForm,

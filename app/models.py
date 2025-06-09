@@ -3,7 +3,7 @@
 import random
 import string
 import jwt
-from datetime import datetime, timezone
+from datetime import datetime
 from time import time
 from flask import current_app                                
 from flask_sqlalchemy import SQLAlchemy                                
@@ -12,8 +12,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError                                
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 from sqlalchemy import DateTime
-
-UTC = timezone.utc
+from app.constants import UTC
 
 db = SQLAlchemy()
 
