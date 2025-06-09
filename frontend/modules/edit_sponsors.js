@@ -1,5 +1,9 @@
 import { initQuill } from './quill_common.js';
 document.addEventListener('DOMContentLoaded', function() {
-    initQuill('#description', '#description-textarea');
+    const editorEl   = document.querySelector('#description');
+    const hiddenEl   = document.querySelector('#description-textarea');
+    if (editorEl && hiddenEl) {
+        initQuill(editorEl, hiddenEl);
+    }
 });
 
