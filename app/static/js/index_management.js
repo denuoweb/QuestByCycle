@@ -50,7 +50,7 @@ function updateGameName() {
 
   const gameId = gameHolder.getAttribute("data-game-id");
 
-  fetch(`/games/get_game/${gameId}`)
+  fetch(`/games/get_game/${gameId}`, { credentials: 'same-origin' })
     .then(response => {
       if (!response.ok) {
         console.error(
