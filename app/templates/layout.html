@@ -38,6 +38,12 @@
   <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon-180x180.png') }}">
 
+  <style>
+    @supports (top: env(titlebar-area-height)) {
+      body { padding-top: env(titlebar-area-height, 0); }
+    }
+  </style>
+
   <title>{% block title %}{% endblock %} - QuestByCycle</title>
 
   <!-- Load non-critical CSS asynchronously -->
