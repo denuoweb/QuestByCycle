@@ -21,6 +21,31 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           });
         });
+
+        // Background sync registration
+        if ('SyncManager' in window) {
+          registration.sync
+            .register('sync-notifications')
+            .catch(function(err) {
+              console.error('Sync registration failed:', err);
+            });
+        }
+
+        // Periodic background sync registration
+        if (registration.periodicSync) {
+          registration.periodicSync
+            .register('periodic-notifications', { minInterval: 24 * 60 * 60 * 1000 })
+            .catch(function(err) {
+              console.error('Periodic sync registration failed:', err);
+            });
+        }
+
+        // Request permission for push notifications
+        if ('PushManager' in window) {
+          if (Notification.permission === 'default') {
+            Notification.requestPermission();
+          }
+
         if ('sync' in registration) {
           registration.sync.register('sync-requests').catch(function(err) {
             console.error('Background sync registration failed:', err);
@@ -123,6 +148,18 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error('showLeaderboardModal not defined');
       }
     });
+  }
+
+  // --------------------------------------------------------------
+  // 5.5) Adjust body padding for window controls overlay
+  // --------------------------------------------------------------
+  if ('windowControlsOverlay' in navigator) {
+    function updateOverlayPadding() {
+      var rect = navigator.windowControlsOverlay.getTitlebarAreaRect();
+      document.body.style.paddingTop = rect.height + 'px';
+    }
+    navigator.windowControlsOverlay.addEventListener('geometrychange', updateOverlayPadding);
+    updateOverlayPadding();
   }
 
   // --------------------------------------------------------------

@@ -43,6 +43,7 @@ const APP_STATIC_RESOURCES = [
   "/static/js/submission_detail_modal.js",
   "/static/js/user_management.js",
   "/static/js/user_profile_modal.js",
+  "/static/js/push.js",
 
   // Icons
   "/static/icons/icon_48x48.webp",
@@ -253,5 +254,53 @@ self.addEventListener("sync", (event) => {
 self.addEventListener("message", (event) => {
   if (event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Background sync to refresh notifications
+// ---------------------------------------------------------------------------
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-notifications") {
+    event.waitUntil(fetch("/notifications/unread_count"));
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Periodic background sync for notification count
+// ---------------------------------------------------------------------------
+self.addEventListener("periodicsync", (event) => {
+  if (event.tag === "periodic-notifications") {
+    event.waitUntil(fetch("/notifications/unread_count"));
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Push notifications support
+// ---------------------------------------------------------------------------
+self.addEventListener("push", (event) => {
+  let data = {};
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      data = { body: event.data.text() };
+    }
+  }
+  const title = data.title || "QuestByCycle";
+  const options = {
+    body: data.body || "",
+    icon: "/static/icons/icon_96x96.webp",
+    data,
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow("/notifications/"));
+  const url = event.notification.data && event.notification.data.url;
+  if (url) {
+    event.waitUntil(clients.openWindow(url));
   }
 });

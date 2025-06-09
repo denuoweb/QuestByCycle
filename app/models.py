@@ -669,3 +669,15 @@ QuestSubmission.replies = db.relationship(
     cascade='all, delete-orphan',
     single_parent=True
 )
+
+
+class PushSubscription(db.Model):
+    """Web Push subscription details for a user."""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    endpoint = db.Column(db.String, nullable=False)
+    p256dh = db.Column(db.String, nullable=False)
+    auth = db.Column(db.String, nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
+
+    user = db.relationship('User', backref=db.backref('push_subscriptions', cascade='all, delete-orphan'))

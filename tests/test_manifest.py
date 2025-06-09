@@ -24,3 +24,12 @@ def test_manifest_route(client):
     assert resp.mimetype == 'application/json'
     data = resp.get_json()
     assert data.get('name') == 'QuestByCycle'
+    assert 'window-controls-overlay' in data.get('display_override', [])
+    assert 'file_handlers' in data
+
+
+def test_launch_handler_is_object(client):
+    resp = client.get('/manifest.json')
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert isinstance(data.get('launch_handler'), dict)
