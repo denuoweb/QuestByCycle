@@ -34,8 +34,17 @@ from urllib.parse import urlparse, parse_qs
 from app.models import (db, Game, User, Quest, Badge, UserQuest, QuestSubmission,
                         ShoutBoardMessage, ProfileWallMessage,
                         user_games)
-from app.forms import (ProfileForm, ShoutBoardForm, ContactForm, BikeForm,
-                       LoginForm, RegistrationForm, ForgotPasswordForm, ResetPasswordForm)
+from app.forms import (
+    ProfileForm,
+    ShoutBoardForm,
+    ContactForm,
+    BikeForm,
+    LoginForm,
+    RegistrationForm,
+    ForgotPasswordForm,
+    ResetPasswordForm,
+    MastodonLoginForm,
+)
 from app.utils import (
     save_profile_picture,
     save_bicycle_picture,
@@ -251,6 +260,7 @@ def index(game_id, quest_id, user_id):
     register_form = RegistrationForm()
     forgot_form = ForgotPasswordForm()
     reset_form = ResetPasswordForm()
+    mastodon_form = MastodonLoginForm()
 
     now = datetime.now(UTC)
 
@@ -403,7 +413,8 @@ def index(game_id, quest_id, user_id):
         login_form=login_form,
         register_form=register_form,
         forgot_form=forgot_form,
-        reset_form=reset_form
+        reset_form=reset_form,
+        mastodon_form=mastodon_form
     )
 
 
