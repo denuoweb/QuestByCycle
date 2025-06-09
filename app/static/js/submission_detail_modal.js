@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   const $    = s => document.querySelector(s);
-  const csrf = () => document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  const csrf = () => getCSRFToken();
   const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
 
   window.showSubmissionDetail = function(image) {

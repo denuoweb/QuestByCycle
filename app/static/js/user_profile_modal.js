@@ -300,13 +300,12 @@ function showUserProfileModal(userId) {
 
         updateFollowButton();
         btn.onclick = async () => {
-          const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
           const action = following ? 'unfollow' : 'follow';
           const res = await fetch(`/profile/${data.user.username}/${action}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'X-CSRFToken': token
+              'X-CSRFToken': getCSRFToken()
             },
             credentials: 'same-origin'
           });
@@ -396,7 +395,7 @@ function saveProfile(userId) {
   fetch(`/profile/${userId}/edit`, {
     method: 'POST',
     headers: {
-      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      'X-CSRFToken': getCSRFToken()
     },
     body: formData
   })
@@ -433,7 +432,7 @@ function saveBike(userId) {
   fetch(`/profile/${userId}/edit-bike`, {
     method: 'POST',
     headers: {
-      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      'X-CSRFToken': getCSRFToken()
     },
     body: formData
   })
@@ -457,7 +456,7 @@ function deleteSubmission(submissionId, context, userId) {
   fetch(`/quests/quest/delete_submission/${submissionId}`, {
     method: 'DELETE',
     headers: {
-      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      'X-CSRF-Token': getCSRFToken()
     }
   })
     .then(r => r.json())
@@ -484,7 +483,7 @@ function deleteAccount() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      'X-CSRFToken': getCSRFToken()
     }
   })
     .then(response => {

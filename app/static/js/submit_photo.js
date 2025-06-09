@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const formData = new FormData(submitPhotoForm);
 
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const csrfToken = getCSRFToken();
         formData.append('csrf_token', csrfToken);
 
         fetch(submitPhotoForm.action, {
