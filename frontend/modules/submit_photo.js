@@ -1,4 +1,6 @@
 
+import { showLoadingModal, hideLoadingModal } from './loading_modal.js';
+
 document.addEventListener('DOMContentLoaded', function () {
     const submitPhotoForm = document.getElementById('submitPhotoForm');
     let isSubmitting = false;

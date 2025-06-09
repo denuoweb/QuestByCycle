@@ -1,9 +1,9 @@
-function showLoadingModal() {
+export function showLoadingModal() {
     console.debug('Showing loading modal');
     document.getElementById('loadingModal').style.display = 'flex';
 }
 
-function hideLoadingModal() {
+export function hideLoadingModal() {
     console.debug('Hiding loading modal');
     document.getElementById('loadingModal').style.display = 'none';
 }

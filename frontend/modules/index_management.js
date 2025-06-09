@@ -1,4 +1,5 @@
 import { initQuill } from './quill_common.js';
+import { showLoadingModal, hideLoadingModal } from './loading_modal.js';
 const refreshCSRFToken = async () => {
   try {
     const res  = await fetch('/refresh-csrf');
