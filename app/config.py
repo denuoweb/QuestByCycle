@@ -172,6 +172,12 @@ def load_config():
             "instagram_user_id": _get_env("INSTAGRAM_USER_ID", _toml_config["social"]["instagram_user_id"]),
         },
 
+        "push": {
+            "VAPID_PUBLIC_KEY": _get_env("VAPID_PUBLIC_KEY", _toml_config.get("push", {}).get("VAPID_PUBLIC_KEY", "")),
+            "VAPID_PRIVATE_KEY": _get_env("VAPID_PRIVATE_KEY", _toml_config.get("push", {}).get("VAPID_PRIVATE_KEY", "")),
+            "VAPID_ADMIN_EMAIL": _get_env("VAPID_ADMIN_EMAIL", _toml_config.get("push", {}).get("VAPID_ADMIN_EMAIL", "push@example.com")),
+        },
+
         "twa": {
             "SHA256_CERT_FINGERPRINT": _get_env(
                 "TWA_SHA256_FINGERPRINT",
