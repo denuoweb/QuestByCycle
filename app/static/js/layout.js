@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
           if (Notification.permission === 'default') {
             Notification.requestPermission();
           }
+        }
 
         if ('sync' in registration) {
           registration.sync.register('sync-requests').catch(function(err) {
