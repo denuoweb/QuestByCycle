@@ -230,14 +230,14 @@
                 <li class="nav-item">
                     <a href="{{ url_for('auth.login') }}"
                        class="btn btn-secondary btn-lg"
-                       onclick="if (typeof window.openModal === 'function' && document.getElementById('loginModal')) { event.preventDefault(); openModal('loginModal'); }">
+                       onclick="if (typeof window.openModal === 'function' && document.getElementById('loginModal')) { openModal('loginModal'); return false; }">
                       Login
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="{{ url_for('auth.register') }}"
                        class="btn btn-primary btn-lg"
-                       onclick="if (typeof window.openModal === 'function' && document.getElementById('registerModal')) { event.preventDefault(); openModal('registerModal'); }">
+                       onclick="if (typeof window.openModal === 'function' && document.getElementById('registerModal')) { openModal('registerModal'); return false; }">
                       Register Today!
                     </a>
                 </li>
