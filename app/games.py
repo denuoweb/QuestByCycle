@@ -62,7 +62,7 @@ def sanitize_html(html_content):
     return bleach.clean(html_content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
 
 
-games_bp = Blueprint('games', __name__)
+games_bp = Blueprint('games', __name__, url_prefix='/games')
 
 
 @games_bp.route('/create_game', methods=['GET', 'POST'])
@@ -497,8 +497,16 @@ def generate_qr_for_game(game_id):
 
 @games_bp.route('/get_game/<int:game_id>', methods=['GET'])
 def get_game(game_id):
-    """
-    Retrieve the game with the given game_id and return its title as JSON.
-    """
-    game = Game.query.get_or_404(game_id)
-    return jsonify(name=game.title)
+    game = Game.query.get(game_id)
+    if not game:
+        return jsonify(error="Game not found"), 404
+
+    try:
+        return jsonify(
+            id=game.id,
+            name=game.name or '',
+            game_goal=game.goal
+        )
+    except Exception:
+        current_app.logger.exception("Error in get_game")
+        return jsonify(error="Internal server error"), 500
