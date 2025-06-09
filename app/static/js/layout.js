@@ -121,6 +121,18 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // --------------------------------------------------------------
+  // 5.5) Adjust body padding for window controls overlay
+  // --------------------------------------------------------------
+  if ('windowControlsOverlay' in navigator) {
+    function updateOverlayPadding() {
+      var rect = navigator.windowControlsOverlay.getTitlebarAreaRect();
+      document.body.style.paddingTop = rect.height + 'px';
+    }
+    navigator.windowControlsOverlay.addEventListener('geometrychange', updateOverlayPadding);
+    updateOverlayPadding();
+  }
+
+  // --------------------------------------------------------------
   // 6) Hoist modals to document.body to avoid clipping
   // --------------------------------------------------------------
   document.querySelectorAll('.modal').forEach(function(modal) {
