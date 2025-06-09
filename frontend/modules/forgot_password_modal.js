@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const form          = document.getElementById('forgotForm');
+  const form = document.getElementById('forgotForm');
+  if (!form) return; // Modal not present
+
   const emailErr      = document.getElementById('forgotEmailError');
   const successDiv    = document.getElementById('forgotSuccess');
   const btn           = document.getElementById('forgotButton');
