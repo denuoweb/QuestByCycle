@@ -18,15 +18,4 @@ body {
   background: url('/static/images/header-bg.jpg') stretch;
 }
 
-.container {
-  // Overrides layout/_grid.scss .container
-  width: 100%;
-  max-width: 95%;
-  margin: 0 auto;
-  background-color: #D0E6B5;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-  overflow: visible;
-  @include transition(transform 0.3s ease-in-out, box-shadow 0.3s ease);
-}
+// rely on Bootstrap's container styles
