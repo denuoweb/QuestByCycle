@@ -1,5 +1,6 @@
 import { initLayout } from './layout.js';
 import './utils.js';
+import '../app/static/scss/main.scss';
 // Ensure global helpers are loaded before any module uses them
 import './modules/quill_common.js';
 import './modules/modal_common.js';

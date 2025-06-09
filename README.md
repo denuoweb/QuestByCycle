@@ -182,10 +182,11 @@ This project relies on a variety of open source libraries. The badges below link
 ```sudo apt install postfix```
 ```sudo nano /etc/postfix/main.cf```
 
-13. Build CSS
+13. Build frontend assets
 
 ```cd /opt/QuestByCycle```
-```sass app/static/scss/main.scss app/static/css/main.css --no-source-map --style=compressed```
+```npm install```
+```npm run build```
 
 14. Configure
     - Copy `config.toml.example` to `config.toml` and adjust the variables accordingly.
