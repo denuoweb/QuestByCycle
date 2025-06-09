@@ -8,7 +8,7 @@ from flask_login import login_required, current_user
 from app.models import db, User, Game, Sponsor, user_games, QuestSubmission, UserIP
 from app.forms import SponsorForm
 from app.utils import save_sponsor_logo, sanitize_html
-from functools import wraps
+from app.decorators import require_admin, require_super_admin
 from werkzeug.utils import secure_filename
 
 admin_bp = Blueprint('admin', __name__)
@@ -19,24 +19,6 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
                                    
-def require_admin(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_super_admin and not current_user.is_admin:
-            flash('Access denied: You do not have the necessary permissions.', 'error')
-            return redirect(url_for('main.index'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-
-def require_super_admin(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_super_admin:
-            flash('Access denied: You do not have the necessary permissions.', 'error')
-            return redirect(url_for('main.index'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 def create_super_admin(app):

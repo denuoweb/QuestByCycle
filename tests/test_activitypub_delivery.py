@@ -7,6 +7,7 @@ from app.activitypub_utils import (
     deliver_activity,
     generate_activitypub_keys,
     sign_activitypub_request,
+    create_activitypub_actor,
 )
 
 
@@ -79,3 +80,18 @@ def test_sign_request_returns_string(app):
         "{}",
     )
     assert isinstance(headers["Signature"], str)
+
+def test_create_actor_uses_local_domain_when_server_name_blank(app):
+    app.config["SERVER_NAME"] = ""
+    user = User(
+        username="fall",
+        email="fall@example.com",
+        license_agreed=True,
+        email_verified=True,
+    )
+    db.session.add(user)
+    db.session.commit()
+
+    create_activitypub_actor(user)
+
+    assert user.activitypub_id == "https://example.com/users/fall"
