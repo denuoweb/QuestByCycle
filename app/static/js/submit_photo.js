@@ -18,6 +18,11 @@ document.addEventListener('DOMContentLoaded', function () {
             isSubmitting = false;
             return;
         }
+        if (file && file.type.startsWith('image/') && file.size > 8 * 1024 * 1024) {
+            displayFlashMessage('Image must be 8 MB or smaller.', 'error');
+            isSubmitting = false;
+            return;
+        }
 
         showFloatingModal();
 
