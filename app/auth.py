@@ -333,9 +333,9 @@ def login():
     form    = LoginForm()
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-                                          
+
     if not form.validate_on_submit():
-        msg = 'Please enter both email and password.'
+        msg = 'Please correct the errors in the login form.'
         if is_ajax:
             return jsonify({
                 'success': False,

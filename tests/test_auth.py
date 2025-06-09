@@ -96,7 +96,7 @@ def test_get_login_opens_modal(client):
 @pytest.mark.parametrize("headers,status_code,error,show_forgot", [
     ({}, 302, None, None),                                  
     ({"X-Requested-With": "XMLHttpRequest"}, 400,
-     "Please enter both email and password.", False),
+     "Please correct the errors in the login form.", False),
 ])
 def test_post_missing_credentials(client, headers, status_code, error, show_forgot):
     resp = client.post("/auth/login", data={}, headers=headers, follow_redirects=False)
@@ -109,7 +109,7 @@ def test_post_missing_credentials(client, headers, status_code, error, show_forg
 
 @pytest.mark.parametrize("ajax", [False, True])
 def test_post_invalid_email(client, ajax):
-    data = {"email": "doesnotexist@example.com", "password": "whatever"}
+    data = {"email": "doesnotexist@example.com", "password": "whatever", "accept_license": "y"}
     headers = {"X-Requested-With": "XMLHttpRequest"} if ajax else {}
     resp = client.post("/auth/login", data=data, headers=headers, follow_redirects=False)
     if ajax:
@@ -134,7 +134,7 @@ def test_post_invalid_email(client, ajax):
 def test_unverified_email_flow(client, user_unverified, app):
                                                             
     app.config["MAIL_SERVER"] = "smtp.test"
-    data = {"email": user_unverified.email, "password": "secret"}
+    data = {"email": user_unverified.email, "password": "secret", "accept_license": "y"}
                
     resp = client.post(
         "/auth/login",
@@ -149,7 +149,7 @@ def test_unverified_email_flow(client, user_unverified, app):
 
 @pytest.mark.parametrize("ajax", [False, True])
 def test_wrong_password(client, user_normal, ajax):
-    data = {"email": user_normal.email, "password": "wrongpwd"}
+    data = {"email": user_normal.email, "password": "wrongpwd", "accept_license": "y"}
     headers = {"X-Requested-With": "XMLHttpRequest"} if ajax else {}
     resp = client.post("/auth/login", data=data, headers=headers, follow_redirects=False)
     if ajax:
@@ -161,7 +161,7 @@ def test_wrong_password(client, user_normal, ajax):
 
 @pytest.mark.parametrize("ajax", [False, True])
 def test_successful_login_defaults_to_index(client, user_normal, ajax):
-    data = {"email": user_normal.email, "password": "secret", "remember_me": "y"}
+    data = {"email": user_normal.email, "password": "secret", "remember_me": "y", "accept_license": "y"}
     headers = {"X-Requested-With": "XMLHttpRequest"} if ajax else {}
     resp = client.post("/auth/login", data=data, headers=headers, follow_redirects=False)
     if ajax:
@@ -176,7 +176,7 @@ def test_successful_login_defaults_to_index(client, user_normal, ajax):
         assert resp.headers["Location"].startswith(expected)
 
 def test_successful_login_with_next_param(client, user_normal):
-    data = {"email": user_normal.email, "password": "secret", "remember_me": "y"}
+    data = {"email": user_normal.email, "password": "secret", "remember_me": "y", "accept_license": "y"}
     resp = client.post("/auth/login?next=/profile", data=data, follow_redirects=False)
                                           
     assert resp.status_code == 302
