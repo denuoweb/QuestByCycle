@@ -257,7 +257,27 @@ self.addEventListener("message", (event) => {
   }
 });
 
-// Display push notifications
+// ---------------------------------------------------------------------------
+// Background sync to refresh notifications
+// ---------------------------------------------------------------------------
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-notifications") {
+    event.waitUntil(fetch("/notifications/unread_count"));
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Periodic background sync for notification count
+// ---------------------------------------------------------------------------
+self.addEventListener("periodicsync", (event) => {
+  if (event.tag === "periodic-notifications") {
+    event.waitUntil(fetch("/notifications/unread_count"));
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Push notifications support
+// ---------------------------------------------------------------------------
 self.addEventListener("push", (event) => {
   let data = {};
   if (event.data) {
@@ -278,6 +298,7 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+  event.waitUntil(clients.openWindow("/notifications/"));
   const url = event.notification.data && event.notification.data.url;
   if (url) {
     event.waitUntil(clients.openWindow(url));
