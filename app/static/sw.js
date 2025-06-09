@@ -215,8 +215,12 @@ self.addEventListener("fetch", (event) => {
           return cachedResponse;
         }
         const networkResponse = await fetch(event.request);
-        if (shouldCacheRequest(event.request)) {
-          cache.put(event.request, networkResponse.clone());
+        if (shouldCacheRequest(event.request) && networkResponse.status !== 206) {
+          try {
+            cache.put(event.request, networkResponse.clone());
+          } catch (err) {
+            console.error("Cache put failed:", err);
+          }
         }
         return networkResponse;
       } catch (error) {
