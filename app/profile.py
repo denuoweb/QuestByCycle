@@ -1,7 +1,6 @@
-import bleach
 import json
 import requests
-from .utils import REQUEST_TIMEOUT
+from .utils import REQUEST_TIMEOUT, sanitize_html
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import current_user, login_required
 from .models import db, ProfileWallMessage, User, Notification
@@ -12,40 +11,6 @@ from urllib.parse import urlparse
 from threading import Thread
 
 profile_bp = Blueprint('profile', __name__)
-
-ALLOWED_TAGS = [
-    'a', 'b', 'i', 'u', 'em', 'strong', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'blockquote', 'code', 'pre', 'br', 'div', 'span', 'ul', 'ol', 'li', 'hr',
-    'sub', 'sup', 's', 'strike', 'font', 'img', 'video', 'figure'
-]
-
-ALLOWED_ATTRIBUTES = {
-    '*': ['class', 'id'],
-    'a': ['href', 'title', 'target'],
-    'img': ['src', 'alt', 'width', 'height'],
-    'video': ['src', 'width', 'height', 'controls'],
-    'p': ['class'],
-    'span': ['class'],
-    'div': ['class'],
-    'h1': ['class'],
-    'h2': ['class'],
-    'h3': ['class'],
-    'h4': ['class'],
-    'h5': ['class'],
-    'h6': ['class'],
-    'blockquote': ['class'],
-    'code': ['class'],
-    'pre': ['class'],
-    'ul': ['class'],
-    'ol': ['class'],
-    'li': ['class'],
-    'hr': ['class'],
-    'sub': ['class'],
-    'sup': ['class'],
-    's': ['class'],
-    'strike': ['class'],
-    'font': ['color', 'face', 'size']
-}
 
 
 def _deliver_follow_activity(actor_url, activity, sender_id):
@@ -76,7 +41,7 @@ def _deliver_follow_activity(actor_url, activity, sender_id):
 def post_profile_message(user_id):
     user = User.query.get_or_404(user_id)
     data = request.get_json()
-    content = bleach.clean(data.get('content'), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+    content = sanitize_html(data.get('content'))
 
     if not content:
         return jsonify({'error': 'Content is required.'}), 400
@@ -151,7 +116,7 @@ def post_reply(user_id, message_id):
         return jsonify({'error': 'You are not authorized to reply to messages on this profile.'}), 403
 
     data = request.get_json()
-    content = bleach.clean(data.get('content'), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+    content = sanitize_html(data.get('content'))
     if not content:
         return jsonify({'error': 'Content is required.'}), 400
 
@@ -204,7 +169,7 @@ def edit_message(user_id, message_id):
         return jsonify({'error': 'Unauthorized access'}), 403
 
     data = request.get_json()
-    new_content = bleach.clean(data.get('content'), tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
+    new_content = sanitize_html(data.get('content'))
 
     if not new_content:
         return jsonify({'error': 'Content is required.'}), 400

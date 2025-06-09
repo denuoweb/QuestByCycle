@@ -5,7 +5,6 @@ This module defines the main blueprint for the Flask application.
 It contains routes for the index page, profile management, image resizing,
 shout board interactions, leaderboard data, and contact submissions.
 """
-import bleach
 import io
 import logging
 import os
@@ -27,7 +26,12 @@ from app.models import (db, Game, User, Quest, Badge, UserQuest, QuestSubmission
                         user_games)
 from app.forms import (ProfileForm, ShoutBoardForm, ContactForm, BikeForm,
                        LoginForm, RegistrationForm, ForgotPasswordForm, ResetPasswordForm)
-from app.utils import (save_profile_picture, save_bicycle_picture, send_email)
+from app.utils import (
+    save_profile_picture,
+    save_bicycle_picture,
+    send_email,
+    sanitize_html,
+)
 from .config import load_config
 
 # Configure logging
@@ -37,49 +41,11 @@ logger = logging.getLogger(__name__)
 # Create blueprint
 main_bp = Blueprint('main', __name__)
 
-# Allowed HTML tags and attributes for sanitization
-ALLOWED_TAGS = [
-    'a', 'b', 'i', 'u', 'em', 'strong', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'blockquote', 'code', 'pre', 'br', 'div', 'span', 'ul', 'ol', 'li', 'hr',
-    'sub', 'sup', 's', 'strike', 'font', 'img', 'video', 'figure'
-]
-ALLOWED_ATTRIBUTES = {
-    '*': ['class', 'id'],
-    'a': ['href', 'title', 'target'],
-    'img': ['src', 'alt', 'width', 'height'],
-    'video': ['src', 'width', 'height', 'controls'],
-    'p': ['class'],
-    'span': ['class'],
-    'div': ['class'],
-    'h1': ['class'],
-    'h2': ['class'],
-    'h3': ['class'],
-    'h4': ['class'],
-    'h5': ['class'],
-    'h6': ['class'],
-    'blockquote': ['class'],
-    'code': ['class'],
-    'pre': ['class'],
-    'ul': ['class'],
-    'ol': ['class'],
-    'li': ['class'],
-    'hr': ['class'],
-    'sub': ['class'],
-    'sup': ['class'],
-    's': ['class'],
-    'strike': ['class'],
-    'font': ['color', 'face', 'size']
-}
 
 # Load configuration
 config = load_config()
 
 
-def sanitize_html(html_content):
-    """
-    Sanitize HTML content using bleach with a set of allowed tags and attributes.
-    """
-    return bleach.clean(html_content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
 
 
 def get_datetime(activity):

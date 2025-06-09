@@ -1,55 +1,17 @@
 """
 Admin and Admin Dashboard related routes.
 """
-import bleach
 import os
 import logging
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
 from app.models import db, User, Game, Sponsor, user_games, QuestSubmission, UserIP
 from app.forms import SponsorForm
-from app.utils import save_sponsor_logo
+from app.utils import save_sponsor_logo, sanitize_html
 from functools import wraps
 from werkzeug.utils import secure_filename
 
 admin_bp = Blueprint('admin', __name__)
-
-ALLOWED_TAGS = [
-    'a', 'b', 'i', 'u', 'em', 'strong', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'blockquote', 'code', 'pre', 'br', 'div', 'span', 'ul', 'ol', 'li', 'hr',
-    'sub', 'sup', 's', 'strike', 'font', 'img', 'video', 'figure'
-]
-
-ALLOWED_ATTRIBUTES = {
-    '*': ['class', 'id'],
-    'a': ['href', 'title', 'target'],
-    'img': ['src', 'alt', 'width', 'height'],
-    'video': ['src', 'width', 'height', 'controls'],
-    'p': ['class'],
-    'span': ['class'],
-    'div': ['class'],
-    'h1': ['class'],
-    'h2': ['class'],
-    'h3': ['class'],
-    'h4': ['class'],
-    'h5': ['class'],
-    'h6': ['class'],
-    'blockquote': ['class'],
-    'code': ['class'],
-    'pre': ['class'],
-    'ul': ['class'],
-    'ol': ['class'],
-    'li': ['class'],
-    'hr': ['class'],
-    'sub': ['class'],
-    'sup': ['class'],
-    's': ['class'],
-    'strike': ['class'],
-    'font': ['color', 'face', 'size']
-}
-
-def sanitize_html(html_content):
-    return bleach.clean(html_content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
 
 ALLOWED_EXTENSIONS = {'csv'}
 

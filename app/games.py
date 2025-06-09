@@ -1,7 +1,6 @@
 # pylint: disable=import-error
 import os
 import base64
-import bleach
 import qrcode
 
 from flask import (
@@ -17,49 +16,9 @@ from app.utils import (
     generate_smoggy_images,
     allowed_image_file,
     send_social_media_liaison_email,
+    sanitize_html,
 )
 from io import BytesIO
-
-ALLOWED_TAGS = [
-    'a', 'b', 'i', 'u', 'em', 'strong', 'p', 'h1', 'h2', 'h3', 'h4', 'h5',
-    'h6', 'blockquote', 'code', 'pre', 'br', 'div', 'span', 'ul', 'ol', 'li',
-    'hr', 'sub', 'sup', 's', 'strike', 'font', 'img', 'video', 'figure'
-]
-
-ALLOWED_ATTRIBUTES = {
-    '*': ['class', 'id'],
-    'a': ['href', 'title', 'target'],
-    'img': ['src', 'alt', 'width', 'height'],
-    'video': ['src', 'width', 'height', 'controls'],
-    'p': ['class'],
-    'span': ['class'],
-    'div': ['class'],
-    'h1': ['class'],
-    'h2': ['class'],
-    'h3': ['class'],
-    'h4': ['class'],
-    'h5': ['class'],
-    'h6': ['class'],
-    'blockquote': ['class'],
-    'code': ['class'],
-    'pre': ['class'],
-    'ul': ['class'],
-    'ol': ['class'],
-    'li': ['class'],
-    'hr': ['class'],
-    'sub': ['class'],
-    'sup': ['class'],
-    's': ['class'],
-    'strike': ['class'],
-    'font': ['color', 'face', 'size']
-}
-
-
-def sanitize_html(html_content):
-    """
-    Sanitize the provided HTML content using bleach with allowed tags and attributes.
-    """
-    return bleach.clean(html_content, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRIBUTES)
 
 
 games_bp = Blueprint('games', __name__)

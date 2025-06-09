@@ -7,13 +7,23 @@ import io
 import bleach
 import smtplib
 from flask import current_app, request, url_for
-from .models import db, Quest, Badge, Game, UserQuest, User, ShoutBoardMessage, QuestSubmission, UserIP
+from .models import (
+    db,
+    Quest,
+    Badge,
+    Game,
+    UserQuest,
+    User,
+    ShoutBoardMessage,
+    QuestSubmission,
+    UserIP,
+)
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
 from PIL import Image
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from email.mime.image    import MIMEImage
+from email.mime.image import MIMEImage
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
 
 UTC = timezone.utc
@@ -81,27 +91,49 @@ def allowed_video_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_VIDEO_EXTENSIONS
 
 
-def save_leaderboard_image(image_file):
-    if not hasattr(image_file, 'filename'):
+def save_image_file(
+    image_file,
+    subpath,
+    *,
+    allowed_extensions=ALLOWED_IMAGE_EXTENSIONS,
+    old_filename=None,
+    output_ext=None,
+):
+    """Save ``image_file`` under ``static/<subpath>``.
+
+    ``subpath`` should be a path relative to the ``static`` directory.
+    Optionally delete ``old_filename`` (also relative to ``static``).
+    If ``output_ext`` is provided, the saved file will use that extension.
+    """
+
+    if not image_file or not getattr(image_file, "filename", None):
         raise ValueError("Invalid file object passed.")
-    
+
+    ext = image_file.filename.rsplit(".", 1)[-1].lower()
+    if ext not in allowed_extensions:
+        raise ValueError("File extension not allowed.")
+
+    if output_ext:
+        ext = output_ext.lstrip(".").lower()
+
+    filename = secure_filename(f"{uuid.uuid4()}.{ext}")
+    upload_dir = os.path.join(current_app.static_folder, subpath)
+    os.makedirs(upload_dir, exist_ok=True)
+    image_file.save(os.path.join(upload_dir, filename))
+
+    if old_filename:
+        old_path = os.path.join(current_app.static_folder, old_filename)
+        if os.path.exists(old_path):
+            os.remove(old_path)
+
+    return os.path.join(subpath, filename)
+
+
+def save_leaderboard_image(image_file):
     try:
-        ext = image_file.filename.rsplit('.', 1)[-1].lower()
-        if ext not in ALLOWED_IMAGE_EXTENSIONS:
-            raise ValueError("File extension not allowed.")
-        filename = secure_filename(f"{uuid.uuid4()}.{ext}")
-        rel_path = os.path.join('images', 'leaderboard', filename)
-        abs_path = os.path.join(current_app.root_path, 'static', rel_path)
-
-        leaderboard_images_dir = os.path.join(current_app.root_path, 'static/images/leaderboard')
-        if not os.path.exists(leaderboard_images_dir):
-            os.makedirs(leaderboard_images_dir)
-
-        image_file.save(abs_path)
-        return rel_path
-
-    except Exception as e:
-        raise ValueError(f"Failed to save image: {str(e)}")
+        return save_image_file(image_file, os.path.join('images', 'leaderboard'))
+    except Exception as e:  # rethrow as ValueError for API consistency
+        raise ValueError(f"Failed to save image: {str(e)}") from e
 
 def create_smog_effect(image, smog_level):
     smog_overlay = Image.new('RGBA', image.size, (169, 169, 169, int(255 * smog_level)))
@@ -140,71 +172,39 @@ def update_user_score(user_id):
 
 
 def save_profile_picture(profile_picture_file, old_filename=None):
-    if old_filename:
-        old_path = os.path.join(current_app.root_path, 'static', old_filename)
-        if os.path.exists(old_path):
-            os.remove(old_path)  # Remove the old file
-
-    ext = profile_picture_file.filename.rsplit('.', 1)[-1]
-    filename = secure_filename(f"{uuid.uuid4()}.{ext}")
-    uploads_path = os.path.join(current_app.root_path, 'static', current_app.config['main']['UPLOAD_FOLDER'])
-    if not os.path.exists(uploads_path):
-        os.makedirs(uploads_path)
-    profile_picture_file.save(os.path.join(uploads_path, filename))
-    return os.path.join(current_app.config['main']['UPLOAD_FOLDER'], filename)
+    uploads = current_app.config['main']['UPLOAD_FOLDER']
+    return save_image_file(profile_picture_file, uploads, old_filename=old_filename)
 
 
 def save_badge_image(image_file):
     try:
-        # Generate a secure filename
-        filename = secure_filename(f"{uuid.uuid4()}.png")
-        rel_path = os.path.join('images', 'badge_images', filename)  # No leading slashes
-        abs_path = os.path.join(current_app.root_path, current_app.static_folder, rel_path)
-
-        # Save the file
-        image_file.save(abs_path)
-        return filename  # Return the correct relative path from 'static' directory
-
+        return os.path.basename(
+            save_image_file(
+                image_file,
+                os.path.join('images', 'badge_images'),
+                output_ext='png',
+            )
+        )
     except Exception as e:
-        raise ValueError(f"Failed to save image: {str(e)}")
+        raise ValueError(f"Failed to save image: {str(e)}") from e
 
 
 def save_bicycle_picture(bicycle_picture_file, old_filename=None):
-    """
-    Save the uploaded bicycle picture, replacing the old one if provided.
-    """
-    if old_filename:
-        old_path = os.path.join(current_app.root_path, 'static', old_filename)
-        if os.path.exists(old_path):
-            os.remove(old_path)  # Remove the old file
-
-    ext = bicycle_picture_file.filename.rsplit('.', 1)[-1].lower()
-    if ext not in ALLOWED_IMAGE_EXTENSIONS:
-        raise ValueError("File extension not allowed.")
-    
-    filename = secure_filename(f"{uuid.uuid4()}.{ext}")
-    uploads_path = os.path.join(current_app.root_path, 'static', current_app.config['main']['UPLOAD_FOLDER'], 'bicycle_pictures')
-    if not os.path.exists(uploads_path):
-        os.makedirs(uploads_path)
-
-    bicycle_picture_file.save(os.path.join(uploads_path, filename))
-    return os.path.join(current_app.config['main']['UPLOAD_FOLDER'], 'bicycle_pictures', filename)
+    subdir = os.path.join(
+        current_app.config['main']['UPLOAD_FOLDER'], 'bicycle_pictures'
+    )
+    return save_image_file(
+        bicycle_picture_file,
+        subdir,
+        old_filename=old_filename,
+    )
 
 
 def save_submission_image(submission_image_file):
     try:
-        ext = submission_image_file.filename.rsplit('.', 1)[-1].lower()
-        if ext not in ALLOWED_IMAGE_EXTENSIONS:
-            raise ValueError("File extension not allowed.")
-        filename = secure_filename(f"{uuid.uuid4()}.{ext}")
-        uploads_dir = os.path.join(current_app.static_folder, 'images', 'verifications')
-        
-        # Ensure the upload directory exists
-        os.makedirs(uploads_dir, exist_ok=True)
-        
-        full_path = os.path.join(uploads_dir, filename)
-        submission_image_file.save(full_path)
-        return os.path.join('images', 'verifications', filename)
+        return save_image_file(
+            submission_image_file, os.path.join('images', 'verifications')
+        )
     except Exception as e:
         current_app.logger.error(f"Failed to save image: {e}")
         raise
@@ -324,40 +324,17 @@ def public_media_url(path):
 
 
 def save_sponsor_logo(image_file, old_filename=None):
-    # Check if the uploaded file has a valid filename
-    if image_file and allowed_image_file(image_file.filename):
-        # Secure the filename and generate a unique identifier to avoid collisions
-        ext = image_file.filename.rsplit('.', 1)[-1].lower()
-        filename = secure_filename(f"{uuid.uuid4()}.{ext}")
-
-        # Define the upload path
-        upload_path = os.path.join(current_app.root_path, 'static/images/sponsors')
-
-        # Ensure the directory exists
-        if not os.path.exists(upload_path):
-            os.makedirs(upload_path)
-
-        # Save the new file
-        file_path = os.path.join(upload_path, filename)
-        try:
-            image_file.save(file_path)
-        except Exception as e:
-            raise ValueError(f"Failed to save image: {str(e)}")
-
-        # Remove the old file if provided
-        if old_filename:
-            old_file_path = os.path.join(current_app.root_path, 'static', old_filename)
-            if os.path.exists(old_file_path):
-                try:
-                    os.remove(old_file_path)
-                except Exception as e:
-                    current_app.logger.error(f"Failed to remove old image: {str(e)}")
-
-        # Return the relative path to the saved file
-        return os.path.join('images', 'sponsors', filename)
-
-    else:
+    if not image_file or not image_file.filename:
         raise ValueError("Invalid file type or no file provided.")
+
+    try:
+        return save_image_file(
+            image_file,
+            os.path.join('images', 'sponsors'),
+            old_filename=old_filename,
+        )
+    except Exception as e:
+        raise ValueError(f"Failed to save image: {str(e)}") from e
 
 
 def can_complete_quest(user_id, quest_id):
