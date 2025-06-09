@@ -9,11 +9,12 @@ window.allBadges = window.allBadges || [];
 async function fetchAllBadges() {
   const gameHolder = document.getElementById("game_IdHolder");
   const selectedGameId = gameHolder ? gameHolder.getAttribute("data-game-id") : null;
-  // Hit the badge endpoint directly without a trailing slash
-  const url = new URL('/badges', window.location.origin);
-  if (selectedGameId && !isNaN(parseInt(selectedGameId, 10)) && selectedGameId !== "0") {
-    url.searchParams.set('game_id', selectedGameId);
-  }
+  // Build the badge endpoint explicitly to avoid accidental path prefixing
+  const query = (selectedGameId && !isNaN(parseInt(selectedGameId, 10)) &&
+                 selectedGameId !== "0")
+                 ? `?game_id=${selectedGameId}`
+                 : '';
+  const url = `/badges${query}`;
 
   const response = await fetch(url, { credentials: 'same-origin' });
   if (!response.ok) {
