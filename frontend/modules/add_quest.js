@@ -1,26 +1,28 @@
 import { initQuill } from './quill_common.js';
 
-// Only initialise the editors when the elements exist on the page.
-const descriptionEl = document.querySelector('#description-editor');
-const tipsEl        = document.querySelector('#tips-editor');
+document.addEventListener('DOMContentLoaded', () => {
+  // Only initialise the editors when the elements exist on the page.
+  const descriptionEl = document.querySelector('#description-editor');
+  const tipsEl        = document.querySelector('#tips-editor');
 
-const quillDescription = descriptionEl ? initQuill(descriptionEl) : null;
-const quillTips        = tipsEl ? initQuill(tipsEl) : null;
+  const quillDescription = descriptionEl ? initQuill(descriptionEl) : null;
+  const quillTips        = tipsEl ? initQuill(tipsEl) : null;
 
-const questForm = document.getElementById('quest-form');
-if (questForm && quillDescription && quillTips) {
-  questForm.addEventListener('submit', e => {
-    const descriptionContent = quillDescription.root.innerHTML.trim();
-    const tipsContent        = quillTips.root.innerHTML.trim();
+  const questForm = document.getElementById('quest-form');
+  if (questForm && quillDescription && quillTips) {
+    questForm.addEventListener('submit', e => {
+      const descriptionContent = quillDescription.root.innerHTML.trim();
+      const tipsContent        = quillTips.root.innerHTML.trim();
 
-    if (!descriptionContent || descriptionContent === '<p><br></p>') {
-      alert('Description is required.');
-      e.preventDefault();
-      return false;
-    }
+      if (!descriptionContent || descriptionContent === '<p><br></p>') {
+        alert('Description is required.');
+        e.preventDefault();
+        return false;
+      }
 
-    document.getElementById('description').value = descriptionContent;
-    document.getElementById('tips').value        = tipsContent;
-  });
-}
+      document.getElementById('description').value = descriptionContent;
+      document.getElementById('tips').value        = tipsContent;
+    });
+  }
+});
 
