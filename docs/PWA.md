@@ -6,6 +6,7 @@ This application exposes basic Progressive Web App (PWA) features and can also b
 - The file `app/static/offline.html` is served at `/offline.html` when the service worker is registered.
 - The PWA manifest at `app/static/manifest.json` is available from `/manifest.json`.
 - The service worker is registered from the root path: `/sw.js`.
+- The manifest includes a `launch_handler` object specifying `"client_mode": "focus-existing"` so that repeated launches reuse the existing window.
 
 ## TWA Asset Links
 - The route `/.well-known/assetlinks.json` dynamically returns the digital asset links used for TWA verification.
