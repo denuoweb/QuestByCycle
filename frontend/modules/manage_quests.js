@@ -216,10 +216,13 @@ import { initQuill } from './quill_common.js';
             cell.innerHTML = '';
             cell.appendChild(editor);
             
-            const quill = initQuill(editor);
-
-            quill.root.innerHTML = currentValue;
-            cell.__quill = quill;
+            if (window.Quill) {
+                const quill = initQuill(editor);
+                quill.root.innerHTML = currentValue;
+                cell.__quill = quill;
+            } else {
+                console.error('Quill library not found  quest editing will not work.');
+            }
         }
     }
 
@@ -438,14 +441,18 @@ import { initQuill } from './quill_common.js';
             const descriptionEditorContainer = card.querySelector('.quill-editor-container[data-name="description"]');
             const tipsEditorContainer = card.querySelector('.quill-editor-container[data-name="tips"]');
 
-            if (descriptionEditorContainer && !descriptionEditorContainer.__quill) {
-                const quillDescription = initQuill(descriptionEditorContainer);
-                descriptionEditorContainer.__quill = quillDescription;
-            }
+            if (window.Quill) {
+                if (descriptionEditorContainer && !descriptionEditorContainer.__quill) {
+                    const quillDescription = initQuill(descriptionEditorContainer);
+                    descriptionEditorContainer.__quill = quillDescription;
+                }
 
-            if (tipsEditorContainer && !tipsEditorContainer.__quill) {
-                const quillTips = initQuill(tipsEditorContainer);
-                tipsEditorContainer.__quill = quillTips;
+                if (tipsEditorContainer && !tipsEditorContainer.__quill) {
+                    const quillTips = initQuill(tipsEditorContainer);
+                    tipsEditorContainer.__quill = quillTips;
+                }
+            } else {
+                console.error('Quill library not found  quest editing will not work.');
             }
         }
     }

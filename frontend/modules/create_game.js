@@ -6,7 +6,11 @@ import { initQuill } from './quill_common.js';
             const editorEl = document.getElementById(editorId);
             const hiddenEl = document.getElementById(`${editorId}-textarea`);
             if (editorEl && hiddenEl) {
-                initQuill(editorEl, hiddenEl);
+                if (window.Quill) {
+                    initQuill(editorEl, hiddenEl);
+                } else {
+                    console.error('Quill library not found  game editor will not work.');
+                }
             }
         });
     });
