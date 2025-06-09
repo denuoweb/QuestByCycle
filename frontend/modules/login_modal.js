@@ -1,8 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const form        = document.getElementById('loginForm');
-  const pwdError    = document.getElementById('passwordError');
-  const forgotDiv   = document.getElementById('forgotContainer');
-  const checkUrl    = document.getElementById('loginModal').dataset.checkUrl;
+  const form     = document.getElementById('loginForm');
+  const modal    = document.getElementById('loginModal');
+  if (!form || !modal) return; // Modal not present on this page
+
+  const pwdError  = document.getElementById('passwordError');
+  const forgotDiv = document.getElementById('forgotContainer');
+  const checkUrl  = modal.dataset.checkUrl;
 
   // AJAX submit
   form.addEventListener('submit', e => {

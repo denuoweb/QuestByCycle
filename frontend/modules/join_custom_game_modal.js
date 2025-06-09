@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
+    const modalEl = document.getElementById('joinCustomGameModal');
+    if (!modalEl) return;
+
     document.querySelectorAll('#customGameList .list-group-item').forEach(function (item) {
         item.addEventListener('click', function () {
             const code = this.getAttribute('data-game-code');
@@ -8,8 +11,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
-
-    const modalEl = document.getElementById('joinCustomGameModal');
     const hasJoined = modalEl.dataset.hasJoined === "1";
     const joinDemoUrl = modalEl.dataset.joinDemoUrl;
 
