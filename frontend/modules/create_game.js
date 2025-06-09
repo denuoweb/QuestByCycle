@@ -3,7 +3,11 @@ import { initQuill } from './quill_common.js';
         const editors = ['description', 'description2', 'details', 'awards', 'beyond'];
 
         editors.forEach(editorId => {
-            initQuill(`#${editorId}`, `#${editorId}-textarea`);
+            const editorEl = document.getElementById(editorId);
+            const hiddenEl = document.getElementById(`${editorId}-textarea`);
+            if (editorEl && hiddenEl) {
+                initQuill(editorEl, hiddenEl);
+            }
         });
     });
 
