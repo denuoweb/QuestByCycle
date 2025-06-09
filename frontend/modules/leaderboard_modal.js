@@ -4,7 +4,7 @@ let leaderboardData = null;
 let leaderboardMetric = 'points';
 let leaderboardBody;
 
-function showLeaderboardModal(selectedGameId) {
+export function showLeaderboardModal(selectedGameId) {
     const leaderboardContent = document.getElementById('leaderboardModalContent');
     if (!leaderboardContent) {
         console.error('Leaderboard modal content element not found. Cannot proceed with displaying leaderboard.');
@@ -216,4 +216,7 @@ function updateLeaderboardRows() {
         leaderboardBody.appendChild(row);
     });
 }
+
+// Make available globally for inline scripts
+window.showLeaderboardModal = showLeaderboardModal;
 
