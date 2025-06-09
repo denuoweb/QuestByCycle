@@ -12,27 +12,28 @@ from threading import Thread
 profile_bp = Blueprint('profile', __name__)
 
 
-def _deliver_follow_activity(actor_url, activity, sender_id):
+def _deliver_follow_activity(app, actor_url, activity, sender_id):
     """Background thread: fetch target’s actor doc and POST the activity."""
-    try:
-                                                         
-        sender = User.query.get(sender_id)
-        sender.ensure_activitypub_actor()
+    with app.app_context():
+        try:
 
-        doc = requests.get(actor_url, timeout=REQUEST_TIMEOUT).json()
-        inbox = doc.get("inbox")
-        if inbox:
-            hdrs = sign_activitypub_request(sender, 'POST', inbox, json.dumps(activity))
-            requests.post(
-                inbox,
-                json=activity,
-                headers=hdrs,
-                timeout=REQUEST_TIMEOUT,
+            sender = User.query.get(sender_id)
+            sender.ensure_activitypub_actor()
+
+            doc = requests.get(actor_url, timeout=REQUEST_TIMEOUT).json()
+            inbox = doc.get("inbox")
+            if inbox:
+                hdrs = sign_activitypub_request(sender, 'POST', inbox, json.dumps(activity))
+                requests.post(
+                    inbox,
+                    json=activity,
+                    headers=hdrs,
+                    timeout=REQUEST_TIMEOUT,
+                )
+        except Exception as e:
+            app.logger.error(
+                "Failed to deliver ActivityPub activity to %s: %s", actor_url, e
             )
-    except Exception as e:
-        current_app.logger.error(
-            "Failed to deliver ActivityPub activity to %s: %s", actor_url, e
-        )
 
 
 @profile_bp.route('/<int:user_id>/messages', methods=['POST'])
@@ -246,9 +247,10 @@ def follow_user(username):
 
                                                                       
     if not is_local_actor(target.activitypub_id):
+        app_obj = current_app._get_current_object()
         Thread(
             target=_deliver_follow_activity,
-            args=(target.activitypub_id, activity, current_user.id),
+            args=(app_obj, target.activitypub_id, activity, current_user.id),
             daemon=True
         ).start()
     else:
@@ -293,9 +295,10 @@ def unfollow_user(username):
 
                                         
     if not is_local_actor(target.activitypub_id):
+        app_obj = current_app._get_current_object()
         Thread(
             target=_deliver_follow_activity,
-            args=(target.activitypub_id, activity, current_user.id),
+            args=(app_obj, target.activitypub_id, activity, current_user.id),
             daemon=True
         ).start()
     else:
