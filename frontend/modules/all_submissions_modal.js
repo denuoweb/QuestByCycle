@@ -1,4 +1,6 @@
 
+import { openModal } from './modal_common.js';
+
 const PLACEHOLDER_IMAGE =
   window.PLACEHOLDER_IMAGE ||
   document.querySelector('meta[name="placeholder-image"]').getAttribute('content');

@@ -1,3 +1,5 @@
+import { openModal } from './modal_common.js';
+
 let leaderboardData = null;
 let leaderboardMetric = 'points';
 let leaderboardBody;

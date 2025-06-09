@@ -1,3 +1,5 @@
+import { openModal } from './modal_common.js';
+
 function showUserProfileModal(userId) {
   fetch(`/profile/${userId}`)
     .then(r => r.json())

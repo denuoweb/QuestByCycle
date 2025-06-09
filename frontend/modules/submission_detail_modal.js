@@ -1,3 +1,5 @@
+import { openModal } from './modal_common.js';
+
 document.addEventListener('DOMContentLoaded', () => {
 
   const $    = s => document.querySelector(s);
