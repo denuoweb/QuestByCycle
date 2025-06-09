@@ -426,6 +426,13 @@ def create_activitypub_actor(user):
     if not user.activitypub_id:
         public_pem, private_pem = generate_activitypub_keys()
         actor_url = url_for('activitypub.view_user', username=user.username, _external=True)
+        parsed = urlparse(actor_url)
+        domain = current_app.config.get("LOCAL_DOMAIN")
+        if not domain:
+            raise RuntimeError("LOCAL_DOMAIN must be configured for ActivityPub")
+        if parsed.netloc != domain:
+            actor_url = f"https://{domain}/users/{user.username}"
+
         user.activitypub_id = actor_url
         user.public_key = public_pem
         user.private_key = private_pem
