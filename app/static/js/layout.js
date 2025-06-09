@@ -21,6 +21,31 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           });
         });
+
+        // Background sync registration
+        if ('SyncManager' in window) {
+          registration.sync
+            .register('sync-notifications')
+            .catch(function(err) {
+              console.error('Sync registration failed:', err);
+            });
+        }
+
+        // Periodic background sync registration
+        if (registration.periodicSync) {
+          registration.periodicSync
+            .register('periodic-notifications', { minInterval: 24 * 60 * 60 * 1000 })
+            .catch(function(err) {
+              console.error('Periodic sync registration failed:', err);
+            });
+        }
+
+        // Request permission for push notifications
+        if ('PushManager' in window) {
+          if (Notification.permission === 'default') {
+            Notification.requestPermission();
+          }
+        }
       })
       .catch(function(err) {
         console.error('Service Worker registration failed:', err);

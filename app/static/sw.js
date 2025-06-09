@@ -153,3 +153,39 @@ self.addEventListener("message", (event) => {
     self.skipWaiting();
   }
 });
+
+// ---------------------------------------------------------------------------
+// Background sync to refresh notifications
+// ---------------------------------------------------------------------------
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-notifications") {
+    event.waitUntil(fetch("/notifications/unread_count"));
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Periodic background sync for notification count
+// ---------------------------------------------------------------------------
+self.addEventListener("periodicsync", (event) => {
+  if (event.tag === "periodic-notifications") {
+    event.waitUntil(fetch("/notifications/unread_count"));
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Push notifications support
+// ---------------------------------------------------------------------------
+self.addEventListener("push", (event) => {
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || "QuestByCycle";
+  const options = {
+    body: data.body,
+    icon: "/static/icons/icon_192x192.webp",
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow("/notifications/"));
+});
