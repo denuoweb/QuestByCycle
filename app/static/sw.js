@@ -1,5 +1,5 @@
 // The version of the cache
-const VERSION = "v5"; // Update this version number when changes are made
+const VERSION = "v6"; // Update this version number when changes are made
 const CACHE_NAME = `questbycycle-${VERSION}`;
 
 // List of static resources to cache
@@ -11,18 +11,8 @@ const APP_STATIC_RESOURCES = [
   // CSS Files
   "/static/css/main.css",
 
-  // JavaScript Files
-  "/static/js/all_submissions_modal.js",
-  "/static/js/badge_management.js",
-  "/static/js/generated_quest.js",
-  "/static/js/index_management.js",
-  "/static/js/leaderboard_modal.js",
-  "/static/js/modal_common.js",
-  "/static/js/quest_detail_modal.js",
-  "/static/js/submission_detail_modal.js",
-  "/static/js/user_management.js",
-  "/static/js/user_profile_modal.js",
-  "/static/js/push.js",
+  // JavaScript bundle
+  "/static/dist/main.js",
 
   // Icons
   "/static/icons/icon_48x48.webp",

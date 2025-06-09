@@ -33,6 +33,7 @@ build/
 migrations/
 develop-eggs/
 dist/
+!app/static/dist/
 downloads/
 eggs/
 .eggs/
@@ -188,3 +189,4 @@ logs/gunicorn-access.log
 app/static/videos/welcomeQuestByCycle.mp4
 welcomeQuestByCycle.mp4
 credentials.json
+node_modules/
