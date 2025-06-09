@@ -4,6 +4,7 @@ This application exposes basic Progressive Web App (PWA) features and can also b
 
 ## Offline Support
 - The file `app/static/offline.html` is served at `/offline.html` when the service worker is registered.
+- The PWA manifest at `app/static/manifest.json` is available from `/manifest.json`.
 - The service worker is registered from the root path: `/sw.js`.
 
 ## TWA Asset Links
