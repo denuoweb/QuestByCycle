@@ -410,6 +410,10 @@ async function submitQuestDetails(event, questId) {
       alert('Video must be 10 MB or smaller.');
       return;
     }
+    if (file && file.type.startsWith('image/') && file.size > 8 * 1024 * 1024) {
+      alert('Image must be 8 MB or smaller.');
+      return;
+    }
 
     const formData = new FormData(event.target);
     formData.append('user_id', CURRENT_USER_ID);

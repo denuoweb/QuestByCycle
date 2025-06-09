@@ -63,7 +63,8 @@ ALLOWED_IMAGE_EXTENSIONS = {
     'png', 'jpg', 'jpeg', 'gif', 'webp', 'heif', 'heic'
 }
 ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm', 'mov'}
-                                         
+
+MAX_IMAGE_BYTES = 8 * 1024 * 1024
 MAX_VIDEO_BYTES = 10 * 1024 * 1024
                                                        
 REQUEST_TIMEOUT = 5
@@ -114,6 +115,12 @@ def save_image_file(
 
     if not image_file or not getattr(image_file, "filename", None):
         raise ValueError("Invalid file object passed.")
+
+    image_file.seek(0, os.SEEK_END)
+    size = image_file.tell()
+    image_file.seek(0)
+    if size > MAX_IMAGE_BYTES:
+        raise ValueError("Image exceeds 8 MB limit")
 
     ext = image_file.filename.rsplit(".", 1)[-1].lower()
     if ext not in allowed_extensions:
