@@ -11,7 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
   navigator.serviceWorker.ready.then(async (reg) => {
     try {
       const res = await fetch('/push/public_key');
-      const { public_key } = await res.json();
+      if (!res.ok) return;
+      let public_key;
+      try {
+        ({ public_key } = await res.json());
+      } catch (err) {
+        console.error('Push setup failed', err);
+        return;
+      }
       if (!public_key) return;
 
       const existing = await reg.pushManager.getSubscription();
