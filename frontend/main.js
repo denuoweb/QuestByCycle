@@ -25,7 +25,11 @@ import './modules/manage_quests.js';
 import './modules/manage_sponsors.js';
 import './modules/notifications.js';
 import './modules/push.js';
-import './modules/quest_detail_modal.js';
+import { openQuestDetailModal, refreshQuestDetailModal } from './modules/quest_detail_modal.js';
+
+// Expose quest modal functions globally for inline handlers
+window.openQuestDetailModal = openQuestDetailModal;
+window.refreshQuestDetailModal = refreshQuestDetailModal;
 import './modules/register_modal.js';
 import './modules/reset_password_modal.js';
 import './modules/shout_board_modal.js';
