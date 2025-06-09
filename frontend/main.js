@@ -2,6 +2,7 @@ import { initLayout } from './layout.js';
 import './utils.js';
 // Ensure global helpers are loaded before any module uses them
 import './modules/quill_common.js';
+import './modules/modal_common.js';
 
 // Import all modularized scripts so Vite bundles them
 import './modules/add_quest.js';
@@ -22,7 +23,6 @@ import './modules/loading_modal.js';
 import './modules/login_modal.js';
 import './modules/manage_quests.js';
 import './modules/manage_sponsors.js';
-import './modules/modal_common.js';
 import './modules/notifications.js';
 import './modules/push.js';
 import './modules/quest_detail_modal.js';
