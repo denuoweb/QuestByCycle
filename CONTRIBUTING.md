@@ -1,8 +1,8 @@
 # Backend Work
 
 - Ability to See Tuturoial Game Without Logging In
-- Time Zone Handling
-- Consolidate CSS from template files into separate CSS and split `main.css` into those files
+- Time Zone Handling *(Completed)*
+- Consolidate CSS from template files into separate CSS and split `main.css` into those files *(Completed)*
 - In Windows, `.json` is allowed in image upload
 
 # Admin Overhaul
@@ -22,20 +22,20 @@
 # Activity Pub Profile
 
 - Edit Submission Ability
-- Implement Notification Alert
+- Implement Notification Alert *(Completed)*
 - Add commenting and likes on submission detail page
 - User Notification on Task Completion
-- Move New Task Submission in Profile to Top (Reverse Order)
+- Move New Task Submission in Profile to Top (Reverse Order) *(Completed)*
 - Put a calendar somewhere on the QbC site for keeping track of events listed in Available Quests.  
   _Note: Tomoko has started a Google calendar that could be embedded into the page._
 - On enlargement of a submission picture, use the player's profile name instead of the button for the user profile or make the player's profile name a link to their profile.
-- Add Additional Comment When Submitting a Task Item That Uses QR Verification
+- Add Additional Comment When Submitting a Task Item That Uses QR Verification *(Completed)*
 
 # Update
 
-- Sponsors link at bottom
+- Sponsors link at bottom *(Completed)*
 - Reorganize formatting of Detailed Quest modal
-- Set `photo_comment` verification type to allow for no comment
+- Set `photo_comment` verification type to allow for no comment *(Completed)*
 
 # Fix
 
@@ -46,10 +46,24 @@
   
   > "UPLOAD A PHOTO TO COMPLETE THE QUEST: 'VISIT LOCAL BUSINESSES BY BIKE AND FIND A QR CODE AT THEIR SHOP TO SHOW YOU WERE THERE'"
   
-- On the screen for creating or editing a game, please increase the number of characters for the Quest Instructions editable area to 4500 characters.
-- Modify Quill for Task Detail and Game Instruction modal, and recent activity 
+- On the screen for creating or editing a game, please increase the number of characters for the Quest Instructions editable area to 4500 characters *(Completed)*
+- Modify Quill for Task Detail and Game Instruction modal, and recent activity *(Completed)*
 - Delete Button on shout board not working.
 - After Validating a Task, the Total Posts Variable Doesn't Change on the Task List
-- Get loading modal working for task submissions
+- Get loading modal working for task submissions *(Completed)*
 - Register and login emails are not validated dynamically
 - add mastodon selection modal and add terms and privacy requirement
+
+## Completed
+
+- Time Zone Handling
+- Consolidate CSS from template files into separate CSS and split `main.css` into those files
+- Move New Task Submission in Profile to Top (Reverse Order)
+- Set `photo_comment` verification type to allow for no comment
+- On the screen for creating or editing a game, increase the number of characters for the Quest Instructions editable area to 4500 characters
+- Get loading modal working for task submissions
+- Sponsors link at bottom
+- Add Additional Comment When Submitting a Task Item That Uses QR Verification
+- Implement Notification Alert
+- Modify Quill for Task Detail and Game Instruction modal, and recent activity
+

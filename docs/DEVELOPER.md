@@ -74,7 +74,7 @@ The project is organized as follows:
 - `config.toml`: Configuration file.
 - `LICENSE.md`: License information.
 - `README.md`: Project overview and setup instructions.
-- `requirements.txt`: Python dependencies.
+- `pyproject.toml`: Project configuration and Python dependencies managed by Poetry.
 - `wsgi.py`: WSGI entry point for deploying the application.
 
 ### Important Files
@@ -84,7 +84,7 @@ The project is organized as follows:
 - **`app/forms.py`**: Defines the forms used in the application.
 - **`app/utils.py`**: Contains utility functions used across the application.
 - **`app/templates/`**: Contains HTML templates for rendering views.
-- **`requirements.txt`**: Lists the dependencies required for the project.
+- **`pyproject.toml`**: Lists the dependencies required for the project and is managed by Poetry.
 
 ## Setting Up the Development Environment
 
@@ -113,7 +113,7 @@ Ensure you have the following installed:
 
 3. **Install dependencies**:
    \`\`\`bash
-   pip install -r requirements.txt
+   poetry install
    \`\`\`
 
 4. **Set up the database**:
@@ -404,7 +404,7 @@ Before deploying to production, ensure the following settings in `config.toml`:
 
 4. **Install dependencies**:
    \`\`\`bash
-   pip install -r requirements.txt
+   poetry install
    \`\`\`
 
 5. **Configure the database**:
