@@ -4,8 +4,12 @@ import { initQuill } from './quill_common.js';
         const hiddenEl   = document.querySelector('#description-textarea');
 
         if (editorEl && hiddenEl) {
-            const descriptionEditor = initQuill(editorEl, hiddenEl);
-            if (descriptionEditor) descriptionEditor.root.innerHTML = hiddenEl.value;
+            if (window.Quill) {
+                const descriptionEditor = initQuill(editorEl, hiddenEl);
+                if (descriptionEditor) descriptionEditor.root.innerHTML = hiddenEl.value;
+            } else {
+                console.error('Quill library not found  sponsor editor will not work.');
+            }
         }
     });
 
