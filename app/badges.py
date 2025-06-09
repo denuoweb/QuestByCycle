@@ -61,7 +61,7 @@ def create_badge():
     return render_template('create_badge.html', form=form)
 
 
-@badges_bp.route('/', methods=['GET'])
+@badges_bp.route('', methods=['GET'])
 def get_badges():
     game_id = request.args.get('game_id', type=int)
     if game_id:
