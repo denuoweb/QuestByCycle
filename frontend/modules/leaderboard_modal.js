@@ -2,7 +2,7 @@ let leaderboardData = null;
 let leaderboardMetric = 'points';
 let leaderboardBody;
 
-function showLeaderboardModal(selectedGameId) {
+export function showLeaderboardModal(selectedGameId) {
     const leaderboardContent = document.getElementById('leaderboardModalContent');
     if (!leaderboardContent) {
         console.error('Leaderboard modal content element not found. Cannot proceed with displaying leaderboard.');
@@ -214,4 +214,7 @@ function updateLeaderboardRows() {
         leaderboardBody.appendChild(row);
     });
 }
+
+// Expose the modal function globally for inline and legacy scripts
+window.showLeaderboardModal = showLeaderboardModal;
 
