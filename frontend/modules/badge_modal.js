@@ -129,7 +129,7 @@ function populateBadgeModal(badge, requiredCount, currentUserCompletions, taskLi
  * Open the badge modal and populate it with data.
  * @param {HTMLElement} element - The badge element that was clicked.
  */
-async function openBadgeModal(element) {
+export async function openBadgeModal(element) {
   const badgeId = element.getAttribute('data-badge-id');
   const taskNames = element.getAttribute('data-task-name');
   const taskIdsAttr = element.getAttribute('data-task-id');

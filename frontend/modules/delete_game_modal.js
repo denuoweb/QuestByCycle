@@ -1,6 +1,6 @@
 let deleteInterval;
 
-function openDeleteGameModal(gameId) {
+export function openDeleteGameModal(gameId) {
   const modal = document.getElementById('deleteGameModal');
   const form  = document.getElementById('deleteGameForm');
   const input = document.getElementById('deleteGameConfirmInput');
@@ -51,4 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     confirmBtn.disabled = true;
   });
 });
+
+// Expose globally for inline handlers
+window.openDeleteGameModal = openDeleteGameModal;
 
