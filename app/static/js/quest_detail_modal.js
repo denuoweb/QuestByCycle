@@ -502,7 +502,7 @@ async function fetchSubmissions(questId) {
       .reverse()                     // newest first
       .map(sub => ({
         id:                  sub.id,
-        url:                 sub.image_url || sub.video_url,
+        url:                 sub.image_url || (sub.video_url ? null : '/static/images/default-placeholder.webp'),
         video_url:           sub.video_url,
         alt:                 'Submission Image',
         comment:             sub.comment,
