@@ -70,6 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Video must be 10 MB or smaller.');
         return;
       }
+      if (file.type.startsWith('image/') && file.size > 8 * 1024 * 1024) {
+        alert('Image must be 8 MB or smaller.');
+        return;
+      }
 
       const form = new FormData();
       if (file.type.startsWith('video/')) {

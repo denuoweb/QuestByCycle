@@ -64,3 +64,16 @@ def test_allowed_image_file_heif():
     """HEIF and HEIC images should be recognized as valid."""
     assert allowed_image_file("photo.heif")
     assert allowed_image_file("image.HEIC")
+
+
+def test_save_submission_image_too_large(app):
+    """Images larger than the limit should be rejected."""
+    from io import BytesIO
+    from werkzeug.datastructures import FileStorage
+    from app.utils import save_submission_image, MAX_IMAGE_BYTES
+
+    big_data = BytesIO(b"0" * (MAX_IMAGE_BYTES + 1))
+    file = FileStorage(stream=big_data, filename="big.jpg", content_type="image/jpeg")
+
+    with pytest.raises(ValueError):
+        save_submission_image(file)
