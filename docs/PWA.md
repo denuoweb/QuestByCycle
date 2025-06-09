@@ -20,3 +20,11 @@ This application exposes basic Progressive Web App (PWA) features and can also b
   ```
 
 The fingerprint will be inserted into the generated `assetlinks.json` response at runtime.
+
+## File Handlers
+
+The manifest supports the `file_handlers` property so the application can register
+itself as the default handler for specific file types. By default, the provided
+manifest declares support for common image formats. When a user chooses
+"Always open with QuestByCycle" for a supported image, the site will launch to
+`/` where the uploaded file can be processed.
