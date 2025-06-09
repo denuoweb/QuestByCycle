@@ -53,15 +53,33 @@ def test_liaison_email_lists_all_submissions(app, monkeypatch):
         db.session.add(quest)
         db.session.commit()
 
-        sharer = User(username="sharer", email="s@example.com", license_agreed=True, upload_to_socials=True)
+        sharer = User(
+            username="sharer",
+            email="s@example.com",
+            license_agreed=True,
+            upload_to_socials=True,
+        )
         sharer.set_password("pw")
-        nonsharer = User(username="private", email="p@example.com", license_agreed=True, upload_to_socials=False)
+        nonsharer = User(
+            username="private",
+            email="p@example.com",
+            license_agreed=True,
+            upload_to_socials=False,
+        )
         nonsharer.set_password("pw")
         db.session.add_all([sharer, nonsharer])
         db.session.commit()
 
-        sub1 = QuestSubmission(quest_id=quest.id, user_id=sharer.id, timestamp=datetime.now(timezone.utc))
-        sub2 = QuestSubmission(quest_id=quest.id, user_id=nonsharer.id, timestamp=datetime.now(timezone.utc))
+        sub1 = QuestSubmission(
+            quest_id=quest.id,
+            user_id=sharer.id,
+            timestamp=datetime.now(timezone.utc),
+        )
+        sub2 = QuestSubmission(
+            quest_id=quest.id,
+            user_id=nonsharer.id,
+            timestamp=datetime.now(timezone.utc),
+        )
         db.session.add_all([sub1, sub2])
         db.session.commit()
 

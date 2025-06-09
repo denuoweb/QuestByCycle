@@ -176,7 +176,11 @@ def generate_smoggy_images(image_path, game_id):
         for i in range(10):
             smog_level = i / 9.0
             smoggy_image = create_smog_effect(original_image, smog_level)
-            smoggy_image.save(os.path.join(current_app.root_path, f'static/images/leaderboard/smoggy_skyline_{game_id}_{i}.png'))
+            dest = os.path.join(
+                current_app.root_path,
+                f"static/images/leaderboard/smoggy_skyline_{game_id}_{i}.png",
+            )
+            smoggy_image.save(dest)
     except Exception as e:
         raise ValueError(f"Failed to generate smoggy images: {str(e)}")
 
@@ -187,7 +191,11 @@ def update_user_score(user_id):
             return False
 
                                                         
-        total_points = sum(quest.points_awarded for quest in user.user_quests if quest.points_awarded is not None)
+        total_points = sum(
+            quest.points_awarded
+            for quest in user.user_quests
+            if quest.points_awarded is not None
+        )
 
                                                                             
         user.score = min(total_points, MAX_POINTS_INT)
@@ -277,8 +285,14 @@ def save_submission_video(submission_video_file):
         final_path = os.path.join(uploads_dir, final_name)
 
                                  
-        ffmpeg_bin = current_app.config.get('FFMPEG_PATH') or shutil.which('ffmpeg')
-        if not ffmpeg_bin or (not os.path.isabs(ffmpeg_bin) and shutil.which(ffmpeg_bin) is None):
+        ffmpeg_bin = (
+            current_app.config.get('FFMPEG_PATH')
+            or shutil.which('ffmpeg')
+        )
+        if not ffmpeg_bin or (
+            not os.path.isabs(ffmpeg_bin)
+            and shutil.which(ffmpeg_bin) is None
+        ):
             raise FileNotFoundError(
                 "ffmpeg executable not found. Install ffmpeg or set FFMPEG_PATH"
             )
@@ -394,7 +408,10 @@ def can_complete_quest(user_id, quest_id):
 
         if first_completion_in_period:
                                                                                           
-            next_eligible_time = first_completion_in_period.timestamp + FREQUENCY_DELTA.get(quest.frequency, timedelta(days=1))
+            next_eligible_time = (
+                first_completion_in_period.timestamp
+                + FREQUENCY_DELTA.get(quest.frequency, timedelta(days=1))
+            )
 
     return can_verify, next_eligible_time
 
@@ -445,8 +462,9 @@ def check_and_award_badges(user_id, quest_id, game_id):
                                              
             user.badges.append(quest.badge)
             msg = (
-                f" earned the badge"
-                f"<a class='quest-title' href='javascript:void(0);' onclick='openBadgeModal(this)' "
+                " earned the badge"
+                "<a class='quest-title' href='javascript:void(0);' "
+                "onclick='openBadgeModal(this)' "
                 f"data-badge-id='{quest.badge.id}' "
                 f"data-badge-name='{quest.badge.name}' "
                 f"data-badge-description='{quest.badge.description}' "
@@ -455,11 +473,10 @@ def check_and_award_badges(user_id, quest_id, game_id):
                 f"data-badge-awarded-count='{quest.badge_awarded}' "
                 f"data-task-id='{quest.id}' "
                 f"data-user-completions='{user_quest.completions}'>"
-                f"{quest.badge.name}"
-                f"</a>for completing quest "
-                f"<a class='quest-title' href='javascript:void(0);' onclick='openQuestDetailModal({quest.id})'>"
-                f"{quest.title}"
-                f"</a>"
+                f"{quest.badge.name}</a>for completing quest "
+                "<a class='quest-title' href='javascript:void(0);' "
+                f"onclick='openQuestDetailModal({quest.id})'>"
+                f"{quest.title}</a>"
             )
             sbm = ShoutBoardMessage(message=msg, user_id=user_id, game_id=game_id)
             db.session.add(sbm)
@@ -468,13 +485,21 @@ def check_and_award_badges(user_id, quest_id, game_id):
                                            
     if quest.category and game_id:
                                                                 
-        category_quests = Quest.query.filter_by(category=quest.category, game_id=game_id).all()
+        category_quests = Quest.query.filter_by(
+            category=quest.category,
+            game_id=game_id,
+        ).all()
         if not category_quests:
             return
                                                                                
         completed_quests = [
-            ut.quest for ut in user.user_quests
-            if ut.quest.category == quest.category and ut.quest.game_id == game_id and ut.completions >= 1
+            ut.quest
+            for ut in user.user_quests
+            if (
+                ut.quest.category == quest.category
+                and ut.quest.game_id == game_id
+                and ut.completions >= 1
+            )
         ]
                                                                              
         if len(completed_quests) == len(category_quests):
@@ -493,33 +518,38 @@ def check_and_award_badges(user_id, quest_id, game_id):
                     )
                     user.badges.append(badge)
                     msg = (
-                        f" earned the badge "
-                        f"<a class='quest-title' href='javascript:void(0);' onclick='openBadgeModal(this)' "
+                        " earned the badge "
+                        "<a class='quest-title' href='javascript:void(0);' "
+                        "onclick='openBadgeModal(this)' "
                         f"data-badge-id='{badge.id}' "
                         f"data-badge-name='{badge.name}' "
                         f"data-badge-description='{badge.description}' "
                         f"data-badge-image='{url}' "
                         f"data-task-name='{quest.title}' "
-                        f"data-badge-awarded-count='1' "
+                        "data-badge-awarded-count='1' "
                         f"data-task-id='{quest.id}' "
                         f"data-user-completed='{len(completed_quests)}' "
                         f"data-total-tasks='{len(category_quests)}'>"
-                        f"{badge.name}"
-                        f"</a> for completing all quests in category '{quest.category}'"
+                        f"{badge.name}</a> for completing all quests in category "
+                        f"'{quest.category}'"
                     )
-                    sbm = ShoutBoardMessage(message=msg, user_id=user_id, game_id=game_id)
+                    sbm = ShoutBoardMessage(
+                        message=msg,
+                        user_id=user_id,
+                        game_id=game_id,
+                    )
                     db.session.add(sbm)
                     db.session.commit()
 
 
 def check_and_revoke_badges(user_id, game_id=None):
     """
-    Revoke badges awarded to the user if the tasks in the specified game no longer meet 
-    the required conditions.
-      - Quest-specific badges are revoked if the user’s completions for any awarding quest 
-        fall below quest.badge_awarded.
-      - Category badges are revoked if the user has not completed at least one of every quest 
-        in that badge’s category for the specified game.
+    Revoke badges awarded to the user if the tasks in the specified game no
+    longer meet the required conditions.
+      - Quest-specific badges are revoked if the user’s completions for any
+        awarding quest fall below ``quest.badge_awarded``.
+      - Category badges are revoked if the user has not completed at least one
+        of every quest in that badge’s category for the specified game.
     When revoking a badge, its associated shoutboard award message is deleted.
     """
     user = User.query.get(user_id)
@@ -530,10 +560,18 @@ def check_and_revoke_badges(user_id, game_id=None):
     for badge in user.badges:
         if badge.category:
                                                                                        
-            current_category_quests = Quest.query.filter_by(category=badge.category, game_id=game_id).all()
+            current_category_quests = Quest.query.filter_by(
+                category=badge.category,
+                game_id=game_id,
+            ).all()
             completed_quests = {
-                ut.quest for ut in user.user_quests
-                if ut.quest.category == badge.category and ut.quest.game_id == game_id and ut.completions >= 1
+                ut.quest
+                for ut in user.user_quests
+                if (
+                    ut.quest.category == badge.category
+                    and ut.quest.game_id == game_id
+                    and ut.completions >= 1
+                )
             }
             if set(current_category_quests) != set(completed_quests):
                 badges_to_remove.append(badge)
@@ -541,7 +579,10 @@ def check_and_revoke_badges(user_id, game_id=None):
                                                                                                                 
             all_met = True
             for quest in badge.quests:
-                user_quest = UserQuest.query.filter_by(user_id=user_id, quest_id=quest.id).first()
+                user_quest = UserQuest.query.filter_by(
+                    user_id=user_id,
+                    quest_id=quest.id,
+                ).first()
                 if not user_quest or user_quest.completions < quest.badge_awarded:
                     all_met = False
                     break
@@ -551,7 +592,10 @@ def check_and_revoke_badges(user_id, game_id=None):
     for badge in badges_to_remove:
         user.badges.remove(badge)
                                                                                
-        messages = ShoutBoardMessage.query.filter_by(user_id=user_id, game_id=game_id).all()
+        messages = ShoutBoardMessage.query.filter_by(
+            user_id=user_id,
+            game_id=game_id,
+        ).all()
         for message in messages:
             if f"data-badge-id='{badge.id}'" in message.message:
                 db.session.delete(message)
@@ -562,8 +606,8 @@ def enhance_badges_with_task_info(badges, game_id=None, user_id=None):
     """
     Enhance each badge with aggregated task information from its awarding quests.
     If a game_id is provided, only quests in that game are considered.
-    If user_id is provided, the function computes the maximum completions among those quests 
-    and a flag indicating if any quest’s threshold is met.
+    If user_id is provided, the function computes the maximum completions among
+    those quests and a flag indicating if any quest’s threshold is met.
     Returns a list of dictionaries with:
       - id, name, description, image, category,
       - task_names: comma‑separated quest titles,
@@ -575,14 +619,20 @@ def enhance_badges_with_task_info(badges, game_id=None, user_id=None):
     enhanced_badges = []
     for badge in badges:
         if game_id:
-            awarding_quests = [quest for quest in badge.quests if quest.game_id == game_id]
+            awarding_quests = [
+                quest
+                for quest in badge.quests
+                if quest.game_id == game_id
+            ]
         else:
             awarding_quests = badge.quests
 
         if awarding_quests:
             task_names = ", ".join(quest.title for quest in awarding_quests)
             task_ids = ", ".join(str(quest.id) for quest in awarding_quests)
-            badge_awarded_counts = ", ".join(str(quest.badge_awarded) for quest in awarding_quests)
+            badge_awarded_counts = ", ".join(
+                str(quest.badge_awarded) for quest in awarding_quests
+            )
         else:
             task_names = ""
             task_ids = ""
@@ -593,7 +643,10 @@ def enhance_badges_with_task_info(badges, game_id=None, user_id=None):
         if awarding_quests and user_id:
             completions_list = []
             for quest in awarding_quests:
-                user_quest = UserQuest.query.filter_by(user_id=user_id, quest_id=quest.id).first()
+                user_quest = UserQuest.query.filter_by(
+                    user_id=user_id,
+                    quest_id=quest.id,
+                ).first()
                 completions = user_quest.completions if user_quest else 0
                 completions_list.append(completions)
                 if completions >= quest.badge_awarded:
@@ -701,7 +754,9 @@ def generate_demo_game():
         return                                                      
 
     description = """
-    Welcome to the newest Demo Game! Embark on a quest to create a more sustainable future while enjoying everyday activities, having fun, and fostering teamwork in the real-life battle against climate change.
+    Welcome to the newest Demo Game! Embark on a quest to create a more
+    sustainable future while enjoying everyday activities, having fun, and
+    fostering teamwork in the real-life battle against climate change.
 
     Quest Instructions:
 
@@ -710,9 +765,13 @@ def generate_demo_game():
     How to Play:
 
     Play solo or join forces with friends in teams.
-    Explore the quests and have fun completing them to earn Carbon Reduction Points.
-    Once a quest is verified, you'll earn points displayed on the Leaderboard and badges of honor. Quests can be verified by uploading an image from your computer, taking a photo, writing a comment, or using a QR code.
-    Earn achievement badges by completing a group of quests or repeating quests. Learn more about badge criteria by clicking on the quest name. 
+    Explore the quests and have fun completing them to earn Carbon Reduction
+    Points.
+    Once a quest is verified, you'll earn points displayed on the Leaderboard
+    and badges of honor. Quests can be verified by uploading an image from your
+    computer, taking a photo, writing a comment, or using a QR code.
+    Earn achievement badges by completing a group of quests or repeating quests.
+    Learn more about badge criteria by clicking on the quest name.
     """
 
     start_date = datetime(year, 3 * (current_quarter - 1) + 1, 1)
@@ -731,20 +790,45 @@ def generate_demo_game():
         details="""
         Verifying and Earning "Carbon Reduction" Points:
 
-        Sign In and Access Quests: Log into the game, navigate to the homepage, and scroll down on the main game page to see the quest list.
-        Complete a Quest: Choose by clicking on a quest from the list, and after completion, click "Verify Quest". You will need to upload a picture as proof of your achievement and/or you can add a comment about your experience.
-        Submit Verification: After uploading your verification photo and adding a comment, click the "Submit Verification" button. You should receive a confirmation message indicating your quest completion has been updated. Your image will appear at the bottom of the page and it will be automatically uploaded to Quest by Cycle’s social Media accounts.
-        Social Media Interaction: The uploaded photo will be shared on QuestByCycle’s Twitter, Facebook, and Instagram pages. You can view and expand thumbnail images of completed quests by others, read comments, and visit their profiles by clicking on the images. Use the social media buttons to comment and engage with the community.
-        Explore the Leaderboard: Check the dynamic leaderboard to see the progress of players and teams. The community-wide impact is displayed via a "thermometer" showing collective carbon reduction efforts. Clicking on a player's name reveals their completed quests and badges.
+        Sign In and Access Quests: Log into the game, navigate to the homepage,
+        and scroll down on the main game page to see the quest list.
+        Complete a Quest: Choose by clicking on a quest from the list, and after
+        completion, click "Verify Quest". You will need to upload a picture as
+        proof of your achievement and/or you can add a comment about your
+        experience.
+        Submit Verification: After uploading your verification photo and adding a
+        comment, click the "Submit Verification" button. You should receive a
+        confirmation message indicating your quest completion has been updated.
+        Your image will appear at the bottom of the page and it will be
+        automatically uploaded to Quest by Cycle’s social Media accounts.
+        Social Media Interaction: The uploaded photo will be shared on
+        QuestByCycle’s Twitter, Facebook, and Instagram pages. You can view and
+        expand thumbnail images of completed quests by others, read comments, and
+        visit their profiles by clicking on the images. Use the social media
+        buttons to comment and engage with the community.
+        Explore the Leaderboard: Check the dynamic leaderboard to see the
+        progress of players and teams. The community-wide impact is displayed via
+        a "thermometer" showing collective carbon reduction efforts. Clicking on
+        a player's name reveals their completed quests and badges.
 
         Earning Badges:
 
-        Quest Categories: Each quest belongs to a category. Completing all quests in a category earns you a badge. The more quests you complete, the higher your chances of earning badges.
-        Quest Limits: The quest detail popup provides completion limits. If you reach the limit set for a quest, you will earn a badge.
+        Quest Categories: Each quest belongs to a category. Completing all quests
+        in a category earns you a badge. The more quests you complete, the higher
+        your chances of earning badges.
+        Quest Limits: The quest detail popup provides completion limits. If you
+        reach the limit set for a quest, you will earn a badge.
 
         Social Media Interaction:
 
-        Quest Entries: Engage with the community by commenting and sharing your achievements on social media platforms directly through the game. Click on the thumbnail images at the bottom of a Quest to view user's submissions. At the bottom, there will be buttons to take you to Facebook, X, and Instagram where you can comment on various quests that have been posted and communicate with other players. Through friendly competition, let's strive to reduce carbon emissions and make a positive impact on the atmosphere.
+        Quest Entries: Engage with the community by commenting and sharing your
+        achievements on social media platforms directly through the game. Click
+        on the thumbnail images at the bottom of a Quest to view user's
+        submissions. At the bottom, there will be buttons to take you to
+        Facebook, X, and Instagram where you can comment on various quests that
+        have been posted and communicate with other players. Through friendly
+        competition, let's strive to reduce carbon emissions and make a positive
+        impact on the atmosphere.
         """,
         awards="""
         Stay tuned for prizes...
@@ -774,7 +858,10 @@ def generate_demo_game():
     db.session.commit()
 
                                                 
-    import_quests_and_badges_from_csv(demo_game.id, os.path.join(current_app.static_folder, 'defaultquests.csv'))
+    import_quests_and_badges_from_csv(
+        demo_game.id,
+        os.path.join(current_app.static_folder, 'defaultquests.csv'),
+    )
 
                                    
     try:
@@ -806,9 +893,16 @@ def import_quests_and_badges_from_csv(game_id, csv_path):
                 if 'badge_image_filename' in row and row['badge_image_filename']:
                     badge_image_filename = row['badge_image_filename']
                 else:
-                    badge_image_filename = f"{badge_name.lower().replace(' ', '_')}.png"
+                    badge_image_filename = (
+                        f"{badge_name.lower().replace(' ', '_')}.png"
+                    )
                 
-                badge_image_path = os.path.join(current_app.static_folder, 'images', 'badge_images', badge_image_filename)
+                badge_image_path = os.path.join(
+                    current_app.static_folder,
+                    'images',
+                    'badge_images',
+                    badge_image_filename,
+                )
 
                 if not os.path.exists(badge_image_path):
                     continue
@@ -858,7 +952,12 @@ def get_game_badges(game_id):
     if not game:
         return []
 
-    badges = Badge.query.join(Quest).filter(Quest.game_id == game_id, Quest.badge_id.isnot(None)).distinct().all()
+    badges = (
+        Badge.query.join(Quest)
+        .filter(Quest.game_id == game_id, Quest.badge_id.isnot(None))
+        .distinct()
+        .all()
+    )
     return badges
 
 
@@ -868,8 +967,9 @@ def send_social_media_liaison_email(
     last_limit: int = 5,
 ) -> bool:
     """
-    Sends an email to the social media liaison for the specified game, reporting
-    all QuestSubmissions that have occurred since the last email (or the game start_date).
+    Sends an email to the social media liaison for the specified game,
+    reporting all ``QuestSubmissions`` that have occurred since the last email
+    (or the game ``start_date``).
     
     Returns True if an email was sent, False otherwise.
     """
@@ -879,11 +979,15 @@ def send_social_media_liaison_email(
                                                           
         game = Game.query.get(game_id)
     except Exception as e:
-        current_app.logger.error(f"Database error while fetching Game id={game_id}: {e}")
+        current_app.logger.error(
+            f"Database error while fetching Game id={game_id}: {e}"
+        )
         return False
 
     if game is None:
-        current_app.logger.warning(f"No Game found with id={game_id}. Aborting social media email.")
+        current_app.logger.warning(
+            f"No Game found with id={game_id}. Aborting social media email."
+        )
         return False
 
                                                     
@@ -914,7 +1018,9 @@ def send_social_media_liaison_email(
             .all()
         )
     except Exception as e:
-        current_app.logger.error(f"Database error fetching submissions for game_id={game_id}: {e}")
+        current_app.logger.error(
+            f"Database error fetching submissions for game_id={game_id}: {e}"
+        )
         return False
 
     fallback_used = False
@@ -953,29 +1059,43 @@ def send_social_media_liaison_email(
     header_title = "Recent submissions" if fallback_used else "New submissions"
     html_header = dedent(f"""\
         <h1>{header_title} for "{sanitize_html(game.title)}"</h1>
-        <p><b>Time period:</b> {cutoff_time:%Y-%m-%d %H:%M %Z} → {now:%Y-%m-%d %H:%M %Z}</p>
+        <p><b>Time period:</b> {cutoff_time:%Y-%m-%d %H:%M %Z} →
+        {now:%Y-%m-%d %H:%M %Z}</p>
         <p><b>Total {header_title.lower()}:</b> {len(submissions)}</p>
         <hr>
     """)
     html_parts = [html_header]
     inline_images: list[tuple[str, bytes, str]] = []
 
-    social_submissions = [s for s in submissions if s.submitter.upload_to_socials]
-    nonsocial_submissions = [s for s in submissions if not s.submitter.upload_to_socials]
+    social_submissions = [
+        s for s in submissions if s.submitter.upload_to_socials
+    ]
+    nonsocial_submissions = [
+        s for s in submissions if not s.submitter.upload_to_socials
+    ]
 
     def append_submission(sub, idx):
                                                           
         quest = sub.quest
         user = sub.submitter
 
-        safe_quest_title = sanitize_html(quest.title) if quest and quest.title else "(Untitled Quest)"
-        safe_username = sanitize_html(user.username) if user and user.username else "(Unknown User)"
+        safe_quest_title = (
+            sanitize_html(quest.title)
+            if quest and quest.title
+            else "(Untitled Quest)"
+        )
+        safe_username = (
+            sanitize_html(user.username)
+            if user and user.username
+            else "(Unknown User)"
+        )
 
                                                  
         html_parts.append(dedent(f"""\
             <div style="margin-bottom:1.5rem">
               <h3>{idx}. Quest: {safe_quest_title}</h3>
-              <p>User: {safe_username} &nbsp;|&nbsp; Submitted: {sub.timestamp:%Y-%m-%d %H:%M %Z}</p>
+              <p>User: {safe_username} &nbsp;|&nbsp; Submitted:
+              {sub.timestamp:%Y-%m-%d %H:%M %Z}</p>
         """))
 
                                         
@@ -989,7 +1109,9 @@ def send_social_media_liaison_email(
             rel_path = sub.image_url.strip("/\\")
             if ".." in rel_path:
                 current_app.logger.warning(
-                    f"Skipping image for submission id={sub.id} due to suspicious path '{sub.image_url}'"
+                    "Skipping image for submission id=%s due to suspicious path '%s'",
+                    sub.id,
+                    sub.image_url,
                 )
             else:
                 image_path = os.path.join(current_app.static_folder, rel_path)
@@ -1012,18 +1134,29 @@ def send_social_media_liaison_email(
                         )
                 except OSError as e:
                     current_app.logger.warning(
-                        f"Could not open or process image for submission id={sub.id} at {image_path}: {e}. "
-                        f"Falling back to public URL."
+                        "Could not open or process image for submission id=%s "
+                        "at %s: %s. Falling back to public URL.",
+                        sub.id,
+                        image_path,
+                        e,
                     )
                                                       
                     try:
                                                                
                         with current_app.test_request_context():
-                            public_url = url_for("static", filename=rel_path, _external=True)
-                        html_parts.append(f'<img src="{public_url}" alt="submission image"><br>')
+                            public_url = url_for(
+                                "static",
+                                filename=rel_path,
+                                _external=True,
+                            )
+                        html_parts.append(
+                            f'<img src="{public_url}" alt="submission image"><br>'
+                        )
                     except Exception as ue:
                         current_app.logger.error(
-                            f"Failed to generate public URL for image '{rel_path}': {ue}"
+                            "Failed to generate public URL for image '%s': %s",
+                            rel_path,
+                            ue,
                         )
 
                                            
@@ -1055,7 +1188,11 @@ def send_social_media_liaison_email(
             inline_images=inline_images,
         )
     except Exception as e:
-        current_app.logger.error(f"Exception when sending email to '{liaison_email}': {e}")
+        current_app.logger.error(
+            "Exception when sending email to '%s': %s",
+            liaison_email,
+            e,
+        )
         return False
 
                                                                    
@@ -1065,22 +1202,32 @@ def send_social_media_liaison_email(
                 game.last_social_media_email_sent = now
                 db.session.commit()
                 current_app.logger.info(
-                    f"Sent social media email for game_id={game_id} to {liaison_email}. "
-                    f"Updated last_social_media_email_sent to {now.isoformat()}."
+                    "Sent social media email for game_id=%s to %s. "
+                    "Updated last_social_media_email_sent to %s.",
+                    game_id,
+                    liaison_email,
+                    now.isoformat(),
                 )
             else:
                 current_app.logger.info(
-                    "Sent fallback liaison email for game_id=%s without updating last_social_media_email_sent",
+                    "Sent fallback liaison email for game_id=%s without "
+                    "updating last_social_media_email_sent",
                     game_id,
                 )
         except Exception as db_err:
             current_app.logger.error(
-                f"Email sent, but failed to update last_social_media_email_sent for game_id={game_id}: {db_err}"
+                "Email sent, but failed to update last_social_media_email_sent "
+                "for game_id=%s: %s",
+                game_id,
+                db_err,
             )
                                                              
         return True
     else:
-        current_app.logger.warning(f"send_email returned False for game_id={game_id}, no DB update performed.")
+        current_app.logger.warning(
+            "send_email returned False for game_id=%s, no DB update performed.",
+            game_id,
+        )
         return False
 
 def _ensure_aware(dt):

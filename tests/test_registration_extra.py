@@ -53,6 +53,10 @@ def test_register_next_overrides_quest(client):
         "confirm_password": "pw",
         "accept_license": "y",
     }
-    resp = client.post("/auth/register?next=/dashboard&quest_id=5", data=data, follow_redirects=False)
+    resp = client.post(
+        "/auth/register?next=/dashboard&quest_id=5",
+        data=data,
+        follow_redirects=False,
+    )
     assert resp.status_code == 302
     assert resp.headers["Location"].endswith("/dashboard")
