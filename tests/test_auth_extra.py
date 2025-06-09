@@ -76,20 +76,20 @@ def test_unverified_email_non_ajax(client, app, normal_user):
                              
     normal_user.email_verified = False
     db.session.commit()
-    data = {"email": normal_user.email, "password": "pw", "accept_license": "y"}
+    data = {"email": normal_user.email, "password": "pw"}
     resp = client.post("/auth/login", data=data, follow_redirects=False)
     assert resp.status_code == 302
                                                                              
     assert resp.headers["Location"].endswith(url_for("main.index", show_join_custom=0, _external=False))
 
 def test_successful_login_redirects_to_quest(client, normal_user):
-    data = {"email": normal_user.email, "password": "pw", "accept_license": "y"}
+    data = {"email": normal_user.email, "password": "pw"}
     resp = client.post("/auth/login?quest_id=123", data=data, follow_redirects=False)
     assert resp.status_code == 302
     assert resp.headers["Location"].endswith(url_for("main.index", show_join_custom=0, _external=False))
 
 def test_successful_login_redirects_admin_dashboard(client, admin_user):
-    data = {"email": admin_user.email, "password": "pw", "accept_license": "y"}
+    data = {"email": admin_user.email, "password": "pw"}
     resp = client.post("/auth/login", data=data, follow_redirects=False)
     assert resp.status_code == 302
     assert resp.headers["Location"].endswith(url_for("main.index", show_join_custom=0, _external=False))
@@ -98,7 +98,7 @@ def test_successful_login_redirects_admin_dashboard(client, admin_user):
 def test_login_exception_paths(client, normal_user, monkeypatch, ajax):
                                             
     monkeypatch.setattr("app.auth.login_user", lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("boom")))
-    data = {"email": normal_user.email, "password": "pw", "accept_license": "y"}
+    data = {"email": normal_user.email, "password": "pw"}
     headers = {"X-Requested-With": "XMLHttpRequest"} if ajax else {}
     resp = client.post("/auth/login", data=data, headers=headers, follow_redirects=False)
     assert resp.status_code == 302

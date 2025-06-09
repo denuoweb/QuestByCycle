@@ -50,21 +50,6 @@
           </label>
         </div>
 
-        <div class="form-group mt-half">
-          <div class="d-inline-flex align-items-center gap-half">
-            {{ login_form.accept_license(class="form-check-input") }}
-            <label class="form-check-label" for="{{ login_form.accept_license.id }}">
-              {{ login_form.accept_license.label.text }}
-            </label>
-          </div>
-          {% for err in login_form.accept_license.errors %}
-            <div class="text-danger mt-quarter">[{{ err }}]</div>
-          {% endfor %}
-          <div class="mt-half">
-            <a href="javascript:void(0)" onclick="openModal('termsModal')">Terms of Service</a>, and
-            <a href="javascript:void(0)" onclick="openModal('privacyModal')">Privacy Policy</a>
-          </div>
-        </div>
 
         <div class="form-group">
           <button type="submit" class="btn btn-primary" id="loginButton" disabled>
