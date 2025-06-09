@@ -1,49 +1,29 @@
 // Flash message styling ported from old CSS (main1.css)
 
 .flash-message {
-  background-color: #edf944;
+  background-color: $flash-highlight-color;
 }
 
 .flash-success {
-  background-color: #a8d5a3; /* Light green background */
-  color: #3c763d;            /* Dark green text */
-  border: 1px solid #96c48b;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 15px;
+  @include flash-alert($success-bg, $success-text, $success-border);
 }
 
 .flash-error,
 .flash-danger {
-  background-color: #f7c6c6; /* Light red background */
-  color: #a94442;            /* Dark red text */
-  border: 1px solid #f0a7a7;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 15px;
+  @include flash-alert($error-bg, $error-text, $error-border);
 }
 
 .flash-warning {
-  background-color: #fae1b5; /* Light orange background */
-  color: #8a6d3b;            /* Dark orange text */
-  border: 1px solid #f7d09a;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 15px;
+  @include flash-alert($warning-bg, $warning-text, $warning-border);
 }
 
 .flash-info {
-  background-color: #56cbdf; /* Light blue background */
-  color: #31708f;            /* Dark blue text */
-  border: 1px solid #a3cbd3;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 15px;
+  @include flash-alert($info-bg, $info-text, $info-border);
 }
 
 .blue_button {
-  background-color: #007bff;
-  color: white;
+  background-color: $primary-color;
+  color: $body-bg;
   border: none;
   padding: 10px 20px;
   border-radius: 5px;
@@ -52,5 +32,5 @@
 }
 
 .blue_button:hover {
-  background-color: #0056b3;
+  background-color: darken($primary-color, 10%);
 }

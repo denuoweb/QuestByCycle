@@ -6,10 +6,20 @@
   }
   
   // Mixin for CSS transitions (adds vendor prefix)
-  @mixin transition($properties...) {
-    -webkit-transition: $properties;
-    transition: $properties;
-  }
-  
-  // Example: @include transition(all 0.3s ease-in-out);
+@mixin transition($properties...) {
+  -webkit-transition: $properties;
+  transition: $properties;
+}
+
+// Example: @include transition(all 0.3s ease-in-out);
+
+// Mixin for flash message blocks
+@mixin flash-alert($bg, $text, $border) {
+  background-color: $bg;
+  color: $text;
+  border: 1px solid $border;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
   
