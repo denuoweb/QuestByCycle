@@ -171,3 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Expose the modal function globally so other scripts can invoke it
+window.showAllSubmissionsModal = showAllSubmissionsModal;
