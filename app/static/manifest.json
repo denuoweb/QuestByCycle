@@ -8,6 +8,10 @@
     "background_color": "#f0f0f0",
     "display": "standalone",
     "handle_links": "preferred",
+    "display_override": ["window-controls-overlay", "standalone"],
+    "launch_handler": {
+        "client_mode": "focus-existing"
+    },
     "icons": [
       {
         "src": "/static/icons/icon_48x48.webp",
@@ -33,6 +37,15 @@
         "src": "/static/icons/apple-touch-icon-180x180.png",
         "sizes": "180x180",
         "type": "image/png"
+      }
+    ],
+    "file_handlers": [
+      {
+        "action": "/",
+        "name": "Image files",
+        "accept": {
+          "image/*": [".png", ".jpg", ".jpeg", ".webp"]
+        }
       }
     ]
   }
