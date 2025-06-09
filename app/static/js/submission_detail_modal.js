@@ -147,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el.imgOverlay.parentElement.onclick = el.profileLink.onclick;
 
     // submission image & comment
+    const placeholder = '/static/images/default-placeholder.webp';
     if (image.video_url) {
       el.img.hidden = true;
       el.video.hidden = false;
@@ -155,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       el.video.hidden = true;
       el.img.hidden   = false;
-      el.img.src = image.url;
+      el.img.src = image.url || placeholder;
     }
     el.commentRead.textContent = image.comment || 'No comment provided.';
 

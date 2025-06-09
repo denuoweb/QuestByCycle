@@ -35,15 +35,15 @@ from app.utils import (
 )
 from .config import load_config
 
-# Configure logging
+                   
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Create blueprint
+                  
 main_bp = Blueprint('main', __name__)
 
 
-# Load configuration
+                    
 config = load_config()
 
 
@@ -66,7 +66,7 @@ def _select_game(game_id):
     Determine the game to display based on the provided game_id and current_user.
     Returns a tuple (game, game_id). If no game is found, redirects to an error route.
     """
-    # Set game_id from current_user if not provided
+                                                   
     if game_id is None and current_user.is_authenticated:
         if current_user.selected_game_id:
             game_id = current_user.selected_game_id
@@ -75,7 +75,7 @@ def _select_game(game_id):
             if joined_games:
                 game_id = joined_games[0].id
 
-    # If still None, select the latest demo game
+                                                
     if game_id is None:
         default_demo_game = Game.query.filter_by(is_demo=True).order_by(Game.start_date.desc()).first()
         if default_demo_game:
@@ -85,10 +85,10 @@ def _select_game(game_id):
             return None, None
 
     game = Game.query.get(game_id)
-    # Ensure the user has joined the game (auto-join if they requested it by URL)
+                                                                                 
     if game and current_user.is_authenticated:
         if game not in current_user.participated_games:
-            # auto-register the user for the requested game
+                                                           
             stmt = user_games.insert().values(
                 user_id=current_user.id,
                 game_id=game.id
@@ -154,7 +154,7 @@ def _prepare_quests(game, user_id, user_quests, now):
                     }
                     quest.next_eligible_time = last_submission.timestamp + increment_map.get(quest.frequency, timedelta(days=1))
 
-    # Combine pinned messages and completed quests into activities
+                                                                  
     pinned_messages = ShoutBoardMessage.query.filter_by(is_pinned=True, game_id=game.id).order_by(
         ShoutBoardMessage.timestamp.desc()).all()
     unpinned_messages = ShoutBoardMessage.query.filter_by(is_pinned=False, game_id=game.id).order_by(
@@ -162,7 +162,7 @@ def _prepare_quests(game, user_id, user_quests, now):
     activities = pinned_messages + (unpinned_messages + [ut for ut in completed_quests if ut.quest.game_id == game.id])
     activities.sort(key=get_datetime, reverse=True)
 
-    # Filter out quests lacking a valid badge and with no submissions
+                                                                     
     quests = [
         q for q in quests
         if not (
@@ -179,10 +179,10 @@ def _prepare_quests(game, user_id, user_quests, now):
   
 
 def _prepare_user_data(game_id, profile):
-    # 1. Bulk-load all game badges and their quests in one go
+                                                             
     badges = (
         Badge.query
-             .options(joinedload(Badge.quests))   # eager-load the quests relationship
+             .options(joinedload(Badge.quests))                                       
              .join(Quest)
              .filter(
                  Quest.game_id == game_id,
@@ -193,7 +193,7 @@ def _prepare_user_data(game_id, profile):
              .all()
     )
 
-    # 2. Build a map of user's completions, in one query
+                                                        
     completions = (
         db.session.query(
             UserQuest.quest_id,
@@ -205,16 +205,16 @@ def _prepare_user_data(game_id, profile):
     )
     user_completions_map = {q_id: c for q_id, c in completions}
 
-    # 3. Enhance badges in-memory
+                                 
     enhanced_badges = []
     for badge in badges:
-        # Only keep quests for this game
+                                        
         awarding = [q for q in badge.quests if q.game_id == game_id]
         task_names            = ", ".join(q.title for q in awarding)
         task_ids              = ", ".join(str(q.id) for q in awarding)
         badge_awarded_counts  = ", ".join(str(q.badge_awarded) for q in awarding)
 
-        # Look up the user's max completions for any of those quests
+                                                                    
         user_counts = [user_completions_map.get(q.id, 0) for q in awarding]
         is_complete = any(c >= q.badge_awarded for q, c in zip(awarding, user_counts))
         max_completion = max(user_counts, default=0)
@@ -232,7 +232,7 @@ def _prepare_user_data(game_id, profile):
             'is_complete':           is_complete
         })
 
-    # 4. Split earned / unearned here, once
+                                           
     earned = [b for b in enhanced_badges if b['is_complete']]
     unearned = [b for b in enhanced_badges if not b['is_complete']]
 
@@ -257,18 +257,18 @@ def index(game_id, quest_id, user_id):
     if user_id is None and current_user.is_authenticated:
         user_id = current_user.id
 
-    # Allow overriding game selection via query parameter so links like
-    # /?game_id=X properly switch the active game after actions such as login
+                                                                       
+                                                                             
     query_game_id = request.args.get('game_id', type=int)
     if query_game_id is not None:
         game_id = query_game_id
 
-    # Check if we should prompt custom-game join modal
+                                                      
     show_login       = request.args.get('show_login') == '1'
     show_join_custom = request.args.get('show_join_custom') == '1'
     explicit_game    = bool(request.args.get('game_id'))
-    if current_user.is_authenticated \
-        and not current_user.participated_games \
+    if current_user.is_authenticated\
+        and not current_user.participated_games\
         and not explicit_game:
         show_join_custom = True
 
@@ -279,14 +279,14 @@ def index(game_id, quest_id, user_id):
             show_join_custom=1
         ))
 
-    # Load game context without auto-join when prompting custom-join
+                                                                    
     if show_join_custom:
         game = None
         game_id = None
     else:
         game, game_id = _select_game(game_id)
 
-    # Redirect to login/modal only once
+                                       
     if not show_join_custom and (game is None or game_id is None) and request.args.get('show_login') != '1':
         demo = (Game.query
                     .filter_by(is_demo=True)
@@ -301,7 +301,7 @@ def index(game_id, quest_id, user_id):
                     .first())
         game, game_id = demo, demo.id
 
-    # Load user-specific data
+                             
     profile = None
     user_quests = []
     total_points = None
@@ -312,7 +312,7 @@ def index(game_id, quest_id, user_id):
         if not profile.display_name:
             profile.display_name = profile.username
 
-        # Compute the list of games the user has joined
+                                                       
         user_games_list = (
             db.session.query(Game, user_games.c.joined_at)
                         .join(user_games, user_games.c.game_id == Game.id)
@@ -322,11 +322,11 @@ def index(game_id, quest_id, user_id):
     else:
         user_games_list = []
 
-    # Prepare quests and activities
+                                   
     quests, activities = _prepare_quests(game, user_id, user_quests, now)
     categories = sorted({quest.category for quest in quests if quest.category})
 
-    # Custom vs closed games (exclude demos)
+                                            
     open_games = Game.query.filter(
         Game.custom_game_code.isnot(None),
         Game.is_public.is_(True),
@@ -342,7 +342,7 @@ def index(game_id, quest_id, user_id):
         Game.end_date < now
     ).all()
 
-    # Ongoing demo for UI context
+                                 
     demo_game = (Game.query
                     .filter(
                         Game.is_demo.is_(True),
@@ -352,7 +352,7 @@ def index(game_id, quest_id, user_id):
                     .order_by(Game.start_date.desc())
                     .first())
 
-    # Participation flags
+                         
     has_joined = (current_user.is_authenticated and game in current_user.participated_games)
     explicit_game = bool(request.args.get('game_id'))
     suppress_custom = request.args.get('show_join_custom') == '0'
@@ -363,13 +363,13 @@ def index(game_id, quest_id, user_id):
         not show_join_custom
     )
 
-    # Prepare badge lists
+                         
     if current_user.is_authenticated:
         earned_badges, unearned_badges = _prepare_user_data(game_id, profile)
     else:
         earned_badges, unearned_badges = [], []
 
-    # Render
+            
     return render_template(
         'index.html',
         form=ShoutBoardForm(),
@@ -431,7 +431,7 @@ def shout_board(game_id):
         db.session.add(shout_message)
         db.session.commit()
 
-        # --- notify your followers ---
+                                       
         from app.models import Notification
         follower_ids = [rel.follower_id for rel in current_user.followers]
         for fid in follower_ids:
@@ -459,7 +459,7 @@ def shout_board_messages(game_id):
     page     = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 20, type=int)
 
-    # Pinned messages only on page 1
+                                    
     pinned = []
     if page == 1:
         pinned_q = (ShoutBoardMessage.query
@@ -642,7 +642,7 @@ def user_profile(user_id):
         'riding_preferences_choices': riding_preferences_choices
     }
 
-    # Add a flag for whether the current_user follows this profile
+                                                                  
     response_data['current_user_following'] = (
         current_user.is_authenticated and
         User.query.get(user_id) in current_user.following
@@ -655,11 +655,11 @@ def _coerce_to_list(raw: Any) -> List[str]:
     """
     Turn anything—string, list, tuple, JSON literal—into a Python list of strings.
     """
-    # Already good
+                  
     if isinstance(raw, (list, tuple)):
         return list(raw)
 
-    # A JSON‐encoded list
+                         
     if isinstance(raw, str):
         try:
             loaded = json.loads(raw)
@@ -668,10 +668,10 @@ def _coerce_to_list(raw: Any) -> List[str]:
         except json.JSONDecodeError:
             pass
 
-        # Fallback: maybe comma-separated?
+                                          
         return [item.strip() for item in raw.split(',') if item.strip()]
 
-    # Nothing else
+                  
     return []
 
 
@@ -691,13 +691,13 @@ def edit_profile(user_id):
     user = User.query.get_or_404(user_id)
 
     if not form.validate_on_submit():
-        # Collect WTForms errors and return them
+                                                
         errors = {f: e for f, e in form.errors.items()}
         logger.debug('Form validation failed: %s', errors)
         return jsonify({'error': 'Invalid form submission', 'details': errors}), 400
 
     try:
-        # — profile picture logic unchanged —
+                                             
         pic = request.files.get('profile_picture')
         if pic and pic.filename:
             user.profile_picture = save_profile_picture(pic, user.profile_picture)
@@ -844,7 +844,7 @@ def resize_image():
     image_path = request.args.get('path')
     width_arg  = request.args.get('width')
 
-    # parse width as float, then round or floor to int
+                                                      
     try:
         width = int(float(width_arg))
     except (TypeError, ValueError):
@@ -854,9 +854,9 @@ def resize_image():
         return jsonify({'error': "Invalid request: Missing 'path' or 'width'"}), 400
 
     try:
-        # Normalize the image path. Stored paths may or may not include the
-        # leading "static/" segment. The resize endpoint expects paths relative
-        # to the static folder.
+                                                                           
+                                                                               
+                               
         image_path = image_path.lstrip('/')
         if image_path.startswith('static/'):
             image_path = image_path[len('static/'):] 
@@ -872,7 +872,6 @@ def resize_image():
 
         with Image.open(full_image_path) as img:
             img = correct_image_orientation(img)
-
             ratio = width / float(img.width)
             height = int(img.height * ratio)
             img_resized = img.resize((width, height), Image.Resampling.LANCZOS)

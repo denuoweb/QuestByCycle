@@ -8,7 +8,7 @@ package-mode = false
 [tool.poetry.dependencies]
 python                = "^3.11"
 
-# ───── Flask core & extensions ─────────────────────────────────────────
+
 flask                 = "3.1.1"
 werkzeug              = "3.1.3"
 flask-assets          = "2.1.0"
@@ -17,22 +17,22 @@ flask-sqlalchemy      = "3.1.1"
 flask-login           = "0.6.3"
 
 
-# ───── Data layer ──────────────────────────────────────────────────────
+
 sqlalchemy            = "2.0.41"
 psycopg = {version = "3.2.9", extras = ["binary"]}
 
-# ───── Forms, validation, security ─────────────────────────────────────
+
 wtforms               = "3.2.1"
 email-validator       = "2.2.0"
 cryptography          = "45.0.2"
 pyjwt                 = "2.10.1"
 bleach                = "6.2.0"
 
-# ───── Infrastructure & runtime ───────────────────────────────────────
+
 gunicorn              = "23.0.0"
 apscheduler           = "3.11.0"
 
-# ───── Utility libraries ───────────────────────────────────────────────
+
 qrcode                = {version = "8.2", extras = ["pil"]}
 tweepy                = "4.15.0"
 openai                = "1.82.0"
@@ -41,7 +41,7 @@ httpcore              = "1.0.9"
 tomli                 = "^2.0.1"
 
 
-# ───── Development & testing ───────────────────────────────────────────
+
 pytest                = "^8.3.5"
 python-dotenv = "^1.1.0"
 rsa = "^4.9.1"

@@ -1,4 +1,4 @@
-# pylint: disable=import-error
+                              
 import os
 import base64
 import qrcode
@@ -248,12 +248,12 @@ def delete_game(game_id):
     game = Game.query.get_or_404(game_id)
     
     try:
-        # Find all users that reference this game
+                                                 
         users_with_game = User.query.filter_by(selected_game_id=game.id).all()
         for user in users_with_game:
-            user.selected_game_id = None  # Disassociate the game
+            user.selected_game_id = None                         
 
-        # Now delete the game after removing references
+                                                       
         db.session.delete(game)
         db.session.commit()
         flash('Game deleted successfully!', 'success')
@@ -348,7 +348,7 @@ def join_custom_game():
 
     if not game_code:
         flash('Game code is required to join a custom game.', 'error')
-        # Re-open the modal so they can pick again:
+                                                   
         return redirect(url_for('main.index', show_join_custom=1))
 
     game = Game.query.filter_by(custom_game_code=game_code, is_public=True).first()
@@ -364,7 +364,7 @@ def join_custom_game():
         flash(f'You are already registered for {game.title}.', 'info')
         return redirect(url_for('main.index', game_id=game.id))
 
-    # Register & select
+                       
     db.session.execute(
         user_games.insert().values(user_id=current_user.id, game_id=game.id)
     )
@@ -382,17 +382,17 @@ def join_demo():
     Join the latest demo game—never deleting any other games,
     just add it and select it.
     """
-    demo = Game.query.filter_by(is_demo=True) \
-                     .order_by(Game.start_date.desc()) \
+    demo = Game.query.filter_by(is_demo=True)\
+                     .order_by(Game.start_date.desc())\
                      .first_or_404()
 
-    # add demo if not already joined
+                                    
     if demo not in current_user.participated_games:
         db.session.execute(
             user_games.insert().values(user_id=current_user.id, game_id=demo.id)
         )
 
-    # select it
+               
     current_user.selected_game_id = demo.id
     db.session.commit()
 
@@ -407,17 +407,17 @@ def generate_qr_for_game(game_id):
     Generate a QR code for a game login URL that includes a "next" parameter
     to redirect the user to the main index page with the appropriate game context.
     """
-    # Retrieve the game object or return a 404 if not found
+                                                           
     game = Game.query.get_or_404(game_id)
     
-    # Create the URL for the main index page with the desired game_id
+                                                                     
     next_url = url_for('main.index', game_id=game_id, _external=True)
     
-    # Build the login URL with a "next" parameter. This ensures that after login,
-    # the user is redirected to the intended game page.
+                                                                                 
+                                                       
     login_url = url_for('auth.login', next=next_url, _external=True)
     
-    # Generate the QR code using the login_url
+                                              
     qr_code = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -428,12 +428,12 @@ def generate_qr_for_game(game_id):
     qr_code.make(fit=True)
     img = qr_code.make_image(fill_color="white", back_color="black")
     
-    # Save the generated image to a buffer
+                                          
     img_buffer = BytesIO()
     img.save(img_buffer, format="PNG")
     img_data = base64.b64encode(img_buffer.getvalue()).decode('utf-8')
     
-    # Build the HTML content displaying the QR code
+                                                   
     html_content = (
         "<!DOCTYPE html>\n"
         "<html lang='en'>\n"

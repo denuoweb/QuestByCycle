@@ -7,7 +7,7 @@ import csv
 from flask import Blueprint, current_app, render_template, flash, redirect, url_for, jsonify, request
 from flask_login import login_required, current_user
 from .forms import BadgeForm
-# ``allowed_file`` is defined below for validating uploads
+                                                          
 from .utils import save_badge_image
 from .models import db, Quest, Badge, UserQuest, Game
 from werkzeug.utils import secure_filename
@@ -23,7 +23,7 @@ def sanitize_html(html_content):
 
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'csv'}
-    return '.' in filename and \
+    return '.' in filename and\
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
@@ -34,10 +34,10 @@ def create_badge():
         flash('Access denied: Only administrators can manage badges.', 'danger')
         return redirect(url_for('main.index'))
 
-    # Fetch unique categories from Quest model
+                                              
     quest_categories = db.session.query(Quest.category).filter(Quest.category.isnot(None)).distinct().all()
 
-    # Flatten the categories into a list
+                                        
     category_choices = sorted([category.category for category in quest_categories])
 
     form = BadgeForm(category_choices=category_choices)
@@ -68,7 +68,7 @@ def get_badges():
         game = Game.query.get(game_id)
         if not game:
             return jsonify(error="Game not found"), 404
-        # Filter badges that are linked to quests for the current game.
+                                                                       
         badges = Badge.query.join(Quest).filter(
             Quest.game_id == game_id,
             Quest.badge_id.isnot(None)
@@ -78,13 +78,13 @@ def get_badges():
     
     badges_data = []
     for badge in badges:
-        # Filter tasks (quests) for the current game if applicable.
+                                                                   
         if game_id:
             awarding_quests = [quest for quest in badge.quests if quest.game_id == game_id]
         else:
             awarding_quests = badge.quests
         
-        # Aggregate the information from all awarding quests.
+                                                             
         if awarding_quests:
             task_names = ", ".join(quest.title for quest in awarding_quests)
             task_ids = ", ".join(str(quest.id) for quest in awarding_quests)
@@ -94,11 +94,11 @@ def get_badges():
             task_ids = None
             badge_awarded_counts = "1"
         
-        # Determine overall completion:
-        # Check each awarding quest and mark the badge complete if any task is complete.
+                                       
+                                                                                        
         is_complete = False
-        # Also, we can aggregate completions; here we take the maximum completions
-        # across the tasks (or you can return a list if needed).
+                                                                                  
+                                                                
         user_completions_total = 0
         if awarding_quests and current_user.is_authenticated:
             completions_list = []
@@ -106,7 +106,7 @@ def get_badges():
                 user_quest = UserQuest.query.filter_by(user_id=current_user.id, quest_id=quest.id).first()
                 completions = user_quest.completions if user_quest else 0
                 completions_list.append(completions)
-                # If the user’s completions for any quest reach the threshold (badge_awarded), flag it.
+                                                                                                       
                 if completions >= quest.badge_awarded:
                     is_complete = True
             user_completions_total = max(completions_list) if completions_list else 0
@@ -136,10 +136,10 @@ def manage_badges():
         flash('Access denied: Only administrators can manage badges.', 'danger')
         return redirect(url_for('main.index'))
 
-    # Fetch unique categories from Quest model
+                                              
     quest_categories = db.session.query(Quest.category).filter(Quest.category.isnot(None)).distinct().all()
 
-    # Flatten the categories into a list
+                                        
     category_choices = sorted([category.category for category in quest_categories])
 
     form = BadgeForm(category_choices=category_choices)
@@ -173,34 +173,34 @@ def manage_badges():
 @badges_bp.route('/update/<int:badge_id>', methods=['POST'])
 @login_required
 def update_badge(badge_id):
-    # Fetch the badge from the database or return 404 if not found
+                                                                  
     badge = Badge.query.get_or_404(badge_id)
-    # Fetch unique categories from Quest model
+                                              
     quest_categories = db.session.query(Quest.category).filter(Quest.category.isnot(None)).distinct().all()
 
-    # Flatten the categories into a list
+                                        
     category_choices = sorted([category.category for category in quest_categories])
 
     form = BadgeForm(category_choices=category_choices, formdata=request.form)
 
-    # Validate form submission
+                              
     if form.validate_on_submit():
 
-        # Update badge properties with sanitized inputs
+                                                       
         badge.name = sanitize_html(form.name.data)
         badge.description = sanitize_html(form.description.data)
         badge.category = sanitize_html(form.category.data)
 
-        # Handle category 'none' as null
+                                        
         if badge.category == 'none':
             badge.category = None
 
-        # Handle image upload
+                             
         if 'image' in request.files:
             image_file = request.files['image']
             if image_file.filename != '':
                 badge.image = save_badge_image(image_file)
-        # Commit changes to the database
+                                        
         db.session.commit()
         return jsonify({'success': True, 'message': 'Badge updated successfully'})
 
@@ -226,7 +226,7 @@ def delete_badge(badge_id):
 
 @badges_bp.route('/categories', methods=['GET'])
 def get_quest_categories():
-    # Fetch distinct categories from Quest model
+                                                
     quest_categories = db.session.query(Quest.category).filter(Quest.category.isnot(None)).distinct().all()
     categories = [category.category for category in quest_categories]
     return jsonify(categories=sorted(categories))
@@ -246,12 +246,12 @@ def upload_images():
 
     for uploaded_file in uploaded_files:
         if uploaded_file and allowed_file(uploaded_file.filename):
-            # Extract filename and remove any directory path included by the browser
+                                                                                    
             filename = secure_filename(uploaded_file.filename.split('/')[-1])
             file_path = os.path.join(images_folder, filename)
             uploaded_file.save(file_path)
 
-            # Convert filename to badge name
+                                            
             badge_name = ' '.join(word.capitalize() for word in filename.rsplit('.', 1)[0].replace('_', ' ').split())
             badge = Badge.query.filter_by(name=badge_name).first()
             if badge:
@@ -276,7 +276,7 @@ def bulk_upload():
         flash('Invalid or missing CSV file.', 'danger')
         return redirect(url_for('badges.manage_badges'))
 
-    # Save images to a dictionary
+                                 
     image_dict = {}
     for image_file in image_files:
         if allowed_file(image_file.filename):
@@ -284,15 +284,15 @@ def bulk_upload():
             image_path = os.path.join(current_app.root_path, 'static', 'images', 'badge_images', filename)
             image_file.save(image_path)
             image_dict[filename] = filename
-    # Process CSV
+                 
     try:
         csv_data = csv_file.read().decode('utf-8').splitlines()
 
-        # Try with tab delimiter
+                                
         csv_reader = csv.DictReader(csv_data, delimiter='\t')
         headers = csv_reader.fieldnames
         if headers is None or len(headers) == 1:
-            # Try with comma delimiter
+                                      
             csv_reader = csv.DictReader(csv_data, delimiter=',')
             headers = csv_reader.fieldnames
         if 'badge_name' not in headers or 'badge_description' not in headers:

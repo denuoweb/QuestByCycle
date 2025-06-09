@@ -16,7 +16,7 @@ profile_bp = Blueprint('profile', __name__)
 def _deliver_follow_activity(actor_url, activity, sender_id):
     """Background thread: fetch target’s actor doc and POST the activity."""
     try:
-        # re-load the user and ensure they have a keypair
+                                                         
         sender = User.query.get(sender_id)
         sender.ensure_activitypub_actor()
 
@@ -54,7 +54,7 @@ def post_profile_message(user_id):
     db.session.add(message)
     db.session.commit()
 
-    # --- notify your followers of your new profile message ---
+                                                               
     from app.models import Notification
     follower_ids = [u.id for u in current_user.followers]
     for fid in follower_ids:
@@ -129,7 +129,7 @@ def post_reply(user_id, message_id):
     db.session.add(reply)
     db.session.commit()
 
-    # --- notify your followers of your new reply ---
+                                                     
     from app.models import Notification
     follower_ids = [u.id for u in current_user.followers]
     for fid in follower_ids:
@@ -199,20 +199,20 @@ def is_local_actor(actor_url):
 def follow_user(username):
     target = User.query.filter_by(username=username).first_or_404()
 
-    # 0) no self-follow
+                       
     if target.id == current_user.id:
         return jsonify(error="You can't follow yourself"), 400
 
-    # 1) already following?
+                           
     if target in current_user.following:
         return jsonify(success=True, message="Already following"), 200
 
-    # ensure both actors exist locally (and persist their keys)
+                                                               
     current_user.ensure_activitypub_actor()
     target.ensure_activitypub_actor()
     db.session.commit()
 
-    # 2) record the follow in the DB
+                                    
     current_user.following.append(target)
     db.session.commit()
 
@@ -237,7 +237,7 @@ def follow_user(username):
     ))
     db.session.commit()
 
-    # 3) prepare the Follow activity
+                                    
     activity = {
       "@context": "https://www.w3.org/ns/activitystreams",
       "type":      "Follow",
@@ -245,7 +245,7 @@ def follow_user(username):
       "object":    target.activitypub_id
     }
 
-    # 4) if the target is remote, fire off delivery in a daemon thread
+                                                                      
     if not is_local_actor(target.activitypub_id):
         Thread(
             target=_deliver_follow_activity,
@@ -263,24 +263,24 @@ def follow_user(username):
 def unfollow_user(username):
     target = User.query.filter_by(username=username).first_or_404()
 
-    # 0) no self-unfollow
+                         
     if target.id == current_user.id:
         return jsonify(error="Invalid operation"), 400
 
-    # 1) if you weren’t following, no-op
+                                        
     if target not in current_user.following:
         return jsonify(success=True, message="Already not following"), 200
 
-    # ensure actors
+                   
     current_user.ensure_activitypub_actor()
     target.ensure_activitypub_actor()
     db.session.commit()
 
-    # 2) remove from local DB
+                             
     current_user.following.remove(target)
     db.session.commit()
 
-    # 3) prepare the Undo(Follow) activity
+                                          
     activity = {
       "@context": "https://www.w3.org/ns/activitystreams",
       "type":      "Undo",
@@ -292,7 +292,7 @@ def unfollow_user(username):
       }
     }
 
-    # 4) deliver in background if remote
+                                        
     if not is_local_actor(target.activitypub_id):
         Thread(
             target=_deliver_follow_activity,

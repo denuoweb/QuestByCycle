@@ -128,7 +128,7 @@ def get_instagram_permalink(media_id, access_token):
 
 
 def post_to_instagram(image_url, caption, user_id, access_token):
-    # Step 1: Create Media Container
+                                    
     upload_url = f"https://graph.facebook.com/v20.0/{user_id}/media"
     payload = {
         'image_url': image_url,
@@ -142,7 +142,7 @@ def post_to_instagram(image_url, caption, user_id, access_token):
 
     container_id = response_data['id']
 
-    # Step 2: Publish the Media Container
+                                         
     publish_url = f"https://graph.facebook.com/v20.0/{user_id}/media_publish"
     publish_payload = {
         'creation_id': container_id,
@@ -155,7 +155,7 @@ def post_to_instagram(image_url, caption, user_id, access_token):
 
     media_id = publish_data['id']
 
-    # Get the permalink of the published media
+                                              
     permalink, error = get_instagram_permalink(media_id, access_token)
     if error:
         raise Exception(error)

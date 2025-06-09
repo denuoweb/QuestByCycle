@@ -18,7 +18,7 @@ ALLOWED_EXTENSIONS = {'csv'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Decorator to require admin access
+                                   
 def require_admin(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -46,18 +46,18 @@ def create_super_admin(app):
         default_super_admin_username = current_app.config['DEFAULT_SUPER_ADMIN_USERNAME']
         default_super_admin_email = current_app.config['DEFAULT_SUPER_ADMIN_EMAIL']
 
-        # Check if a super admin user already exists
+                                                    
         super_admin_user = User.query.filter_by(email=default_super_admin_email).first()
         
         if super_admin_user:
-            # Update existing super admin user
+                                              
             super_admin_user.email_verified = True
             super_admin_user.is_admin = True
             super_admin_user.is_super_admin = True
             super_admin_user.license_agreed = True
             super_admin_user.set_password(default_super_admin_password)
         else:
-            # Create a new super admin user
+                                           
             super_admin_user = User(
                 username=default_super_admin_username, 
                 email=default_super_admin_email,
@@ -67,10 +67,10 @@ def create_super_admin(app):
                 license_agreed=True
             )
             super_admin_user.set_password(default_super_admin_password)
-            super_admin_user.is_admin = True  # Set as admin
+            super_admin_user.is_admin = True                
             super_admin_user.email_verified = True
             super_admin_user.license_agreed = True
-            # ... set other fields if necessary
+                                               
             db.session.add(super_admin_user)
 
         try:
@@ -84,7 +84,7 @@ def create_super_admin(app):
 @login_required
 @require_admin
 def admin_dashboard():
-    games = Game.query.all()  # or however you fetch games
+    games = Game.query.all()                              
     return render_template('admin_dashboard.html', in_admin_dashboard=True, games=games)
 
 
@@ -93,31 +93,31 @@ def admin_dashboard():
 @login_required
 @require_super_admin
 def user_management(game_id=None):
-    games = Game.query.all()  # Fetch all games for the filter dropdown
+    games = Game.query.all()                                           
 
-    # Determine the selected game if a game_id is provided
+                                                          
     selected_game = None
     if game_id:
         selected_game = Game.query.get(game_id)
 
-    # Fetch users based on the selected game filter
+                                                   
     if selected_game:
-        # Only get users who have participated in the selected game
+                                                                   
         users = User.query.join(User.participated_games).filter(Game.id == game_id).all()
     else:
-        # Get all users, including those not in any game
+                                                        
         users = User.query.outerjoin(User.participated_games).all()
 
-    # Calculate the score per game only for the games each user has actually joined
+                                                                                   
     user_game_scores = {}
     for user in users:
-        # Get games the user has participated in
+                                                
         user_games = user.participated_games
         user_game_scores[user.id] = {
             game.id: user.get_score_for_game(game.id) for game in user_games
         }
 
-    # Pass the necessary context to the template
+                                                
     return render_template(
         'user_management.html',
         users=users,
@@ -198,7 +198,7 @@ def edit_user(user_id):
         flash('User not found', 'error')
         return redirect(url_for('admin.user_management'))
     
-    # Ensure user fields that are lists are non-None for template compatibility
+                                                                               
     user.riding_preferences = user.riding_preferences or []
     user.participated_games = user.participated_games or []
     user.badges = user.badges or []
@@ -207,7 +207,7 @@ def edit_user(user_id):
         logging.debug("Received POST request with form data: %s", request.form)
 
         try:
-            # Update user details from the form
+                                               
             user.username = request.form.get('username')
             user.email = request.form.get('email')
             user.is_admin = 'is_admin' in request.form
@@ -220,7 +220,7 @@ def edit_user(user_id):
             user.interests = request.form.get('interests')
             user.email_verified = 'email_verified' in request.form
 
-            # Update new fields for riding preferences and toggles
+                                                                  
             riding_preferences = request.form.get('riding_preferences')
             user.riding_preferences = riding_preferences.split(',') if riding_preferences else []
             user.ride_description = request.form.get('ride_description')
@@ -231,7 +231,7 @@ def edit_user(user_id):
             user.show_carbon_game = 'show_carbon_game' in request.form
             user.onboarded = 'onboarded' in request.form
 
-            # Update selected_game_id if provided
+                                                 
             selected_game_id = request.form.get('selected_game_id')
             user.selected_game_id = int(selected_game_id) if selected_game_id else None
 
@@ -248,7 +248,7 @@ def edit_user(user_id):
 
         return redirect(url_for('admin.edit_user', user_id=user.id))
 
-    # Safeguard all fetched data to ensure no 'None' values are passed to the template
+                                                                                      
     try:
         participated_games = user.get_participated_games() or []
         logging.debug("Fetched participated games: %s", participated_games)
@@ -270,7 +270,7 @@ def edit_user(user_id):
         logging.error("Error fetching user IPs for user %s: %s", user_id, e)
         user_ips = []
 
-    # Fetch all games for the selected_game_id dropdown, ensuring no 'None' value is passed
+                                                                                           
     try:
         games = Game.query.all() or []
         logging.debug("Fetched all games for dropdown: %s", games)
@@ -314,10 +314,10 @@ def edit_sponsor(sponsor_id):
     game_id = sponsor.game_id if sponsor.game_id else request.args.get('game_id', type=int)
 
     form = SponsorForm(obj=sponsor)
-    form.game_id.data = game_id  # Ensure game_id is correctly set on the form
+    form.game_id.data = game_id                                               
 
     if form.validate_on_submit():
-        # Handle image upload
+                             
         if 'logo' in request.files and request.files['logo'].filename:
             image_file = request.files['logo']
             try:
@@ -326,12 +326,12 @@ def edit_sponsor(sponsor_id):
                 flash(f"Error saving sponsor logo: {e}", 'error')
                 return render_template('edit_sponsors.html', form=form, sponsor=sponsor, game_id=game_id)
         
-        # Update other sponsor details
+                                      
         sponsor.name = sanitize_html(form.name.data)
         sponsor.website = sanitize_html(form.website.data)
         sponsor.description = sanitize_html(form.description.data)
         sponsor.tier = sanitize_html(form.tier.data)
-        sponsor.game_id = game_id  # Ensure game_id is updated
+        sponsor.game_id = game_id                             
         db.session.commit()
         flash('Sponsor updated successfully!', 'success')
         return redirect(url_for('admin.manage_sponsors', game_id=game_id))
@@ -347,7 +347,7 @@ def delete_sponsor(sponsor_id):
         flash('Access denied.', 'danger')
         return redirect(url_for('auth.login'))
 
-    game_id = request.form.get('game_id', type=int)  # Retrieve game_id from the form data
+    game_id = request.form.get('game_id', type=int)                                       
 
     sponsor = Sponsor.query.get_or_404(sponsor_id)
     db.session.delete(sponsor)
@@ -358,7 +358,7 @@ def delete_sponsor(sponsor_id):
         db.session.rollback()
         flash(f'Error occurred: {e}', 'danger')
     
-    # Redirect to the manage sponsors page with the game_id
+                                                           
     return redirect(url_for('admin.manage_sponsors', game_id=game_id))  
 
 
@@ -385,7 +385,7 @@ def manage_sponsors():
         game_id = request.form.get('game_id', type=int)
 
     form = SponsorForm()
-    form.game_id.data = game_id  # Set game_id on the form
+    form.game_id.data = game_id                           
 
     if form.validate_on_submit():
         sponsor = Sponsor(
@@ -396,7 +396,7 @@ def manage_sponsors():
             game_id=game_id
         )
 
-        # Handle image upload
+                             
         if 'logo' in request.files and request.files['logo'].filename:
             image_file = request.files['logo']
             try:
@@ -425,7 +425,7 @@ def user_emails():
     games = Game.query.all()
     game_email_map = {}
 
-    # Fetch all users grouped by each game
+                                          
     for game in games:
         users = User.query.join(user_games).filter(user_games.c.game_id == game.id).all()
         game_email_map[game.title] = [user.email for user in users]

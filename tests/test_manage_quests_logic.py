@@ -46,8 +46,8 @@ def login_as(client, user):
     with client.session_transaction() as sess:
         sess["_user_id"] = str(user.id)
         sess["_fresh"] = True
-    # Also invoke login_user within a request context so Flask-Login
-    # properly sets up the session for subsequent requests.
+                                                                    
+                                                           
     with client.application.test_request_context():
         login_user(user)
 
@@ -63,7 +63,7 @@ def create_game(title, admin_id):
 
 
 def test_get_quests_per_game(client, admin_user):
-    # create two games with different quests
+                                            
     game1 = create_game("Game 1", admin_user.id)
     game2 = create_game("Game 2", admin_user.id)
     game1.admins.append(admin_user)
@@ -77,7 +77,7 @@ def test_get_quests_per_game(client, admin_user):
     db.session.add_all([q1, q2, q3])
     db.session.commit()
 
-    # verify API returns quests only for specified game
+                                                       
     resp1 = client.get(f"/quests/game/{game1.id}/quests")
     assert resp1.status_code == 200
     data1 = resp1.get_json()

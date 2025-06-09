@@ -3,24 +3,24 @@ import tomli
 from pathlib import Path
 from dotenv import load_dotenv
 
-# -----------------------------------------------------------------------------
-# 1. Determine paths for the TOML file and the .env file.
-# -----------------------------------------------------------------------------
-BASE_DIR = Path(__file__).resolve().parent       # e.g., "<project_root>/app"
-PROJECT_ROOT = BASE_DIR.parent                   # "<project_root>"
+                                                                               
+                                                         
+                                                                               
+BASE_DIR = Path(__file__).resolve().parent                                   
+PROJECT_ROOT = BASE_DIR.parent                                     
 ENV_PATH = PROJECT_ROOT / ".env"
 TOML_PATH = PROJECT_ROOT / "config.toml"
 DEFAULT_TOML_PATH = PROJECT_ROOT / "config.toml.example"
 
-# -----------------------------------------------------------------------------
-# 2. Load environment variables from ".env" if it exists.
-# -----------------------------------------------------------------------------
-# This call will populate os.environ with values found in the .env file.
+                                                                               
+                                                         
+                                                                               
+                                                                        
 load_dotenv(dotenv_path=ENV_PATH)
 
-# -----------------------------------------------------------------------------
-# 3. Helper functions to coerce types when reading from environment.
-# -----------------------------------------------------------------------------
+                                                                               
+                                                                    
+                                                                               
 def _get_env(key: str, default=None):
     """
     Retrieves the environment variable 'key'. If not set, returns 'default'.
@@ -52,9 +52,9 @@ def _get_env_integer(key: str, default: int):
     except ValueError:
         return default
 
-# -----------------------------------------------------------------------------
-# 4. Load the TOML file into a dictionary. If it is missing, error out.
-# -----------------------------------------------------------------------------
+                                                                               
+                                                                       
+                                                                               
 if TOML_PATH.exists():
     with open(TOML_PATH, "rb") as f:
         _toml_config = tomli.load(f)
@@ -64,19 +64,19 @@ elif DEFAULT_TOML_PATH.exists():
 else:
     _toml_config = {}
 
-# -----------------------------------------------------------------------------
-# 5. Build a new config dictionary, where environment variables override TOML.
-# -----------------------------------------------------------------------------
+                                                                               
+                                                                              
+                                                                               
 def load_config():
     """
     Returns a dictionary with the same structure as the TOML file, but with
     values overridden by environment variables when present.
     """
-    # Safely fetch the 'sqlalchemy_engine_options' section as a dict;
-    # if it is not in TOML, fall back to {}.
+                                                                     
+                                            
     sq_opts = _toml_config.get("sqlalchemy_engine_options", {})
 
-    # Now build the full config, pulling each value from env first, then TOML, then default.
+                                                                                            
     cfg = {
         "main": {
             "UPLOAD_FOLDER": _get_env("UPLOAD_FOLDER", _toml_config["main"]["UPLOAD_FOLDER"]),
@@ -132,7 +132,7 @@ def load_config():
             ),
         },
         "flask": {
-            # Database URI usually comes from environment for security;
+                                                                       
             "SQLALCHEMY_DATABASE_URI": _get_env(
                 "SQLALCHEMY_DATABASE_URI",
                 _toml_config["flask"]["SQLALCHEMY_DATABASE_URI"]
@@ -175,9 +175,9 @@ def load_config():
             ),
         },
  
-        # -----------------------------------------------------------------------------
-        # 6. Safely read the sqlalchemy_engine_options section or fall back to defaults
-        # -----------------------------------------------------------------------------
+                                                                                       
+                                                                                       
+                                                                                       
         "sqlalchemy_engine_options": {
             "pool_pre_ping": sq_opts.get("pool_pre_ping", True),
             "pool_recycle": sq_opts.get("pool_recycle", 3300),
@@ -186,13 +186,13 @@ def load_config():
 
     return cfg
 
-# -----------------------------------------------------------------------------
-# 7. Expose a top‐level SQLALCHEMY_ENGINE_OPTIONS (optional convenience).
-#    If you prefer, you can import this directly instead of loading the entire dict.
-# -----------------------------------------------------------------------------
+                                                                               
+                                                                         
+                                                                                    
+                                                                               
 SQLALCHEMY_ENGINE_OPTIONS = {
-    # If you always want these hardcoded, you could specify them,
-    # or you can rely on cfg["sqlalchemy_engine_options"] after calling load_config().
+                                                                 
+                                                                                      
     "pool_pre_ping": True,
     "pool_recycle": 3300,
 }
