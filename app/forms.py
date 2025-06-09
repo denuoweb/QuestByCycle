@@ -76,7 +76,15 @@ class RegistrationForm(FlaskForm):
 class MastodonLoginForm(FlaskForm):
     """Form for logging in via Mastodon OAuth."""
     instance = StringField("Mastodon Instance Domain", validators=[DataRequired()])
+    accept_license = BooleanField("I agree to the ", validators=[DataRequired()])
     submit = SubmitField("Login with Mastodon")
+
+    def validate_accept_license(self, field):
+        """Ensure the user agrees to the terms when logging in."""
+        if not field.data:
+            raise ValidationError(
+                "You must agree to the terms of service, license agreement, and privacy policy to log in."
+            )
 
 class LoginForm(FlaskForm):
     """User login form."""
@@ -87,7 +95,15 @@ class LoginForm(FlaskForm):
         render_kw={"autocomplete": "current-password"},
     )
     remember_me = BooleanField("Remember Me", default=True)
+    accept_license = BooleanField("I agree to the ", validators=[DataRequired()])
     submit = SubmitField("Sign In")
+
+    def validate_accept_license(self, field):
+        """Ensure the user agrees to the terms when logging in."""
+        if not field.data:
+            raise ValidationError(
+                "You must agree to the terms of service, license agreement, and privacy policy to log in."
+            )
 
 
 class LogoutForm(FlaskForm):
