@@ -38,4 +38,3 @@ document.addEventListener("DOMContentLoaded", () => {
          .addEventListener("click", hideFlash);
 });
 
-export {};

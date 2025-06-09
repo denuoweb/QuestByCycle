@@ -624,4 +624,3 @@ function toggleContent(element) {
 window.openQuestDetailModal = openQuestDetailModal;
 window.refreshQuestDetailModal = refreshQuestDetailModal;
 
-export {};

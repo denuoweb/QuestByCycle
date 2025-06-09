@@ -63,4 +63,3 @@ document.addEventListener('DOMContentLoaded', () => {
   emailIn.addEventListener('input', resetState);
 });
 
-export {};

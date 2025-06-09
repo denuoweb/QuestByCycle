@@ -1,4 +1,4 @@
-window.QUILL_OPTIONS = {
+export const QUILL_OPTIONS = {
   theme: 'snow',
   modules: {
     toolbar: [
@@ -15,13 +15,13 @@ window.QUILL_OPTIONS = {
   }
 };
 
-window.initQuill = function(selector, hidden, options = {}) {
+export function initQuill(selector, hidden, options = {}) {
   const el = typeof selector === 'string' ? document.querySelector(selector) : selector;
   if (!el) {
     console.error('initQuill: element not found for', selector);
     return null;
   }
-  const opts = Object.assign({}, window.QUILL_OPTIONS, options);
+  const opts = Object.assign({}, QUILL_OPTIONS, options);
   const q = new Quill(el, opts);
   if (hidden) {
     const input = typeof hidden === 'string' ? document.querySelector(hidden) : hidden;
@@ -35,4 +35,3 @@ window.initQuill = function(selector, hidden, options = {}) {
   return q;
 };
 
-export {};

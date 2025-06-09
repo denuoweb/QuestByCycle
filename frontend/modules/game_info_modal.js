@@ -6,4 +6,3 @@ function showGameInfoModal(gameId) {
 // Expose the function globally so it can be called by inline onclick attributes.
 window.showGameInfoModal = showGameInfoModal;
 
-export {};

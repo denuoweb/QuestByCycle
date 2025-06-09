@@ -186,4 +186,3 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-export {};

@@ -1,3 +1,4 @@
+import { initQuill } from './quill_common.js';
 const refreshCSRFToken = async () => {
   try {
     const res  = await fetch('/refresh-csrf');
@@ -178,4 +179,3 @@ function filterQuests() {
 /* attach listeners once */
 // additional event listeners are installed in the main DOMContentLoaded handler
 
-export {};

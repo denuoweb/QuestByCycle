@@ -375,4 +375,3 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-export {};

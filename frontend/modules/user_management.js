@@ -7,4 +7,3 @@ document.getElementById('gameFilter')?.addEventListener('change', function () {
   }
 });
 
-export {};
