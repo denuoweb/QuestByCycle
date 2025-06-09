@@ -4,10 +4,14 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadBadges() {
+    const badgesBody = document.getElementById('badgesBody');
+    if (!badgesBody) {
+        return;
+    }
+
     fetch('/badges')
         .then(response => response.json())
         .then(data => {
-            const badgesBody = document.getElementById('badgesBody');
             badgesBody.innerHTML = '';
             data.badges.forEach(badge => {
                 const row = document.createElement('tr');
