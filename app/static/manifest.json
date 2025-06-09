@@ -7,6 +7,9 @@
     "theme_color": "#D0E6B5",
     "background_color": "#f0f0f0",
     "display": "standalone",
+    "launch_handler": {
+        "client_mode": "focus-existing"
+    },
     "icons": [
       {
         "src": "/static/icons/icon_48x48.webp",
