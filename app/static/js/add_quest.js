@@ -1,36 +1,5 @@
-var quillDescription = new Quill('#description-editor', {
-    theme: 'snow',
-    modules: {
-        toolbar: [
-            [{ 'font': [] }, { 'size': [] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'script': 'sub'}, { 'script': 'super' }],
-            [{ 'header': 1 }, { 'header': 2 }, { 'header': 3 }, { 'header': 4 }, { 'header': 5 }, { 'header': 6 }, 'blockquote', 'code-block'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
-            [{ 'direction': 'rtl' }, { 'align': [] }],
-            ['link', 'image', 'video', 'formula'],
-            ['clean']
-        ]
-    }
-});
-
-var quillTips = new Quill('#tips-editor', {
-    theme: 'snow',
-    modules: {
-        toolbar: [
-            [{ 'font': [] }, { 'size': [] }],
-            ['bold', 'italic', 'underline', 'strike'],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'script': 'sub'}, { 'script': 'super' }],
-            [{ 'header': 1 }, { 'header': 2 }, { 'header': 3 }, { 'header': 4 }, { 'header': 5 }, { 'header': 6 }, 'blockquote', 'code-block'],
-            [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
-            [{ 'direction': 'rtl' }, { 'align': [] }],
-            ['link', 'image', 'video', 'formula'],
-            ['clean']
-        ]
-    }
-});
+var quillDescription = initQuill('#description-editor');
+var quillTips        = initQuill('#tips-editor');
 
 document.getElementById('quest-form').onsubmit = function(e) {
     // Get the Quill editor contents

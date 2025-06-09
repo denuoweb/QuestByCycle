@@ -64,6 +64,7 @@
   <script src="{{ url_for('static', filename='js/3rd/highlight.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/3rd/katex.min.js') }}"></script>
   <script src="{{ url_for('static', filename='js/3rd/quill.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/quill_common.js') }}"></script>
 </head>
 
 <body data-user-id="{{ current_user.id if current_user.is_authenticated else 'none' }}">
