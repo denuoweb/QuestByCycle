@@ -357,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
  * Generic loader: fetch a chunk of HTML, inject its first node,
  * then `openModal(modalId)`.
  */
-async function fetchAndShowModal(url, modalId) {
+export async function fetchAndShowModal(url, modalId) {
   try {
     const res = await fetch(url, { credentials: 'same-origin' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
