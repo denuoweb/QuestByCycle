@@ -510,4 +510,10 @@ function deleteAccount() {
 }
 // Expose globally for inline handlers
 window.showUserProfileModal = showUserProfileModal;
+window.toggleProfileEditMode = toggleProfileEditMode;
+window.cancelProfileEdit = cancelProfileEdit;
+window.saveProfile = saveProfile;
+window.saveBike = saveBike;
+window.deleteSubmission = deleteSubmission;
+window.deleteAccount = deleteAccount;
 
