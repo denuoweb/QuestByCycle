@@ -1,6 +1,9 @@
 // Badge management functions
-document.addEventListener('DOMContentLoaded', function() {
-    loadBadges();
+document.addEventListener('DOMContentLoaded', () => {
+  loadBadges();
+  document.querySelectorAll('[data-toggle-form]').forEach(btn => {
+    btn.addEventListener('click', () => toggleForm(btn.dataset.toggleForm));
+  });
 });
 
 function loadBadges() {
@@ -15,7 +18,7 @@ function loadBadges() {
             badgesBody.innerHTML = '';
             data.badges.forEach(badge => {
                 const row = document.createElement('tr');
-                row.setAttribute('data-badge-id', badge.id);
+                row.dataset.badgeId = badge.id;
 
                 const imageHTML = badge.image ? `<img src="${badge.image}" height="50" alt="Badge Image">` : 'No Image';
 
@@ -25,10 +28,14 @@ function loadBadges() {
                     <td class="badge-description">${badge.description}</td>
                     <td class="badge-category">${badge.category || 'None'}</td>
                     <td>
-                        <button class="edit-badge" onclick="editBadge(${badge.id})">Edit</button>
-                        <button onclick="deleteBadge(${badge.id})">Delete</button>
+                        <button class="edit-badge" data-badge-id="${badge.id}">Edit</button>
+                        <button class="delete-badge" data-badge-id="${badge.id}">Delete</button>
                     </td>
                 `;
+
+                row.querySelector('.edit-badge').addEventListener('click', () => editBadge(badge.id));
+                row.querySelector('.delete-badge').addEventListener('click', () => deleteBadge(badge.id));
+
                 badgesBody.appendChild(row);
             });
         })
@@ -38,7 +45,7 @@ function loadBadges() {
 function toggleForm(formId) {
   const form = document.getElementById(formId);
   if (!form) return;
-  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  form.classList.toggle('d-none');
 }
 
 function setCategoryOptions(currentCategory) {

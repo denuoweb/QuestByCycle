@@ -23,9 +23,9 @@
     </div>
     <div>
         <!-- Toggle buttons for forms -->
-        <button class="button" onclick="toggleForm('uploadForm')">Upload Badge Images for Uploaded Quests</button>
-        <button class="button" onclick="toggleForm('addBadgeForm')">Add a single Category Badge</button>
-        <button class="button" onclick="toggleForm('bulkUploadForm')">Bulk Upload Badges from CSV and Image Files</button>
+        <button class="button" data-toggle-form="uploadForm">Upload Badge Images for Uploaded Quests</button>
+        <button class="button" data-toggle-form="addBadgeForm">Add a single Category Badge</button>
+        <button class="button" data-toggle-form="bulkUploadForm">Bulk Upload Badges from CSV and Image Files</button>
     </div>
     <!-- Forms to be toggled -->
     <div id="uploadForm" class="form-container d-none">
@@ -104,8 +104,8 @@
                     <td>{{ badge.description }}</td>
                     <td>{{ badge.category}}</td> <!-- Display the category -->
                     <td>
-                        <button class="edit-badge" data-badge-id="{{ badge.id }}" onclick="editBadge('{{ badge.id }}')">Edit</button>
-                        <button onclick="deleteBadge('{{ badge.id }}')">Delete</button>
+                        <button class="edit-badge" data-badge-id="{{ badge.id }}">Edit</button>
+                        <button class="delete-badge" data-badge-id="{{ badge.id }}">Delete</button>
                     </td>
                 </tr>
                 {% endfor %}
