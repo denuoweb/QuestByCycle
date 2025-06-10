@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const submissionsButton = document.getElementById('submissionsButton');
   if (submissionsButton) {
     submissionsButton.addEventListener('click', () => {
-      if (currentUserId !== 'none') showMySubmissionsModal(currentUserId);
+      if (currentUserId !== 'none') showAllSubmissionsModal(currentUserId);
     });
   }
 
