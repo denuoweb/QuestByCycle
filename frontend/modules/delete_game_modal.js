@@ -10,6 +10,11 @@ export function openDeleteGameModal(gameId) {
   const timerSpan = document.getElementById('deleteGameTimer');
   const confirmBtn = document.getElementById('deleteGameConfirmBtn');
 
+  if (!modal || !form || !input || !countdown || !timerSpan || !confirmBtn) {
+    console.warn('Delete game modal elements missing');
+    return;
+  }
+
   modal.dataset.gameId = gameId;
   form.action = `/games/delete_game/${gameId}`;
   input.value = '';

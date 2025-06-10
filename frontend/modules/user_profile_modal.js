@@ -371,6 +371,10 @@ document.querySelectorAll('.needs-validation').forEach(form => {
 function toggleProfileEditMode() {
   const viewDiv = document.getElementById('profileViewMode');
   const editDiv = document.getElementById('profileEditMode');
+  if (!viewDiv || !editDiv) {
+    console.error('Profile edit mode elements missing');
+    return;
+  }
   viewDiv.classList.toggle('d-none');
   editDiv.classList.toggle('d-none');
 }
@@ -381,6 +385,10 @@ function cancelProfileEdit(userId) {
 
 function saveProfile(userId) {
   const form = document.getElementById('editProfileForm');
+  if (!form) {
+    console.error('Edit profile form not found');
+    return;
+  }
   const formData = new FormData(form);
   const profilePictureInput = document.getElementById('profilePictureInput');
   if (profilePictureInput.files.length > 0) {
@@ -426,6 +434,10 @@ function saveProfile(userId) {
 
 function saveBike(userId) {
   const form = document.getElementById('editBikeForm');
+  if (!form) {
+    console.error('Edit bike form not found');
+    return;
+  }
   const formData = new FormData(form);
   const bikePictureInput = document.getElementById('bikePicture');
   if (bikePictureInput.files.length > 0) {
