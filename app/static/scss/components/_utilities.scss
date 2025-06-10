@@ -1,4 +1,4 @@
-@import '../abstracts/functions'; // pxToRem()
+@use '../abstracts/functions' as *; // pxToRem()
 
 .bold-item {
   font-weight: bold;

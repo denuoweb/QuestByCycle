@@ -1,5 +1,5 @@
-@import '../abstracts/functions';
-@import '../abstracts/mixins';
+@use '../abstracts/functions' as *;
+@use '../abstracts/mixins' as *;
 
 /* 1. Navbar container */
 .navbar {

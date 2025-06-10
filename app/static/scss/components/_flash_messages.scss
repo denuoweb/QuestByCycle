@@ -1,4 +1,7 @@
 // Flash message styling ported from old CSS (main1.css)
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+@use 'sass:color';
 
 .flash-message {
   background-color: $flash-highlight-color;
@@ -32,5 +35,5 @@
 }
 
 .blue_button:hover {
-  background-color: darken($primary-color, 10%);
+  background-color: color.adjust($primary-color, $lightness: -10%);
 }

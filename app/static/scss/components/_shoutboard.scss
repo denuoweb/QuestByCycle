@@ -1,5 +1,6 @@
-@import '../abstracts/functions';
-@import '../abstracts/mixins';
+@use '../abstracts/functions' as *;
+@use '../abstracts/mixins' as *;
+@use "../abstracts/variables" as *;
 
 /*==============================================================================
   Shout Board / Recent Activity Styles
