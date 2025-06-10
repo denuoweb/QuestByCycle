@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const submitPhotoForm = document.getElementById('submitPhotoForm');
 
     if (!submitPhotoForm) {
-        console.error('submitPhotoForm element not found on page.');
+        console.debug('submitPhotoForm element not found on page.');
         return;
     }
 
