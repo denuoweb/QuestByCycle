@@ -926,8 +926,43 @@ def service_worker():
 
 @main_bp.route('/manifest.json')
 def manifest():
-    """Serve the PWA manifest from the application root."""
-    return current_app.send_static_file('manifest.json')
+    """Serve the PWA manifest with dynamic shortcuts."""
+    base_path = os.path.join(current_app.static_folder, 'manifest.json')
+    with open(base_path) as f:
+        data = json.load(f)
+
+    game_id = request.args.get('game_id', type=int)
+    if not game_id and current_user.is_authenticated:
+        game_id = current_user.selected_game_id
+
+    if game_id:
+        quests = (
+            Quest.query.filter_by(game_id=game_id, enabled=True)
+            .order_by(Quest.id.asc())
+            .limit(4)
+            .all()
+        )
+        shortcuts = []
+        for q in quests:
+            shortcuts.append({
+                "name": q.title,
+                "short_name": q.title[:12],
+                "description": q.description or "",
+                "url": url_for('main.index', game_id=game_id) + f"?quest_shortcut={q.id}",
+                "icons": [
+                    {
+                        "src": "/static/icons/icon_96x96.webp",
+                        "sizes": "96x96",
+                        "type": "image/webp",
+                    }
+                ],
+            })
+        if shortcuts:
+            data["shortcuts"] = shortcuts
+
+    response = jsonify(data)
+    response.headers['Content-Type'] = 'application/json'
+    return response
 
 
 @main_bp.route('/offline.html')

@@ -34,7 +34,7 @@
   <!-- Browser Compatibility Meta Tags -->
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-  <link rel="manifest" href="{{ url_for('main.manifest') }}">
+  <link rel="manifest" href="{{ url_for('main.manifest', game_id=selected_game_id) }}">
   <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon-180x180.png') }}">
 

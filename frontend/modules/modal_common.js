@@ -273,11 +273,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const params     = new URLSearchParams(window.location.search);
     const showJoin   = params.get('show_join_custom') === '1';
     const hasGameId  = params.has('game_id');
-  
+
     if (showJoin && !hasGameId) {
       openModal('joinCustomGameModal');
     }
   });
+
+// ────────────────────────────────────────────────────────────
+// Auto-open quest detail modal if URL contains quest_shortcut
+// ────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const params   = new URLSearchParams(window.location.search);
+  const questId  = params.get('quest_shortcut');
+  if (questId) {
+    openQuestDetailModal(questId);
+    history.replaceState(null, '', window.location.pathname);
+  }
+});
   
 // ─────────────────────────────────────────────────────────────────
 // Auto‐open the login modal for QR links like:
