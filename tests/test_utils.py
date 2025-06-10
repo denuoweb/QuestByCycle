@@ -47,6 +47,23 @@ def test_save_submission_video_invalid(app, tmp_path):
         save_submission_video(file)
 
 
+def test_save_submission_video_no_ffmpeg(app, monkeypatch):
+    """Video saving should bypass conversion if ffmpeg is unavailable."""
+    from io import BytesIO
+    from werkzeug.datastructures import FileStorage
+    from app.utils import save_submission_video
+    import shutil
+
+    video_data = BytesIO(b"0" * 100)
+    file = FileStorage(stream=video_data, filename="small.mp4", content_type="video/mp4")
+
+    app.config["FFMPEG_PATH"] = "/nonexistent/ffmpeg"
+    monkeypatch.setattr(shutil, "which", lambda x: None)
+
+    path = save_submission_video(file)
+    assert path.endswith(".mp4")
+
+
 def test_save_submission_image_invalid_extension(app, tmp_path):
     """Uploading a non-image file should raise a ValueError."""
     from io import BytesIO
