@@ -3,6 +3,12 @@ import { showLoadingModal, hideLoadingModal } from './loading_modal.js';
 
 document.addEventListener('DOMContentLoaded', function () {
     const submitPhotoForm = document.getElementById('submitPhotoForm');
+
+    if (!submitPhotoForm) {
+        console.error('submitPhotoForm element not found on page.');
+        return;
+    }
+
     let isSubmitting = false;
 
     // Handle form submission
