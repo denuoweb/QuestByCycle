@@ -1,3 +1,5 @@
+import { submitFormJson, openForgotPasswordModal } from './modal_common.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   const form     = document.getElementById('loginForm');
   const modal    = document.getElementById('loginModal');
@@ -13,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     pwdError.style.display = 'none';
     forgotDiv.innerHTML   = '';
 
-    window.submitFormJson(form)
+    submitFormJson(form)
       .then(({ json }) => {
         if (json.success) {
           window.location.href = json.redirect;
@@ -25,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
             a.href      = 'javascript:void(0)';
             a.textContent = 'Forgot password?';
             a.className = 'd-block mt-1';
-            a.onclick   = window.openForgotPasswordModal;
+            a.onclick   = openForgotPasswordModal;
             forgotDiv.appendChild(a);
           }
         }

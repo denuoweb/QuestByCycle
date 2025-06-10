@@ -1,5 +1,6 @@
 
 import { showLoadingModal, hideLoadingModal } from './loading_modal.js';
+import { getCSRFToken } from '../utils.js';
 
 document.addEventListener('DOMContentLoaded', function () {
     const submitPhotoForm = document.getElementById('submitPhotoForm');

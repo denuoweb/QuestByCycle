@@ -1,4 +1,5 @@
 import { openModal, closeModal, resetModalContent } from './modal_common.js';
+import { getCSRFToken } from '../utils.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 

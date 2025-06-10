@@ -1,3 +1,4 @@
+import { getCSRFToken } from '../utils.js';
 
     let game_Id = null;
     const VerificationTypes = {

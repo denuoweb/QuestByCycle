@@ -396,7 +396,7 @@ export async function fetchAndShowModal(url, modalId) {
 }
 
 // Submit a form via AJAX and return the JSON response
-async function submitFormJson(form) {
+export async function submitFormJson(form) {
   const res = await fetch(form.action, {
     method: form.method || 'POST',
     headers: { 'X-Requested-With': 'XMLHttpRequest' },

@@ -1,5 +1,6 @@
 
 import { openModal } from './modal_common.js';
+import { getCSRFToken } from '../utils.js';
 
 const PLACEHOLDER_IMAGE =
   window.PLACEHOLDER_IMAGE ||
