@@ -1,12 +1,8 @@
-$(document).ready(function() {
-    $('#generateAIQuestModal').modal({
-        show: false
-    });
-});
+import { openModal } from './modal_common.js';
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener('DOMContentLoaded', () => {
     const buttons = document.querySelectorAll('button[data-game-id]');
-    
+
     buttons.forEach(button => {
         button.addEventListener('click', function() {
             openQuestCreationModal(this);
@@ -46,7 +42,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     if (data.generated_quest_html) {
                         document.getElementById('generatedQuestContent').innerHTML = data.generated_quest_html;
 
-                        $('#generateAIQuestModal').modal('show');
+                        openModal('generateAIQuestModal');
                 
                         const modalForm = document.getElementById('generateAIQuestModalForm');
                         if (modalForm) {
