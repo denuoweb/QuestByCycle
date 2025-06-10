@@ -1,6 +1,7 @@
 /* ------------------------------------------------------------------ */
 /*  SHOUT‑BOARD ADMIN MODAL                                           */
 /* ------------------------------------------------------------------ */
+import { closeModal } from './modal_common.js';
 document.addEventListener('DOMContentLoaded', () => {
   const modalId   = 'shoutBoardModal';
   const formEl    = document.getElementById('shoutBoardForm');
