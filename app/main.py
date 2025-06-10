@@ -519,45 +519,47 @@ def leaderboard_partial():
     Provide leaderboard data for a specific game.
     """
     selected_game_id = request.args.get('game_id', type=int)
-    if selected_game_id:
-        game = Game.query.get(selected_game_id)
-        if not game:
-            return jsonify({'error': 'Game not found'}), 404
+    if not selected_game_id:
+        return jsonify({'error': 'Missing or invalid game_id'}), 400
 
-        top_users_query = db.session.query(
-            User.id,
-            User.username,
-            User.display_name,
-            db.func.sum(UserQuest.points_awarded).label('total_points'),
-            db.func.sum(
-                db.case([(UserQuest.completions > 0, 1)], else_=0)
-            ).label('completed_quests')
-        ).join(UserQuest, UserQuest.user_id == User.id
-        ).join(Quest, Quest.id == UserQuest.quest_id
-        ).filter(Quest.game_id == selected_game_id
-        ).group_by(User.id, User.username, User.display_name
-        ).order_by(db.func.sum(UserQuest.points_awarded).desc()
-        ).all()
+    game = Game.query.get(selected_game_id)
+    if not game:
+        return jsonify({'error': 'Game not found'}), 404
 
-        top_users = [{
-            'user_id': uid,
-            'username': username,
-            'display_name': display_name,
-            'total_points': total_points,
-            'completed_quests': completed_quests
-        } for uid, username, display_name, total_points, completed_quests in top_users_query]
+    top_users_query = db.session.query(
+        User.id,
+        User.username,
+        User.display_name,
+        db.func.sum(UserQuest.points_awarded).label('total_points'),
+        db.func.sum(
+            db.case([(UserQuest.completions > 0, 1)], else_=0)
+        ).label('completed_quests')
+    ).join(UserQuest, UserQuest.user_id == User.id
+    ).join(Quest, Quest.id == UserQuest.quest_id
+    ).filter(Quest.game_id == selected_game_id
+    ).group_by(User.id, User.username, User.display_name
+    ).order_by(db.func.sum(UserQuest.points_awarded).desc()
+    ).all()
 
-        total_game_points = db.session.query(
-            db.func.sum(UserQuest.points_awarded)
-        ).join(Quest, UserQuest.quest_id == Quest.id
-        ).filter(Quest.game_id == selected_game_id
-        ).scalar() or 0
+    top_users = [{
+        'user_id': uid,
+        'username': username,
+        'display_name': display_name,
+        'total_points': total_points,
+        'completed_quests': completed_quests
+    } for uid, username, display_name, total_points, completed_quests in top_users_query]
 
-        return jsonify({
-            'top_users': top_users,
-            'total_game_points': total_game_points,
-            'game_goal': game.game_goal if game.game_goal else None
-        })
+    total_game_points = db.session.query(
+        db.func.sum(UserQuest.points_awarded)
+    ).join(Quest, UserQuest.quest_id == Quest.id
+    ).filter(Quest.game_id == selected_game_id
+    ).scalar() or 0
+
+    return jsonify({
+        'top_users': top_users,
+        'total_game_points': total_game_points,
+        'game_goal': game.game_goal if game.game_goal else None
+    })
 
 
 @main_bp.route('/profile/<int:user_id>')
