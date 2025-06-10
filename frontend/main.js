@@ -30,7 +30,6 @@ import './modules/register_modal.js';
 import './modules/reset_password_modal.js';
 import './modules/shout_board_modal.js';
 import './modules/submission_detail_modal.js';
-import './modules/submit_photo.js';
 import './modules/user_management.js';
 import './modules/user_profile_modal.js';
 
