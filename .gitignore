@@ -32,7 +32,6 @@ venv/
 build/
 migrations/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
