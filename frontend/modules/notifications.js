@@ -1,3 +1,6 @@
+import { showUserProfileModal } from './user_profile_modal.js';
+import { showSubmissionDetail } from './submission_detail_modal.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------
   // 0) Ensure the notifications menu exists on this page
@@ -30,34 +33,43 @@ document.addEventListener('DOMContentLoaded', () => {
   const payloadRenderers = {
     follow: ({ from_user_name, from_user_id }) => ({
       text: `Now following ${from_user_name}`,
-      onclick: `showUserProfileModal(${from_user_id}); return false;`
+      onClick: () => showUserProfileModal(from_user_id)
     }),
     followed_by: ({ follower_name, follower_id }) => ({
       text: `${follower_name} is now following you`,
-      onclick: `showUserProfileModal(${follower_id}); return false;`
+      onClick: () => showUserProfileModal(follower_id)
     }),
     submission: ({ actor_name, quest_name, submission_id }) => ({
       text: `${actor_name} submitted a new “${quest_name}” quest`,
-      onclick: `fetch('/quests/submissions/${submission_id}')` +
-               `.then(r => r.json()).then(img => showSubmissionDetail(img)); return false;`
+      onClick: async () => {
+        const r = await fetch(`/quests/submissions/${submission_id}`);
+        const img = await r.json();
+        showSubmissionDetail(img);
+      }
     }),
     profile_message: ({ from_user_name, content, profile_user_id }) => ({
       text: `${from_user_name} says “${content}”`,
-      onclick: `showUserProfileModal(${profile_user_id}); return false;`
+      onClick: () => showUserProfileModal(profile_user_id)
     }),
     profile_reply: ({ from_user_name, content, profile_user_id }) => ({
       text: `${from_user_name} replied “${content}”`,
-      onclick: `showUserProfileModal(${profile_user_id}); return false;`
+      onClick: () => showUserProfileModal(profile_user_id)
     }),
     submission_like: ({ liker_name, submission_id }) => ({
       text: `${liker_name} liked your submission`,
-      onclick: `fetch('/quests/submissions/${submission_id}', { credentials: 'same-origin' })` +
-               `.then(r => r.json()).then(img => showSubmissionDetail(img)); return false;`
+      onClick: async () => {
+        const r = await fetch(`/quests/submissions/${submission_id}`, { credentials: 'same-origin' });
+        const img = await r.json();
+        showSubmissionDetail(img);
+      }
     }),
     submission_reply: ({ actor_name, content, submission_id }) => ({
       text: `${actor_name} replied “${content}”`,
-      onclick: `fetch('/quests/submissions/${submission_id}', { credentials: 'same-origin' })` +
-               `.then(r => r.json()).then(img => showSubmissionDetail(img)); return false;`
+      onClick: async () => {
+        const r = await fetch(`/quests/submissions/${submission_id}`, { credentials: 'same-origin' });
+        const img = await r.json();
+        showSubmissionDetail(img);
+      }
     })
     // Add new types here as needed
   };
@@ -67,31 +79,35 @@ document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------
   function renderNotification(n) {
     const handler = payloadRenderers[n.type];
-    let text, onclick;
+    let text, onClick;
 
     if (handler && n.payload) {
       try {
-        ({ text, onclick } = handler(n.payload));
+        ({ text, onClick } = handler(n.payload));
       } catch (e) {
         console.error(`Error in handler for ${n.type}:`, e);
       }
     }
 
-    // Fallback if no handler or error
-    if (!text || !onclick) {
+    if (!text || !onClick) {
       text = n.payload.summary || JSON.stringify(n.payload);
-      onclick = "location.href='/notifications/';";
+      onClick = () => { window.location.href = '/notifications/'; };
     }
 
     const cls = n.is_read ? '' : 'fw-bold';
-    return `
-      <a href="#" class="dropdown-item ${cls}" onclick="${onclick}">
-        ${text}
-        <small class="text-muted d-block text-center">
-          ${new Date(n.when).toLocaleString()}
-        </small>
-      </a>
-    `;
+    const a = document.createElement('a');
+    a.href = '#';
+    a.className = `dropdown-item ${cls}`;
+    a.innerHTML = `
+      ${text}
+      <small class="text-muted d-block text-center">
+        ${new Date(n.when).toLocaleString()}
+      </small>`;
+    a.addEventListener('click', async (e) => {
+      e.preventDefault();
+      try { await onClick(); } catch (err) { console.error(err); }
+    });
+    return a;
   }
 
   // --------------------------------------------------------------
@@ -159,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Append each notification
     data.items.forEach(n => {
-      menu.insertAdjacentHTML('beforeend', renderNotification(n));
+      menu.appendChild(renderNotification(n));
     });
 
     // Re-add loader/footer

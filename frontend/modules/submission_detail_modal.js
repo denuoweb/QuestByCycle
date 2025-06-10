@@ -1,5 +1,8 @@
 import { openModal, closeModal, resetModalContent } from './modal_common.js';
 import { getCSRFToken } from '../utils.js';
+import { showUserProfileModal } from './user_profile_modal.js';
+
+export let showSubmissionDetail;
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -10,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const csrf = () => getCSRFToken();
   const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
 
-  window.showSubmissionDetail = function(image) {
+  showSubmissionDetail = function(image) {
     const modal = $('#submissionDetailModal');
     modal.dataset.submissionId = image.id;
     modal.dataset.questId = image.quest_id || '';
@@ -380,4 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+
+// Provide global access for existing inline handlers
+window.showSubmissionDetail = showSubmissionDetail;
 

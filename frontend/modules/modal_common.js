@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const params   = new URLSearchParams(window.location.search);
   const questId  = params.get('quest_shortcut');
   if (questId) {
-    openQuestDetailModal(questId);
+    import('./quest_detail_modal.js').then(m => m.openQuestDetailModal(questId));
     history.replaceState(null, '', window.location.pathname);
   }
 });
