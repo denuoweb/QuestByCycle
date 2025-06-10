@@ -6,6 +6,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   root: 'frontend',                       // ← treat `frontend/` as your project root
+  base: '/static/dist/',                  // ← ensure chunks load from Flask static
   resolve: {
     alias: {
       '@': resolve(__dirname, 'frontend') // ← lets you import modules via "@/utils.js" etc.
