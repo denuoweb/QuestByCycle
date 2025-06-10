@@ -4,6 +4,7 @@ Badge related routes.
 from markupsafe import escape
 import os
 import csv
+import logging
 from flask import Blueprint, current_app, render_template, flash, redirect, url_for, jsonify, request
 from flask_login import login_required, current_user
 from .forms import BadgeForm
@@ -13,6 +14,7 @@ from .models import db, Quest, Badge, UserQuest, Game
 from werkzeug.utils import secure_filename
 
 badges_bp = Blueprint('badges', __name__, template_folder='templates')
+logger = logging.getLogger(__name__)
 
 def sanitize_html(html_content: str) -> str:
     return escape(html_content)
@@ -305,7 +307,7 @@ def bulk_upload():
                 db.session.add(new_badge)
             else:
                 flash(f'Image for badge "{badge_name}" not found.', 'warning')
-                print(f'Image for badge "{badge_name}" not found.')
+                logger.warning('Image for badge "%s" not found.', badge_name)
 
     except Exception:
         flash('Error processing CSV file.', 'danger')
