@@ -188,6 +188,9 @@ This project relies on a variety of open source libraries. The badges below link
 ```npm install```
 ```npm run build```
 
+Vite outputs two entry points: `main.js` for the majority of pages and
+`submitPhoto.js` which is loaded only on `submit_photo.html`.
+
 14. Configure
     - Copy `config.toml.example` to `config.toml` and adjust the variables accordingly.
     - Copy `gunicorn.conf.py.example` to `gunicorn.conf.py` and adjust the variables accordingly.
