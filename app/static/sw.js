@@ -9,7 +9,7 @@ const APP_STATIC_RESOURCES = [
   "/offline.html",
 
   // CSS Files
-  "/static/dist/main.css",
+  "/static/dist/style.css",
 
   // JavaScript bundle
   "/static/dist/main.js",
