@@ -1,10 +1,12 @@
+import logger from '../logger.js';
+
 let topZIndex = 3000;
 let scrollY = 0;
 
 export function openModal(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) {
-    console.error(`Modal ${modalId} not found`);
+    logger.error(`Modal ${modalId} not found`);
     return;
   }
 
@@ -260,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.pathname
             );
         } else {
-            console.warn('show_reset=1 present but no token in URL');
+            logger.warn('show_reset=1 present but no token in URL');
         }
     }
 });
@@ -315,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
           gameId = candidate;
         }
       } catch (e) {
-        console.warn('Failed to parse next URL for gameId:', e);
+        logger.warn('Failed to parse next URL for gameId:', e);
       }
     }
   }
@@ -353,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gameId = candidate;
       }
     } catch (e) {
-      console.warn('Could not parse next URL for gameId:', e);
+      logger.warn('Could not parse next URL for gameId:', e);
     }
   }
 
@@ -384,13 +386,13 @@ export async function fetchAndShowModal(url, modalId) {
     tmp.innerHTML = html.trim();
     const modalEl = tmp.firstElementChild;
     if (!modalEl || modalEl.id !== modalId) {
-      console.warn(`Expected first element to be #${modalId}`, modalEl);
+      logger.warn(`Expected first element to be #${modalId}`, modalEl);
     }
     document.body.appendChild(modalEl);
 
     openModal(modalId);
   } catch (err) {
-    console.error(`Error loading ${modalId} from ${url}:`, err);
+    logger.error(`Error loading ${modalId} from ${url}:`, err);
     alert('Failed to load data. Please try again later.');
   }
 }
@@ -416,7 +418,7 @@ document.addEventListener('click', e => {
   const url      = button.getAttribute('data-modal-url');
   const modalId  = button.getAttribute('data-modal-id');
   if (!url || !modalId) {
-    console.error('data-modal-url or data-modal-id missing', button);
+    logger.error('data-modal-url or data-modal-id missing', button);
     return;
   }
   fetchAndShowModal(url, modalId);

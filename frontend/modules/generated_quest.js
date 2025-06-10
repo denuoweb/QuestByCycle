@@ -1,4 +1,5 @@
 import { openModal } from './modal_common.js';
+import logger from '../logger.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const buttons = document.querySelectorAll('button[data-game-id]');
@@ -66,9 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                     // Handle the response here
                                     window.location.href = '/';
 
-                                    console.log(result);
+                                    logger.log(result);
                                 }).catch(error => {
-                                    console.error('Error:', error);
+                                    logger.error('Error:', error);
                                 });
                             });
                         }
@@ -80,15 +81,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         const aiBadgeFilenameInput = document.getElementById('aiBadgeFilename');
                     
                         if (!generateAIImageBtn || !badgeDescriptionInput || !aiBadgeImage || !aiBadgeFilenameInput) {
-                            console.error("One or more elements not found in the DOM");
+                            logger.error("One or more elements not found in the DOM");
                             return;
                         }
                     
                         generateAIImageBtn.addEventListener('click', function() {
-                            console.log("Generate AI Image button clicked");
+                            logger.log("Generate AI Image button clicked");
                     
                             const badgeDescription = badgeDescriptionInput.value;
-                            console.log("Badge Description:", badgeDescription);
+                            logger.log("Badge Description:", badgeDescription);
                     
                             if (!badgeDescription) {
                                 alert('Please enter a badge description first.');
@@ -105,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             })
                             .then(response => response.json())
                             .then(data => {
-                                console.log("Response data:", data);
+                                logger.log("Response data:", data);
                                 if (data.error) {
                                     alert('Error generating badge image: ' + data.error);
                                 } else {
@@ -117,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 }
                             })
                             .catch(error => {
-                                console.error('Fetch error:', error);
+                                logger.error('Fetch error:', error);
                                 alert('Error: ' + error);
                             });
                         });
@@ -128,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         } else {
-            console.error("Form '#questCreationForm' not found.");
+            logger.error("Form '#questCreationForm' not found.");
         }
     }
 });

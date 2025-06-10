@@ -1,6 +1,7 @@
 import { showLoadingModal, hideLoadingModal } from './loading_modal.js';
 import { showAllSubmissionsModal } from './all_submissions_modal.js';
 import { closeModal } from './modal_common.js';
+import logger from '../logger.js';
 const refreshCSRFToken = async () => {
   try {
     const res  = await fetch('/refresh-csrf');
@@ -9,7 +10,7 @@ const refreshCSRFToken = async () => {
       .querySelector('meta[name="csrf-token"]')
       .setAttribute('content', data.csrf_token);
   } catch (err) {
-    console.error('Error refreshing CSRF token:', err);
+    logger.error('Error refreshing CSRF token:', err);
   }
 };
 
@@ -35,7 +36,7 @@ const updateMeter = async gameId => {
       label.innerText = `Remaining Reduction: ${remainingPoints} / ${gameGoal}`;
     }
   } catch (err) {
-    console.error('Failed to update meter:', err);
+    logger.error('Failed to update meter:', err);
   }
 };
 
@@ -59,7 +60,7 @@ function updateGameName() {
   fetch(`/games/get_game/${gameId}`, { credentials: 'same-origin' })
     .then(response => {
       if (!response.ok) {
-        console.error(
+        logger.error(
           `Failed fetching game name; URL returned status ${response.status} (${response.statusText})`
         );
         // show a user-friendly message in the header
@@ -73,7 +74,7 @@ function updateGameName() {
       gameNameHeader.textContent = data.name || "Game Not Found";
     })
     .catch(error => {
-      console.error("Error retrieving game name:", error);
+      logger.error("Error retrieving game name:", error);
       gameNameHeader.textContent = "Error Loading Game";
     });
 }

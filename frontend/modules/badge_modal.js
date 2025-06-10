@@ -1,6 +1,7 @@
 "use strict";
 import { openModal } from './modal_common.js';
 import { escapeHTML } from '../utils.js';
+import logger from '../logger.js';
 
 // Cache all badges in a global variable once loaded
 window.allBadges = window.allBadges || [];
@@ -57,7 +58,7 @@ async function ensureBadgeCache() {
     try {
       await fetchAllBadges();
     } catch (err) {
-      console.error('Error loading badges:', err);
+      logger.error('Error loading badges:', err);
       window.allBadges = [];
     }
   }
@@ -97,7 +98,7 @@ function populateBadgeModal(badge, requiredCount, currentUserCompletions, taskLi
   const modalText  = document.getElementById('badgeModalText');
 
   if (!modalTitle || !modalImage || !modalText) {
-    console.error('Badge modal elements missing');
+    logger.error('Badge modal elements missing');
     return;
   }
 
@@ -159,7 +160,7 @@ export async function openBadgeModal(element) {
     try {
       currentUserCompletions = await fetchUserCompletions(taskId);
     } catch (err) {
-      console.error('Error fetching user completions:', err);
+      logger.error('Error fetching user completions:', err);
     }
   }
 

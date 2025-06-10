@@ -1,6 +1,7 @@
 import { openModal } from './modal_common.js';
 import { showUserProfileModal } from './user_profile_modal.js';
 import { showAllSubmissionsModal } from './all_submissions_modal.js';
+import logger from '../logger.js';
 
 let leaderboardData = null;
 let leaderboardMetric = 'points';
@@ -9,7 +10,7 @@ let leaderboardBody;
 export function showLeaderboardModal(selectedGameId) {
     const leaderboardContent = document.getElementById('leaderboardModalContent');
     if (!leaderboardContent) {
-        console.error('Leaderboard modal content element not found. Cannot proceed with displaying leaderboard.');
+        logger.error('Leaderboard modal content element not found. Cannot proceed with displaying leaderboard.');
         alert('Leaderboard modal content element not found. Please ensure the page has loaded completely and the correct ID is used.');
         return;
     }
@@ -32,7 +33,7 @@ export function showLeaderboardModal(selectedGameId) {
             openModal('leaderboardModal');
         })
         .catch(error => {
-            console.error('Failed to load leaderboard:', error);
+            logger.error('Failed to load leaderboard:', error);
             alert('Failed to load leaderboard data. Please try again.');
         });
 }

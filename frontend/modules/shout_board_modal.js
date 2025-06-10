@@ -2,6 +2,7 @@
 /*  SHOUT‑BOARD ADMIN MODAL                                           */
 /* ------------------------------------------------------------------ */
 import { closeModal } from './modal_common.js';
+import logger from '../logger.js';
 document.addEventListener('DOMContentLoaded', () => {
   const modalId   = 'shoutBoardModal';
   const formEl    = document.getElementById('shoutBoardForm');
@@ -40,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         location.reload();
       })
       .catch(err => {
-        console.error('Failed to post shout:', err);
+        logger.error('Failed to post shout:', err);
         alert('Could not post. Please try again.');
       });
   });

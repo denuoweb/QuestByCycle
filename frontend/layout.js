@@ -1,4 +1,6 @@
 
+import logger from './logger.js';
+
 export function initLayout() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker
@@ -21,13 +23,13 @@ export function initLayout() {
         if ('SyncManager' in window) {
           registration.sync
             .register('sync-notifications')
-            .catch((err) => console.error('Sync registration failed:', err));
+            .catch((err) => logger.error('Sync registration failed:', err));
         }
 
         if (registration.periodicSync) {
           registration.periodicSync
             .register('periodic-notifications', { minInterval: 24 * 60 * 60 * 1000 })
-            .catch((err) => console.error('Periodic sync registration failed:', err));
+            .catch((err) => logger.error('Periodic sync registration failed:', err));
         }
 
         if ('PushManager' in window && Notification.permission === 'default') {
@@ -36,11 +38,11 @@ export function initLayout() {
 
         if ('sync' in registration) {
           registration.sync.register('sync-requests').catch((err) => {
-            console.error('Background sync registration failed:', err);
+            logger.error('Background sync registration failed:', err);
           });
         }
       })
-      .catch((err) => console.error('Service Worker registration failed:', err));
+      .catch((err) => logger.error('Service Worker registration failed:', err));
 
     navigator.serviceWorker.addEventListener('message', (event) => {
       if (event.data.type === 'UPDATE_AVAILABLE') {

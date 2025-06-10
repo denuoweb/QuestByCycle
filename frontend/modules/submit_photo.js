@@ -1,12 +1,13 @@
 
 import { showLoadingModal, hideLoadingModal } from './loading_modal.js';
 import { getCSRFToken } from '../utils.js';
+import logger from '../logger.js';
 
 document.addEventListener('DOMContentLoaded', function () {
     const submitPhotoForm = document.getElementById('submitPhotoForm');
 
     if (!submitPhotoForm) {
-        console.error('submitPhotoForm element not found on page.');
+        logger.error('submitPhotoForm element not found on page.');
         return;
     }
 
@@ -61,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
         .catch(error => {
-            console.error("Submission error:", error);
+            logger.error("Submission error:", error);
             displayFlashMessage('Error during submission: ' + error.message, 'error');
         })
         .finally(() => {
@@ -80,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             `;
         } else {
-            console.warn('Flash messages container not found.');
+            logger.warn('Flash messages container not found.');
         }
     }
 });

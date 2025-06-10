@@ -1,5 +1,6 @@
 import { showUserProfileModal } from './user_profile_modal.js';
 import { showSubmissionDetail } from './submission_detail_modal.js';
+import logger from '../logger.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------
@@ -85,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         ({ text, onClick } = handler(n.payload));
       } catch (e) {
-        console.error(`Error in handler for ${n.type}:`, e);
+        logger.error(`Error in handler for ${n.type}:`, e);
       }
     }
 
@@ -105,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </small>`;
     a.addEventListener('click', async (e) => {
       e.preventDefault();
-      try { await onClick(); } catch (err) { console.error(err); }
+      try { await onClick(); } catch (err) { logger.error(err); }
     });
     return a;
   }
@@ -151,13 +152,13 @@ document.addEventListener('DOMContentLoaded', () => {
       );
     } catch (err) {
       loadingLi.textContent = 'Network error.';
-      console.error(err);
+      logger.error(err);
       return;
     }
 
     if (!resp.ok) {
       loadingLi.textContent = 'Error loading.';
-      console.error('Status:', resp.status, resp.statusText);
+      logger.error('Status:', resp.status, resp.statusText);
       return;
     }
 

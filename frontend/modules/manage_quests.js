@@ -1,4 +1,5 @@
 import { getCSRFToken } from '../utils.js';
+import logger from '../logger.js';
 
     let game_Id = null;
     const VerificationTypes = {
@@ -35,7 +36,7 @@ import { getCSRFToken } from '../utils.js';
             const data = await response.json();
             badges = data.badges || [];
         } catch (error) {
-            console.error('Error fetching badges:', error);
+            logger.error('Error fetching badges:', error);
         }
     }
 
@@ -58,7 +59,7 @@ import { getCSRFToken } from '../utils.js';
                 alert('Failed to add quest');
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => logger.error('Error:', error));
     }
 
     function editQuest(questId) {
@@ -117,13 +118,13 @@ import { getCSRFToken } from '../utils.js';
                         }
                     })
                     .catch(error => {
-                        console.error('Error:', error);
+                        logger.error('Error:', error);
                         alert('Failed to delete all quests. Please check the console for more details.');
                     });
                 }
             })
             .catch(error => {
-                console.error('Error fetching game title:', error);
+                logger.error('Error fetching game title:', error);
                 alert('Failed to fetch game title. Please check the console for more details.');
             });
         }
@@ -288,7 +289,7 @@ import { getCSRFToken } from '../utils.js';
             }
         })
         .catch(error => {
-            console.error('Error updating quest:', error);
+            logger.error('Error updating quest:', error);
             alert('Error updating quest. Please check console for details.');
         });
     }
@@ -353,7 +354,7 @@ import { getCSRFToken } from '../utils.js';
             });
 
         })
-        .catch(error => console.error('Failed to load quests:', error));
+        .catch(error => logger.error('Failed to load quests:', error));
     }
 
     function deleteQuest(questId) {
@@ -377,7 +378,7 @@ import { getCSRFToken } from '../utils.js';
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            logger.error('Error:', error);
             alert('Failed to delete quest. Please check the console for more details.');
         });
     }
@@ -409,7 +410,7 @@ import { getCSRFToken } from '../utils.js';
             }
         })
         .catch(error => {
-            console.error('Error importing quests:', error);
+            logger.error('Error importing quests:', error);
         });
     }
 
@@ -426,7 +427,7 @@ import { getCSRFToken } from '../utils.js';
             window.open(imageFilename, '_blank');
         })
         .catch(error => {
-            console.error('Error generating QR code:', error);
+            logger.error('Error generating QR code:', error);
             alert('Failed to generate QR code. Please check console for more details.');
         });
     }

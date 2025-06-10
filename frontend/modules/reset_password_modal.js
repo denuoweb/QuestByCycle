@@ -1,4 +1,5 @@
 import { submitFormJson } from './modal_common.js';
+import logger from '../logger.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('resetForm');
@@ -31,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             })
             .catch(err => {
-                console.error('Reset-password AJAX error:', err);
+                logger.error('Reset-password AJAX error:', err);
                 form.submit();
             });
     });

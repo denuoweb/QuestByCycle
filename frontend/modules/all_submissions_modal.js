@@ -2,6 +2,7 @@
 import { openModal } from './modal_common.js';
 import { getCSRFToken } from '../utils.js';
 import { showSubmissionDetail } from './submission_detail_modal.js';
+import logger from '../logger.js';
 
 const PLACEHOLDER_IMAGE =
   window.PLACEHOLDER_IMAGE ||
@@ -40,7 +41,7 @@ function fetchSubmissions() {
             submissionsPage += 1;
         })
         .catch(error => {
-            console.error('Error fetching all submissions:', error);
+            logger.error('Error fetching all submissions:', error);
             alert('Error fetching all submissions: ' + error.message);
         });
 }
@@ -48,7 +49,7 @@ function fetchSubmissions() {
 function displayAllSubmissions(submissions, isAdmin, append = false) {
     const container = document.getElementById('allSubmissionsContainer');
     if (!container) {
-        console.error('allSubmissionsContainer element not found.');
+        logger.error('allSubmissionsContainer element not found.');
         return;  // Exit if the container element is not found
     }
     if (!append) {
@@ -158,7 +159,7 @@ function deleteSubmission(submissionId) {
             }
         })
         .catch(error => {
-            console.error('Error deleting submission:', error);
+            logger.error('Error deleting submission:', error);
             alert('Error during deletion: ' + error.message);
         });
 }

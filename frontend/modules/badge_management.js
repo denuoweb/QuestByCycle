@@ -1,4 +1,5 @@
 import { getCSRFToken } from '../utils.js';
+import logger from '../logger.js';
 
 // Badge management functions
 document.addEventListener('DOMContentLoaded', () => {
@@ -41,7 +42,7 @@ function loadBadges() {
                 badgesBody.appendChild(row);
             });
         })
-        .catch(error => console.error('Failed to load badges:', error));
+        .catch(error => logger.error('Failed to load badges:', error));
 }
 
 function toggleForm(formId) {
@@ -79,7 +80,7 @@ function setCategoryOptions(currentCategory) {
             return select;
         })
         .catch(error => {
-            console.error('Error fetching categories:', error);
+            logger.error('Error fetching categories:', error);
             const select = document.createElement('select');
             select.className = 'form-control badge-category-select';
             const noneOption = document.createElement('option');
@@ -94,7 +95,7 @@ function setCategoryOptions(currentCategory) {
 function editBadge(badgeId) {
     const row = document.querySelector(`tr[data-badge-id='${badgeId}']`);
     if (!row) {
-        console.error(`Badge row with ID ${badgeId} not found.`);
+        logger.error(`Badge row with ID ${badgeId} not found.`);
         return;
     }
     const nameCell = row.querySelector('.badge-name');
@@ -129,7 +130,7 @@ function editBadge(badgeId) {
         fileInput.className = 'form-control-file badge-image-input';
         imageContainer.appendChild(fileInput);
     } else {
-        console.error('Could not find badge-image-manage cell');
+        logger.error('Could not find badge-image-manage cell');
     }
 
     // 4) Call setCategoryOptions(...) to build the <select> for Category
@@ -176,7 +177,7 @@ function saveBadge(badgeId) {
             alert('Failed to update badge: ' + data.message);
         }
     })
-    .catch(error => console.error('Error updating badge:', error));
+    .catch(error => logger.error('Error updating badge:', error));
 }
 
 
@@ -198,7 +199,7 @@ function deleteBadge(badgeId) {
         }
     })
     .catch(error => {
-        console.error('Error deleting badge:', error);
+        logger.error('Error deleting badge:', error);
         alert('Error deleting badge. Please check console for details.');
     });
 }
@@ -220,5 +221,5 @@ function uploadImages() {
             alert('Failed to upload images: ' + data.message);
         }
     })
-    .catch(error => console.error('Error uploading images:', error));
+    .catch(error => logger.error('Error uploading images:', error));
 }

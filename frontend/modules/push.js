@@ -1,3 +1,5 @@
+import logger from '../logger.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   if (
     typeof window === 'undefined' ||
@@ -16,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         ({ public_key } = await res.json());
       } catch (err) {
-        console.error('Push setup failed', err);
+        logger.error('Push setup failed', err);
         return;
       }
       if (!public_key) return;
@@ -34,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ subscription: sub }),
       });
     } catch (err) {
-      console.error('Push setup failed', err);
+      logger.error('Push setup failed', err);
     }
   });
 });
