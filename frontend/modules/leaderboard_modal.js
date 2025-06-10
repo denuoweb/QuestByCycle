@@ -14,14 +14,22 @@ export function showLeaderboardModal(selectedGameId) {
         alert('Leaderboard modal content element not found. Please ensure the page has loaded completely and the correct ID is used.');
         return;
     }
-    fetch('/leaderboard_partial?game_id=' + selectedGameId)
+    fetch('/leaderboard_partial?game_id=' + selectedGameId, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin'
+    })
         .then(response => {
+            if (response.status === 401) {
+                window.location.href = '/auth/login?next=' + encodeURIComponent(window.location.pathname);
+                return null;
+            }
             if (!response.ok) {
                 throw new Error('Failed to fetch leaderboard data');
             }
             return response.json();
         })
         .then(data => {
+            if (!data) return;
             leaderboardContent.innerHTML = '';
             leaderboardData = data;
             leaderboardMetric = 'points';

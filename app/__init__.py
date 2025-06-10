@@ -176,6 +176,13 @@ def create_app(config_overrides=None):
     csrf.exempt(ap_bp)
     login_manager.login_view = "auth.login"
 
+    @login_manager.unauthorized_handler
+    def unauthorized_callback():
+        """Return JSON response for unauthorized AJAX requests."""
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.accept_mimetypes.accept_json:
+            return jsonify({"error": "Unauthorized"}), 401
+        return redirect(url_for("auth.login", next=request.url))
+
     @login_manager.user_loader
     def load_user(user_id):
         from app.models import User
