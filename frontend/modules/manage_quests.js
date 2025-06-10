@@ -12,7 +12,7 @@ import logger from '../logger.js';
 
     let badges = [];  // Define badges globally
 
-    document.addEventListener('DOMContentLoaded', async function() {
+    function initManageQuests() {
         const gameEl = document.getElementById('game_Data');
         if (!gameEl) {
             return;
@@ -25,9 +25,14 @@ import logger from '../logger.js';
         const importBtn = document.getElementById('importQuestsBtn');
         if (importBtn) importBtn.addEventListener('click', importQuests);
 
-        await loadBadges();
-        loadQuests(game_Id);
-    });
+        loadBadges().then(() => loadQuests(game_Id));
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initManageQuests);
+    } else {
+        initManageQuests();
+    }
 
     async function loadBadges() {
         try {
