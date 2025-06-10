@@ -4,29 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const emailInput = document.getElementById('registerEmail');
   if (!emailInput) return; // Modal not included on this page
 
-  const registerForm = emailInput.closest('form');
-  const formGroup = emailInput.closest('.form-group');
   const modal = document.getElementById('registerModal');
   const checkUrlBase = modal?.dataset.checkUrl || '/auth/check_email';
-    
-  // Create a hidden login section to show when email exists  
-  const loginSection = document.createElement('div');  
-  loginSection.id = 'existingUserLogin';  
-  loginSection.style.display = 'none';  
-  loginSection.innerHTML = `  
-    <div class="alert alert-info">This email is already registered. Enter your password to log in.</div>  
-    <div class="form-group">  
-      <label for="existingUserPassword">Password</label>  
-      <input type="password" id="existingUserPassword" class="form-control" autocomplete="current-password">
-      <div id="loginError" class="text-danger mt-1" style="display: none;"></div>  
-    </div>  
-    <div class="form-group">  
-      <button type="button" id="loginWithExistingBtn" class="btn btn-primary">Login</button>  
-    </div>  
-  `;  
-    
-  // Insert after the email form group  
-  formGroup.insertAdjacentElement('afterend', loginSection);  
+  const loginSection = document.getElementById('existingUserLogin');
+  if (!loginSection) return;
     
   // Handle blur event on email field  
   emailInput.addEventListener('blur', () => {  
