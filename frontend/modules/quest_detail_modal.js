@@ -2,6 +2,7 @@ import { openModal } from './modal_common.js';
 import { resetModalContent } from './modal_common.js';
 import { getCSRFToken } from '../utils.js';
 import { showSubmissionDetail } from './submission_detail_modal.js';
+import logger from '../logger.js';
 
 /* ------------------------------------------------------------------ */
 /*  HELPER: read meta-content                                         */
@@ -36,7 +37,7 @@ export function openQuestDetailModal(questId) {
           nextEligibleTime
         )
       ) {
-        console.error('populateQuestDetails – required element missing');
+        logger.error('populateQuestDetails – required element missing');
         return;
       }
 
@@ -52,7 +53,7 @@ export function openQuestDetailModal(questId) {
       fetchQuestSubmissions(questId);
     })
     .catch(err => {
-      console.error('Error opening quest detail modal:', err);
+      logger.error('Error opening quest detail modal:', err);
       alert('Sign in to view quest details.');
     });
 }
@@ -71,7 +72,7 @@ function refreshQuestDetailModal(questId) {
           nextEligibleTime
         )
       ) {
-        console.error('populateQuestDetails – required element missing');
+        logger.error('populateQuestDetails – required element missing');
         return;
       }
 
@@ -86,7 +87,7 @@ function refreshQuestDetailModal(questId) {
       fetchQuestSubmissions(questId);
     })
     .catch(err => {
-      console.error('Failed to refresh quest detail modal:', err);
+      logger.error('Failed to refresh quest detail modal:', err);
     });
 }
 
@@ -127,7 +128,7 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
 
     for (let key in elements) {
         if (!elements[key]) {
-            console.error(`Error: Missing element ${key}`);
+            logger.error(`Error: Missing element ${key}`);
             return false;
         }
     }
@@ -189,7 +190,7 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
 function ensureDynamicElementsExistAndPopulate(quest, userCompletionCount, nextEligibleTime, canVerify) {
     const parentElement = document.querySelector('.user-quest-data');
     if (!parentElement) {
-        console.error('Parent element .user-quest-data not found');
+        logger.error('Parent element .user-quest-data not found');
         return;
     }
 
@@ -237,7 +238,7 @@ function formatTimeDiff(ms) {
 function manageVerificationSection(questId, canVerify, verificationType, nextEligibleTime) {
     const userQuestData = document.querySelector('.user-quest-data');
     if (!userQuestData) {
-        console.error('Parent element .user-quest-data not found');
+        logger.error('Parent element .user-quest-data not found');
         return;
     }
     userQuestData.innerHTML = '';
@@ -364,13 +365,13 @@ function toggleVerificationForm(questId) {
 function setupSubmissionForm(questId) {
     const container = document.getElementById(`verifyQuestForm-${questId}`);
     if (!container) {
-        console.error("Form container not found for quest ID:", questId);
+        logger.error("Form container not found for quest ID:", questId);
         return;
     }
 
     const form = container.querySelector('form');
     if (!form) {
-        console.error("Form element missing for quest ID:", questId);
+        logger.error("Form element missing for quest ID:", questId);
         return;
     }
 
@@ -472,7 +473,7 @@ async function submitQuestDetails(event, questId) {
     refreshQuestDetailModal(questId);
     event.target.reset();
   } catch (err) {
-    console.error('Submission error:', err);
+    logger.error('Submission error:', err);
     alert(`Error during submission: ${err.message}`);
   } finally {
     isSubmitting = false;
@@ -551,14 +552,14 @@ async function fetchQuestSubmissions(questId) {
 
     distributeImages(gallery);
   } catch (err) {
-    console.error('Failed to fetch submissions:', err);
+    logger.error('Failed to fetch submissions:', err);
     alert('Could not load submissions. Please try again.');
   }
 }
 
 function isValidImageUrl(url) {
     if (!url) {
-        console.error(`Invalid URL detected: ${url}`);
+        logger.error(`Invalid URL detected: ${url}`);
         return false;
     }
     try {
@@ -571,7 +572,7 @@ function isValidImageUrl(url) {
             return allowedExtensions.some(ext => parsedUrl.pathname.toLowerCase().endsWith(ext));
         }
     } catch (e) {
-        console.error(`Invalid URL detected: ${url}`);
+        logger.error(`Invalid URL detected: ${url}`);
         return false;
     }
     return false;
@@ -580,7 +581,7 @@ function isValidImageUrl(url) {
 function distributeImages(images) {
     const board = document.getElementById('submissionBoard');
     if (!board) {
-        console.error('submissionBoard element not found');
+        logger.error('submissionBoard element not found');
         return;
     }
     board.innerHTML = '';

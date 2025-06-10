@@ -1,3 +1,5 @@
+import logger from '../logger.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   const emailInput = document.getElementById('registerEmail');
   if (!emailInput) return; // Modal not included on this page
@@ -44,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }  
       })  
       .catch(err => {  
-        console.error('Error checking email:', err);  
+        logger.error('Error checking email:', err);  
         loginSection.style.display = 'none';  
       });  
   });  
@@ -90,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }  
     })  
     .catch(err => {  
-      console.error('Login error:', err);  
+      logger.error('Login error:', err);  
       errorDiv.textContent = 'An error occurred. Please try again.';  
       errorDiv.style.display = 'block';  
     });  

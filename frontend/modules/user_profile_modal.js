@@ -1,19 +1,20 @@
 import { openModal } from './modal_common.js';
 import { getCSRFToken } from '../utils.js';
+import logger from '../logger.js';
 
 export function showUserProfileModal(userId) {
   fetch(`/profile/${userId}`)
     .then(r => r.json())
     .then(data => {
       if (!data.riding_preferences_choices) {
-        console.error('Riding preferences choices missing.');
+        logger.error('Riding preferences choices missing.');
         return;
       }
 
       const detailsContainer = document.getElementById('userProfileDetails');
 
       if (!detailsContainer) {
-        console.error('Profile details containers not found');
+        logger.error('Profile details containers not found');
         return;
       }
 
@@ -324,7 +325,7 @@ export function showUserProfileModal(userId) {
           });
 
           if (!res.ok) {
-            console.error('Follow toggle failed:', await res.text());
+            logger.error('Follow toggle failed:', await res.text());
             return;
           }
           following = !following;
@@ -356,7 +357,7 @@ export function showUserProfileModal(userId) {
       }
     })
     .catch(err => {
-      console.error('Failed to load profile:', err);
+      logger.error('Failed to load profile:', err);
       alert('Could not load user profile. Please try again.');
     });
 }
@@ -385,7 +386,7 @@ function toggleProfileEditMode() {
   const viewDiv = document.getElementById('profileViewMode');
   const editDiv = document.getElementById('profileEditMode');
   if (!viewDiv || !editDiv) {
-    console.error('Profile edit mode elements missing');
+    logger.error('Profile edit mode elements missing');
     return;
   }
   viewDiv.classList.toggle('d-none');
@@ -399,7 +400,7 @@ function cancelProfileEdit(userId) {
 function saveProfile(userId) {
   const form = document.getElementById('editProfileForm');
   if (!form) {
-    console.error('Edit profile form not found');
+    logger.error('Edit profile form not found');
     return;
   }
   const formData = new FormData(form);
@@ -440,7 +441,7 @@ function saveProfile(userId) {
       }
     })
     .catch(err => {
-      console.error('Error updating profile:', err);
+      logger.error('Error updating profile:', err);
       alert('Failed to update profile. Please try again.');
     });
 }
@@ -448,7 +449,7 @@ function saveProfile(userId) {
 function saveBike(userId) {
   const form = document.getElementById('editBikeForm');
   if (!form) {
-    console.error('Edit bike form not found');
+    logger.error('Edit bike form not found');
     return;
   }
   const formData = new FormData(form);
@@ -473,7 +474,7 @@ function saveBike(userId) {
       }
     })
     .catch(err => {
-      console.error('Error updating bike details:', err);
+      logger.error('Error updating bike details:', err);
       alert('Failed to update bike details. Please try again.');
     });
 }
@@ -496,7 +497,7 @@ function deleteSubmission(submissionId, context, userId) {
       }
     })
     .catch(err => {
-      console.error('Error deleting submission:', err);
+      logger.error('Error deleting submission:', err);
       alert('Error during deletion: ' + err.message);
     });
 }
@@ -529,7 +530,7 @@ function deleteAccount() {
       }
     })
     .catch(err => {
-      console.error('Error deleting account:', err);
+      logger.error('Error deleting account:', err);
       alert('Failed to delete account. Please try again.');
     });
 }

@@ -1,4 +1,8 @@
 from google_auth_oauthlib.flow import InstalledAppFlow
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 SCOPES = ['https://mail.google.com/']
 
@@ -20,8 +24,8 @@ def get_tokens():
     )
 
                                    
-    print('Please go to this URL and authorize access:')
-    print(auth_url)
+    logger.info('Please go to this URL and authorize access:')
+    logger.info(auth_url)
 
                                               
     code = input('Enter the authorization code: ')

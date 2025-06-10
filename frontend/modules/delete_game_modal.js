@@ -1,4 +1,5 @@
 import { openModal } from './modal_common.js';
+import logger from '../logger.js';
 
 let deleteInterval;
 
@@ -11,7 +12,7 @@ export function openDeleteGameModal(gameId) {
   const confirmBtn = document.getElementById('deleteGameConfirmBtn');
 
   if (!modal || !form || !input || !countdown || !timerSpan || !confirmBtn) {
-    console.warn('Delete game modal elements missing');
+    logger.warn('Delete game modal elements missing');
     return;
   }
 
