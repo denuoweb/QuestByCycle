@@ -621,7 +621,8 @@ def user_profile(user_id):
             'upload_to_mastodon': user.upload_to_mastodon,
             'show_carbon_game': user.show_carbon_game,
             'badges': [{'id': badge.id, 'name': badge.name, 'description': badge.description,
-                        'category': badge.category, 'image': badge.image} for badge in badges]
+                        'category': badge.category, 'image': badge.image} for badge in badges],
+            'follower_count': len(user.followers)
         },
         'user_quests': [
             {'id': quest.id, 'completions': quest.completions} for quest in user_quests
