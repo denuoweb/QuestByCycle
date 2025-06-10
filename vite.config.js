@@ -15,7 +15,7 @@ export default defineConfig({
   build: {
     outDir: '../app/static/dist',         // ← emit into Flask’s `static/dist/`
     emptyOutDir: true,
-    cssCodeSplit: false,                  // ← bundle *all* your SCSS into single main.css
+    cssCodeSplit: false,                  // ← bundle *all* your SCSS into single style.css
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'frontend/main.js'),
@@ -24,7 +24,7 @@ export default defineConfig({
       output: {
         entryFileNames: '[name].js',       // → main.js & submitPhoto.js
         chunkFileNames: 'chunk-[hash].js',
-        assetFileNames: '[name][extname]'  // → main.css (no hash)
+        assetFileNames: '[name][extname]'  // → style.css (no hash)
       }
     }
   },
