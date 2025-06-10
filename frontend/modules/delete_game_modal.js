@@ -25,7 +25,7 @@ export function openDeleteGameModal(gameId) {
   openModal('deleteGameModal');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initDeleteGameModal() {
   const input = document.getElementById('deleteGameConfirmInput');
   const confirmBtn = document.getElementById('deleteGameConfirmBtn');
   const countdown = document.getElementById('deleteGameCountdown');
@@ -63,7 +63,13 @@ document.addEventListener('DOMContentLoaded', () => {
     input.value = '';
     confirmBtn.disabled = true;
   });
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initDeleteGameModal);
+} else {
+  initDeleteGameModal();
+}
 
 // Expose globally for inline handlers
 window.openDeleteGameModal = openDeleteGameModal;
