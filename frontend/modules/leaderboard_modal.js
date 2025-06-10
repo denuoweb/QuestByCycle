@@ -219,6 +219,5 @@ function updateLeaderboardRows() {
     });
 }
 
-// Make available globally for inline scripts
-window.showLeaderboardModal = showLeaderboardModal;
+
 

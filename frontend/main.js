@@ -18,7 +18,6 @@ import './modules/game_info_modal.js';
 import './modules/generated_quest.js';
 import './modules/index_management.js';
 import './modules/join_custom_game_modal.js';
-import './modules/leaderboard_modal.js';
 import './modules/loading_modal.js';
 import './modules/login_modal.js';
 import './modules/manage_quests.js';
