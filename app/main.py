@@ -674,7 +674,7 @@ def _coerce_to_list(raw: Any) -> List[str]:
     Turn anything—string, list, tuple, JSON literal—into a Python list of strings.
     """
                   
-    if isinstance(raw, (list, tuple)):
+    if isinstance(raw, (list, tuple, set)):
         return list(raw)
 
                          
@@ -864,11 +864,11 @@ def resize_image():
 
                                                       
     try:
-        width = int(float(width_arg))
+        width = int(width_arg)
     except (TypeError, ValueError):
-        return jsonify({'error': "Invalid request: 'width' must be a number"}), 400
+        return jsonify({'error': "Invalid request: 'width' must be a positive integer"}), 400
 
-    if not image_path or not width:
+    if not image_path or width <= 0:
         return jsonify({'error': "Invalid request: Missing 'path' or 'width'"}), 400
 
     try:
