@@ -24,7 +24,7 @@
         <h1 class="display-4 text-center flex-grow-1">{{ game.title }}</h1>
         <div>
             <a href="{{ url_for('quests.add_quest', game_id=game.id) }}" class="btn btn-primary">Add Quest</a>
-            <button class="btn btn-danger ms-2" onclick="deleteAllQuests()">Delete All Quests</button>
+            <button id="deleteAllQuestsBtn" class="btn btn-danger ms-2">Delete All Quests</button>
         </div>
     </div>
 
@@ -33,7 +33,7 @@
         <h3 class="mb-3">Import Quests from CSV</h3>
         <form id="importQuestsForm" method="post" enctype="multipart/form-data" class="d-flex">
             <input type="file" name="quests_csv" accept=".csv" class="form-control me-3">
-            <button type="button" class="btn btn-secondary" onclick="importQuests()">Import</button>
+            <button type="button" id="importQuestsBtn" class="btn btn-secondary">Import</button>
         </form>
     </div>
 
