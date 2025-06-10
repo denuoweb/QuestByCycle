@@ -1,5 +1,7 @@
 // === app/static/scss/pages/_submission.scss ===
 
+@use 'sass:color';
+
 // ── IMAGE CONTAINER ──
 #submissionImageContainer {
   position: relative;
@@ -170,7 +172,7 @@
       // optional: change hover on unliked
       &:not(.active):hover {
         .fa-heart {
-          color: darken(#0d6efd, 10%);
+          color: color.adjust(#0d6efd, $lightness: -10%);
         }
       }
     }

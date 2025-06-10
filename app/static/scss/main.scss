@@ -1,9 +1,9 @@
 @use 'sass:math';
 
 // 1. ABSTRACTS
-@import 'abstracts/variables';
-@import 'abstracts/functions';
-@import 'abstracts/mixins';
+@use 'abstracts/variables' as *;
+@use 'abstracts/functions' as *;
+@use 'abstracts/mixins' as *;
 
 // 2. BASE
 // Use Bootstrap's reboot and typography
@@ -11,43 +11,43 @@
 
 // 3. LAYOUT
 // Bootstrap grid provides container, row, and col utilities
-@import 'layout/header';
-@import 'layout/layout';
-@import 'layout/footer';
+@use 'layout/header';
+@use 'layout/layout';
+@use 'layout/footer';
 
 // 4. COMPONENTS
 // Use Bootstrap containers instead
-@import 'components/notification-dropdown';
-@import 'components/navbar';
-@import 'components/dropdown';
+@use 'components/notification-dropdown';
+@use 'components/navbar';
+@use 'components/dropdown';
 // Use Bootstrap button and form styles
-@import 'components/modals';
-@import 'components/join_custom_game_modal';
-@import 'components/contact_modal';
-@import 'components/register_modal';
-@import 'components/badge_modal';
-@import 'components/loading_modal';
-@import 'components/all_submissions_modal';
-@import 'components/delete_game_modal';
-@import 'components/quest_detail_modal';
-@import 'components/leaderboard_modal';
-@import 'components/sponsors-modal';
-@import 'components/user_profile_modal';
-@import 'components/badges';
-@import 'components/badge-bar';
-@import 'components/utilities';
-@import 'components/shoutboard';
-@import 'components/notifications';
-@import 'components/flash_messages';
+@use 'components/modals';
+@use 'components/join_custom_game_modal';
+@use 'components/contact_modal';
+@use 'components/register_modal';
+@use 'components/badge_modal';
+@use 'components/loading_modal';
+@use 'components/all_submissions_modal';
+@use 'components/delete_game_modal';
+@use 'components/quest_detail_modal';
+@use 'components/leaderboard_modal';
+@use 'components/sponsors-modal';
+@use 'components/user_profile_modal';
+@use 'components/badges';
+@use 'components/badge-bar';
+@use 'components/utilities';
+@use 'components/shoutboard';
+@use 'components/notifications';
+@use 'components/flash_messages';
 
 // 5. PAGES
-@import 'pages/index';
-@import 'pages/game';
-@import 'pages/profile';
-@import 'pages/quest';
-@import 'pages/submission';
-@import 'pages/submit_photo';
+@use 'pages/index';
+@use 'pages/game';
+@use 'pages/profile';
+@use 'pages/quest';
+@use 'pages/submission';
+@use 'pages/submit_photo';
 
 // 6. UTILS
-@import 'utils/animations';
-@import 'utils/responsive';
+@use 'utils/animations';
+@use 'utils/responsive';

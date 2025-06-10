@@ -1,5 +1,5 @@
 @use 'sass:math';
-@import '../abstracts/mixins';
+@use '../abstracts/mixins' as *;
 
 body {
   display: flex;

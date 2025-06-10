@@ -1,5 +1,6 @@
-@import '../abstracts/functions';
-@import '../abstracts/mixins';
+@use '../abstracts/functions' as *;
+@use '../abstracts/mixins' as *;
+@use 'sass:color';
 
 // Dropdown variables
 $dropdown-bg:        #e2e8db;
@@ -70,7 +71,7 @@ $dropdown-item-max-width: pxToRem(290); // Keeps items inside bounds
     transition: background 0.18s, color 0.18s;
     &:hover, &:focus-visible, &[aria-expanded="true"] {
       background: $dropdown-hover-bg;
-      color: darken($dropdown-color, 14%);
+      color: color.adjust($dropdown-color, $lightness: -14%);
       outline: none;
     }
     .dropdown-toggle-icon {
@@ -101,7 +102,7 @@ $dropdown-item-max-width: pxToRem(290); // Keeps items inside bounds
     &:hover,
     &:focus {
       background: $dropdown-hover-bg;
-      color: darken($dropdown-color, 8%);
+      color: color.adjust($dropdown-color, $lightness: -8%);
       outline: none;
     }
     &.fw-bold    { font-weight: bold; }
@@ -119,7 +120,7 @@ $dropdown-item-max-width: pxToRem(290); // Keeps items inside bounds
     &:hover,
     &:focus {
       background: $dropdown-hover-bg;
-      color: darken($dropdown-color, 8%);
+      color: color.adjust($dropdown-color, $lightness: -8%);
       outline: none;
     }
     &.fw-bold    { font-weight: bold; }

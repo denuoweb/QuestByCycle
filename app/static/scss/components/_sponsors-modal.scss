@@ -1,5 +1,7 @@
-@import '../abstracts/functions';  // pxToRem
-@import '../abstracts/mixins';     // respond, transition
+@use '../abstracts/functions' as *;  // pxToRem
+@use '../abstracts/mixins' as *;     // respond, transition
+@use '../abstracts/variables' as *;
+@use 'sass:color';
 
 // Game Sponsors Modal Styles
 #sponsorsModal {
@@ -101,7 +103,7 @@
                 border-radius: pxToRem(4);
                 text-decoration: none;
                 text-align: center;
-                &:hover { background-color: darken($secondary-color, 10%); }
+                &:hover { background-color: color.adjust($secondary-color, $lightness: -10%); }
               }
             }
           }
@@ -148,7 +150,7 @@
         border-radius: pxToRem(4);
         text-decoration: none;
         @include transition(background-color 0.2s ease);
-        &:hover { background-color: darken($primary-color, 10%); }
+        &:hover { background-color: color.adjust($primary-color, $lightness: -10%); }
       }
     }
   }

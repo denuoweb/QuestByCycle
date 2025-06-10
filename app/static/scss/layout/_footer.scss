@@ -1,5 +1,6 @@
-@import '../abstracts/mixins';   // for any transition mixin, if needed
-@import '../abstracts/functions';// for pxToRem()
+@use '../abstracts/mixins' as *;   // for any transition mixin, if needed
+@use '../abstracts/functions' as *; // for pxToRem()
+@use 'sass:color';
 
 .footer {
   // 1. Base footer container
@@ -82,7 +83,7 @@
         font-size: pxToRem(14);
         &:hover {
           text-decoration: none;
-          color: lighten(#fff, 10%);
+          color: color.adjust(#fff, $lightness: 10%);
         }
       }
       margin-bottom: pxToRem(20);

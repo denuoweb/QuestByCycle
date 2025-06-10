@@ -9,6 +9,6 @@
   },
   "devDependencies": {
     "vite": "^6.3.5",
-    "sass": "^1.75.0"
+    "sass": "^1.89.2"
   }
 }
