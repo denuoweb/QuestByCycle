@@ -27,6 +27,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const undoBtn = document.getElementById('deleteGameUndo');
   const form = document.getElementById('deleteGameForm');
 
+  // If any of the required elements are missing, skip attaching
+  if (!input || !confirmBtn || !countdown || !timerSpan || !undoBtn || !form) {
+    return;
+  }
+
   input.addEventListener('input', () => {
     confirmBtn.disabled = input.value.trim().toLowerCase() !== 'delete';
   });
