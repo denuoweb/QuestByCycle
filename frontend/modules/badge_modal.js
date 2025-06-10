@@ -95,6 +95,11 @@ function populateBadgeModal(badge, requiredCount, currentUserCompletions, taskLi
   const modalImage = document.getElementById('badgeModalImage');
   const modalText  = document.getElementById('badgeModalText');
 
+  if (!modalTitle || !modalImage || !modalText) {
+    console.error('Badge modal elements missing');
+    return;
+  }
+
   modalTitle.textContent = badge.name;
   modalImage.src = validateImageUrl(badge.image) || PLACEHOLDER_IMAGE;
 

@@ -186,6 +186,10 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
 
 function ensureDynamicElementsExistAndPopulate(quest, userCompletionCount, nextEligibleTime, canVerify) {
     const parentElement = document.querySelector('.user-quest-data');
+    if (!parentElement) {
+        console.error('Parent element .user-quest-data not found');
+        return;
+    }
 
     const dynamicElements = [
         { id: 'modalQuestCompletions', value: `${userCompletionCount || 0}` },
@@ -230,6 +234,10 @@ function formatTimeDiff(ms) {
 
 function manageVerificationSection(questId, canVerify, verificationType, nextEligibleTime) {
     const userQuestData = document.querySelector('.user-quest-data');
+    if (!userQuestData) {
+        console.error('Parent element .user-quest-data not found');
+        return;
+    }
     userQuestData.innerHTML = '';
 
     if (canVerify) {
@@ -569,11 +577,14 @@ function isValidImageUrl(url) {
 
 function distributeImages(images) {
     const board = document.getElementById('submissionBoard');
+    if (!board) {
+        console.error('submissionBoard element not found');
+        return;
+    }
     board.innerHTML = '';
 
     const rawFallbackRaw =
-        document.getElementById('questDetailModal')
-                .getAttribute('data-placeholder-url') ||
+        document.getElementById('questDetailModal')?.getAttribute('data-placeholder-url') ||
         PLACEHOLDER_IMAGE;
     const rawFallback = isValidImageUrl(rawFallbackRaw) ? rawFallbackRaw : PLACEHOLDER_IMAGE;
 
