@@ -5,15 +5,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const modal    = document.getElementById('loginModal');
   if (!form || !modal) return; // Modal not present on this page
 
-  const pwdError  = document.getElementById('passwordError');
-  const forgotDiv = document.getElementById('forgotContainer');
+  const pwdError   = document.getElementById('passwordError');
+  const forgotLink = document.getElementById('forgotPasswordLink');
   const checkUrl  = modal.dataset.checkUrl;
 
   // AJAX submit
   form.addEventListener('submit', e => {
     e.preventDefault();
     pwdError.style.display = 'none';
-    forgotDiv.innerHTML   = '';
+    if (forgotLink) forgotLink.style.display = 'none';
 
     submitFormJson(form)
       .then(({ json }) => {
@@ -22,13 +22,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           pwdError.textContent = json.error;
           pwdError.style.display = 'block';
-          if (json.show_forgot) {
-            const a = document.createElement('a');
-            a.href      = 'javascript:void(0)';
-            a.textContent = 'Forgot password?';
-            a.className = 'd-block mt-1';
-            a.onclick   = openForgotPasswordModal;
-            forgotDiv.appendChild(a);
+          if (json.show_forgot && forgotLink) {
+            forgotLink.style.display = 'block';
           }
         }
       })
@@ -44,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loginBtn.disabled = true;
     emailErr.style.display = 'none';
     emailErr.textContent = '';
+    if (forgotLink) forgotLink.style.display = 'none';
   }
 
   resetState();

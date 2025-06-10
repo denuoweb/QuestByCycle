@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const $    = s => document.querySelector(s);
   const modal = $('#submissionDetailModal');
   if (!modal) return; // Modal not included
+  const replyLimitMessage = document.getElementById('replyLimitMessage');
 
   const csrf = () => getCSRFToken();
   const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
@@ -276,21 +277,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const textarea = $('#submissionReplyEdit');
         const btn = $('#postReplyBtn');
-        const existingMessage = $('#replyLimitMessage');
         if (d.replies.length >= 10) {
           textarea.disabled = true;
           btn.disabled = true;
-          if (!existingMessage) {
-            const msg = document.createElement('div');
-            msg.id = 'replyLimitMessage';
-            msg.className = 'text-muted mt-2';
-            msg.textContent = 'Maximum replies reached, sorry.';
-            textarea.parentNode.insertBefore(msg, textarea);
-          }
+          if (replyLimitMessage) replyLimitMessage.style.display = 'block';
         } else {
           textarea.disabled = false;
           btn.disabled = false;
-          if (existingMessage) existingMessage.remove();
+          if (replyLimitMessage) replyLimitMessage.style.display = 'none';
         }
       });
   }
@@ -374,13 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn      = $('#postReplyBtn');
     textarea.disabled = true;
     btn.disabled      = true;
-    if (!$('#replyLimitMessage')) {
-      const msg = document.createElement('div');
-      msg.id = 'replyLimitMessage';
-      msg.className = 'text-muted mt-2';
-      msg.textContent = 'Maximum replies reached, sorry.';
-      textarea.parentNode.insertBefore(msg, textarea);
-    }
+    if (replyLimitMessage) replyLimitMessage.style.display = 'block';
   }
   // Provide global access for existing inline handlers
   window.showSubmissionDetail = showSubmissionDetail;

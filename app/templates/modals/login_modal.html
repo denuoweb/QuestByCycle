@@ -40,8 +40,16 @@
             <span class="text-danger">[{{ err }}]</span>
           {% endfor %}
           <div id="passwordError" class="text-danger mt-1 d-none"></div>
-          <div id="forgotContainer" class="mt-1"></div>
-        </div>
+          <div id="forgotContainer" class="mt-1">
+            <a id="forgotPasswordLink"
+               href="javascript:void(0)"
+               class="d-block"
+               style="display:none"
+               onclick="openForgotPasswordModal()">
+              Forgot password?
+            </a>
+          </div>
+          </div>
 
         <div class="form-check form-check-inline">
           {{ login_form.remember_me(class="form-check-input") }}
