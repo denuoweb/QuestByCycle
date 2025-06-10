@@ -83,7 +83,7 @@ function showUserProfileModal(userId) {
                     <p><strong>Interests:</strong> ${data.user.interests || ''}</p>
                     <p><strong>Riding Preferences:</strong> ${data.user.riding_preferences.join(', ')}</p>
                     <p><strong>Ride Description:</strong> ${data.user.ride_description || ''}</p>
-                    <button class="btn btn-primary" onclick="toggleProfileEditMode()">Edit</button>
+                    <button class="btn btn-primary" onclick="window.toggleProfileEditMode()">Edit</button>
                   </div>
                   <div id="profileEditMode" class="d-none">
                     <form id="editProfileForm" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
