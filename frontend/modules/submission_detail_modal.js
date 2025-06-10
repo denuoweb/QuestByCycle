@@ -382,8 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
       textarea.parentNode.insertBefore(msg, textarea);
     }
   }
+  // Provide global access for existing inline handlers
+  window.showSubmissionDetail = showSubmissionDetail;
 });
-
-// Provide global access for existing inline handlers
-window.showSubmissionDetail = showSubmissionDetail;
 
