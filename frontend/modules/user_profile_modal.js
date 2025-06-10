@@ -280,6 +280,16 @@ function showUserProfileModal(userId) {
         btn.style.display = '';      // undo any previous 'display:none'
       }
 
+      // 2.2) Populate follower count
+      const followerEl = document.getElementById('followerCount');
+      let followerCount = data.user.follower_count;
+      function updateFollowerCount() {
+        if (followerEl) {
+          followerEl.textContent = `${followerCount} follower${followerCount === 1 ? '' : 's'}`;
+        }
+      }
+      updateFollowerCount();
+
       // 3) Follow/Unfollow button logic
       if (!isCurrent && btn) {
         if (btn) {
@@ -317,7 +327,9 @@ function showUserProfileModal(userId) {
             return;
           }
           following = !following;
+          followerCount += following ? 1 : -1;
           updateFollowButton();
+          updateFollowerCount();
         };
       } else {
         // Hide on your own profile
