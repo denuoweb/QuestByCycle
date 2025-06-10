@@ -1,12 +1,16 @@
 {
+  "id": "questbycycle-pwa",
   "name": "QuestByCycle",
   "short_name": "QuestCycle",
   "description": "Photo sharing cycling app promoting environmental sustainability.",
   "start_url": "/",
   "scope": "/",
+  "scope_extensions": [{"origin": "https://questbycycle.org"}],
   "theme_color": "#D0E6B5",
   "background_color": "#f0f0f0",
+  "dir": "ltr",
   "display": "standalone",
+  "orientation": "portrait",
   "handle_links": "preferred",
   "display_override": ["window-controls-overlay", "standalone"],
   "launch_handler": {
@@ -32,6 +36,17 @@
       ]
     }
   },
+  "categories": ["social", "sports", "photography"],
+  "iarc_rating_id": "e1234567890",
+  "lang": "en",
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.questbycycle.pwa",
+      "id": "com.questbycycle.pwa"
+    }
+  ],
   "protocol_handlers": [
     {"protocol": "web+questbycycle", "url": "/protocol-handler?url=%s"}
   ],
