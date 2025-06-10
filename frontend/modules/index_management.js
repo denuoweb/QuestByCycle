@@ -1,5 +1,4 @@
 import { showLoadingModal, hideLoadingModal } from './loading_modal.js';
-import { showLeaderboardModal } from './leaderboard_modal.js';
 import { showAllSubmissionsModal } from './all_submissions_modal.js';
 import { closeModal } from './modal_common.js';
 const refreshCSRFToken = async () => {
@@ -83,9 +82,10 @@ function updateGameName() {
 document.addEventListener('DOMContentLoaded', () => {
   const leaderboardButton = document.getElementById('leaderboardButton');
   if (leaderboardButton) {
-    leaderboardButton.addEventListener('click', () => {
+    leaderboardButton.addEventListener('click', async () => {
       const gameId = leaderboardButton.getAttribute('data-game-id');
-      showLeaderboardModal(gameId);
+      const module = await import('./leaderboard_modal.js');
+      module.showLeaderboardModal(gameId);
       updateMeter(gameId);
     });
   }

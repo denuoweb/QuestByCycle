@@ -1,4 +1,3 @@
-import { showLeaderboardModal } from './modules/leaderboard_modal.js';
 
 export function initLayout() {
   if ('serviceWorker' in navigator) {
@@ -103,10 +102,11 @@ export function initLayout() {
 
 
   if (leaderboardLink) {
-    leaderboardLink.addEventListener('click', (e) => {
+    leaderboardLink.addEventListener('click', async (e) => {
       e.preventDefault();
       const gameId = leaderboardLink.getAttribute('data-game-id') || 0;
-      showLeaderboardModal(gameId);
+      const module = await import('./modules/leaderboard_modal.js');
+      module.showLeaderboardModal(gameId);
     });
   }
 
