@@ -1,6 +1,7 @@
 import { openModal } from './modal_common.js';
 import { resetModalContent } from './modal_common.js';
 import { getCSRFToken } from '../utils.js';
+import { showSubmissionDetail } from './submission_detail_modal.js';
 
 /* ------------------------------------------------------------------ */
 /*  HELPER: read meta-content                                         */

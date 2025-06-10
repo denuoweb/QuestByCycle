@@ -1,6 +1,7 @@
 
 import { openModal } from './modal_common.js';
 import { getCSRFToken } from '../utils.js';
+import { showSubmissionDetail } from './submission_detail_modal.js';
 
 const PLACEHOLDER_IMAGE =
   window.PLACEHOLDER_IMAGE ||
@@ -13,7 +14,7 @@ let submissionsIsAdmin = false;
 let submissionsHasMore = false;
 
 
-function showAllSubmissionsModal(gameId) {
+export function showAllSubmissionsModal(gameId) {
     submissionsPage = 0;
     submissionsGameId = gameId;
 

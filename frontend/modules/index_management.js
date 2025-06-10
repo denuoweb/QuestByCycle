@@ -1,5 +1,6 @@
 import { showLoadingModal, hideLoadingModal } from './loading_modal.js';
 import { showLeaderboardModal } from './leaderboard_modal.js';
+import { showAllSubmissionsModal } from './all_submissions_modal.js';
 import { closeModal } from './modal_common.js';
 const refreshCSRFToken = async () => {
   try {

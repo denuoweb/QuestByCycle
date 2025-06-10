@@ -1,4 +1,6 @@
 import { openModal } from './modal_common.js';
+import { showUserProfileModal } from './user_profile_modal.js';
+import { showAllSubmissionsModal } from './all_submissions_modal.js';
 
 let leaderboardData = null;
 let leaderboardMetric = 'points';
