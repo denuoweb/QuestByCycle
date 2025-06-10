@@ -1,3 +1,5 @@
+import { submitFormJson } from './modal_common.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('forgotForm');
   if (!form) return; // Modal not present
@@ -21,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     emailErr.style.display   = 'none';
     successDiv.style.display = 'none';
 
-    window.submitFormJson(form)
+    submitFormJson(form)
       .then(({ json }) => {
         if (json.success) {
           successDiv.textContent   = json.message;

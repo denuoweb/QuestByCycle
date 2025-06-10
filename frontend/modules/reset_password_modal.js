@@ -1,3 +1,5 @@
+import { submitFormJson } from './modal_common.js';
+
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('resetForm');
     if (!form) return;
@@ -11,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         errDiv.style.display     = 'none';
         successDiv.style.display = 'none';
 
-        window.submitFormJson(form)
+        submitFormJson(form)
             .then(({ json }) => {
                 if (json.success) {
                     successDiv.textContent   = json.message;

@@ -1,5 +1,6 @@
 "use strict";
 import { openModal } from './modal_common.js';
+import { escapeHTML } from '../utils.js';
 
 // Cache all badges in a global variable once loaded
 window.allBadges = window.allBadges || [];

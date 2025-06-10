@@ -1,4 +1,5 @@
 import { openModal } from './modal_common.js';
+import { getCSRFToken } from '../utils.js';
 
 function showUserProfileModal(userId) {
   fetch(`/profile/${userId}`)

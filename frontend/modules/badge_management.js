@@ -1,3 +1,5 @@
+import { getCSRFToken } from '../utils.js';
+
 // Badge management functions
 document.addEventListener('DOMContentLoaded', () => {
   loadBadges();
