@@ -28,6 +28,17 @@ from email.mime.image import MIMEImage
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
 from textwrap import dedent
 
+
+def _get_ffmpeg_bin() -> str | None:
+    """Return the path to a usable ffmpeg binary or ``None`` if unavailable."""
+    ffmpeg_bin = current_app.config.get("FFMPEG_PATH") or shutil.which("ffmpeg")
+    if ffmpeg_bin and (
+        (os.path.isabs(ffmpeg_bin) and os.path.exists(ffmpeg_bin))
+        or shutil.which(ffmpeg_bin)
+    ):
+        return ffmpeg_bin
+    return None
+
 ALLOWED_TAGS = {
     'a', 'b', 'i', 'u', 'em', 'strong', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
     'blockquote', 'code', 'pre', 'br', 'div', 'span', 'ul', 'ol', 'li', 'hr',
@@ -284,16 +295,9 @@ def save_submission_video(submission_video_file):
         )
         os.makedirs(uploads_dir, exist_ok=True)
 
-        ffmpeg_bin = current_app.config.get("FFMPEG_PATH") or shutil.which("ffmpeg")
-        ffmpeg_available = ffmpeg_bin and (
-            (
-                os.path.isabs(ffmpeg_bin)
-                and os.path.exists(ffmpeg_bin)
-            )
-            or shutil.which(ffmpeg_bin)
-        )
+        ffmpeg_bin = _get_ffmpeg_bin()
 
-        if not ffmpeg_available:
+        if not ffmpeg_bin:
             current_app.logger.warning(
                 "ffmpeg not found, saving video without conversion"
             )
