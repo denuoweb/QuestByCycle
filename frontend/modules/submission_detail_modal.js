@@ -1,5 +1,4 @@
-import { openModal } from './modal_common.js';
-import { resetModalContent } from './modal_common.js';
+import { openModal, closeModal, resetModalContent } from './modal_common.js';
 
 document.addEventListener('DOMContentLoaded', () => {
 

@@ -29,7 +29,7 @@ export function openModal(modalId) {
   document.body.classList.add('body-no-scroll');
 }
 
-function closeModal(modalId) {
+export function closeModal(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
 
