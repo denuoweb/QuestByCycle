@@ -10,10 +10,11 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'frontend/main.js')
+        main: resolve(__dirname, 'frontend/main.js'),
+        submitPhoto: resolve(__dirname, 'frontend/submit_photo_entry.js')
       },
       output: {
-        entryFileNames: 'main.js',
+        entryFileNames: '[name].js',
         chunkFileNames: 'chunk-[hash].js',
         assetFileNames: '[name][extname]'
       }
