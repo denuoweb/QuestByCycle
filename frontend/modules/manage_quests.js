@@ -16,6 +16,13 @@
             return;
         }
         game_Id = gameEl.dataset.gameId;
+
+        const delBtn = document.getElementById('deleteAllQuestsBtn');
+        if (delBtn) delBtn.addEventListener('click', deleteAllQuests);
+
+        const importBtn = document.getElementById('importQuestsBtn');
+        if (importBtn) importBtn.addEventListener('click', importQuests);
+
         await loadBadges();
         loadQuests(game_Id);
     });
@@ -326,14 +333,22 @@
                         <p class="card-text"><strong>Frequency:</strong> <span class="editable" data-name="frequency" data-value="${quest.frequency}">${frequencyDisplayText}</span></p>
                         <p class="card-text"><strong>Category:</strong> <span class="editable" data-name="category">${categoryText}</span></p>
                         <div class="d-flex justify-content-between">
-                            <button class="btn btn-warning edit-button" onclick="editQuest(${quest.id})">Edit</button>
-                            <button class="btn btn-danger" onclick="deleteQuest(${quest.id})">Delete</button>
-                            <button class="btn btn-info" onclick="window.location.href = '/quests/generate_qr/${quest.id}'">Generate QR Code</button>
+                            <button class="btn btn-warning edit-button" data-quest-id="${quest.id}">Edit</button>
+                            <button class="btn btn-danger delete-button" data-quest-id="${quest.id}">Delete</button>
+                            <button class="btn btn-info qr-button" data-quest-id="${quest.id}">Generate QR Code</button>
                         </div>
                     </div>
                 `;
 
                 questsBody.appendChild(card);
+
+                const editBtn = card.querySelector('.edit-button');
+                const delBtn = card.querySelector('.delete-button');
+                const qrBtn = card.querySelector('.qr-button');
+
+                if (editBtn) editBtn.addEventListener('click', () => editQuest(quest.id));
+                if (delBtn) delBtn.addEventListener('click', () => deleteQuest(quest.id));
+                if (qrBtn) qrBtn.addEventListener('click', () => generateQRCode(quest.id));
             });
 
         })
