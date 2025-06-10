@@ -3,7 +3,7 @@ import { showLoadingModal, hideLoadingModal } from './loading_modal.js';
 import { getCSRFToken } from '../utils.js';
 import logger from '../logger.js';
 
-document.addEventListener('DOMContentLoaded', function () {
+function initSubmitPhotoForm() {
     const submitPhotoForm = document.getElementById('submitPhotoForm');
 
     if (!submitPhotoForm) {
@@ -84,5 +84,11 @@ document.addEventListener('DOMContentLoaded', function () {
             logger.warn('Flash messages container not found.');
         }
     }
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSubmitPhotoForm);
+} else {
+    initSubmitPhotoForm();
+}
 
