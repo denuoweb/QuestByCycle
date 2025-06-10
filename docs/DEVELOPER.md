@@ -95,7 +95,7 @@ Ensure you have the following installed:
 - Python 3.x
 - PostgreSQL
 - Virtualenv
-- ffmpeg
+- ffmpeg (optional for video compression)
 
 ### Installation
 

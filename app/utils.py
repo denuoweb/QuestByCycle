@@ -279,60 +279,77 @@ def save_submission_video(submission_video_file):
         submission_video_file.save(orig_path)
 
                                            
-        uploads_dir = os.path.join(current_app.static_folder, 'videos', 'verifications')
-        os.makedirs(uploads_dir, exist_ok=True)
-        final_name = secure_filename(f"{uuid.uuid4()}.mp4")
-        final_path = os.path.join(uploads_dir, final_name)
-
-                                 
-        ffmpeg_bin = (
-            current_app.config.get('FFMPEG_PATH')
-            or shutil.which('ffmpeg')
+        uploads_dir = os.path.join(
+            current_app.static_folder, "videos", "verifications"
         )
-        if not ffmpeg_bin or (
-            not os.path.isabs(ffmpeg_bin)
-            and shutil.which(ffmpeg_bin) is None
-        ):
-            raise FileNotFoundError(
-                "ffmpeg executable not found. Install ffmpeg or set FFMPEG_PATH"
-            )
+        os.makedirs(uploads_dir, exist_ok=True)
 
-                                          
-        ffmpeg_cmd = [
-            ffmpeg_bin, '-i', orig_path,
-            '-vf', "scale='min(1280,iw)':-2",
-            '-c:v', 'libx264', '-preset', 'fast', '-crf', '28',
-            '-c:a', 'aac', '-movflags', 'faststart',
-            '-y', final_path
-        ]
-        current_app.logger.debug("Running ffmpeg command: %s", ' '.join(ffmpeg_cmd))
-        try:
-            subprocess.run(
-                ffmpeg_cmd,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+        ffmpeg_bin = current_app.config.get("FFMPEG_PATH") or shutil.which("ffmpeg")
+        ffmpeg_available = ffmpeg_bin and (
+            (
+                os.path.isabs(ffmpeg_bin)
+                and os.path.exists(ffmpeg_bin)
             )
-        except subprocess.CalledProcessError as e:
-            stderr_output = e.stderr.decode(errors="ignore") if e.stderr else ""
-            current_app.logger.error("ffmpeg failed: %s", stderr_output)
+            or shutil.which(ffmpeg_bin)
+        )
+
+        if not ffmpeg_available:
+            current_app.logger.warning(
+                "ffmpeg not found, saving video without conversion"
+            )
+            final_name = secure_filename(f"{uuid.uuid4()}.{ext}")
+            final_path = os.path.join(uploads_dir, final_name)
+            shutil.move(orig_path, final_path)
+        else:
+            final_name = secure_filename(f"{uuid.uuid4()}.mp4")
+            final_path = os.path.join(uploads_dir, final_name)
+            ffmpeg_cmd = [
+                ffmpeg_bin,
+                "-i",
+                orig_path,
+                "-vf",
+                "scale='min(1280,iw)':-2",
+                "-c:v",
+                "libx264",
+                "-preset",
+                "fast",
+                "-crf",
+                "28",
+                "-c:a",
+                "aac",
+                "-movflags",
+                "faststart",
+                "-y",
+                final_path,
+            ]
+            current_app.logger.debug(
+                "Running ffmpeg command: %s", " ".join(ffmpeg_cmd)
+            )
+            try:
+                subprocess.run(
+                    ffmpeg_cmd,
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+            except subprocess.CalledProcessError as e:
+                stderr_output = e.stderr.decode(errors="ignore") if e.stderr else ""
+                current_app.logger.error("ffmpeg failed: %s", stderr_output)
+                os.remove(orig_path)
+                current_app.logger.debug("Removed temporary upload %s", orig_path)
+                raise ValueError("Invalid or corrupted video file") from e
+
             os.remove(orig_path)
             current_app.logger.debug("Removed temporary upload %s", orig_path)
-            raise ValueError("Invalid or corrupted video file") from e
 
-                                 
-        os.remove(orig_path)
-        current_app.logger.debug("Removed temporary upload %s", orig_path)
-
-                          
-        final_size = os.path.getsize(final_path)
-        current_app.logger.debug("Compressed video size: %s bytes", final_size)
-        if final_size > MAX_VIDEO_BYTES:
-            os.remove(final_path)
-            current_app.logger.debug(
-                "Compressed video exceeded max size and was deleted"
-            )
-            raise ValueError("Video exceeds 10 MB limit after compression")
+            final_size = os.path.getsize(final_path)
+            current_app.logger.debug("Compressed video size: %s bytes", final_size)
+            if final_size > MAX_VIDEO_BYTES:
+                os.remove(final_path)
+                current_app.logger.debug(
+                    "Compressed video exceeded max size and was deleted"
+                )
+                raise ValueError("Video exceeds 10 MB limit after compression")
 
         return os.path.join('videos', 'verifications', final_name)
     except Exception as e:

@@ -73,7 +73,7 @@ This project relies on a variety of open source libraries. The badges below link
 - Python 3.11+
 - PostgreSQL
 - git
-- ffmpeg (for video processing)
+- ffmpeg (optional, for video compression)
 - Poetry (for dependency management)
 - NGINX with Certbot
 - UFW firewall
@@ -191,7 +191,7 @@ This project relies on a variety of open source libraries. The badges below link
 14. Configure
     - Copy `config.toml.example` to `config.toml` and adjust the variables accordingly.
     - Copy `gunicorn.conf.py.example` to `gunicorn.conf.py` and adjust the variables accordingly.
-    - Ensure the `ffmpeg` binary is installed and accessible or set `FFMPEG_PATH` in `config.toml`.
+    - If you have `ffmpeg` installed, ensure it is accessible or set `FFMPEG_PATH` in `config.toml`. Without `ffmpeg` videos are stored unmodified.
 
 15. Run the server in debug
 ```sudo -u APPUSER /home/APPUSER/.local/bin/poetry run flask   --app wsgi:app   run   --host=127.0.0.1   --port=5000```
