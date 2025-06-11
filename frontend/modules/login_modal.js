@@ -1,4 +1,4 @@
-import { submitFormJson, openForgotPasswordModal } from './modal_common.js';
+import { submitFormJson, openForgotPasswordModal, registerFromLogin } from './modal_common.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const form     = document.getElementById('loginForm');
@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const pwdError   = document.getElementById('passwordError');
   const forgotLink = document.getElementById('forgotPasswordLink');
+  const registerBtn = modal.querySelector('[data-register-from-login]');
   const checkUrl  = modal.dataset.checkUrl;
 
   // AJAX submit
@@ -43,6 +44,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   resetState();
+
+  if (forgotLink) {
+    forgotLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      openForgotPasswordModal();
+    });
+  }
+
+  if (registerBtn) {
+    registerBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      registerFromLogin();
+    });
+  }
 
   emailIn.addEventListener('blur', () => {
     const email = emailIn.value.trim();

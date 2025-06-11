@@ -141,4 +141,10 @@ export function handleGameSelection(opt) {
   }
 }
 
-window.handleGameSelection = handleGameSelection;
+// Delegate clicks for game selection
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-game-selection]');
+  if (!el) return;
+  e.preventDefault();
+  handleGameSelection({ value: el.getAttribute('data-game-selection') });
+});

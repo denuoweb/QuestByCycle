@@ -647,7 +647,19 @@ function toggleContent(element) {
 }
 
 
-// Expose globally for inline handlers
-window.openQuestDetailModal = openQuestDetailModal;
-window.refreshQuestDetailModal = refreshQuestDetailModal;
+// Event delegation for quest detail triggers and toggles
+document.addEventListener('click', (e) => {
+    const questEl = e.target.closest('[data-quest-detail]');
+    if (questEl) {
+        e.preventDefault();
+        openQuestDetailModal(questEl.getAttribute('data-quest-detail'));
+        return;
+    }
+
+    const toggleEl = e.target.closest('[data-toggle-content]');
+    if (toggleEl && toggleEl.closest('#questDetailModal')) {
+        e.preventDefault();
+        toggleContent(toggleEl);
+    }
+});
 

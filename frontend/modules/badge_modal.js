@@ -107,7 +107,7 @@ function populateBadgeModal(badge, requiredCount, currentUserCompletions, taskLi
 
   let badgeSpecificText = '';
   if (taskId) {
-    const taskLink = `<a href="#" onclick="openQuestDetailModal('${taskId}')">${escapeHTML(taskNames)}</a>`;
+    const taskLink = `<a href="#" data-quest-detail="${taskId}">${escapeHTML(taskNames)}</a>`;
     badgeSpecificText = `<p>Completion Requirement: ${requiredCount > 1 ? requiredCount + ' times' : requiredCount + ' time'}</p>` +
                         `<p>Your Total Completions: ${currentUserCompletions}</p>` +
                         `<p>${earned ? 'You have earned this badge.' : 'Complete ' + taskLink + ' to earn this badge.'}</p>`;
@@ -175,6 +175,12 @@ document.addEventListener('DOMContentLoaded', () => {
   ensureBadgeCache();
 });
 
-// Expose globally for inline handlers
-window.openBadgeModal = openBadgeModal;
+// Event delegation for badge modals
+document.addEventListener('click', (e) => {
+  const badgeEl = e.target.closest('[data-open-badge]');
+  if (badgeEl) {
+    e.preventDefault();
+    openBadgeModal(badgeEl);
+  }
+});
 
