@@ -17,7 +17,7 @@ def _deliver_follow_activity(app, actor_url, activity, sender_id):
     with app.app_context():
         try:
 
-            sender = User.query.get(sender_id)
+            sender = db.session.get(User, sender_id)
             sender.ensure_activitypub_actor()
 
             doc = requests.get(actor_url, timeout=REQUEST_TIMEOUT).json()
@@ -111,7 +111,11 @@ def post_reply(user_id, message_id):
         current_user.id == user.id or
         current_user.id == message.author_id or
         current_user.id == message.user_id or
-        (message.parent_id and current_user.id == ProfileWallMessage.query.get(message.parent_id).author_id)
+        (
+            message.parent_id
+            and current_user.id
+            == db.session.get(ProfileWallMessage, message.parent_id).author_id
+        )
     ):
         return jsonify({'error': 'You are not authorized to reply to messages on this profile.'}), 403
 

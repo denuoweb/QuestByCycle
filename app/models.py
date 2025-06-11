@@ -200,7 +200,7 @@ class User(UserMixin, db.Model):
             user_id = payload['verify_email']
         except jwt.exceptions.InvalidTokenError:
             return None
-        return User.query.get(user_id)
+        return db.session.get(User, user_id)
 
     def generate_reset_token(self, expiration=320000):
         """Generate a JWT token for password reset."""
@@ -223,7 +223,7 @@ class User(UserMixin, db.Model):
             user_id = payload['reset_password']
         except jwt.exceptions.InvalidTokenError:
             return None
-        return User.query.get(user_id)
+        return db.session.get(User, user_id)
 
     def set_password(self, password):
         """Set the user's password."""
@@ -290,7 +290,7 @@ class User(UserMixin, db.Model):
 
     def is_admin_for_game(self, game_id):
         """Return True if the user is an admin for the given game."""
-        game = Game.query.get(game_id)
+        game = db.session.get(Game, game_id)
         return bool(game and (self in game.admins or self.is_super_admin))
 
 

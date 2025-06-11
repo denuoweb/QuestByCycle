@@ -197,7 +197,7 @@ def generate_smoggy_images(image_path, game_id):
 
 def update_user_score(user_id):
     try:
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             return False
 
@@ -389,7 +389,7 @@ def save_sponsor_logo(image_file, old_filename=None):
 
 def can_complete_quest(user_id, quest_id):
     now = datetime.now(UTC)
-    quest = Quest.query.get(quest_id)
+    quest = db.session.get(Quest, quest_id)
     
     if not quest:
         return False, None                        
@@ -425,7 +425,7 @@ def can_complete_quest(user_id, quest_id):
 
 def getLastRelevantCompletionTime(user_id, quest_id):
     now = datetime.now(UTC)
-    quest = Quest.query.get(quest_id)
+    quest = db.session.get(Quest, quest_id)
     
     if not quest:
         return None                        
@@ -452,8 +452,8 @@ def check_and_award_badges(user_id, quest_id, game_id):
         every quest in that category for the specified game.
     All awards and associated shoutboard messages are tied to the given game_id.
     """
-    user = User.query.get(user_id)
-    quest = Quest.query.get(quest_id)
+    user = db.session.get(User, user_id)
+    quest = db.session.get(Quest, quest_id)
     user_quest = UserQuest.query.filter_by(user_id=user_id, quest_id=quest_id).first()
     if not user_quest:
         return
@@ -559,7 +559,7 @@ def check_and_revoke_badges(user_id, game_id=None):
         of every quest in that badge’s category for the specified game.
     When revoking a badge, its associated shoutboard award message is deleted.
     """
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return
 
@@ -859,7 +859,7 @@ def generate_demo_game():
         leaderboard_image="leaderboard_image.png"                                                     
     )
     db.session.add(demo_game)
-    admin_user = User.query.get(1)
+    admin_user = db.session.get(User, 1)
     if admin_user:
         demo_game.admins.append(admin_user)
     db.session.commit()
@@ -955,7 +955,7 @@ def log_user_ip(user):
 
 
 def get_game_badges(game_id):
-    game = Game.query.get(game_id)
+    game = db.session.get(Game, game_id)
     if not game:
         return []
 
@@ -984,7 +984,7 @@ def send_social_media_liaison_email(
     try:
                                                               
                                                           
-        game = Game.query.get(game_id)
+        game = db.session.get(Game, game_id)
     except Exception as e:
         current_app.logger.error(
             f"Database error while fetching Game id={game_id}: {e}"

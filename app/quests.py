@@ -167,7 +167,9 @@ def submit_quest(quest_id):
     to Mastodon and generate a local ActivityPub Create activity.
     """
     current_app.logger.debug("Start quest submission for quest_id=%s", quest_id)
-    quest = Quest.query.get_or_404(quest_id)
+    quest = db.session.get(Quest, quest_id)
+    if not quest:
+        abort(404)
     game = Game.query.get_or_404(quest.game_id)
     now = datetime.now(UTC)
 
@@ -507,7 +509,7 @@ def get_quest_submissions(quest_id):
 
     submissions_data = []
     for sub, quest in submissions:
-        user = User.query.get(sub.user_id)
+        user = db.session.get(User, sub.user_id)
         submissions_data.append({
             "id"                 : sub.id,
             "image_url"          : public_media_url(sub.image_url),
@@ -541,7 +543,7 @@ def quest_user_completion(quest_id):
         quest_id (int): The ID of the quest.
     """
     quest = Quest.query.get_or_404(quest_id)
-    badge = Badge.query.get(quest.badge_id) if quest.badge_id else None
+    badge = db.session.get(Badge, quest.badge_id) if quest.badge_id else None
     user_quest = UserQuest.query.filter_by(
         user_id=current_user.id, quest_id=quest_id
     ).first()
@@ -904,7 +906,7 @@ def delete_submission(submission_id):
     ).first()
 
     if user_quest:
-        quest = Quest.query.get(submission.quest_id)
+        quest = db.session.get(Quest, submission.quest_id)
         user_quest.completions = max(user_quest.completions - 1, 0)
         if user_quest.completions == 0:
             user_quest.points_awarded = 0
@@ -1066,8 +1068,10 @@ def get_game_title(game_id):
 @quests_bp.route('/submissions/<int:submission_id>')
 @login_required
 def get_submission(submission_id):
-    sub = QuestSubmission.query.get_or_404(submission_id)
-    user = User.query.get(sub.user_id)
+    sub = db.session.get(QuestSubmission, submission_id)
+    if not sub:
+        abort(404)
+    user = db.session.get(User, sub.user_id)
 
                                                                      
     if user.profile_picture:
