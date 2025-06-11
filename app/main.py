@@ -19,6 +19,7 @@ from flask import (
     flash,
     current_app,
     send_file,
+    send_from_directory,
 )
 from werkzeug.utils import secure_filename
 from flask_login import current_user, login_required
@@ -980,6 +981,18 @@ def manifest():
 def offline_page():
     """Return the offline fallback page."""
     return current_app.send_static_file('offline.html')
+
+
+@main_bp.route('/favicon.ico')
+def favicon():
+    """Serve the site's favicon."""
+    return current_app.send_static_file('favicon.ico')
+
+
+@main_bp.route('/robots.txt')
+def robots_txt():
+    """Serve the robots.txt file."""
+    return send_from_directory(current_app.root_path, 'robots.txt', mimetype='text/plain')
 
 
 @main_bp.route('/share-target', methods=['POST'])

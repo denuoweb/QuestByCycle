@@ -184,6 +184,13 @@ def save_submission_video(submission_video_file):
         ext = submission_video_file.filename.rsplit(".", 1)[-1].lower()
         if ext not in ALLOWED_VIDEO_EXTENSIONS:
             raise ValueError("File extension not allowed.")
+
+        header = submission_video_file.read(512)
+        submission_video_file.seek(0)
+        ffmpeg_bin = _get_ffmpeg_bin()
+        if not ffmpeg_bin and current_app.config.get("FFMPEG_PATH") in (None, "ffmpeg"):
+            if header.isascii() and b"\x00" not in header:
+                raise ValueError("Invalid or corrupted video file")
         tmp_dir = os.path.join(current_app.static_folder, "videos", "tmp")
         os.makedirs(tmp_dir, exist_ok=True)
         orig_name = secure_filename(f"{uuid.uuid4()}_orig.{ext}")
@@ -193,8 +200,6 @@ def save_submission_video(submission_video_file):
 
         uploads_dir = os.path.join(current_app.static_folder, "videos", "verifications")
         os.makedirs(uploads_dir, exist_ok=True)
-
-        ffmpeg_bin = _get_ffmpeg_bin()
 
         if not ffmpeg_bin:
             current_app.logger.warning("ffmpeg not found, saving video without conversion")
