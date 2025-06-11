@@ -929,8 +929,8 @@ def resize_image():
 
 @main_bp.route('/sw.js')
 def service_worker():
-    """Serve the service worker from the application root."""
-    response = current_app.send_static_file('sw.js')
+    """Serve the compiled service worker from ``static/dist``."""
+    response = current_app.send_static_file('dist/sw.js')
     response.headers['Content-Type'] = 'application/javascript'
     return response
 
