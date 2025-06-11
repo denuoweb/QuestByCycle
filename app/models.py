@@ -5,10 +5,11 @@ import string
 import jwt
 from datetime import datetime
 from time import time
-from flask import current_app                                
-from flask_sqlalchemy import SQLAlchemy                                
-from flask_login import UserMixin                                
-from werkzeug.security import generate_password_hash, check_password_hash                                
+from urllib.parse import urlparse
+from flask import current_app
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.exc import IntegrityError                                
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 from sqlalchemy import DateTime
@@ -156,19 +157,26 @@ class User(UserMixin, db.Model):
     notifications = db.relationship('Notification', back_populates='user')
 
     def ensure_activitypub_actor(self):
-        """
-        Ensure that the user has a local ActivityPub actor record.
-        For Mastodon users, if they are linked, activitypub_id should already be set to their
-        Mastodon actor URL.
-        """
-        if not self.activitypub_id or not self.private_key or not self.public_key:
+        """Ensure this user has a valid local ActivityPub actor."""
+        if self.mastodon_id and self.mastodon_instance:
+            return
+
+        local_domain = current_app.config["LOCAL_DOMAIN"]
+        parsed = urlparse(self.activitypub_id or "")
+        needs_id = not parsed.netloc or parsed.netloc != local_domain
+        needs_keys = not self.private_key or not self.public_key
+
+        if needs_keys:
             from app.activitypub_utils import generate_activitypub_keys
+
             public_key, private_key = generate_activitypub_keys()
-            local_domain = current_app.config["LOCAL_DOMAIN"]
-            actor_url = f"https://{local_domain}/users/{self.username}"
-            self.activitypub_id = actor_url
             self.public_key = public_key
             self.private_key = private_key
+
+        if needs_id:
+            self.activitypub_id = f"https://{local_domain}/users/{self.username}"
+
+        if needs_id or needs_keys:
             db.session.commit()
     
     def generate_verification_token(self, expiration=320000):
