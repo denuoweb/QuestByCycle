@@ -864,12 +864,9 @@ def handle_large_file_error(_error):
 
 
 @quests_bp.route("/quest/my_submissions", methods=["GET"])
+@login_required
 def get_user_submissions():
-    """
-    Retrieve submissions for the current user.
-    """
-    if not current_user.is_authenticated:
-        return
+    """Retrieve submissions for the logged in user."""
 
     submissions = QuestSubmission.query.filter_by(user_id=current_user.id).all()
     submissions_data = [
