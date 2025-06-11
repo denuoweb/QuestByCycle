@@ -27,6 +27,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
 from textwrap import dedent
+from app.tasks import enqueue_email
 
 
 def _get_ffmpeg_bin() -> str | None:
@@ -1191,12 +1192,13 @@ def send_social_media_liaison_email(
 
                                   
     try:
-        sent = send_email(
-            to=liaison_email,
-            subject=subject,
-            html_content=html_body,
-            inline_images=inline_images,
+        enqueue_email(
+            liaison_email,
+            subject,
+            html_body,
+            inline_images,
         )
+        sent = True
     except Exception as e:
         current_app.logger.error(
             "Exception when sending email to '%s': %s",

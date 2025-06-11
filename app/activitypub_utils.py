@@ -19,6 +19,7 @@ from email.utils import formatdate
 from urllib.parse import urlparse
 from flask import Blueprint, current_app, request, abort, jsonify, url_for
 from app.models import User, ActivityStore, QuestLike, db, Notification, QuestSubmission
+from app.tasks import enqueue_deliver_activity
 
                                      
 ap_bp = Blueprint('activitypub', __name__)
@@ -541,7 +542,7 @@ def post_activitypub_create_activity(submission, user, quest):
     db.session.commit()
 
                                   
-    deliver_activity(activity, user)
+    enqueue_deliver_activity(activity, user.id)
 
     return activity
 
@@ -588,7 +589,7 @@ def post_activitypub_like_activity(submission, user):
       'to'     : [submission.user.activitypub_id]
     }
                                                  
-    deliver_activity(activity, user)
+    enqueue_deliver_activity(activity, user.id)
     return activity
 
 
@@ -615,5 +616,5 @@ def post_activitypub_comment_activity(reply, user):
       'object' : note,
       'to'     : [submission.user.activitypub_id]
     }
-    deliver_activity(activity, user)
+    enqueue_deliver_activity(activity, user.id)
     return activity

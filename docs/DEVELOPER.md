@@ -432,4 +432,7 @@ Before deploying to production, ensure the following settings in your `.env` fil
 9. **Start the application**:
    - Ensure Gunicorn and Nginx are running.
 
+10. **Start the task worker**:
+    - Run `poetry run rqworker` to process background jobs.
+
 By following this guide, you should have a comprehensive understanding of the project's architecture, codebase, and development practices. Happy coding!

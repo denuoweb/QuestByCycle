@@ -19,6 +19,7 @@ from app.models import db, User, Game
 from app.forms import (LoginForm, RegistrationForm, ForgotPasswordForm,
                        ResetPasswordForm, UpdatePasswordForm, MastodonLoginForm)
 from app.utils import send_email, log_user_ip, REQUEST_TIMEOUT, sanitize_html
+from app.tasks import enqueue_email
 from app.activitypub_utils import create_activitypub_actor
 
 auth_bp = Blueprint('auth', __name__)
@@ -64,7 +65,7 @@ def _send_verification_email(user):
     verify_url = url_for('auth.verify_email', _external=True, **params)
     html = render_template('verify_email.html', verify_url=verify_url)
     subject = "QuestByCycle – verify your email"
-    send_email(user.email, subject, html)
+    enqueue_email(user.email, subject, html)
 
 
 def _auto_verify_and_login(user):
@@ -431,7 +432,7 @@ def resend_verification_email():
         verify_url = url_for('auth.verify_email', token=token, _external=True)
         html = render_template('verify_email.html', verify_url=verify_url)
         subject = "Please verify your email"
-        send_email(user.email, subject, html)
+        enqueue_email(user.email, subject, html)
         flash('A new verification email has been sent. Please check your inbox.',
               'info')
     else:
@@ -602,7 +603,7 @@ def forgot_password():
             if user:
                 token     = user.generate_reset_token()
                 html      = render_template('reset_password_email.html', token=token)
-                send_email(user.email, "Password Reset Requested", html)
+                enqueue_email(user.email, "Password Reset Requested", html)
                 success_msg = 'A password reset email has been sent. Please check your inbox.'
 
                 if is_ajax:

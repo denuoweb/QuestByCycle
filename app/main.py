@@ -48,10 +48,10 @@ from app.forms import (
 from app.utils import (
     save_profile_picture,
     save_bicycle_picture,
-    send_email,
     sanitize_html,
     correct_image_orientation,
 )
+from app.tasks import enqueue_email
 from .config import load_config
 
                    
@@ -832,7 +832,7 @@ def contact():
 
         html = render_template('contact_email.html', message=message, user_info=user_info)
         try:
-            send_email(recipient, subject, html)
+            enqueue_email(recipient, subject, html)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify(success=True)
             flash('Your message has been sent successfully.', 'success')
