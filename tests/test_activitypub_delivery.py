@@ -95,3 +95,20 @@ def test_create_actor_uses_local_domain_when_server_name_blank(app):
     create_activitypub_actor(user)
 
     assert user.activitypub_id == "https://example.com/users/fall"
+
+
+def test_ensure_actor_updates_missing_domain(app):
+    user = User(
+        username="old",
+        email="old@example.com",
+        license_agreed=True,
+        email_verified=True,
+        activitypub_id="https:///users/old",
+    )
+    db.session.add(user)
+    db.session.commit()
+
+    user.ensure_activitypub_actor()
+
+    assert user.activitypub_id == "https://example.com/users/old"
+    assert user.public_key and user.private_key
