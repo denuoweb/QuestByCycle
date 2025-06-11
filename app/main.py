@@ -555,10 +555,20 @@ def leaderboard_partial():
     ).filter(Quest.game_id == selected_game_id
     ).scalar() or 0
 
+    num_participants = game.participants.count()
+    num_quests = Quest.query.filter_by(game_id=selected_game_id).count()
+    avg_points = round(total_game_points / num_participants, 2) if num_participants else 0
+    secondary_stats = [
+        {"label": "Participants", "value": num_participants},
+        {"label": "Quests Available", "value": num_quests},
+        {"label": "Avg Points", "value": avg_points},
+    ]
+
     return jsonify({
         'top_users': top_users,
         'total_game_points': total_game_points,
-        'game_goal': game.game_goal if game.game_goal else None
+        'game_goal': game.game_goal if game.game_goal else None,
+        'secondary_stats': secondary_stats
     })
 
 
