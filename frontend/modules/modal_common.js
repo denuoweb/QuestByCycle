@@ -443,21 +443,10 @@ document.addEventListener('click', e => {
 
 // on DOMContentLoaded, hoist *all* static .modal up under <body>
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.modal').forEach(m => {
+  document.querySelectorAll('.modal').forEach((m) => {
     if (m.parentNode !== document.body) {
       document.body.appendChild(m);
     }
   });
 });
-// Expose globally for inline handlers
-window.openModal = openModal;
-window.closeModal = closeModal;
-window.openLoginModalWithOptions = openLoginModalWithOptions;
-window.openRegisterModalWithOptions = openRegisterModalWithOptions;
-window.openLoginModalWithGame = openLoginModalWithGame;
-window.openForgotPasswordModal = openForgotPasswordModal;
-window.openResetPasswordModal = openResetPasswordModal;
-window.fetchAndShowModal = fetchAndShowModal;
-window.submitFormJson = submitFormJson;
-window.resetModalContent = resetModalContent;
 

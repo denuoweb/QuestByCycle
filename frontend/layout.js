@@ -1,5 +1,6 @@
 
 import logger from './logger.js';
+import { openModal } from './modules/modal_common.js';
 
 export function initLayout() {
   if ('serviceWorker' in navigator) {
@@ -131,11 +132,7 @@ export function initLayout() {
 export function handleGameSelection(opt) {
   const val = opt.value;
   if (val === 'join_custom_game') {
-    if (typeof window.openModal === 'function') {
-      window.openModal('joinCustomGameModal');
-    } else {
-      window.location.href = '/?show_join_custom=1';
-    }
+    openModal('joinCustomGameModal');
   } else {
     window.location.href = val;
   }
