@@ -185,7 +185,8 @@ def create_app(config_overrides=None):
 
     @login_manager.user_loader
     def load_user(user_id):
-        from app.models import User, db
+        from app.models import db
+        from app.models.user import User
         try:
             return db.session.get(User, int(user_id))
         except (TypeError, ValueError):

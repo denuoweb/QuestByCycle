@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
-from app.models import Notification, db
+from app.models import db
+from app.models.user import Notification
 
 notifications_bp = Blueprint('notifications', __name__)
 

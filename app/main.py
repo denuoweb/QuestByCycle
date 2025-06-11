@@ -31,9 +31,11 @@ from PIL import Image, UnidentifiedImageError
 from app.constants import UTC, FREQUENCY_DELTA
 from urllib.parse import urlparse, parse_qs
 
-from app.models import (db, Game, User, Quest, Badge, UserQuest, QuestSubmission,
-                        ShoutBoardMessage, ProfileWallMessage,
-                        user_games)
+from app.models import db, user_games
+from app.models.game import Game, ShoutBoardMessage
+from app.models.user import User, UserQuest, ProfileWallMessage
+from app.models.quest import Quest, QuestSubmission
+from app.models.badge import Badge
 from app.forms import (
     ProfileForm,
     ShoutBoardForm,
@@ -435,7 +437,7 @@ def shout_board(game_id):
         db.session.commit()
 
                                        
-        from app.models import Notification
+        from app.models.user import Notification
         follower_ids = [rel.follower_id for rel in current_user.followers]
         for fid in follower_ids:
             notif = Notification(
