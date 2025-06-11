@@ -1,4 +1,3 @@
-import flask.helpers as _helpers
 import logging
 import os
 import atexit
@@ -61,7 +60,7 @@ logger = logging.getLogger(__name__)
                         
                    
                         
-_original_url_for = _helpers.url_for
+_original_url_for = url_for
 
 def _url_for(*args, **kwargs):
     try:
@@ -76,8 +75,6 @@ def _url_for(*args, **kwargs):
         p = urlparse(url)
         return urlunparse(("", "", p.path, p.params, p.query, p.fragment))
     return url
-
-_helpers.url_for = _url_for
 
                         
                       

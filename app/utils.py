@@ -7,6 +7,7 @@ import io
 from html_sanitizer import Sanitizer
 import smtplib
 from flask import current_app, request, url_for
+from urllib.parse import urlparse, urlunparse
 from .models import (
     db,
     Quest,
@@ -27,6 +28,21 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
 from textwrap import dedent
+
+
+def safe_url_for(*args, **kwargs):
+    """Generate a URL and strip scheme and host during tests."""
+    try:
+        url = url_for(*args, **kwargs)
+    except RuntimeError:
+        app = current_app._get_current_object()
+        with app.test_request_context():
+            url = url_for(*args, **kwargs)
+
+    if current_app.config.get("TESTING"):
+        p = urlparse(url)
+        return urlunparse(("", "", p.path, p.params, p.query, p.fragment))
+    return url
 
 
 def _get_ffmpeg_bin() -> str | None:
