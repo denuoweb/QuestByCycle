@@ -297,6 +297,8 @@ If login requests fail with a "CSRF session token is missing" message, the sessi
 sent. Ensure `SECRET_KEY` is defined and access the site using the host specified by
 `LOCAL_DOMAIN` (typically `localhost:5000`).
 
+When `DEBUG=true`, JavaScript helpers skip sending CSRF tokens to simplify local testing.
+
 ## Deployment
 
 ### Production Configuration
