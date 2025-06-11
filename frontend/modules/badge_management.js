@@ -179,7 +179,7 @@ function saveBadge(badgeId) {
 
 
 function deleteBadge(badgeId) {
-    if (!confirm("Are you sure you want to delete this badge?")) return;
+    if (!confirm('Are you sure you want to delete this badge?')) return;
 
     csrfFetchJson(`/badges/delete/${badgeId}`, {
         method: 'DELETE'
@@ -197,18 +197,3 @@ function deleteBadge(badgeId) {
     });
 }
 
-function uploadImages() {
-    const formData = new FormData(document.getElementById('uploadForm'));
-    csrfFetchJson('/badges/upload_images', {
-        method: 'POST',
-        body: formData
-    })
-    .then(({ json }) => {
-        if (json.success) {
-            alert('Images uploaded successfully');
-        } else {
-            alert('Failed to upload images: ' + json.message);
-        }
-    })
-    .catch(error => logger.error('Error uploading images:', error));
-}

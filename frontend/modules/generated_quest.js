@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 e.preventDefault();
                                 const formData = new FormData(modalForm);
 
-                                csrfFetchJson(`/ai/create_quest`, {
+                                csrfFetchJson('/ai/create_quest', {
                                     method: 'POST',
                                     body: formData
                                 }).then(({ json }) => {
@@ -62,15 +62,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         const aiBadgeFilenameInput = document.getElementById('aiBadgeFilename');
                     
                         if (!generateAIImageBtn || !badgeDescriptionInput || !aiBadgeImage || !aiBadgeFilenameInput) {
-                            logger.error("One or more elements not found in the DOM");
+                            logger.error('One or more elements not found in the DOM');
                             return;
                         }
                     
                         generateAIImageBtn.addEventListener('click', function() {
-                            logger.log("Generate AI Image button clicked");
+                            logger.log('Generate AI Image button clicked');
                     
                             const badgeDescription = badgeDescriptionInput.value;
-                            logger.log("Badge Description:", badgeDescription);
+                            logger.log('Badge Description:', badgeDescription);
                     
                             if (!badgeDescription) {
                                 alert('Please enter a badge description first.');
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 body: JSON.stringify({ badge_description: badgeDescription })
                             })
                             .then(({ json }) => {
-                                logger.log("Response data:", json);
+                                logger.log('Response data:', json);
                                 if (json.error) {
                                     alert('Error generating badge image: ' + json.error);
                                 } else {
@@ -106,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         } else {
-            logger.error("Form '#questCreationForm' not found.");
+            logger.error('Form \'#questCreationForm\' not found.');
         }
     }
 });

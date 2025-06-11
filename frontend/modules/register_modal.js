@@ -61,8 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
       body: formData,  
       credentials: 'same-origin'  
     })  
-    .then(response => response.json().then(payload => ({ status: response.status, payload })))  
-    .then(({ status, payload }) => {  
+    .then(response => response.json().then(payload => ({ payload })))
+    .then(({ payload }) => {
       if (payload.success) {  
         // Successful login → redirect  
         window.location.href = payload.redirect;  

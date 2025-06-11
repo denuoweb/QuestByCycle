@@ -159,7 +159,7 @@ function appendTableCell(row, content, isLink = false, userId = null) {
     const cell = document.createElement('td');
     if (isLink) {
         const link = document.createElement('a');
-        link.href = "javascript:void(0)";
+        link.href = 'javascript:void(0)';
         link.onclick = () => showUserProfileModal(userId);
         link.textContent = content;
         cell.appendChild(link);
