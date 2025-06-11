@@ -314,8 +314,11 @@ def login():
 
                                            
     if current_user.is_authenticated:
-                                                                               
-        return redirect(next_page or url_for('main.index'))
+        if next_page and _is_safe_url(next_page):
+            target = next_page
+        else:
+            target = url_for('main.index', show_login=0, next=next_page)
+        return redirect(target)
 
                                                           
     if request.method == 'GET':

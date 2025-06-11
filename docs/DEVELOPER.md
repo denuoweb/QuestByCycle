@@ -301,6 +301,8 @@ Before deploying to production, ensure the following settings in `config.toml`:
 
 - `DEBUG = false`
 - `SESSION_COOKIE_SECURE = true`
+- `SESSION_COOKIE_DOMAIN` should match your production domain or be left blank to
+  use the request host.
 - `SQLALCHEMY_DATABASE_URI` is set to the production database URL.
 - `SECRET_KEY` is set to a secure value.
 
