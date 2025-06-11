@@ -3,7 +3,9 @@ from datetime import datetime, timedelta
 from datetime import timezone
 
 from app import create_app, db
-from app.models import Game, Quest, User
+from app.models.game import Game
+from app.models.quest import Quest
+from app.models.user import User
 from flask_login import login_user
 
 @pytest.fixture

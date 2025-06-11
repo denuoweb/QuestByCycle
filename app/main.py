@@ -31,9 +31,11 @@ from PIL import Image, UnidentifiedImageError
 from app.constants import UTC, FREQUENCY_DELTA
 from urllib.parse import urlparse, parse_qs
 
-from app.models import (db, Game, User, Quest, Badge, UserQuest, QuestSubmission,
-                        ShoutBoardMessage, ProfileWallMessage,
-                        user_games)
+from app.models import db, user_games
+from app.models.game import Game, ShoutBoardMessage
+from app.models.user import User, UserQuest, ProfileWallMessage
+from app.models.quest import Quest, QuestSubmission
+from app.models.badge import Badge
 from app.forms import (
     ProfileForm,
     ShoutBoardForm,
@@ -52,20 +54,12 @@ from app.utils import (
     correct_image_orientation,
 )
 from app.tasks import enqueue_email
-from .config import load_config
 
                    
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-                  
 main_bp = Blueprint('main', __name__)
-
-
-                    
-config = load_config()
-
-
 
 
 def get_datetime(activity):
@@ -443,7 +437,7 @@ def shout_board(game_id):
         db.session.commit()
 
                                        
-        from app.models import Notification
+        from app.models.user import Notification
         follower_ids = [rel.follower_id for rel in current_user.followers]
         for fid in follower_ids:
             notif = Notification(

@@ -17,7 +17,10 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from sqlalchemy.exc import SQLAlchemyError
-from app.models import db, Game, Quest, UserQuest, user_games, User
+from app.models import db, user_games
+from app.models.game import Game
+from app.models.quest import Quest
+from app.models.user import User, UserQuest
 from app.forms import GameForm
 from app.utils import (
     save_leaderboard_image,

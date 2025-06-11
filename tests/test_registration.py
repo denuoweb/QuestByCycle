@@ -2,8 +2,8 @@ import pytest
 from urllib.parse import urlparse, parse_qs
 
 from app import create_app, db
-from app.models import User
-from flask import url_for
+from tests.helpers import url_for_path
+from app.models.user import User
 from datetime import datetime, timezone
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -62,7 +62,7 @@ def test_register_get_shows_form(client):
 
     loc = resp.headers["Location"]
                                                    
-    assert loc.startswith(url_for("main.index"))
+    assert loc.startswith(url_for_path(client.application, "main.index"))
 
     qs = parse_qs(urlparse(loc).query)
     assert qs.get("show_register") == ["1"]
@@ -70,23 +70,18 @@ def test_register_get_shows_form(client):
                                                                
 
 def test_register_post_missing_data(client):
-    from flask import url_for
-
-                                                         
     resp = client.post("/auth/register", data={}, follow_redirects=False)
     assert resp.status_code == 302
 
     loc = resp.headers["Location"]
                                                          
-    assert loc.startswith(url_for("main.index"))
+    assert loc.startswith(url_for_path(client.application, "main.index"))
     qs = parse_qs(urlparse(loc).query)
     assert qs.get("show_register") == ["1"]
 
                                                         
 
 def test_register_post_without_license(client):
-    from flask import url_for
-
     data = {
         "email": "newuser@example.com",
         "password": "password",
@@ -97,7 +92,7 @@ def test_register_post_without_license(client):
     assert resp.status_code == 302
 
     loc = resp.headers["Location"]
-    assert loc.startswith(url_for("main.index"))
+    assert loc.startswith(url_for_path(client.application, "main.index"))
     qs = parse_qs(urlparse(loc).query)
     assert qs.get("show_register") == ["1"]
 
@@ -129,7 +124,7 @@ def test_register_success_default(client):
     assert resp.status_code == 302
     loc = resp.headers["Location"]
                                                  
-    assert url_for("main.index") in loc
+    assert url_for_path(client.application, "main.index") in loc
     assert "show_join_custom=1" in loc
                                            
 
@@ -211,8 +206,7 @@ def test_register_db_failure(client, monkeypatch):
     loc = resp.headers["Location"]
 
                                                         
-    from flask import url_for
-    assert loc.startswith(url_for("main.index"))
+    assert loc.startswith(url_for_path(client.application, "main.index"))
     assert "show_register=1" in loc
 
                                                                                     

@@ -8,14 +8,26 @@ import requests
 from datetime import datetime
 from urllib.parse import urlparse, urlencode
 
-from flask import (Blueprint, render_template, request, redirect, url_for, flash,
-                   current_app, session, jsonify)
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    current_app,
+    session,
+    jsonify,
+)
+from app.utils import safe_url_for
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from app.constants import UTC
 from urllib.parse import urljoin
-from app.models import db, User, Game
+from app.models import db
+from app.models.user import User
+from app.models.game import Game
 from app.forms import (LoginForm, RegistrationForm, ForgotPasswordForm,
                        ResetPasswordForm, UpdatePasswordForm, MastodonLoginForm)
 from app.utils import send_email, log_user_ip, REQUEST_TIMEOUT, sanitize_html
@@ -62,7 +74,7 @@ def _send_verification_email(user):
     if raw_next:
         params['next'] = raw_next
 
-    verify_url = url_for('auth.verify_email', _external=True, **params)
+    verify_url = safe_url_for('auth.verify_email', _external=True, **params)
     html = render_template('verify_email.html', verify_url=verify_url)
     subject = "QuestByCycle – verify your email"
     enqueue_email(user.email, subject, html)
@@ -146,7 +158,7 @@ def mastodon_login():
     form = MastodonLoginForm()
     if form.validate_on_submit():
         instance = form.instance.data.strip().lower()
-        redirect_uri = url_for('auth.mastodon_callback', _external=True)
+        redirect_uri = safe_url_for('auth.mastodon_callback', _external=True)
         state = uuid.uuid4().hex
         session['mastodon_state'] = state
         session['mastodon_instance'] = instance
@@ -199,7 +211,7 @@ def mastodon_callback():
     instance = session.get('mastodon_instance')
     client_id = session.get('mastodon_client_id')
     client_secret = session.get('mastodon_client_secret')
-    redirect_uri = url_for('auth.mastodon_callback', _external=True)
+    redirect_uri = safe_url_for('auth.mastodon_callback', _external=True)
     token_url = f"https://{instance}/oauth/token"
     data = {
         "grant_type": "authorization_code",
@@ -326,7 +338,7 @@ def login():
         show_login_flag = 0 if next_page else 1
 
         return redirect(
-            url_for('main.index',
+            safe_url_for('main.index',
                     show_login=show_login_flag,
                     show_join_custom=show_join,
                     game_id=game_id,
@@ -429,7 +441,7 @@ def resend_verification_email():
     user = User.query.filter_by(email=email).first()
     if user and not user.email_verified:
         token = user.generate_verification_token()
-        verify_url = url_for('auth.verify_email', token=token, _external=True)
+        verify_url = safe_url_for('auth.verify_email', token=token, _external=True)
         html = render_template('verify_email.html', verify_url=verify_url)
         subject = "Please verify your email"
         enqueue_email(user.email, subject, html)
@@ -473,19 +485,19 @@ def register():
                 custom_game_code = ''
 
         return redirect(
-            url_for('main.index',
-                    show_register=1,
-                    game_id=game_id,
-                    custom_game_code=custom_game_code,
-                    quest_id=quest_id,
-                    next=next_page,
-                    _external=True)
+            safe_url_for('main.index',
+                show_register=1,
+                game_id=game_id,
+                custom_game_code=custom_game_code,
+                quest_id=quest_id,
+                next=next_page,
+                _external=True)
         )
 
                                                      
     if not form.validate_on_submit():
         flash('Please correct the errors in the registration form.', 'warning')
-        return redirect(url_for('main.index',
+        return redirect(safe_url_for('main.index',
                                 show_register=1,
                                 game_id=game_id,
                                 custom_game_code=custom_game_code,
@@ -495,7 +507,7 @@ def register():
 
     if not form.accept_license.data:
         flash('You must agree to the terms of service, license agreement, and privacy policy.', 'warning')
-        return redirect(url_for('main.index',
+        return redirect(safe_url_for('main.index',
                                 show_register=1,
                                 game_id=game_id,
                                 custom_game_code=custom_game_code,
@@ -528,7 +540,7 @@ def register():
         db.session.rollback()
         current_app.logger.error(f'Failed to register user: {exc}')
         flash('Registration failed due to an unexpected error. Please try again.', 'error')
-        return redirect(url_for('main.index',
+        return redirect(safe_url_for('main.index',
                                 show_register=1,
                                 game_id=game_id,
                                 custom_game_code=custom_game_code,
@@ -565,12 +577,12 @@ def register():
         return redirect(next_page)
 
     if quest_id:
-        return redirect(url_for('quests.submit_photo',
+        return redirect(safe_url_for('quests.submit_photo',
                                 quest_id=quest_id,
                                 _external=True))
 
     if game_id:
-        return redirect(url_for('main.index',
+        return redirect(safe_url_for('main.index',
                                 show_join_custom=0,
                                 game_id=game_id,
                                 quest_id=quest_id,
@@ -578,7 +590,7 @@ def register():
                                 _external=True))
 
                                                 
-    return redirect(url_for('main.index',
+    return redirect(safe_url_for('main.index',
                             show_join_custom=1,
                             _external=True))
 

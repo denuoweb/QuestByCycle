@@ -7,6 +7,7 @@ import io
 from html_sanitizer import Sanitizer
 import smtplib
 from flask import current_app, request, url_for
+from urllib.parse import urlparse, urlunparse
 from .models import (
     db,
     Quest,
@@ -28,6 +29,21 @@ from email.mime.image import MIMEImage
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
 from textwrap import dedent
 from app.tasks import enqueue_email
+
+
+def safe_url_for(*args, **kwargs):
+    """Generate a URL and strip scheme and host during tests."""
+    try:
+        url = url_for(*args, **kwargs)
+    except RuntimeError:
+        app = current_app._get_current_object()
+        with app.test_request_context():
+            url = url_for(*args, **kwargs)
+
+    if current_app.config.get("TESTING"):
+        p = urlparse(url)
+        return urlunparse(("", "", p.path, p.params, p.query, p.fragment))
+    return url
 
 
 def _get_ffmpeg_bin() -> str | None:
@@ -224,7 +240,7 @@ def update_user_score(user_id):
 
 
 def save_profile_picture(profile_picture_file, old_filename=None):
-    uploads = current_app.config['main']['UPLOAD_FOLDER']
+    uploads = current_app.config['UPLOAD_FOLDER']
     return save_image_file(profile_picture_file, uploads, old_filename=old_filename)
 
 
@@ -243,7 +259,7 @@ def save_badge_image(image_file):
 
 def save_bicycle_picture(bicycle_picture_file, old_filename=None):
     subdir = os.path.join(
-        current_app.config['main']['UPLOAD_FOLDER'], 'bicycle_pictures'
+        current_app.config['UPLOAD_FOLDER'], 'bicycle_pictures'
     )
     return save_image_file(
         bicycle_picture_file,

@@ -1,4 +1,3 @@
-import flask.helpers as _helpers
 import logging
 import os
 import atexit
@@ -62,7 +61,7 @@ logger = logging.getLogger(__name__)
                         
                    
                         
-_original_url_for = _helpers.url_for
+_original_url_for = url_for
 
 def _url_for(*args, **kwargs):
     try:
@@ -77,8 +76,6 @@ def _url_for(*args, **kwargs):
         p = urlparse(url)
         return urlunparse(("", "", p.path, p.params, p.query, p.fragment))
     return url
-
-_helpers.url_for = _url_for
 
                         
                       
@@ -188,7 +185,8 @@ def create_app(config_overrides=None):
 
     @login_manager.user_loader
     def load_user(user_id):
-        from app.models import User, db
+        from app.models import db
+        from app.models.user import User
         try:
             return db.session.get(User, int(user_id))
         except (TypeError, ValueError):

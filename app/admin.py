@@ -4,7 +4,10 @@ Admin and Admin Dashboard related routes.
 import logging
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
-from app.models import db, User, Game, Sponsor, user_games, QuestSubmission, UserIP
+from app.models import db, user_games
+from app.models.user import User, UserIP
+from app.models.game import Game, Sponsor
+from app.models.quest import QuestSubmission
 from app.forms import SponsorForm
 from app.utils import save_sponsor_logo, sanitize_html
 from app.decorators import require_admin, require_super_admin
