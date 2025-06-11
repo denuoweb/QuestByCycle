@@ -80,7 +80,7 @@ This project relies on a variety of open source libraries. The badges below link
 
 ### Prerequisites
 
-- Python 3.13
+- Python 3.11+
 - PostgreSQL
 - git
 - ffmpeg (optional, for video compression)
