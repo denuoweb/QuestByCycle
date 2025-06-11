@@ -370,7 +370,5 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.disabled      = true;
     if (replyLimitMessage) replyLimitMessage.style.display = 'block';
   }
-  // Provide global access for existing inline handlers
-  window.showSubmissionDetail = showSubmissionDetail;
 });
 
