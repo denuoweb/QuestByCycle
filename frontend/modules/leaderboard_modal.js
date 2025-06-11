@@ -21,12 +21,24 @@ export async function showLeaderboardModal(selectedGameId) {
             credentials: 'same-origin'
         });
 
+        if (resp.redirected && resp.url.includes('/auth/login')) {
+            window.location.href = resp.url;
+            return;
+        }
+
         if (resp.status === 401) {
             window.location.href = '/auth/login?next=' + encodeURIComponent(window.location.pathname);
             return;
         }
+
         if (!resp.ok) {
             throw new Error('Failed to fetch leaderboard data');
+        }
+
+        const contentType = resp.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            logger.error('Unexpected content type for leaderboard:', contentType);
+            throw new Error('Invalid server response');
         }
 
         let data;
