@@ -75,7 +75,29 @@ This project relies on a variety of open source libraries. The badges below link
 - GeoIP2 module and database
 - Sass CLI for building CSS
 
-### Debian 12 Server Setup
+### Quick Developer Setup
+
+1. Clone the repository and enter the directory:
+   ```bash
+   git clone https://github.com/denuoweb/QuestByCycle.git
+   cd QuestByCycle
+   ```
+2. Install Poetry and project dependencies:
+   ```bash
+   curl -sSL https://install.python-poetry.org | python3.13
+   poetry install
+   npm install
+   npm run build
+   ```
+3. Copy `config.toml.example` to `config.toml` and `gunicorn.conf.py.example` to
+   `gunicorn.conf.py`.
+4. Start the development server:
+   ```bash
+   poetry run flask --app wsgi:app run --host=127.0.0.1 --port=5000
+   ```
+
+### Debian 12 Server Setup (Production)
+These steps assume root access and create a dedicated `appuser` to run QuestByCycle.
 
 #### RAM Allocation
 1. Allocate Swap on low ram systems:
