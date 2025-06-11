@@ -409,14 +409,31 @@ export async function submitFormJson(form) {
   return { status: res.status, json };
 }
 
+// handle elements that close a modal
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-close-modal]');
+  if (!btn) return;
+  e.preventDefault();
+  const id = btn.getAttribute('data-close-modal');
+  if (id) closeModal(id);
+});
+
+// handle simple open modal triggers
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-open-modal]');
+  if (!btn) return;
+  e.preventDefault();
+  openModal(btn.getAttribute('data-open-modal'));
+});
+
 // wire up any [data-modal-url] triggers
 document.addEventListener('click', e => {
   const button = e.target.closest('[data-modal-url]');
   if (!button) return;
   e.preventDefault();
 
-  const url      = button.getAttribute('data-modal-url');
-  const modalId  = button.getAttribute('data-modal-id');
+  const url     = button.getAttribute('data-modal-url');
+  const modalId = button.getAttribute('data-modal-id');
   if (!url || !modalId) {
     logger.error('data-modal-url or data-modal-id missing', button);
     return;

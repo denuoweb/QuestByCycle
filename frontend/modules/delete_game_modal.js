@@ -71,6 +71,11 @@ if (document.readyState === 'loading') {
   initDeleteGameModal();
 }
 
-// Expose globally for inline handlers
-window.openDeleteGameModal = openDeleteGameModal;
+// Delegate clicks for delete buttons
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-delete-game-id]');
+  if (!btn) return;
+  e.preventDefault();
+  openDeleteGameModal(btn.getAttribute('data-delete-game-id'));
+});
 
