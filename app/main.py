@@ -31,9 +31,11 @@ from PIL import Image, UnidentifiedImageError
 from app.constants import UTC, FREQUENCY_DELTA
 from urllib.parse import urlparse, parse_qs
 
-from app.models import (db, Game, User, Quest, Badge, UserQuest, QuestSubmission,
-                        ShoutBoardMessage, ProfileWallMessage,
-                        user_games)
+from app.models import db, user_games
+from app.models.game import Game, ShoutBoardMessage
+from app.models.user import User, UserQuest, ProfileWallMessage
+from app.models.quest import Quest, QuestSubmission
+from app.models.badge import Badge
 from app.forms import (
     ProfileForm,
     ShoutBoardForm,
@@ -48,24 +50,20 @@ from app.forms import (
 from app.utils import (
     save_profile_picture,
     save_bicycle_picture,
-    send_email,
     sanitize_html,
     correct_image_orientation,
 )
 from .config import load_config, AppConfig
+from app.tasks import enqueue_email
 
                    
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-                  
 main_bp = Blueprint('main', __name__)
-
 
                     
 config: AppConfig = load_config()
-
-
 
 
 def get_datetime(activity):
@@ -443,7 +441,7 @@ def shout_board(game_id):
         db.session.commit()
 
                                        
-        from app.models import Notification
+        from app.models.user import Notification
         follower_ids = [rel.follower_id for rel in current_user.followers]
         for fid in follower_ids:
             notif = Notification(
@@ -832,7 +830,7 @@ def contact():
 
         html = render_template('contact_email.html', message=message, user_info=user_info)
         try:
-            send_email(recipient, subject, html)
+            enqueue_email(recipient, subject, html)
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify(success=True)
             flash('Your message has been sent successfully.', 'success')

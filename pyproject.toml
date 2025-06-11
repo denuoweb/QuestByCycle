@@ -30,8 +30,13 @@ python-dotenv         = "^1.1.0"
 rsa                   = "^4.9.1"
 html-sanitizer        = "2.5.0"
 requests-oauthlib     = "2.0.0"
+redis                = "^5.0.4"
+rq                   = "^2.3.3"
 
 [tool.poetry.group.dev.dependencies]
+
+[tool.poetry.scripts]
+rqworker = "rq_worker:main"
 
 [build-system]
 requires      = ["poetry-core>=1.8.0"]

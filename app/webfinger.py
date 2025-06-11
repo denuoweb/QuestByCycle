@@ -1,5 +1,6 @@
 from flask import Blueprint, current_app, request, abort, Response, json
-from app.models import db, User
+from app.models import db
+from app.models.user import User
 from urllib.parse import unquote
 import string
 

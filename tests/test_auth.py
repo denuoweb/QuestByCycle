@@ -3,8 +3,8 @@ import pytest
 from urllib.parse import urlparse, parse_qs
 
 from app import create_app, db
-from app.models import User
-from flask import url_for
+from tests.helpers import url_for_path
+from app.models.user import User
 from datetime import datetime, timezone
 
 @pytest.fixture
@@ -169,10 +169,10 @@ def test_successful_login_defaults_to_index(client, user_normal, ajax):
         body = resp.get_json()
         assert body["success"] is True
                                                              
-        assert body["redirect"] == url_for("main.index", show_join_custom=0, _external=False)
+        assert body["redirect"] == url_for_path(client.application, "main.index", show_join_custom=0, _external=False)
     else:
         assert resp.status_code == 302
-        expected = url_for("main.index", show_join_custom=0, _external=False)
+        expected = url_for_path(client.application, "main.index", show_join_custom=0, _external=False)
         assert resp.headers["Location"].startswith(expected)
 
 def test_successful_login_with_next_param(client, user_normal):

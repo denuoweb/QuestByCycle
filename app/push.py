@@ -1,7 +1,8 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_login import login_required, current_user
 from pywebpush import webpush, WebPushException
-from app.models import db, PushSubscription
+from app.models import db
+from app.models.user import PushSubscription
 import json
 
 push_bp = Blueprint('push', __name__)

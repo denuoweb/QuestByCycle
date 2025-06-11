@@ -219,7 +219,6 @@ def load_config() -> AppConfig:
         ),
     )
 
-
 SQLALCHEMY_ENGINE_OPTIONS = {
     "pool_pre_ping": True,
     "pool_recycle": 3300,
