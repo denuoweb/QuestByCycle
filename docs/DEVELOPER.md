@@ -71,7 +71,7 @@ The project is organized as follows:
 - `migrations/`: Database migration scripts.
 - `venv/`: Virtual environment directory.
 - `.gitignore`: Git ignore file.
-- `config.toml`: Configuration file.
+- `.env`: Environment configuration file.
 - `LICENSE.md`: License information.
 - `README.md`: Project overview and setup instructions.
 - `pyproject.toml`: Project configuration and Python dependencies managed by Poetry.
@@ -117,7 +117,7 @@ Ensure you have the following installed:
    \`\`\`
 
 4. **Set up the database**:
-   Create a PostgreSQL database and update the `config.toml` file with your database credentials.
+   Create a PostgreSQL database and update the `.env` file with your database credentials.
 
 5. **Run database migrations**:
    \`\`\`bash
@@ -126,7 +126,7 @@ Ensure you have the following installed:
 
 ### Configuration
 
-Update the `config.toml` file with the appropriate configuration settings for your development environment.
+Update the `.env` file with the appropriate configuration settings for your development environment.
 
 ## Key Components
 
@@ -291,7 +291,7 @@ Tests are crucial for maintaining the integrity of the codebase. To run tests:
 
 ### Debugging
 
-To enable debugging, update the `config.toml` file to set `DEBUG = true`. This will enable Flask's debugger, providing detailed error messages and an interactive debugger in the browser.
+To enable debugging, set `DEBUG=true` in your `.env` file. This enables Flask's debugger with detailed error messages and an interactive browser debugger.
 
 If login requests fail with a "CSRF session token is missing" message, the session cookie was not
 sent. Ensure `SECRET_KEY` is defined and access the site using the host specified by
@@ -301,7 +301,7 @@ sent. Ensure `SECRET_KEY` is defined and access the site using the host specifie
 
 ### Production Configuration
 
-Before deploying to production, ensure the following settings in `config.toml`:
+Before deploying to production, ensure the following settings in your `.env` file:
 
 - `DEBUG = false`
 - `SESSION_COOKIE_SECURE = true`
@@ -414,7 +414,7 @@ Before deploying to production, ensure the following settings in `config.toml`:
    \`\`\`
 
 5. **Configure the database**:
-   - Update `config.toml` with the production database credentials.
+   - Update the `.env` file with the production database credentials.
 
 6. **Run database migrations**:
    \`\`\`bash

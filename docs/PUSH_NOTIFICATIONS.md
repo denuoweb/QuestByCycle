@@ -10,7 +10,7 @@ QuestByCycle supports optional Web Push notifications so users can receive updat
    ```
    This prints a public and private key pair.
 
-2. Add the keys to `config.toml` or `.env`:
+2. Add the keys to your `.env` file:
    ```toml
    [push]
    VAPID_PUBLIC_KEY = "YOUR_PUBLIC_KEY"
