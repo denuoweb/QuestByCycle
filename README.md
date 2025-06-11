@@ -77,6 +77,7 @@ This project relies on a variety of open source libraries. The badges below link
 
 ### Debian 12 Server Setup
 
+#### RAM Allocation
 1. Allocate Swap on low ram systems:
 
 ```sudo fallocate -l 4G /swapfile```
@@ -85,6 +86,7 @@ This project relies on a variety of open source libraries. The badges below link
 ```sudo swapon /swapfile```
 ```echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab```
 
+#### Database Install and Setup
 2. Install PostgreSQL
 ```sudo apt-get update```
 ```sudo apt-get install -y postgresql postgresql-contrib```
@@ -95,7 +97,7 @@ This project relies on a variety of open source libraries. The badges below link
    Create application database & role
 ```sudo -u postgres psql <<EOF```
 ```CREATE DATABASE questdb;```
-```CREATE USER questuser WITH PASSWORD 'EVEN_STRONGER_PASSWORD';```
+```CREATE USER questuser WITH PASSWORD 'questpassword';```
 ```GRANT ALL PRIVILEGES ON DATABASE questdb TO questuser;```
 ```EOF```
 
@@ -103,18 +105,12 @@ This project relies on a variety of open source libraries. The badges below link
 ```sudo sed -i "s/^#listen_addresses =.*/listen_addresses = 'localhost'/" /etc/postgresql/*/main/postgresql.conf```
 ```sudo systemctl restart postgresql``
 
+#### Install PIP
 3. Install python dependencies
 ```sudo apt-get install -y python3-pip```
 
-4. Create User
-```sudo adduser --system --group appuser```
-```sudo mkdir -p /opt/QuestByCycle```
-```sudo chown appuser:appuser /opt/QuestByCycle```
-```sudo chmod 755 /opt/QuestByCycle```
-```sudo -u appuser git clone https://github.com/denuoweb/QuestByCycle.git /opt/QuestByCycle```
-
 5. Install Poetry
-```sudo su -s /bin/bash appuser -c 'curl -sSL https://install.python-poetry.org | python3 - && \```
+```sudo su -s /bin/bash appuser -c 'curl -sSL https://install.python-poetry.org | python3.13 - && \```
 ```echo "export PATH=\"$HOME/.local/bin:\$PATH\"" >> /home/appuser/.bashrc'```
 
 6. Download QuestByCycle
@@ -122,7 +118,7 @@ This project relies on a variety of open source libraries. The badges below link
 
 7. Install Python VM
 ```cd /opt/QuestByCycle```
-```sudo -u appuser /home/appuser/.local/bin/poetry env use /usr/bin/python3```
+```sudo -u appuser /home/appuser/.local/bin/poetry env use /usr/bin/python3.13```
 ```sudo -u appuser /home/appuser/.local/bin/poetry install```
 
 8. Install NGINX:
@@ -195,6 +191,13 @@ Vite outputs two entry points: `main.js` for the majority of pages and
 
 16. Run the server in production:
 
+Create User
+```sudo adduser --system --group appuser```
+```sudo mkdir -p /opt/QuestByCycle```
+```sudo chown appuser:appuser /opt/QuestByCycle```
+```sudo chmod 755 /opt/QuestByCycle```
+```sudo -u appuser git clone https://github.com/denuoweb/QuestByCycle.git /opt/QuestByCycle```
+
 ```sudo nano /etc/systemd/system/questbycycleApp.service```
 
 ```markdown
@@ -213,7 +216,7 @@ Environment="PATH=/home/APPUSER/.cache/pypoetry/virtualenvs/questbycycle-BK-IO7k
 [Install]
 WantedBy=multi-user.target
 ```
-8. Run:
+Run:
 
 ```sudo systemctl start questbycycleApp.service```
 ```sudo systemctl enable questbycycleApp.service```
