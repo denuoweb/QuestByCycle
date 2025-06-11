@@ -1,5 +1,5 @@
 // The version of the cache
-const VERSION = "v9"; // Update this version number when changes are made
+const VERSION = "v10"; // Update this version number when changes are made
 const CACHE_NAME = `questbycycle-${VERSION}`;
 
 // List of static resources to cache
@@ -189,9 +189,17 @@ self.addEventListener("fetch", (event) => {
 
   if (event.request.mode === "navigate") {
     event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
-        return cachedResponse || fetch(event.request).catch(() => caches.match("/offline.html"));
-      })
+      (async () => {
+        try {
+          const networkResponse = await fetch(event.request);
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(event.request, networkResponse.clone());
+          return networkResponse;
+        } catch (_) {
+          const cached = await caches.match(event.request);
+          return cached || caches.match("/offline.html");
+        }
+      })()
     );
     return;
   }
