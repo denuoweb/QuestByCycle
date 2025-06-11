@@ -537,7 +537,16 @@ def register():
 
                                      
     create_activitypub_actor(user)
-    _auto_verify_and_login(user)
+
+    mail_server = current_app.config.get("MAIL_SERVER")
+    if mail_server:
+        _send_verification_email(user)
+        flash(
+            "Registration successful! Please verify your email before logging in.",
+            "info",
+        )
+    else:
+        _auto_verify_and_login(user)
                                                                    
                                               
                              
