@@ -2,7 +2,9 @@ import pytest
 from datetime import datetime, timedelta, timezone
 
 from app import create_app, db
-from app.models import Game, Quest, User, QuestSubmission
+from app.models.game import Game
+from app.models.quest import Quest, QuestSubmission
+from app.models.user import User
 from app.utils import send_social_media_liaison_email
 
 

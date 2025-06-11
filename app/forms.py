@@ -34,7 +34,7 @@ from wtforms.validators import (
 )
 
                            
-from app.models import Badge
+from app.models.badge import Badge
 
                                                                                
                       

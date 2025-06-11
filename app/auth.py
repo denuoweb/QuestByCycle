@@ -15,7 +15,9 @@ from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from app.constants import UTC
 from urllib.parse import urljoin
-from app.models import db, User, Game
+from app.models import db
+from app.models.user import User
+from app.models.game import Game
 from app.forms import (LoginForm, RegistrationForm, ForgotPasswordForm,
                        ResetPasswordForm, UpdatePasswordForm, MastodonLoginForm)
 from app.utils import send_email, log_user_ip, REQUEST_TIMEOUT, sanitize_html

@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch
 from app import create_app, db
-from app.models import User, PushSubscription
+from app.models.user import User, PushSubscription
 
 @pytest.fixture
 def app():
