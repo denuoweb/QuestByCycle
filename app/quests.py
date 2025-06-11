@@ -29,18 +29,19 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 from app.forms import PhotoForm, QuestForm
 from app.social import post_to_social_media
-from app.utils import REQUEST_TIMEOUT
-from app.utils import (
+from app.utils import REQUEST_TIMEOUT, sanitize_html
+from app.utils.quest_scoring import (
     can_complete_quest,
     check_and_award_badges,
     check_and_revoke_badges,
-    getLastRelevantCompletionTime,
+    get_last_relevant_completion_time,
+    update_user_score,
+)
+from app.utils.file_uploads import (
     save_badge_image,
     save_submission_image,
     save_submission_video,
     public_media_url,
-    update_user_score,
-    sanitize_html,
 )
 from app.activitypub_utils import (
     post_activitypub_create_activity, 
@@ -548,7 +549,7 @@ def quest_user_completion(quest_id):
         user_id=current_user.id, quest_id=quest_id
     ).first()
     can_verify, next_eligible_time = can_complete_quest(current_user.id, quest_id)
-    last_relevant_completion_time = getLastRelevantCompletionTime(
+    last_relevant_completion_time = get_last_relevant_completion_time(
         current_user.id, quest_id
     )
 
@@ -610,7 +611,7 @@ def quest_user_completion(quest_id):
 
 @quests_bp.route("/get_last_relevant_completion_time/<int:quest_id>/<int:user_id>")
 @login_required
-def get_last_relevant_completion_time(quest_id, user_id):
+def get_last_relevant_completion_time_route(quest_id, user_id):
     """
     Get the last relevant completion time for a user on a specific quest.
 
@@ -618,7 +619,7 @@ def get_last_relevant_completion_time(quest_id, user_id):
         quest_id (int): The ID of the quest.
         user_id (int): The user ID.
     """
-    last_time = getLastRelevantCompletionTime(user_id, quest_id)
+    last_time = get_last_relevant_completion_time(user_id, quest_id)
     
     if last_time:
         return jsonify(success=True, lastRelevantCompletionTime=last_time.isoformat())

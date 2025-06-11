@@ -5,7 +5,7 @@ from app import create_app, db
 from app.models.game import Game
 from app.models.quest import Quest, QuestSubmission
 from app.models.user import User
-from app.utils import send_social_media_liaison_email
+from app.utils.email_utils import send_social_media_liaison_email
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ def test_liaison_email_lists_all_submissions(app, monkeypatch):
         captured["html"] = html_content
         return True
 
-    monkeypatch.setattr("app.utils.send_email", fake_send_email)
+    monkeypatch.setattr("app.utils.email_utils.send_email", fake_send_email)
 
     with app.app_context():
         admin = User(username="admin", email="admin@example.com", license_agreed=True)

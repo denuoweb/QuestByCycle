@@ -5,7 +5,8 @@ import re
 from flask import Blueprint, jsonify, render_template, request, current_app
 from flask_login import login_required
 from app.forms import QuestForm
-from app.utils import save_badge_image, REQUEST_TIMEOUT, sanitize_html
+from app.utils.file_uploads import save_badge_image
+from app.utils import REQUEST_TIMEOUT, sanitize_html
 from .models import db, Quest, Badge
 from werkzeug.datastructures import MultiDict
 from openai import OpenAI

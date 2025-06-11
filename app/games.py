@@ -22,13 +22,13 @@ from app.models.game import Game
 from app.models.quest import Quest
 from app.models.user import User, UserQuest
 from app.forms import GameForm
-from app.utils import (
+from app.utils.file_uploads import (
     save_leaderboard_image,
     generate_smoggy_images,
     allowed_image_file,
-    send_social_media_liaison_email,
-    sanitize_html,
 )
+from app.utils.email_utils import send_social_media_liaison_email
+from app.utils import sanitize_html
 from io import BytesIO
 
 
