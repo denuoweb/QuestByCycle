@@ -1,4 +1,5 @@
 import { openModal } from './modal_common.js';
+import { csrfFetchJson } from '../utils.js';
 import logger from '../logger.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -19,27 +20,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 event.preventDefault();
 
                 const questDescription = document.getElementById('questDescription').value;
-                const csrfToken = document.querySelector('[name=csrf_token]').value;
 
-                fetch('/ai/generate_quest', {
+                csrfFetchJson('/ai/generate_quest', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ description: questDescription, game_id: gameId })
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(data => Promise.reject({
-                            status: response.status,
-                            statusText: response.statusText,
-                            errorMessage: data.error
-                        }));
-                    }
-                    return response.json();
-                })
-                .then(data => {
+                .then(({ json }) => {
+                    const data = json;
                     if (data.generated_quest_html) {
                         document.getElementById('generatedQuestContent').innerHTML = data.generated_quest_html;
 
@@ -54,20 +42,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             modalForm.addEventListener('submit', function(e) {
                                 e.preventDefault();
                                 const formData = new FormData(modalForm);
-                                const csrfToken = document.querySelector('[name=csrf_token]').value;
-                
-                                fetch(`/ai/create_quest`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'X-CSRFToken': csrfToken
-                                    },
-                                    body: formData
-                                }).then(response => response.json())
-                                .then(result => {
-                                    // Handle the response here
-                                    window.location.href = '/';
 
-                                    logger.log(result);
+                                csrfFetchJson(`/ai/create_quest`, {
+                                    method: 'POST',
+                                    body: formData
+                                }).then(({ json }) => {
+                                    window.location.href = '/';
+                                    logger.log(json);
                                 }).catch(error => {
                                     logger.error('Error:', error);
                                 });
@@ -96,22 +77,18 @@ document.addEventListener('DOMContentLoaded', () => {
                                 return;
                             }
                     
-                            fetch('/ai/generate_badge_image', {
+                            csrfFetchJson('/ai/generate_badge_image', {
                                 method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRFToken': document.querySelector('[name=csrf_token]').value
-                                },
+                                headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ badge_description: badgeDescription })
                             })
-                            .then(response => response.json())
-                            .then(data => {
-                                logger.log("Response data:", data);
-                                if (data.error) {
-                                    alert('Error generating badge image: ' + data.error);
+                            .then(({ json }) => {
+                                logger.log("Response data:", json);
+                                if (json.error) {
+                                    alert('Error generating badge image: ' + json.error);
                                 } else {
-                                    const imageFilename = `${data.filename}`;
-                                    const imageURL = `static/images/badge_images/${data.filename}`;
+                                    const imageFilename = `${json.filename}`;
+                                    const imageURL = `static/images/badge_images/${json.filename}`;
                                     aiBadgeImage.src = imageURL;
                                     aiBadgeImage.style.display = 'block';
                                     aiBadgeFilenameInput.value = imageFilename;
@@ -125,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 })
                 .catch(error => {
-                    alert('Error generating quest: ' + (error.errorMessage || error.statusText));
+                    alert('Error generating quest: ' + error.message);
                 });
             });
         } else {

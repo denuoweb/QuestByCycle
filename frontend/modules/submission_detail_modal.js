@@ -1,5 +1,5 @@
 import { openModal, closeModal, resetModalContent } from './modal_common.js';
-import { getCSRFToken } from '../utils.js';
+import { csrfFetchJson, fetchJson } from '../utils.js';
 import { showUserProfileModal } from './user_profile_modal.js';
 
 export let showSubmissionDetail;
@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!modal) return; // Modal not included
   const replyLimitMessage = document.getElementById('replyLimitMessage');
 
-  const csrf = () => getCSRFToken();
   const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
 
   showSubmissionDetail = function(image) {
@@ -54,13 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
     deleteBtn.addEventListener('click', () => {
       if (!confirm('Are you sure you want to delete this submission?')) return;
       const id = modal.dataset.submissionId;
-      fetch(`/quests/quest/delete_submission/${id}`, {
-        method: 'DELETE',
-        headers: { 'X-CSRF-Token': csrf() }
+      csrfFetchJson(`/quests/quest/delete_submission/${id}`, {
+        method: 'DELETE'
       })
-        .then(r => r.json())
-        .then(j => {
-          if (!j.success) throw new Error(j.message || 'Delete failed');
+        .then(({ json }) => {
+          if (!json.success) throw new Error(json.message || 'Delete failed');
           closeModal('submissionDetailModal');
           resetModalContent();
           if (modal.dataset.questId) {
@@ -92,14 +89,11 @@ document.addEventListener('DOMContentLoaded', () => {
         form.append('photo', file);
       }
 
-      fetch(`/quests/submission/${id}/photo`, {
-        method:      'PUT',
-        credentials: 'same-origin',
-        headers:     { 'X-CSRFToken': csrf() },
-        body:        form
+      csrfFetchJson(`/quests/submission/${id}/photo`, {
+        method: 'PUT',
+        body:   form
       })
-      .then(r => r.json())
-      .then(json => {
+      .then(({ json }) => {
         if (!json.success) throw new Error(json.message || 'Upload failed');
         if (json.video_url) {
           $('#submissionImage').hidden = true;
@@ -210,19 +204,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $('#saveCommentBtn').addEventListener('click', () => {
     const id = $('#submissionDetailModal').dataset.submissionId;
-    fetch(`/quests/submission/${id}/comment`, {
-      method:      'PUT',
-      credentials: 'same-origin',
-      headers: {
-        'Content-Type':'application/json',
-        'X-CSRFToken' : csrf()
-      },
+    csrfFetchJson(`/quests/submission/${id}/comment`, {
+      method: 'PUT',
+      headers: { 'Content-Type':'application/json' },
       body: JSON.stringify({ comment: $('#submissionCommentEdit').value.trim() })
     })
-    .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json() })
-    .then(j=>{
-      if(!j.success) throw new Error(j.message||'Save failed');
-      $('#submissionComment').textContent = j.comment||'No comment provided.';
+    .then(({ json }) => {
+      if(!json.success) throw new Error(json.message||'Save failed');
+      $('#submissionComment').textContent = json.comment||'No comment provided.';
       toggleEdit(false);
     })
     .catch(e=>alert(`Could not save comment: ${e.message}`));
@@ -242,16 +231,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const id = $('#submissionDetailModal').dataset.submissionId;
     if(!id) return;
 
-    fetch(`/quests/submissions/${id}`, { credentials:'same-origin' })
-      .then(r=>r.json())
-      .then(d=>{
-        $('#submissionLikeCount').textContent = d.like_count||0;
-        $('#submissionLikeBtn').classList.toggle('active', d.liked_by_current_user);
+    fetchJson(`/quests/submissions/${id}`)
+      .then(({ json }) => {
+        $('#submissionLikeCount').textContent = json.like_count||0;
+        $('#submissionLikeBtn').classList.toggle('active', json.liked_by_current_user);
       });
 
-      fetch(`/quests/submission/${id}/replies`, { credentials:'same-origin' })
-        .then(r=>r.json())
-        .then(d=>{
+      fetchJson(`/quests/submission/${id}/replies`)
+        .then(({ json: d }) => {
           const list = $('#submissionRepliesList');
           list.innerHTML = '';
         d.replies.forEach(rep => {
@@ -296,19 +283,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const id    = $('#submissionDetailModal').dataset.submissionId;
     const liked = btn.classList.contains('active');
 
-    fetch(`/quests/submission/${id}/like`, {
-      method:     liked? 'DELETE' : 'POST',
-      credentials:'same-origin',
-      headers: {
-        'Content-Type':'application/json',
-        'X-CSRFToken' : csrf()
-      }
+    csrfFetchJson(`/quests/submission/${id}/like`, {
+      method: liked ? 'DELETE' : 'POST',
+      headers: { 'Content-Type':'application/json' }
     })
-    .then(r=>{ if(!r.ok) throw new Error(r.status); return r.json() })
-    .then(j=>{
-      if(!j.success) throw new Error('Like failed');
-      $('#submissionLikeCount').textContent = j.like_count;
-      btn.classList.toggle('active', j.liked);
+    .then(({ json }) => {
+      if(!json.success) throw new Error('Like failed');
+      $('#submissionLikeCount').textContent = json.like_count;
+      btn.classList.toggle('active', json.liked);
     })
     .catch(e=>alert(e.message));
   });
@@ -321,17 +303,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const content = textarea.value.trim();
     if(!id||!content) return;
 
-    fetch(`/quests/submission/${id}/replies`, {
-      method:      'POST',
-      credentials: 'same-origin',
-      headers: {
-        'Content-Type':'application/json',
-        'X-CSRFToken' : csrf()
-      },
+    csrfFetchJson(`/quests/submission/${id}/replies`, {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json' },
       body: JSON.stringify({ content })
     })
-    .then(r => r.json().then(j => ({ ok: r.ok, status: r.status, body: j })))
-    .then(({ ok, status, body }) => {
+    .then(({ status, json: body }) => {
       if (!body.success) {
         // if it’s the “limit reached” response, disable the form and show the message
         if (body.message === 'Reply limit of 10 reached') {

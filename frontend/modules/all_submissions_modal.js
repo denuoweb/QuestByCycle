@@ -1,6 +1,6 @@
 
 import { openModal } from './modal_common.js';
-import { getCSRFToken } from '../utils.js';
+import { fetchJson, csrfFetchJson } from '../utils.js';
 import { showSubmissionDetail } from './submission_detail_modal.js';
 import logger from '../logger.js';
 
@@ -27,15 +27,14 @@ export function showAllSubmissionsModal(gameId) {
 
 function fetchSubmissions() {
     const offset = submissionsPage * 10;
-    fetch(`/quests/quest/all_submissions?game_id=${submissionsGameId}&offset=${offset}&limit=10`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                throw new Error(data.error);
+    fetchJson(`/quests/quest/all_submissions?game_id=${submissionsGameId}&offset=${offset}&limit=10`)
+        .then(({ json }) => {
+            if (json.error) {
+                throw new Error(json.error);
             }
-            submissionsIsAdmin = data.is_admin;
-            submissionsHasMore = data.has_more;
-            displayAllSubmissions(data.submissions, submissionsIsAdmin, submissionsPage > 0);
+            submissionsIsAdmin = json.is_admin;
+            submissionsHasMore = json.has_more;
+            displayAllSubmissions(json.submissions, submissionsIsAdmin, submissionsPage > 0);
             toggleLoadMoreButton(submissionsHasMore);
             submissionsPage += 1;
         })
@@ -143,18 +142,14 @@ function displayAllSubmissions(submissions, isAdmin, append = false) {
 
 
 function deleteSubmission(submissionId) {
-    fetch(`/quests/quest/delete_submission/${submissionId}`, {
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-Token': getCSRFToken()
-        }
+    csrfFetchJson(`/quests/quest/delete_submission/${submissionId}`, {
+        method: 'DELETE'
     })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+        .then(({ json }) => {
+            if (json.success) {
                 alert('Submission deleted successfully.');
             } else {
-                throw new Error(data.message);
+                throw new Error(json.message);
             }
         })
         .catch(error => {
