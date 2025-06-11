@@ -44,7 +44,7 @@
                             <td>{{ game.description }}</td>
                             <td class="text-end">
                                 <a href="{{ url_for('games.update_game', game_id=game.id) }}" class="btn btn-sm btn-info me-2">Edit</a>
-                                <button type="button" class="btn btn-sm btn-danger me-2" onclick="openDeleteGameModal({{ game.id }})">Delete</button>
+                                <button type="button" class="btn btn-sm btn-danger me-2" data-delete-game-id="{{ game.id }}">Delete</button>
                                 <a href="{{ url_for('quests.manage_game_quests', game_id=game.id) }}" class="btn btn-sm btn-primary me-2">Quests</a>
                                 <a href="{{ url_for('badges.manage_badges', game_id=game.id) }}" class="btn btn-sm btn-primary me-2">Badges</a>
                                 <a href="{{ url_for('games.generate_qr_for_game', game_id=game.id) }}" class="btn btn-sm btn-success" title="Generate QR Code">

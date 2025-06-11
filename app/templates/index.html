@@ -96,7 +96,7 @@
                                     {% if current_user.is_admin %}
                                         <div class="admin-new-shout">
                                             <button type="button" class="btn btn-primary"
-                                                    onclick="openModal('shoutBoardModal')">
+                                                    data-open-modal="shoutBoardModal">
                                                 New Shout
                                             </button>
                                         </div>
@@ -111,7 +111,7 @@
                                                             <strong>
                                                                 {{ activity.timestamp.strftime('%m-%d') }} -
                                                                 <a href="javascript:void(0)"
-                                                                onclick="showUserProfileModal('{{ activity.user.id }}')">
+                                                                data-user-profile="{{ activity.user.id }}">
                                                                     {{ activity.user.display_name or activity.user.username }}
                                                                 </a>
                                                             </strong>
@@ -134,7 +134,7 @@
                                                             <strong>
                                                                 {{ activity.completed_at.strftime('%m-%d') }} -
                                                                 <a href="javascript:void(0)"
-                                                                onclick="showUserProfileModal('{{ activity.user.id }}')">
+                                                                data-user-profile="{{ activity.user.id }}">
                                                                     {{ activity.user.display_name or activity.user.username }}
                                                                 </a>
                                                             </strong>
@@ -158,7 +158,7 @@
                                                         <strong>
                                                             {{ activity.timestamp.strftime('%m-%d') }} -
                                                             <a href="javascript:void(0)"
-                                                            onclick="showUserProfileModal('{{ activity.user.id }}')">
+                                                            data-user-profile="{{ activity.user.id }}">
                                                                 {{ activity.user.display_name or activity.user.username }}
                                                             </a>
                                                         </strong>
@@ -180,7 +180,7 @@
                                                         <strong>
                                                             {{ activity.completed_at.strftime('%m-%d') }} -
                                                             <a href="javascript:void(0)"
-                                                            onclick="showUserProfileModal('{{ activity.user.id }}')">
+                                                            data-user-profile="{{ activity.user.id }}">
                                                                 {{ activity.user.display_name or activity.user.username }}
                                                             </a>
                                                         </strong>
@@ -316,7 +316,7 @@
         {% endif %}
         {% if current_user.is_authenticated and current_user.is_admin %}
             <div class="text-center mb-4">
-                <button data-game-id="{{ game.id }}" class="btn btn-primary btn-lg mb-2" onclick="openModal('generateAIQuestModal')">Create New Quest</button>
+                <button data-game-id="{{ game.id }}" class="btn btn-primary btn-lg mb-2" data-open-modal="generateAIQuestModal">Create New Quest</button>
             </div>
         {% endif %}
     {% endif %}

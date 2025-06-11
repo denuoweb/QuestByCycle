@@ -6,7 +6,7 @@
         <button type="button"
                 class="btn-close"
                 aria-label="Close"
-                onclick="closeModal('registerModal')">
+                data-close-modal="registerModal">
         </button>
       </div>
   
@@ -82,9 +82,9 @@
             {% endfor %}
             <div class="mt-half">
               <a href="javascript:void(0)"
-                 onclick="openModal('termsModal')">Terms of Service</a>, and
+                 data-open-modal="termsModal">Terms of Service</a>, and
               <a href="javascript:void(0)"
-                 onclick="openModal('privacyModal')">Privacy Policy</a>
+                 data-open-modal="privacyModal">Privacy Policy</a>
             </div>
           </div>
   

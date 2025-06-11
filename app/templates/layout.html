@@ -187,18 +187,18 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="javascript:void(0)" onclick="openModal('sponsorsModal', '{{ selected_game_id }}')">
+                            <a class="nav-link" href="javascript:void(0)" data-open-modal="sponsorsModal">
                                 <i class="fas fa-handshake me-1"></i>Sponsors
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="javascript:void(0)" onclick="openModal('contactModal', '{{ selected_game_id }}')">
+                            <a class="nav-link" href="javascript:void(0)" data-open-modal="contactModal">
                                 <i class="fas fa-comment-dots me-1"></i> Feedback
                             </a>
                         </li>
                     {% endif %}
                     <li class="nav-item">
-                        <a class="nav-link" href="javascript:void(0)" onclick="showUserProfileModal('{{ current_user.id }}')">
+                        <a class="nav-link" href="javascript:void(0)" data-user-profile="{{ current_user.id }}">
                             <i class="fas fa-user me-1"></i> Profile
                         </a>
                     </li>
@@ -225,14 +225,14 @@
                 <li class="nav-item">
                     <a href="{{ url_for('auth.login') }}"
                        class="btn btn-secondary btn-lg"
-                       onclick="if (typeof window.openModal === 'function' && document.getElementById('loginModal')) { openModal('loginModal'); return false; }">
+                       data-open-modal="loginModal">
                       Login
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="{{ url_for('auth.register') }}"
                        class="btn btn-primary btn-lg"
-                       onclick="if (typeof window.openModal === 'function' && document.getElementById('registerModal')) { openModal('registerModal'); return false; }">
+                       data-open-modal="registerModal">
                       Register Today!
                     </a>
                 </li>
@@ -252,7 +252,7 @@
   <div class="footer-section text">
     <div class="footer-section logos">
       <p>
-        <a class="social-link" href="javascript:void(0)" onclick="openModal('sponsorsModal', '{{ selected_game_id }}')">
+        <a class="social-link" href="javascript:void(0)" data-open-modal="sponsorsModal">
             <i class="fas fa-handshake me-1"></i>Game Sponsors
         </a>
       </p>
@@ -298,9 +298,9 @@
   </div>
   <div class="footer-content">
     <div class="footer-section links">
-      <a href="javascript:void(0)" onclick="openModal('privacyModal')">Privacy Policy</a>
-      <a href="javascript:void(0)" onclick="openModal('termsModal')">Terms of Service</a>
-      <a href="javascript:void(0)" onclick="openModal('licenseModal')">License Agreement</a>
+      <a href="javascript:void(0)" data-open-modal="privacyModal">Privacy Policy</a>
+      <a href="javascript:void(0)" data-open-modal="termsModal">Terms of Service</a>
+      <a href="javascript:void(0)" data-open-modal="licenseModal">License Agreement</a>
     </div>
   </div>
   <div class="footer-section legal">
