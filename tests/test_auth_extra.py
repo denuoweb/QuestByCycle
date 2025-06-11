@@ -1,7 +1,7 @@
                           
 
 import pytest
-from flask import url_for
+from tests.helpers import url_for_path
 from app import create_app, db
 from app.models.user import User
 from datetime import datetime, timezone
@@ -69,7 +69,7 @@ def test_login_redirect_if_authenticated_next_unsafe(client, normal_user):
     login_as(client, normal_user)
     resp = client.get("/auth/login?next=http://evil.com", follow_redirects=False)
     assert resp.status_code == 302
-    expected = url_for("main.index", show_login=0, next="http://evil.com", _external=False)
+    expected = url_for_path(client.application, "main.index", show_login=0, next="http://evil.com", _external=False)
     assert resp.headers["Location"].endswith(expected)
 
 def test_unverified_email_non_ajax(client, app, normal_user):
@@ -80,19 +80,19 @@ def test_unverified_email_non_ajax(client, app, normal_user):
     resp = client.post("/auth/login", data=data, follow_redirects=False)
     assert resp.status_code == 302
                                                                              
-    assert resp.headers["Location"].endswith(url_for("main.index", show_join_custom=0, _external=False))
+    assert resp.headers["Location"].endswith(url_for_path(client.application, "main.index", show_join_custom=0, _external=False))
 
 def test_successful_login_redirects_to_quest(client, normal_user):
     data = {"email": normal_user.email, "password": "pw"}
     resp = client.post("/auth/login?quest_id=123", data=data, follow_redirects=False)
     assert resp.status_code == 302
-    assert resp.headers["Location"].endswith(url_for("main.index", show_join_custom=0, _external=False))
+    assert resp.headers["Location"].endswith(url_for_path(client.application, "main.index", show_join_custom=0, _external=False))
 
 def test_successful_login_redirects_admin_dashboard(client, admin_user):
     data = {"email": admin_user.email, "password": "pw"}
     resp = client.post("/auth/login", data=data, follow_redirects=False)
     assert resp.status_code == 302
-    assert resp.headers["Location"].endswith(url_for("main.index", show_join_custom=0, _external=False))
+    assert resp.headers["Location"].endswith(url_for_path(client.application, "main.index", show_join_custom=0, _external=False))
 
 @pytest.mark.parametrize("ajax", [False, True])
 def test_login_exception_paths(client, normal_user, monkeypatch, ajax):
@@ -102,5 +102,5 @@ def test_login_exception_paths(client, normal_user, monkeypatch, ajax):
     headers = {"X-Requested-With": "XMLHttpRequest"} if ajax else {}
     resp = client.post("/auth/login", data=data, headers=headers, follow_redirects=False)
     assert resp.status_code == 302
-    expected_prefix = url_for("main.index", _external=False)
+    expected_prefix = url_for_path(client.application, "main.index", _external=False)
     assert resp.headers["Location"].startswith(expected_prefix)
