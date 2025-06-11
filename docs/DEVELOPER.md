@@ -266,7 +266,7 @@ Our platform leverages AI to generate new quests for users. This functionality i
 
 ### CSS and JavaScript
 
-Third-party libraries (Bootstrap, jQuery, KaTeX, Font Awesome, and Highlight.js) are now loaded directly from public CDNs.
+Third-party libraries (Bootstrap, KaTeX, Font Awesome, and Highlight.js) are now loaded directly from public CDNs.
 Only project specific assets remain under `app/static`.
 
 ### Images and Videos
