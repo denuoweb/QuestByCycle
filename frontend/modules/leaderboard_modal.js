@@ -29,7 +29,13 @@ export async function showLeaderboardModal(selectedGameId) {
             throw new Error('Failed to fetch leaderboard data');
         }
 
-        const data = await resp.json();
+        let data;
+        try {
+            data = await resp.json();
+        } catch (e) {
+            logger.error('Invalid JSON in leaderboard response', e);
+            throw new Error('Invalid server response');
+        }
         leaderboardContent.innerHTML = '';
         leaderboardData = data;
         leaderboardMetric = 'points';
