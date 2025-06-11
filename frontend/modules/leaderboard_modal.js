@@ -36,6 +36,7 @@ export async function showLeaderboardModal(selectedGameId) {
         appendGameSelector(leaderboardContent, data, selectedGameId);
         appendCompletionMeter(leaderboardContent, data, selectedGameId);
         appendMetricToggle(leaderboardContent);
+        appendSecondaryStatsList(leaderboardContent, data);
         appendLeaderboardTable(leaderboardContent);
         updateLeaderboardRows();
         openModal('leaderboardModal');
@@ -95,6 +96,23 @@ function appendMetricToggle(parentElement) {
     toggleDiv.appendChild(toggleInput);
     toggleDiv.appendChild(toggleLabel);
     parentElement.appendChild(toggleDiv);
+}
+
+function appendSecondaryStatsList(parentElement, data) {
+    if (!data.secondary_stats || data.secondary_stats.length === 0) return;
+    const list = document.createElement('ul');
+    list.className = 'list-group my-3';
+    data.secondary_stats.forEach(stat => {
+        const item = document.createElement('li');
+        item.className = 'list-group-item d-flex justify-content-between align-items-center';
+        item.textContent = stat.label;
+        const val = document.createElement('span');
+        val.className = 'badge bg-primary rounded-pill';
+        val.textContent = stat.value;
+        item.appendChild(val);
+        list.appendChild(item);
+    });
+    parentElement.appendChild(list);
 }
 
 function appendLeaderboardTable(parentElement) {
