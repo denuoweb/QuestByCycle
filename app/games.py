@@ -4,8 +4,16 @@ import base64
 import qrcode
 
 from flask import (
-    Blueprint, jsonify, render_template, request, redirect, url_for, flash,
-    current_app, make_response
+    Blueprint,
+    jsonify,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    current_app,
+    make_response,
+    abort,
 )
 from flask_login import login_required, current_user
 from sqlalchemy.exc import SQLAlchemyError
@@ -150,7 +158,9 @@ def update_game(game_id):
     """
     Update an existing game's information based on the submitted form data.
     """
-    game = Game.query.get_or_404(game_id)
+    game = db.session.get(Game, game_id)
+    if not game:
+        abort(404)
     if not current_user.is_admin_for_game(game_id):
         flash('Access denied: Only assigned admins can edit this game.', 'danger')
         return redirect(url_for('main.index'))
@@ -271,7 +281,7 @@ def game_info(game_id):
     Display game information. If a 'modal' query parameter is provided,
     render a modal template; otherwise, render the full game info page.
     """
-    game_obj = Game.query.get(game_id)
+    game_obj = db.session.get(Game, game_id)
     if not game_obj:
         flash("Game details are not available.", "error")
         return redirect(url_for('main.index'))
@@ -300,7 +310,7 @@ def get_game_points(game_id):
         Quest.game_id == game_id
     ).scalar() or 0
 
-    game = Game.query.get(game_id)
+    game = db.session.get(Game, game_id)
     game_goal = game.game_goal
 
     return jsonify(total_game_points=total_game_points, game_goal=game_goal)

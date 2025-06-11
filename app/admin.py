@@ -78,7 +78,7 @@ def user_management(game_id=None):
                                                           
     selected_game = None
     if game_id:
-        selected_game = Game.query.get(game_id)
+        selected_game = db.session.get(Game, game_id)
 
                                                    
     if selected_game:
@@ -112,7 +112,7 @@ def user_management(game_id=None):
 @login_required
 @require_super_admin
 def user_details(user_id):
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return
 
@@ -123,7 +123,7 @@ def user_details(user_id):
 @login_required
 @require_super_admin
 def update_user(user_id):
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         flash('User not found.', 'error')
         return redirect(url_for('admin.user_management'))
@@ -156,7 +156,7 @@ def update_user(user_id):
 def edit_user(user_id):
     logging.debug("Entered edit_user function with user_id: %s", user_id)
     
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         logging.error("User not found with id: %s", user_id)
         flash('User not found', 'error')
@@ -255,7 +255,7 @@ def edit_user(user_id):
 @login_required
 @require_super_admin
 def delete_user(user_id):
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         flash('User not found.', 'error')
         return redirect(url_for('admin.user_management'))

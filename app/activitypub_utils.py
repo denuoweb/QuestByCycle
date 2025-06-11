@@ -306,7 +306,7 @@ def inbox(username):
                 db.session.add(reply)
                 db.session.commit()
                                          
-                sub = QuestSubmission.query.get(sid)
+                sub = db.session.get(QuestSubmission, sid)
                 if sub:
                     db.session.add(Notification(
                         user_id=sub.user_id,
@@ -348,7 +348,7 @@ def inbox(username):
         if '/submissions/' in obj_id:
             try:
                 sid = int(obj_id.rsplit('/', 1)[1])
-                sub = QuestSubmission.query.get(sid)
+                sub = db.session.get(QuestSubmission, sid)
                 if sub:
                     db.session.add(Notification(
                         user_id=sub.user_id,

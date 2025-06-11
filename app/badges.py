@@ -5,7 +5,17 @@ from markupsafe import escape
 import os
 import csv
 import logging
-from flask import Blueprint, current_app, render_template, flash, redirect, url_for, jsonify, request
+from flask import (
+    Blueprint,
+    current_app,
+    render_template,
+    flash,
+    redirect,
+    url_for,
+    jsonify,
+    request,
+    abort,
+)
 from flask_login import login_required, current_user
 from .forms import BadgeForm
                                                           
@@ -63,7 +73,7 @@ def create_badge():
 def get_badges():
     game_id = request.args.get('game_id', type=int)
     if game_id:
-        game = Game.query.get(game_id)
+        game = db.session.get(Game, game_id)
         if not game:
             return jsonify(error="Game not found"), 404
                                                                        
@@ -172,7 +182,9 @@ def manage_badges():
 @login_required
 def update_badge(badge_id):
                                                                   
-    badge = Badge.query.get_or_404(badge_id)
+    badge = db.session.get(Badge, badge_id)
+    if not badge:
+        abort(404)
                                               
     quest_categories = db.session.query(Quest.category).filter(Quest.category.isnot(None)).distinct().all()
 
@@ -210,7 +222,7 @@ def update_badge(badge_id):
 def delete_badge(badge_id):
     if not current_user.is_admin:
         return jsonify({'success': False, 'message': 'Permission denied'}), 403
-    badge = Badge.query.get(badge_id)
+    badge = db.session.get(Badge, badge_id)
     if not badge:
         return jsonify({'success': False, 'message': 'Badge not found'}), 404
     try:
