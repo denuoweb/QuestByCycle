@@ -17,6 +17,7 @@ from flask import (
     abort,
 )
 from flask_login import login_required, current_user
+from app.decorators import require_admin
 from .forms import BadgeForm
                                                           
 from .utils import save_badge_image
@@ -37,10 +38,8 @@ def allowed_file(filename):
 
 @badges_bp.route('/create', methods=['GET', 'POST'])
 @login_required
+@require_admin
 def create_badge():
-    if not current_user.is_admin:
-        flash('Access denied: Only administrators can manage badges.', 'danger')
-        return redirect(url_for('main.index'))
 
                                               
     quest_categories = db.session.query(Quest.category).filter(Quest.category.isnot(None)).distinct().all()
@@ -139,10 +138,8 @@ def get_badges():
 
 @badges_bp.route('/manage_badges', methods=['GET', 'POST'])
 @login_required
+@require_admin
 def manage_badges():
-    if not current_user.is_admin:
-        flash('Access denied: Only administrators can manage badges.', 'danger')
-        return redirect(url_for('main.index'))
 
                                               
     quest_categories = db.session.query(Quest.category).filter(Quest.category.isnot(None)).distinct().all()
@@ -219,9 +216,8 @@ def update_badge(badge_id):
 
 @badges_bp.route('/delete/<int:badge_id>', methods=['DELETE'])
 @login_required
+@require_admin
 def delete_badge(badge_id):
-    if not current_user.is_admin:
-        return jsonify({'success': False, 'message': 'Permission denied'}), 403
     badge = db.session.get(Badge, badge_id)
     if not badge:
         return jsonify({'success': False, 'message': 'Badge not found'}), 404
@@ -244,9 +240,8 @@ def get_quest_categories():
 
 @badges_bp.route('/upload_images', methods=['POST'])
 @login_required
+@require_admin
 def upload_images():
-    if not current_user.is_admin:
-        return jsonify({'success': False, 'message': 'Unauthorized access'}), 403
 
     uploaded_files = request.files.getlist('file')
     images_folder = os.path.join(current_app.root_path, 'static', 'images', 'badge_images')
@@ -274,10 +269,8 @@ def upload_images():
 
 @badges_bp.route('/bulk_upload', methods=['POST'])
 @login_required
+@require_admin
 def bulk_upload():
-    if not current_user.is_admin:
-        flash('Access denied: Only administrators can manage badges.', 'danger')
-        return redirect(url_for('main.index'))
 
     csv_file = request.files.get('csv_file')
     image_files = request.files.getlist('image_files')

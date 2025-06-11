@@ -25,6 +25,7 @@ from flask import (
     abort
 )
 from flask_login import current_user, login_required
+from app.decorators import require_admin
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 from app.forms import PhotoForm, QuestForm
@@ -336,6 +337,7 @@ def submit_quest(quest_id):
 
 @quests_bp.route("/quest/<int:quest_id>/update", methods=["POST"])
 @login_required
+@require_admin
 def update_quest(quest_id):
     """
     Update quest details. Only accessible to administrators.
@@ -343,8 +345,6 @@ def update_quest(quest_id):
     Args:
         quest_id (int): The ID of the quest.
     """
-    if not current_user.is_admin:
-        return jsonify({"success": False, "message": "Permission denied"}), 403
 
     quest = Quest.query.get_or_404(quest_id)
     data = request.get_json()

@@ -16,6 +16,7 @@ from flask import (
     abort,
 )
 from flask_login import login_required, current_user
+from app.decorators import require_admin
 from sqlalchemy.exc import SQLAlchemyError
 from app.models import db, user_games
 from app.models.game import Game
@@ -207,11 +208,9 @@ def update_game(game_id):
 
 @games_bp.route('/send_liaison_email/<int:game_id>', methods=['POST'])
 @login_required
+@require_admin
 def send_liaison_email(game_id):
     """Manually trigger sending of liaison emails for a game."""
-    if not current_user.is_admin:
-        flash('Access denied: Only administrators can send liaison emails.', 'danger')
-        return redirect(url_for('main.index'))
 
     if send_social_media_liaison_email(game_id, fallback_to_last=True):
         flash('Liaison email sent successfully.', 'success')
@@ -249,14 +248,12 @@ def register_game(game_id):
 
 @games_bp.route('/delete_game/<int:game_id>', methods=['POST'])
 @login_required
+@require_admin
 def delete_game(game_id):
     """
     Delete a game. Only administrators are allowed to delete games.
     Prior to deletion, ensure that users referencing the game have their selected_game_id set to NULL.
     """
-    if not current_user.is_admin:
-        flash('Access denied: Only administrators can delete games.', 'danger')
-        return redirect(url_for('main.index'))
 
     game = Game.query.get_or_404(game_id)
     
