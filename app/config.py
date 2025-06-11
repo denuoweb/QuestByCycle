@@ -52,6 +52,15 @@ def _get_env_integer(key: str, default: int):
     except ValueError:
         return default
 
+def _get_env_nullable(key: str, default=None):
+    """Retrieve an environment variable but return ``None`` for falsey values."""
+    val = os.getenv(key)
+    if val is None:
+        val = default
+    if val in (False, "", "false", "False", None):
+        return None
+    return val
+
                                                                                
                                                                        
                                                                                
@@ -116,7 +125,7 @@ def load_config():
                 "SESSION_COOKIE_SAMESITE",
                 _toml_config["encryption"]["SESSION_COOKIE_SAMESITE"]
             ),
-            "SESSION_COOKIE_DOMAIN": _get_env(
+            "SESSION_COOKIE_DOMAIN": _get_env_nullable(
                 "SESSION_COOKIE_DOMAIN",
                 _toml_config["encryption"]["SESSION_COOKIE_DOMAIN"]
             ),
