@@ -20,7 +20,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'frontend/main.js'),
-        submitPhoto: resolve(__dirname, 'frontend/submit_photo_entry.js')
+        submitPhoto: resolve(__dirname, 'frontend/submit_photo_entry.js'),
+        sw: resolve(__dirname, 'frontend/sw.js')
       },
       output: {
         entryFileNames: '[name].js',       // → main.js & submitPhoto.js
