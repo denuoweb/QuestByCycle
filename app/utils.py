@@ -30,14 +30,17 @@ from textwrap import dedent
 
 
 def _get_ffmpeg_bin() -> str | None:
-    """Return the path to a usable ffmpeg binary or ``None`` if unavailable."""
-    ffmpeg_bin = current_app.config.get("FFMPEG_PATH") or shutil.which("ffmpeg")
-    if ffmpeg_bin and (
-        (os.path.isabs(ffmpeg_bin) and os.path.exists(ffmpeg_bin))
-        or shutil.which(ffmpeg_bin)
-    ):
-        return ffmpeg_bin
-    return None
+    """Return the path to a usable ``ffmpeg`` binary."""
+    configured = current_app.config.get("FFMPEG_PATH")
+    if configured:
+        if os.path.isabs(configured) and os.path.exists(configured):
+            return configured
+        resolved = shutil.which(configured)
+        if resolved:
+            return resolved
+
+    resolved = shutil.which("ffmpeg")
+    return resolved
 
 ALLOWED_TAGS = {
     'a', 'b', 'i', 'u', 'em', 'strong', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
