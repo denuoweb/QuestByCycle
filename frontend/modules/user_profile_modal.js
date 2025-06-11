@@ -85,7 +85,7 @@ export function showUserProfileModal(userId) {
                     <p><strong>Interests:</strong> ${data.user.interests || ''}</p>
                     <p><strong>Riding Preferences:</strong> ${data.user.riding_preferences.join(', ')}</p>
                     <p><strong>Ride Description:</strong> ${data.user.ride_description || ''}</p>
-                    <button class="btn btn-primary" onclick="window.toggleProfileEditMode()">Edit</button>
+                    <button class="btn btn-primary" id="editProfileBtn">Edit</button>
                   </div>
                   <div id="profileEditMode" class="d-none">
                     <form id="editProfileForm" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
@@ -142,20 +142,20 @@ export function showUserProfileModal(userId) {
                         <label class="form-check-label" for="uploadToMastodon">Cross post to your federation server?</label>
                       </div>
                       <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-success" onclick="saveProfile(${userId})">
+                        <button type="button" class="btn btn-success" id="saveProfileBtn">
                           <i class="bi bi-save me-2"></i>Save Profile
                         </button>
-                        <button class="btn btn-secondary" onclick="cancelProfileEdit(${userId})">Cancel</button>
+                        <button class="btn btn-secondary" id="cancelProfileBtn">Cancel</button>
                       </div>
                     </form>
                     <hr>
                     <form id="updatePasswordForm" class="d-flex justify-content-between">
-                      <button class="btn btn-primary w-100 me-2" onclick="window.location.href='/auth/update_password'">
+                      <button class="btn btn-primary w-100 me-2" id="updatePasswordBtn">
                         <i class="bi bi-shield-lock-fill me-2"></i>Update Password
                       </button>
                     </form>
                     <hr>
-                    <form id="deleteAccountForm" onsubmit="event.preventDefault(); deleteAccount();">
+                    <form id="deleteAccountForm">
                       <button class="btn btn-danger w-100">
                         <i class="bi bi-trash-fill me-2"></i>Delete My Account
                       </button>
@@ -195,7 +195,7 @@ export function showUserProfileModal(userId) {
                       <textarea class="form-control" id="bikeDescription" name="bike_description" rows="3">${data.user.bike_description || ''}</textarea>
                     </div>
                     <div class="d-flex justify-content-between">
-                      <button class="btn btn-success" onclick="saveBike(${userId})">
+                      <button class="btn btn-success" id="saveBikeBtn">
                         <i class="bi bi-save me-2"></i>Save Bike Details
                       </button>
                     </div>
@@ -261,7 +261,7 @@ export function showUserProfileModal(userId) {
                           ${sub.fb_url       ? `<a href="${sub.fb_url}"        target="_blank" class="btn btn-sm btn-facebook"><i class="bi bi-facebook"></i></a>` : ''}
                           ${sub.instagram_url? `<a href="${sub.instagram_url}" target="_blank" class="btn btn-sm btn-instagram"><i class="bi bi-instagram"></i></a>`: ''}
                         </div>
-                        ${isCurrent ? `<button class="btn btn-danger btn-sm mt-2" onclick="deleteSubmission(${sub.id}, 'profileSubmissions', ${data.user.id})">Delete</button>` : ''}
+                        ${isCurrent ? `<button class="btn btn-danger btn-sm mt-2" data-delete-submission="${sub.id}">Delete</button>` : ''}
                       </div>
                     `).join('') 
                     : '<p class="text-muted">No quest submissions yet.</p>'}
@@ -337,6 +337,38 @@ export function showUserProfileModal(userId) {
 
       // 4) Small-screen <select> ↔ tabs synchronization
       openModal('userProfileModal');
+
+      const editBtn = document.getElementById('editProfileBtn');
+      if (editBtn) editBtn.addEventListener('click', toggleProfileEditMode);
+
+      const saveBtn = document.getElementById('saveProfileBtn');
+      if (saveBtn) saveBtn.addEventListener('click', () => saveProfile(userId));
+
+      const cancelBtn = document.getElementById('cancelProfileBtn');
+      if (cancelBtn) cancelBtn.addEventListener('click', () => cancelProfileEdit(userId));
+
+      const updatePasswordBtn = document.getElementById('updatePasswordBtn');
+      if (updatePasswordBtn) updatePasswordBtn.addEventListener('click', () => {
+        window.location.href = '/auth/update_password';
+      });
+
+      const saveBikeBtn = document.getElementById('saveBikeBtn');
+      if (saveBikeBtn) saveBikeBtn.addEventListener('click', () => saveBike(userId));
+
+      document.querySelectorAll('[data-delete-submission]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const sid = btn.getAttribute('data-delete-submission');
+          deleteSubmission(sid, 'profileSubmissions', data.user.id);
+        });
+      });
+
+      const deleteAccountForm = document.getElementById('deleteAccountForm');
+      if (deleteAccountForm) {
+        deleteAccountForm.addEventListener('submit', e => {
+          e.preventDefault();
+          deleteAccount();
+        });
+      }
       const tabSelect = document.getElementById('profileTabSelect');
       if (tabSelect) {
         tabSelect.addEventListener('change', e => {
@@ -503,13 +535,6 @@ function deleteAccount() {
       alert('Failed to delete account. Please try again.');
     });
 }
-// Expose globally for inline handlers
-window.toggleProfileEditMode = toggleProfileEditMode;
-window.cancelProfileEdit = cancelProfileEdit;
-window.saveProfile = saveProfile;
-window.saveBike = saveBike;
-window.deleteSubmission = deleteSubmission;
-window.deleteAccount = deleteAccount;
 
 // delegate clicks to open a user profile
 document.addEventListener('click', e => {
