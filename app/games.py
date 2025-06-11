@@ -19,13 +19,13 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import SQLAlchemyError
 from app.models import db, Game, Quest, UserQuest, user_games, User
 from app.forms import GameForm
-from app.utils import (
+from app.utils.file_uploads import (
     save_leaderboard_image,
     generate_smoggy_images,
     allowed_image_file,
-    send_social_media_liaison_email,
-    sanitize_html,
 )
+from app.utils.email_utils import send_social_media_liaison_email
+from app.utils import sanitize_html
 from io import BytesIO
 
 

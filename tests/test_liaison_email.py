@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from app import create_app, db
 from app.models import Game, Quest, User, QuestSubmission
-from app.utils import send_social_media_liaison_email
+from app.utils.email_utils import send_social_media_liaison_email
 
 
 @pytest.fixture

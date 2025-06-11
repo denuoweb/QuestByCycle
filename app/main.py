@@ -45,13 +45,13 @@ from app.forms import (
     ResetPasswordForm,
     MastodonLoginForm,
 )
-from app.utils import (
+from app.utils.file_uploads import (
     save_profile_picture,
     save_bicycle_picture,
-    send_email,
-    sanitize_html,
     correct_image_orientation,
 )
+from app.utils.email_utils import send_email
+from app.utils import sanitize_html
 from .config import load_config
 
                    

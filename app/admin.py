@@ -6,7 +6,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from app.models import db, User, Game, Sponsor, user_games, QuestSubmission, UserIP
 from app.forms import SponsorForm
-from app.utils import save_sponsor_logo, sanitize_html
+from app.utils.file_uploads import save_sponsor_logo
+from app.utils import sanitize_html
 from app.decorators import require_admin, require_super_admin
 
 admin_bp = Blueprint('admin', __name__)

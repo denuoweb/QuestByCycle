@@ -29,18 +29,19 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 from app.forms import PhotoForm, QuestForm
 from app.social import post_to_social_media
-from app.utils import REQUEST_TIMEOUT
-from app.utils import (
+from app.utils import REQUEST_TIMEOUT, sanitize_html
+from app.utils.quest_scoring import (
     can_complete_quest,
     check_and_award_badges,
     check_and_revoke_badges,
     getLastRelevantCompletionTime,
+    update_user_score,
+)
+from app.utils.file_uploads import (
     save_badge_image,
     save_submission_image,
     save_submission_video,
     public_media_url,
-    update_user_score,
-    sanitize_html,
 )
 from app.activitypub_utils import (
     post_activitypub_create_activity, 

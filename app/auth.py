@@ -18,7 +18,8 @@ from urllib.parse import urljoin
 from app.models import db, User, Game
 from app.forms import (LoginForm, RegistrationForm, ForgotPasswordForm,
                        ResetPasswordForm, UpdatePasswordForm, MastodonLoginForm)
-from app.utils import send_email, log_user_ip, REQUEST_TIMEOUT, sanitize_html
+from app.utils.email_utils import send_email
+from app.utils import log_user_ip, REQUEST_TIMEOUT, sanitize_html
 from app.activitypub_utils import create_activitypub_actor
 
 auth_bp = Blueprint('auth', __name__)
