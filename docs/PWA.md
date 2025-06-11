@@ -29,7 +29,7 @@ This application exposes basic Progressive Web App (PWA) features and can also b
 
 ## TWA Asset Links
 - The route `/.well-known/assetlinks.json` dynamically returns the digital asset links used for TWA verification.
-- The SHA256 fingerprint of your Android signing certificate must be configured in either `.env` or `config.toml`.
+- The SHA256 fingerprint of your Android signing certificate must be configured in the `.env` file.
 
 ### Configuration Keys
 - **Environment variable:** `TWA_SHA256_FINGERPRINT`
