@@ -5,6 +5,4 @@ export function showGameInfoModal(gameId) {
     fetchAndShowModal(url, 'gameInfoModal');
 }
 
-// Expose the function globally so it can be called by inline onclick attributes.
-window.showGameInfoModal = showGameInfoModal;
 

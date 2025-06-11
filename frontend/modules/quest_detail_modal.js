@@ -15,8 +15,9 @@ function meta(name) {
 /*  Current user ID and CSRF token pulled from <meta> tags.           */
 const CURRENT_USER_ID = Number(meta('current-user-id') || 0);
 const CSRF_TOKEN = getCSRFToken();
-const PLACEHOLDER_IMAGE = window.PLACEHOLDER_IMAGE || meta('placeholder-image');
-window.PLACEHOLDER_IMAGE = PLACEHOLDER_IMAGE;
+const PLACEHOLDER_IMAGE = document
+  .querySelector('meta[name="placeholder-image"]')
+  .getAttribute('content');
 
 /* ------------------------------------------------------------------ */
 /*  OPEN QUEST DETAIL MODAL                                           */

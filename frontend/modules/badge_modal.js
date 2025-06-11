@@ -3,12 +3,11 @@ import { openModal } from './modal_common.js';
 import { escapeHTML } from '../utils.js';
 import logger from '../logger.js';
 
-// Cache all badges in a global variable once loaded
-window.allBadges = window.allBadges || [];
-const PLACEHOLDER_IMAGE =
-  window.PLACEHOLDER_IMAGE ||
-  document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
-window.PLACEHOLDER_IMAGE = PLACEHOLDER_IMAGE;
+// Cache loaded badges within this module
+let allBadges = [];
+const PLACEHOLDER_IMAGE = document
+  .querySelector('meta[name="placeholder-image"]')
+  .getAttribute('content');
 
 /**
  * Validate that a given URL is a safe image source.
@@ -46,20 +45,20 @@ async function fetchAllBadges() {
   }
 
   const data = await response.json();
-  window.allBadges = data.badges;
-  return window.allBadges;
+  allBadges = data.badges;
+  return allBadges;
 }
 
 /**
  * Ensure the global badge cache is populated.
  */
 async function ensureBadgeCache() {
-  if (!window.allBadges || window.allBadges.length === 0) {
+  if (!allBadges || allBadges.length === 0) {
     try {
       await fetchAllBadges();
     } catch (err) {
       logger.error('Error loading badges:', err);
-      window.allBadges = [];
+      allBadges = [];
     }
   }
 }
@@ -71,7 +70,7 @@ function buildTaskListHTML(taskNames) {
 }
 
 function findBadgeById(badgeId) {
-  return window.allBadges.find(b => b.id == badgeId);
+  return allBadges.find(b => b.id == badgeId);
 }
 
 function getBadgeFromElement(element) {
