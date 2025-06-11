@@ -171,7 +171,7 @@ export function openLoginModalWithGame({ gameId, questId = '' }) {
     openModal('loginModal');
   }
   
-  function registerFromLogin() {
+  export function registerFromLogin() {
     // Read from login modal
     const gameId    = document.getElementById('loginGameId').value    || '';
     const questId   = document.getElementById('loginQuestId').value   || '';
@@ -455,7 +455,6 @@ window.closeModal = closeModal;
 window.openLoginModalWithOptions = openLoginModalWithOptions;
 window.openRegisterModalWithOptions = openRegisterModalWithOptions;
 window.openLoginModalWithGame = openLoginModalWithGame;
-window.registerFromLogin = registerFromLogin;
 window.openForgotPasswordModal = openForgotPasswordModal;
 window.openResetPasswordModal = openResetPasswordModal;
 window.fetchAndShowModal = fetchAndShowModal;

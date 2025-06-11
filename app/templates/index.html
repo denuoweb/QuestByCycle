@@ -15,7 +15,7 @@
             <div class="col-md-6">
                 <div class="card earth-day-card">
                     <h3 class="card-title">
-                        <a href="javascript:void(0)" onclick="openLoginModalWithGame({gameId: 17});">
+                        <a href="javascript:void(0)" data-login-game="17">
                             Earth Day Every Day Game
                         </a>
                     </h3>
@@ -142,7 +142,7 @@
                                                                 completed a quest
                                                                 <a href="javascript:void(0);"
                                                                 class="quest-title"
-                                                                onclick="openQuestDetailModal('{{ activity.quest.id }}')">
+                                                                data-quest-detail="{{ activity.quest.id }}">
                                                                     {{ activity.quest.title }}
                                                                 </a>
                                                             </span>
@@ -188,7 +188,7 @@
                                                             completed a quest
                                                             <a href="javascript:void(0);"
                                                             class="quest-title"
-                                                            onclick="openQuestDetailModal('{{ activity.quest.id }}')">
+                                                            data-quest-detail="{{ activity.quest.id }}">
                                                                 {{ activity.quest.title }}
                                                             </a>
                                                         </span>
@@ -227,7 +227,7 @@
                     data-badge-name="{{ badge.name }}"
                     data-badge-description="{{ badge.description }}"
                     data-badge-image="{{ url_for('static', filename='images/badge_images/' ~ badge.image) }}"
-                    onclick="openBadgeModal(this);">
+                    data-open-badge>
                 <img loading="lazy"
                     src="{{ url_for('static', filename='images/badge_images/' ~ badge.image) }}"
                     alt="{{ badge.name }}"
@@ -247,7 +247,7 @@
                     data-badge-name="{{ badge.name }}"
                     data-badge-description="{{ badge.description }}"
                     data-badge-image="{{ url_for('static', filename='images/badge_images/' ~ badge.image) }}"
-                    onclick="openBadgeModal(this);">
+                    data-open-badge>
                 <img loading="lazy"
                     src="{{ url_for('static', filename='images/badge_images/' ~ badge.image) }}"
                     alt="{{ badge.name }}"
@@ -293,14 +293,14 @@
                                 <button
                                 type="button"
                                 class="btn btn-sm btn-outline-primary quest-inline-view-btn"
-                                onclick="openQuestDetailModal('{{ quest.id }}')"
+                                data-quest-detail="{{ quest.id }}"
                                 >
                                 View
                                 </button>
                                     <a
                                         href="javascript:void(0)"
                                         class="quest-title text-decoration-none ms-2"
-                                        onclick="openQuestDetailModal('{{ quest.id }}')"
+                                        data-quest-detail="{{ quest.id }}"
                                         >
                                         {{ quest.title }}
                                         </a>
