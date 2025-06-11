@@ -310,10 +310,8 @@ def edit_sponsor(sponsor_id):
 
 @admin_bp.route('/sponsors/delete/<int:sponsor_id>', methods=['POST'])
 @login_required
+@require_admin
 def delete_sponsor(sponsor_id):
-    if not current_user.is_admin:
-        flash('Access denied.', 'danger')
-        return redirect(url_for('auth.login'))
 
     game_id = request.form.get('game_id', type=int)                                       
 
@@ -327,7 +325,7 @@ def delete_sponsor(sponsor_id):
         flash(f'Error occurred: {e}', 'danger')
     
                                                            
-    return redirect(url_for('admin.manage_sponsors', game_id=game_id))  
+    return redirect(url_for('admin.manage_sponsors', game_id=game_id))
 
 
 
@@ -343,10 +341,8 @@ def sponsors():
 
 @admin_bp.route('/admin/sponsors', methods=['GET', 'POST'])
 @login_required
+@require_admin
 def manage_sponsors():
-    if not current_user.is_admin:
-        flash('Access denied.', 'danger')
-        return redirect(url_for('auth.login'))
 
     game_id = request.args.get('game_id', type=int)
     if request.method == 'POST':

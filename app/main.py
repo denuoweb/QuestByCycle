@@ -22,6 +22,7 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 from flask_login import current_user, login_required
+from app.decorators import require_admin
 from flask_wtf.csrf import generate_csrf
 from sqlalchemy import func
 from sqlalchemy.orm import joinedload
@@ -788,14 +789,12 @@ def edit_bike(user_id):
 
 @main_bp.route('/pin_message/<int:game_id>/<int:message_id>', methods=['POST'])
 @login_required
+@require_admin
 def pin_message(game_id, message_id):
     """
     Toggle the pin status of a shout board message.
     """
     message = ShoutBoardMessage.query.get_or_404(message_id)
-    if not current_user.is_admin:
-        flash('You do not have permission to perform this action.', 'danger')
-        return redirect(url_for('main.index'))
     message.is_pinned = not message.is_pinned
     db.session.commit()
     flash('Message pin status updated.', 'success')
