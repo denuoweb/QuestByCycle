@@ -293,6 +293,10 @@ Tests are crucial for maintaining the integrity of the codebase. To run tests:
 
 To enable debugging, update the `config.toml` file to set `DEBUG = true`. This will enable Flask's debugger, providing detailed error messages and an interactive debugger in the browser.
 
+If login requests fail with a "CSRF session token is missing" message, the session cookie was not
+sent. Ensure `SECRET_KEY` is defined and access the site using the host specified by
+`LOCAL_DOMAIN` (typically `localhost:5000`).
+
 ## Deployment
 
 ### Production Configuration
