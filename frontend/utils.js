@@ -10,6 +10,11 @@ export async function fetchJson(url, options = {}) {
   return { status: res.status, json };
 }
 
+export async function csrfFetchJson(url, options = {}) {
+  const headers = { 'X-CSRF-Token': getCSRFToken(), ...(options.headers || {}) };
+  return fetchJson(url, { ...options, headers });
+}
+
 export function escapeHTML(str) {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -23,5 +28,6 @@ export function escapeHTML(str) {
 if (typeof window !== 'undefined') {
   window.getCSRFToken = getCSRFToken;
   window.fetchJson = fetchJson;
+  window.csrfFetchJson = csrfFetchJson;
   window.escapeHTML = escapeHTML;
 }

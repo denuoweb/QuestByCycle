@@ -1,4 +1,4 @@
-import { getCSRFToken } from '../utils.js';
+import { csrfFetchJson } from '../utils.js';
 import logger from '../logger.js';
 
 // Badge management functions
@@ -161,20 +161,17 @@ function saveBadge(badgeId) {
 
     // IMPORTANT: Append the CSRF token to the form data if required
     const csrfToken = document.querySelector('[name=csrf_token]').value;
-    fetch(`/badges/update/${badgeId}`, {
+    formData.append('csrf_token', csrfToken);
+    csrfFetchJson(`/badges/update/${badgeId}`, {
         method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': csrfToken
-        }
+        body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+    .then(({ json }) => {
+        if (json.success) {
             alert('Badge updated successfully');
             window.location.reload();
         } else {
-            alert('Failed to update badge: ' + data.message);
+            alert('Failed to update badge: ' + json.message);
         }
     })
     .catch(error => logger.error('Error updating badge:', error));
@@ -184,18 +181,14 @@ function saveBadge(badgeId) {
 function deleteBadge(badgeId) {
     if (!confirm("Are you sure you want to delete this badge?")) return;
 
-    fetch(`/badges/delete/${badgeId}`, {
-        method: 'DELETE',
-        headers: {
-            'X-CSRFToken': getCSRFToken(),
-        },
+    csrfFetchJson(`/badges/delete/${badgeId}`, {
+        method: 'DELETE'
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+    .then(({ json }) => {
+        if (json.success) {
             window.location.reload();
         } else {
-            alert(`Failed to delete badge: ${data.message}`);
+            alert(`Failed to delete badge: ${json.message}`);
         }
     })
     .catch(error => {
@@ -206,19 +199,15 @@ function deleteBadge(badgeId) {
 
 function uploadImages() {
     const formData = new FormData(document.getElementById('uploadForm'));
-    fetch('/badges/upload_images', {
+    csrfFetchJson('/badges/upload_images', {
         method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': getCSRFToken(),
-        },
+        body: formData
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+    .then(({ json }) => {
+        if (json.success) {
             alert('Images uploaded successfully');
         } else {
-            alert('Failed to upload images: ' + data.message);
+            alert('Failed to upload images: ' + json.message);
         }
     })
     .catch(error => logger.error('Error uploading images:', error));
