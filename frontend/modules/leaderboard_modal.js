@@ -7,43 +7,42 @@ let leaderboardData = null;
 let leaderboardMetric = 'points';
 let leaderboardBody;
 
-export function showLeaderboardModal(selectedGameId) {
+export async function showLeaderboardModal(selectedGameId) {
     const leaderboardContent = document.getElementById('leaderboardModalContent');
     if (!leaderboardContent) {
         logger.error('Leaderboard modal content element not found. Cannot proceed with displaying leaderboard.');
         alert('Leaderboard modal content element not found. Please ensure the page has loaded completely and the correct ID is used.');
         return;
     }
-    fetch('/leaderboard_partial?game_id=' + selectedGameId, {
-        headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        credentials: 'same-origin'
-    })
-        .then(response => {
-            if (response.status === 401) {
-                window.location.href = '/auth/login?next=' + encodeURIComponent(window.location.pathname);
-                return null;
-            }
-            if (!response.ok) {
-                throw new Error('Failed to fetch leaderboard data');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (!data) return;
-            leaderboardContent.innerHTML = '';
-            leaderboardData = data;
-            leaderboardMetric = 'points';
-            appendGameSelector(leaderboardContent, data, selectedGameId);
-            appendCompletionMeter(leaderboardContent, data, selectedGameId);
-            appendMetricToggle(leaderboardContent);
-            appendLeaderboardTable(leaderboardContent);
-            updateLeaderboardRows();
-            openModal('leaderboardModal');
-        })
-        .catch(error => {
-            logger.error('Failed to load leaderboard:', error);
-            alert('Failed to load leaderboard data. Please try again.');
+
+    try {
+        const resp = await fetch(`/leaderboard_partial?game_id=${selectedGameId}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
         });
+
+        if (resp.status === 401) {
+            window.location.href = '/auth/login?next=' + encodeURIComponent(window.location.pathname);
+            return;
+        }
+        if (!resp.ok) {
+            throw new Error('Failed to fetch leaderboard data');
+        }
+
+        const data = await resp.json();
+        leaderboardContent.innerHTML = '';
+        leaderboardData = data;
+        leaderboardMetric = 'points';
+        appendGameSelector(leaderboardContent, data, selectedGameId);
+        appendCompletionMeter(leaderboardContent, data, selectedGameId);
+        appendMetricToggle(leaderboardContent);
+        appendLeaderboardTable(leaderboardContent);
+        updateLeaderboardRows();
+        openModal('leaderboardModal');
+    } catch (error) {
+        logger.error('Failed to load leaderboard:', error);
+        alert('Failed to load leaderboard data. Please try again.');
+    }
 }
 
 function appendGameSelector(parentElement, data, selectedGameId) {
