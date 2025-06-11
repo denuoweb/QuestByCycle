@@ -24,10 +24,3 @@ export function escapeHTML(str) {
     .replace(/'/g, '&#039;');
 }
 
-// backwards compatibility
-if (typeof window !== 'undefined') {
-  window.getCSRFToken = getCSRFToken;
-  window.fetchJson = fetchJson;
-  window.csrfFetchJson = csrfFetchJson;
-  window.escapeHTML = escapeHTML;
-}
