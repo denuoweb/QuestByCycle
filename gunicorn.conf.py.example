@@ -2,8 +2,8 @@ command = '/opt/QuestByCycle/venv/bin/gunicorn'
 pythonpath = '/opt/QuestByCycle'
 bind = '127.0.0.1:5000'
 workers = 1
-
-
+user = 'USER'
+group = 'USER'
 loglevel = 'info'
 errorlog = '/opt/QuestByCycle/logs/gunicorn-error.log'
 accesslog = '/opt/QuestByCycle/logs/gunicorn-access.log'

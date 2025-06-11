@@ -1,6 +1,6 @@
 [tool.poetry]
 name         = "questbycycle"
-version      = "0.1.1"
+version      = "0.2.0"
 description  = "QuestByCycle is a Flask-based web application designed to engage and motivate the bicycling community through a gamified approach."
 authors      = ["Jaron Rosenau <jaron@rosenau.info>"]
 package-mode = false
