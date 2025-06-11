@@ -82,7 +82,7 @@ The project is organized as follows:
 - **`app/__init__.py`**: Initializes the Flask application and registers blueprints.
 - **`app/models.py`**: Defines the database models.
 - **`app/forms.py`**: Defines the forms used in the application.
-- **`app/utils.py`**: Contains utility functions used across the application.
+- **`app/utils/`**: Package of utility modules used across the application.
 - **`app/templates/`**: Contains HTML templates for rendering views.
 - **`pyproject.toml`**: Lists the dependencies required for the project and is managed by Poetry.
 
@@ -166,7 +166,7 @@ Forms are defined using WTForms in `app/forms.py` and include:
 
 ### Utilities
 
-Utility functions are defined in `app/utils.py` and include:
+Utility functions are organized under `app/utils/` and include:
 
 - **`save_profile_picture`**: Saves profile pictures.
 - **`save_badge_image`**: Saves badge images.

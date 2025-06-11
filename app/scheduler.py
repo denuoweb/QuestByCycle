@@ -4,7 +4,7 @@ from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.schedulers.base import STATE_RUNNING
 
                                                      
-from app.utils import check_and_send_liaison_emails
+from app.utils.email_utils import check_and_send_liaison_emails
 
 def create_scheduler(app):
     scheduler = BackgroundScheduler(

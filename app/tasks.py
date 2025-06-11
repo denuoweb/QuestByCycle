@@ -17,7 +17,7 @@ def init_queue(app):
 
 def send_email_task(to: str, subject: str, html_content: str, inline_images=None) -> None:
     """Background job to send email."""
-    from app.utils import send_email
+    from app.utils.email_utils import send_email
     send_email(to, subject, html_content, inline_images)
 
 

@@ -2,7 +2,7 @@ import pytest
 from flask import url_for
 
 from app import create_app
-from app.utils import public_media_url, allowed_image_file
+from app.utils.file_uploads import public_media_url, allowed_image_file
 
 @pytest.fixture
 def app():
@@ -38,7 +38,7 @@ def test_save_submission_video_invalid(app, tmp_path):
     """Uploading an invalid video should raise a ValueError."""
     from io import BytesIO
     from werkzeug.datastructures import FileStorage
-    from app.utils import save_submission_video
+    from app.utils.file_uploads import save_submission_video
 
     fake_video = BytesIO(b"not a real video")
     file = FileStorage(stream=fake_video, filename="bad.mp4", content_type="video/mp4")
@@ -51,7 +51,7 @@ def test_save_submission_video_no_ffmpeg(app, monkeypatch):
     """Video saving should bypass conversion if ffmpeg is unavailable."""
     from io import BytesIO
     from werkzeug.datastructures import FileStorage
-    from app.utils import save_submission_video
+    from app.utils.file_uploads import save_submission_video
     import shutil
 
     video_data = BytesIO(b"0" * 100)
@@ -68,7 +68,7 @@ def test_save_submission_image_invalid_extension(app, tmp_path):
     """Uploading a non-image file should raise a ValueError."""
     from io import BytesIO
     from werkzeug.datastructures import FileStorage
-    from app.utils import save_submission_image
+    from app.utils.file_uploads import save_submission_image
 
     fake_file = BytesIO(b"{}")
     file = FileStorage(
@@ -91,7 +91,7 @@ def test_save_submission_image_too_large(app):
     """Images larger than the limit should be rejected."""
     from io import BytesIO
     from werkzeug.datastructures import FileStorage
-    from app.utils import save_submission_image, MAX_IMAGE_BYTES
+    from app.utils.file_uploads import save_submission_image, MAX_IMAGE_BYTES
 
     big_data = BytesIO(b"0" * (MAX_IMAGE_BYTES + 1))
     file = FileStorage(stream=big_data, filename="big.jpg", content_type="image/jpeg")

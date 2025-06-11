@@ -9,7 +9,8 @@ from app.models.user import User, UserIP
 from app.models.game import Game, Sponsor
 from app.models.quest import QuestSubmission
 from app.forms import SponsorForm
-from app.utils import save_sponsor_logo, sanitize_html
+from app.utils.file_uploads import save_sponsor_logo
+from app.utils import sanitize_html
 from app.decorators import require_admin, require_super_admin
 
 admin_bp = Blueprint('admin', __name__)
