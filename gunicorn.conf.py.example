@@ -1,9 +1,13 @@
-command = '/opt/QuestByCycle/venv/bin/gunicorn'
-pythonpath = '/opt/QuestByCycle'
-bind = '127.0.0.1:5000'
+"""Default Gunicorn configuration for QuestByCycle."""
+
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+
+command = "gunicorn"
+pythonpath = str(BASE_DIR)
+bind = "127.0.0.1:5000"
 workers = 1
-user = 'USER'
-group = 'USER'
-loglevel = 'info'
-errorlog = '/opt/QuestByCycle/logs/gunicorn-error.log'
-accesslog = '/opt/QuestByCycle/logs/gunicorn-access.log'
+loglevel = "info"
+errorlog = str(BASE_DIR / "logs" / "gunicorn-error.log")
+accesslog = str(BASE_DIR / "logs" / "gunicorn-access.log")
