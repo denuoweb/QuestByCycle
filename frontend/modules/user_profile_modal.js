@@ -1,5 +1,5 @@
 import { openModal } from './modal_common.js';
-import { getCSRFToken } from '../utils.js';
+import { csrfFetchJson } from '../utils.js';
 import logger from '../logger.js';
 
 export function showUserProfileModal(userId) {
@@ -315,17 +315,13 @@ export function showUserProfileModal(userId) {
         updateFollowButton();
         btn.onclick = async () => {
           const action = following ? 'unfollow' : 'follow';
-          const res = await fetch(`/profile/${data.user.username}/${action}`, {
+          const { status } = await csrfFetchJson(`/profile/${data.user.username}/${action}`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': getCSRFToken()
-            },
-            credentials: 'same-origin'
+            headers: { 'Content-Type': 'application/json' }
           });
 
-          if (!res.ok) {
-            logger.error('Follow toggle failed:', await res.text());
+          if (status !== 200) {
+            logger.error('Follow toggle failed');
             return;
           }
           following = !following;
@@ -416,20 +412,16 @@ function saveProfile(userId) {
   ridingPreferences.forEach(pref => {
     formData.append('riding_preferences', pref);
   });
-  fetch(`/profile/${userId}/edit`, {
+  csrfFetchJson(`/profile/${userId}/edit`, {
     method: 'POST',
-    headers: {
-      'X-CSRFToken': getCSRFToken()
-    },
     body: formData
   })
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) {
-        let msg = `Error: ${data.error}`;
-        if (data.details) {
+    .then(({ json }) => {
+      if (json.error) {
+        let msg = `Error: ${json.error}`;
+        if (json.details) {
           const details = [];
-          Object.values(data.details).forEach(errArr => {
+          Object.values(json.details).forEach(errArr => {
             details.push(errArr.join(', '));
           });
           if (details.length) msg += ` - ${details.join('; ')}`;
@@ -457,17 +449,13 @@ function saveBike(userId) {
   if (bikePictureInput.files.length > 0) {
     formData.append('bike_picture', bikePictureInput.files[0]);
   }
-  fetch(`/profile/${userId}/edit-bike`, {
+  csrfFetchJson(`/profile/${userId}/edit-bike`, {
     method: 'POST',
-    headers: {
-      'X-CSRFToken': getCSRFToken()
-    },
     body: formData
   })
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) {
-        alert(`Error: ${data.error}`);
+    .then(({ json }) => {
+      if (json.error) {
+        alert(`Error: ${json.error}`);
       } else {
         alert('Bike details updated successfully.');
         showUserProfileModal(userId);
@@ -481,19 +469,15 @@ function saveBike(userId) {
 
 
 function deleteSubmission(submissionId, context, userId) {
-  fetch(`/quests/quest/delete_submission/${submissionId}`, {
-    method: 'DELETE',
-    headers: {
-      'X-CSRF-Token': getCSRFToken()
-    }
+  csrfFetchJson(`/quests/quest/delete_submission/${submissionId}`, {
+    method: 'DELETE'
   })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
+    .then(({ json }) => {
+      if (json.success) {
         alert('Submission deleted successfully.');
         if (context === 'profileSubmissions') showUserProfileModal(userId);
       } else {
-        throw new Error(data.message);
+        throw new Error(json.message);
       }
     })
     .catch(err => {
@@ -507,27 +491,12 @@ function deleteAccount() {
     return;
   }
 
-  fetch(`/auth/delete_account`, {
+  csrfFetchJson(`/auth/delete_account`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': getCSRFToken()
-    }
+    headers: { 'Content-Type': 'application/json' }
   })
-    .then(response => {
-      if (response.redirected) {
-        window.location.href = response.url;
-      } else {
-        return response.json();
-      }
-    })
-    .then(data => {
-      if (data && data.error) {
-        throw new Error(data.error);
-      } else {
-        alert('Your account has been successfully deleted.');
-        window.location.href = '/';
-      }
+    .then(() => {
+      window.location.href = '/';
     })
     .catch(err => {
       logger.error('Error deleting account:', err);

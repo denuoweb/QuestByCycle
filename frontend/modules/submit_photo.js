@@ -1,6 +1,6 @@
 
 import { showLoadingModal, hideLoadingModal } from './loading_modal.js';
-import { getCSRFToken } from '../utils.js';
+import { csrfFetchJson } from '../utils.js';
 import logger from '../logger.js';
 
 function initSubmitPhotoForm() {
@@ -36,29 +36,17 @@ function initSubmitPhotoForm() {
 
         const formData = new FormData(submitPhotoForm);
 
-        const csrfToken = getCSRFToken();
-        formData.append('csrf_token', csrfToken);
-
-        fetch(submitPhotoForm.action, {
+        csrfFetchJson(submitPhotoForm.action, {
             method: 'POST',
-            body: formData,
-            credentials: 'same-origin',
-            headers: {
-                'X-CSRF-Token': csrfToken
-            }
+            body: formData
         })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(err => { throw new Error(err.message); });
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                displayFlashMessage(data.message, 'success');
-                window.location.href = data.redirect_url;
+        .then(({ status, json }) => {
+            if (status === 200 && json.success) {
+                displayFlashMessage(json.message, 'success');
+                window.location.href = json.redirect_url;
             } else {
-                displayFlashMessage(data.message, 'error');
+                const msg = json.message || 'Upload failed';
+                displayFlashMessage(msg, 'error');
             }
         })
         .catch(error => {
