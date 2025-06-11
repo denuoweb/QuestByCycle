@@ -2,7 +2,10 @@ import pytest
 from datetime import datetime, timedelta, timezone
 
 from app import create_app, db
-from app.models import Game, User, Quest, QuestSubmission, Badge
+from app.models.game import Game
+from app.models.user import User
+from app.models.quest import Quest, QuestSubmission
+from app.models.badge import Badge
 from app.main import _prepare_quests, _prepare_user_data
 
 

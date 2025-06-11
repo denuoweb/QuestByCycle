@@ -3,7 +3,7 @@
 import pytest
 from tests.helpers import url_for_path
 from app import create_app, db
-from app.models import User
+from app.models.user import User
 from datetime import datetime, timezone
 
 @pytest.fixture

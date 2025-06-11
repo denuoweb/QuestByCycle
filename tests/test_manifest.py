@@ -36,7 +36,10 @@ def test_launch_handler_is_object(client):
 
 
 def test_manifest_shortcuts(client, app):
-    from app.models import db, Game, Quest, User
+    from app.models import db
+    from app.models.game import Game
+    from app.models.quest import Quest
+    from app.models.user import User
     from datetime import datetime, timezone, timedelta
 
     with app.app_context():

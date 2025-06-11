@@ -2,8 +2,8 @@ import pytest
 from urllib.parse import urlparse, parse_qs
 
 from app import create_app, db
-from app.models import User
 from tests.helpers import url_for_path
+from app.models.user import User
 from datetime import datetime, timezone
 from sqlalchemy.exc import SQLAlchemyError
 

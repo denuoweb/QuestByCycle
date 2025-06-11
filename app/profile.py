@@ -55,7 +55,7 @@ def post_profile_message(user_id):
     db.session.commit()
 
                                                                
-    from app.models import Notification
+    from app.models.user import Notification
     follower_ids = [u.id for u in current_user.followers]
     for fid in follower_ids:
         notif = Notification(
@@ -134,7 +134,7 @@ def post_reply(user_id, message_id):
     db.session.commit()
 
                                                      
-    from app.models import Notification
+    from app.models.user import Notification
     follower_ids = [u.id for u in current_user.followers]
     for fid in follower_ids:
         notif = Notification(
