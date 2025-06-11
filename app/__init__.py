@@ -27,6 +27,7 @@ from app.webfinger import webfinger_bp
 from app.notifications import notifications_bp
 from app.push import push_bp
 from .scheduler import create_scheduler, shutdown_scheduler
+from app.tasks import init_queue
 from app.activitypub_utils import ap_bp
 from app.ai import ai_bp
 from app.models import db
@@ -142,6 +143,7 @@ def create_app(config_overrides=None):
 
     if app.config.get("TESTING") and not app.config.get("SERVER_NAME"):
         app.config["SERVER_NAME"] = "localhost:5000"
+        app.config.setdefault("USE_TASK_QUEUE", False)
     else:
         app.config.setdefault("SERVER_NAME", inscopeconfig["main"]["LOCAL_DOMAIN"])
         app.config.setdefault("PREFERRED_URL_SCHEME", "http")
@@ -155,6 +157,7 @@ def create_app(config_overrides=None):
     with app.app_context():
         db.create_all()
         create_super_admin(app)
+        init_queue(app)
 
                             
     app.register_blueprint(auth_bp, url_prefix="/auth")

@@ -60,6 +60,7 @@ def load_config():
                 "PLACEHOLDER_IMAGE", "images/default-placeholder.webp"
             ),
             "SQLALCHEMY_ECHO": _get_env_boolean("SQLALCHEMY_ECHO", False),
+            "USE_TASK_QUEUE": _get_env_boolean("USE_TASK_QUEUE", True),
         },
         "encryption": {
             "DEFAULT_SUPER_ADMIN_USERNAME": _get_env(
@@ -120,6 +121,9 @@ def load_config():
             "VAPID_PUBLIC_KEY": _get_env("VAPID_PUBLIC_KEY", ""),
             "VAPID_PRIVATE_KEY": _get_env("VAPID_PRIVATE_KEY", ""),
             "VAPID_ADMIN_EMAIL": _get_env("VAPID_ADMIN_EMAIL", "push@example.com"),
+        },
+        "redis": {
+            "REDIS_URL": _get_env("REDIS_URL", "redis://localhost:6379/0"),
         },
         "twa": {
             "SHA256_CERT_FINGERPRINT": _get_env("TWA_SHA256_FINGERPRINT", ""),
