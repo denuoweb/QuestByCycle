@@ -223,7 +223,7 @@ def update_user_score(user_id):
 
 
 def save_profile_picture(profile_picture_file, old_filename=None):
-    uploads = current_app.config['main']['UPLOAD_FOLDER']
+    uploads = current_app.config['UPLOAD_FOLDER']
     return save_image_file(profile_picture_file, uploads, old_filename=old_filename)
 
 
@@ -242,7 +242,7 @@ def save_badge_image(image_file):
 
 def save_bicycle_picture(bicycle_picture_file, old_filename=None):
     subdir = os.path.join(
-        current_app.config['main']['UPLOAD_FOLDER'], 'bicycle_pictures'
+        current_app.config['UPLOAD_FOLDER'], 'bicycle_pictures'
     )
     return save_image_file(
         bicycle_picture_file,
