@@ -52,7 +52,7 @@ from app.utils import (
     sanitize_html,
     correct_image_orientation,
 )
-from .config import load_config
+from .config import load_config, AppConfig
 
                    
 logging.basicConfig(level=logging.DEBUG)
@@ -63,7 +63,7 @@ main_bp = Blueprint('main', __name__)
 
 
                     
-config = load_config()
+config: AppConfig = load_config()
 
 
 
