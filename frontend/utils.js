@@ -3,6 +3,11 @@ export function getCSRFToken() {
   return el ? el.getAttribute('content') : '';
 }
 
+export function isDebugMode() {
+  const meta = document.querySelector('meta[name="debug-mode"]');
+  return meta?.getAttribute('content') === 'true';
+}
+
 export async function fetchJson(url, options = {}) {
   const opts = { credentials: 'same-origin', ...options };
   const res = await fetch(url, opts);
@@ -11,7 +16,10 @@ export async function fetchJson(url, options = {}) {
 }
 
 export async function csrfFetchJson(url, options = {}) {
-  const headers = { 'X-CSRF-Token': getCSRFToken(), ...(options.headers || {}) };
+  const headers = { ...(options.headers || {}) };
+  if (!isDebugMode()) {
+    headers['X-CSRF-Token'] = getCSRFToken();
+  }
   return fetchJson(url, { ...options, headers });
 }
 
@@ -27,6 +35,7 @@ export function escapeHTML(str) {
 // backwards compatibility
 if (typeof window !== 'undefined') {
   window.getCSRFToken = getCSRFToken;
+  window.isDebugMode = isDebugMode;
   window.fetchJson = fetchJson;
   window.csrfFetchJson = csrfFetchJson;
   window.escapeHTML = escapeHTML;

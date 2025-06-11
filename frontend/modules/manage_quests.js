@@ -1,4 +1,4 @@
-import { getCSRFToken } from '../utils.js';
+import { getCSRFToken, fetchJson, csrfFetchJson } from '../utils.js';
 import logger from '../logger.js';
 
     let game_Id = null;
@@ -47,17 +47,12 @@ import logger from '../logger.js';
 
     function addQuest() {
         const formData = new FormData(document.getElementById('addQuestForm'));
-        fetch(`/quests/game/${game_Id}/add_quest`, {
+        csrfFetchJson(`/quests/game/${game_Id}/add_quest`, {
             method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-Token': getCSRFToken(),
-                'Accept': 'application/json'
-            },
+            body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+        .then(({ json }) => {
+            if (json.success) {
                 alert('Quest added successfully.');
                 loadQuests(game_Id);
             } else {
@@ -87,34 +82,15 @@ import logger from '../logger.js';
         if (confirm('Are you sure you want to delete all quests? This action cannot be undone.')) {
             
             // Fetch the game title before showing the second confirmation pop-up
-            fetch(`/quests/game/${game_Id}/get_title`, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                },
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Failed to fetch game title');
-                return response.json();
-            })
-            .then(data => {
+            fetchJson(`/quests/game/${game_Id}/get_title`)
+            .then(({ json: data }) => {
                 const gameTitle = data.title;
                 
                 // Second confirmation pop-up with game title
                 if (confirm(`This will delete all quests for the game: "${gameTitle}". Are you absolutely sure? This action cannot be undone.`)) {
                     // Proceed with deletion if the user confirms
-                    fetch(`/quests/game/${game_Id}/delete_all`, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-Token': getCSRFToken(),
-                            'Accept': 'application/json',
-                        },
-                    })
-                    .then(response => {
-                        if (!response.ok) throw new Error('Failed to delete all quests');
-                        return response.json();
-                    })
-                    .then(data => {
+                    csrfFetchJson(`/quests/game/${game_Id}/delete_all`, { method: 'DELETE' })
+                    .then(({ json: data }) => {
                         if (data.success) {
                             alert('All quests deleted successfully');
                             loadQuests(game_Id);
@@ -276,21 +252,17 @@ import logger from '../logger.js';
 
 
 
-        fetch(`/quests/quest/${questId}/update`, {
+        csrfFetchJson(`/quests/quest/${questId}/update`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': getCSRFToken(),
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(questData),
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+        .then(({ json }) => {
+            if (json.success) {
                 alert('Quest updated successfully.');
                 loadQuests(game_Id);
             } else {
-                alert('Failed to update quest. Error: ' + data.message);
+                alert('Failed to update quest. Error: ' + json.message);
             }
         })
         .catch(error => {
@@ -300,17 +272,8 @@ import logger from '../logger.js';
     }
 
     function loadQuests(game_Id) {
-        fetch(`/quests/game/${game_Id}/quests`, {
-            method: 'GET',
-            headers: {'Content-Type': 'application/json'}
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
+        fetchJson(`/quests/game/${game_Id}/quests`)
+        .then(({ json: data }) => {
             const questsBody = document.getElementById('questsBody');
             questsBody.innerHTML = '';
 
@@ -363,23 +326,13 @@ import logger from '../logger.js';
     }
 
     function deleteQuest(questId) {
-        fetch(`/quests/quest/${questId}/delete`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-Token': getCSRFToken(),
-                'Accept': 'application/json',
-            },
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Failed to delete quest');
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
+        csrfFetchJson(`/quests/quest/${questId}/delete`, { method: 'DELETE' })
+        .then(({ json }) => {
+            if (json.success) {
                 alert('Quest deleted successfully');
                 loadQuests(game_Id);
             } else {
-                alert(`Failed to delete quest: ${data.message}`);
+                alert(`Failed to delete quest: ${json.message}`);
             }
         })
         .catch(error => {
@@ -392,26 +345,16 @@ import logger from '../logger.js';
         const form = document.getElementById('importQuestsForm');
         const formData = new FormData(form);
 
-        fetch(`/quests/game/${game_Id}/import_quests`, {
+        csrfFetchJson(`/quests/game/${game_Id}/import_quests`, {
             method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-Token': getCSRFToken(),
-                'Accept': 'application/json',
-            },
+            body: formData
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success && data.redirectUrl) {
+        .then(({ json }) => {
+            if (json.success && json.redirectUrl) {
                 alert('Quests imported successfully');
                 loadQuests(game_Id);
             } else {
-                alert('Failed to import quests: ' + data.message);
+                alert('Failed to import quests: ' + json.message);
             }
         })
         .catch(error => {

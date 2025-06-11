@@ -1,6 +1,6 @@
 import { openModal } from './modal_common.js';
 import { resetModalContent } from './modal_common.js';
-import { getCSRFToken } from '../utils.js';
+import { getCSRFToken, csrfFetchJson, fetchJson } from '../utils.js';
 import { showSubmissionDetail } from './submission_detail_modal.js';
 import logger from '../logger.js';
 
@@ -25,9 +25,8 @@ const PLACEHOLDER_IMAGE = document
 export function openQuestDetailModal(questId) {
   resetModalContent();
 
-  fetch(`/quests/detail/${questId}/user_completion`, { credentials: 'same-origin' })
-    .then(r => r.json())
-    .then(data => {
+  fetchJson(`/quests/detail/${questId}/user_completion`)
+    .then(({ json: data }) => {
       const { quest, userCompletion, canVerify, nextEligibleTime } = data;
       if (
         !populateQuestDetails(
@@ -60,9 +59,8 @@ export function openQuestDetailModal(questId) {
 }
 
 function refreshQuestDetailModal(questId) {
-  fetch(`/quests/detail/${questId}/user_completion`, { credentials: 'same-origin' })
-    .then(r => r.json())
-    .then(data => {
+  fetchJson(`/quests/detail/${questId}/user_completion`)
+    .then(({ json: data }) => {
       const { quest, userCompletion, canVerify, nextEligibleTime } = data;
       if (
         !populateQuestDetails(
@@ -446,25 +444,19 @@ async function submitQuestDetails(event, questId) {
     const formData = new FormData(event.target);
     formData.append('user_id', CURRENT_USER_ID);
 
-    const res = await fetch(`/quests/quest/${questId}/submit`, {
-      method:      'POST',
-      body:        formData,
-      credentials: 'same-origin',
-      headers:     { 'X-CSRFToken': CSRF_TOKEN }
+    const { status, json: data } = await csrfFetchJson(`/quests/quest/${questId}/submit`, {
+      method: 'POST',
+      body: formData
     });
 
-    if (!res.ok) {
-      if (res.status === 403) {
-        const d = await res.json();
-        if (d.message === 'This quest cannot be completed outside of the game dates') {
-          throw new Error('The game has ended and you can no longer submit quests. Join a new game in the game dropdown menu.');
-        }
-        throw new Error(d.message || `Server responded with status ${res.status}`);
+    if (status !== 200) {
+      if (status === 403 && data.message === 'This quest cannot be completed outside of the game dates') {
+        throw new Error('The game has ended and you can no longer submit quests. Join a new game in the game dropdown menu.');
       }
-      throw new Error(`Server responded with status ${res.status}`);
+      throw new Error(data.message || `Server responded with status ${status}`);
     }
 
-    const data = await res.json();
+    if (!data.success) throw new Error(data.message);
     if (!data.success) throw new Error(data.message);
 
     updateScoreboard(data.total_points);
@@ -487,12 +479,7 @@ async function submitQuestDetails(event, questId) {
  **********************************************************************/
 async function fetchQuestSubmissions(questId) {
   try {
-    const res = await fetch(`/quests/quest/${questId}/submissions`, {
-      method:      'GET',
-      credentials: 'same-origin'
-    });
-    if (!res.ok) throw new Error(`Server responded with status ${res.status}`);
-    const submissions = await res.json();
+    const { json: submissions } = await fetchJson(`/quests/quest/${questId}/submissions`);
 
     const twitterLink   = document.getElementById('twitterLink');
     const facebookLink  = document.getElementById('facebookLink');
