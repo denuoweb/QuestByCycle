@@ -9,7 +9,7 @@ frontend.  Python packages are managed via `pyproject.toml`.  Tests are located
 in the `tests/` directory and use `pytest`.  Documentation lives in `docs/`.
 
 ## Coding Guidelines
-- Use **Python 3.11** features.
+- Use **Python 3.13** features.
 - Follow PEP 8 style with 4 space indents.
 - Keep line length under **120 characters**.
 - Prefer double quotes for strings unless single quotes improve readability.
