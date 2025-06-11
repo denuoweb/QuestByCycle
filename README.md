@@ -1,8 +1,24 @@
-[![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/en/stable/quickstart/)  [![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)]([https://www.postgresql.org/](https://www.postgresql.org/docs/current/index.html))  [![Gunicorn](https://img.shields.io/badge/gunicorn-%298729.svg?style=for-the-badge&logo=gunicorn&logoColor=white)](https://docs.gunicorn.org/en/stable/)
-[![Python](https://img.shields.io/badge/python-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)  [![Git](https://img.shields.io/badge/git-F05032.svg?style=for-the-badge&logo=git&logoColor=white)](https://git-scm.com/)  [![FFmpeg](https://img.shields.io/badge/FFmpeg-007808.svg?style=for-the-badge&logo=ffmpeg&logoColor=white)](https://ffmpeg.org/)  [![Poetry](https://img.shields.io/badge/Poetry-60A5FA.svg?style=for-the-badge&logo=poetry&logoColor=white)](https://python-poetry.org/)  [![NGINX](https://img.shields.io/badge/NGINX-009639.svg?style=for-the-badge&logo=nginx&logoColor=white)](https://www.nginx.com/)  [![Let's Encrypt](https://img.shields.io/badge/Let%27s_Encrypt-003A70.svg?style=for-the-badge&logo=letsencrypt&logoColor=white)](https://letsencrypt.org/)  [![UFW](https://img.shields.io/badge/UFW-000000.svg?style=for-the-badge&logo=ufw&logoColor=white)](https://help.ubuntu.com/community/UFW)  [![Postfix](https://img.shields.io/badge/Postfix-E60033.svg?style=for-the-badge&logo=postfix&logoColor=white)](http://www.postfix.org/)  [![GeoIP2](https://img.shields.io/badge/GeoIP2-0072B5.svg?style=for-the-badge&logo=maxmind&logoColor=white)](https://www.maxmind.com/en/geoip2-services-and-databases)  [![Sass](https://img.shields.io/badge/Sass-CC6699.svg?style=for-the-badge&logo=sass&logoColor=white)](https://sass-lang.com/)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/denuoweb/QuestByCycle)
 
 # QuestByCycle
+
+[![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/en/stable/quickstart/) [![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)]([https://www.postgresql.org/](https://www.postgresql.org/docs/current/index.html)) [![Gunicorn](https://img.shields.io/badge/gunicorn-%298729.svg?style=for-the-badge&logo=gunicorn&logoColor=white)](https://docs.gunicorn.org/en/stable/)
+[![Python](https://img.shields.io/badge/python-3776AB.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/) [![Git](https://img.shields.io/badge/git-F05032.svg?style=for-the-badge&logo=git&logoColor=white)](https://git-scm.com/) [![FFmpeg](https://img.shields.io/badge/FFmpeg-007808.svg?style=for-the-badge&logo=ffmpeg&logoColor=white)](https://ffmpeg.org/)
+[![Poetry](https://img.shields.io/badge/Poetry-60A5FA.svg?style=for-the-badge&logo=poetry&logoColor=white)](https://python-poetry.org/) [![NGINX](https://img.shields.io/badge/NGINX-009639.svg?style=for-the-badge&logo=nginx&logoColor=white)](https://www.nginx.com/)
+[![Let's Encrypt](https://img.shields.io/badge/Let%27s_Encrypt-003A70.svg?style=for-the-badge&logo=letsencrypt&logoColor=white)](https://letsencrypt.org/) [![UFW](https://img.shields.io/badge/UFW-000000.svg?style=for-the-badge&logo=ufw&logoColor=white)](https://help.ubuntu.com/community/UFW) [![Postfix](https://img.shields.io/badge/Postfix-E60033.svg?style=for-the-badge&logo=postfix&logoColor=white)](http://www.postfix.org/)
+[![GeoIP2](https://img.shields.io/badge/GeoIP2-0072B5.svg?style=for-the-badge&logo=maxmind&logoColor=white)](https://www.maxmind.com/en/geoip2-services-and-databases) [![Sass](https://img.shields.io/badge/Sass-CC6699.svg?style=for-the-badge&logo=sass&logoColor=white)](https://sass-lang.com/) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/denuoweb/QuestByCycle)
+
+A gamified bicycling platform built with Flask.
+
+## Table of Contents
+- [Overview](#overview)
+- [Package Icons](#package-icons)
+- [Features](#features)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Quick Developer Setup](#quick-developer-setup)
+  - [Debian 12 Server Setup (Production)](#debian-12-server-setup-production)
+- [Contributing](#contributing)
+- [Acknowledgments](#acknowledgments)
 
 ## Overview
 
