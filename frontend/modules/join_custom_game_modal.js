@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
-    const hasJoined = modalEl.dataset.hasJoined === "1";
+    const hasJoined = modalEl.dataset.hasJoined === '1';
     const joinDemoUrl = modalEl.dataset.joinDemoUrl;
 
     let joinedCustomGame = false;

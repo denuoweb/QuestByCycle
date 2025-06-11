@@ -50,7 +50,7 @@ function initSubmitPhotoForm() {
             }
         })
         .catch(error => {
-            logger.error("Submission error:", error);
+            logger.error('Submission error:', error);
             displayFlashMessage('Error during submission: ' + error.message, 'error');
         })
         .finally(() => {

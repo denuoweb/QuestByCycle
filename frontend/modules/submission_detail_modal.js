@@ -298,8 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // post a reply
   $('#postReplyBtn').addEventListener('click', () => {
     const id      = $('#submissionDetailModal').dataset.submissionId;
-    const textarea= $('#submissionReplyEdit');
-    const btn     = $('#postReplyBtn');
+    const textarea = $('#submissionReplyEdit');
     const content = textarea.value.trim();
     if(!id||!content) return;
 

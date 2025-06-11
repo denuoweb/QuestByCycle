@@ -1,33 +1,33 @@
 // The version of the cache
-const VERSION = "v11"; // Update this version number when changes are made
+const VERSION = 'v11'; // Update this version number when changes are made
 const CACHE_NAME = `questbycycle-${VERSION}`;
 
 // List of static resources to cache
 const APP_STATIC_RESOURCES = [
   // Root
-  "/",
-  "/offline.html",
+  '/',
+  '/offline.html',
 
   // CSS Files
-  "/static/dist/style.css",
+  '/static/dist/style.css',
 
   // JavaScript bundle
-  "/static/dist/main.js",
+  '/static/dist/main.js',
 
   // Icons
-  "/static/icons/icon_48x48.webp",
-  "/static/icons/icon_96x96.webp",
-  "/static/icons/icon_192x192.webp",
-  "/static/icons/icon_512x512.webp",
-  "/static/icons/apple-touch-icon-180x180.png",
+  '/static/icons/icon_48x48.webp',
+  '/static/icons/icon_96x96.webp',
+  '/static/icons/icon_192x192.webp',
+  '/static/icons/icon_512x512.webp',
+  '/static/icons/apple-touch-icon-180x180.png',
 
   // Images (Add specific files if needed)
-  "/static/images/welcomeQuestByCycle.webp",
+  '/static/images/welcomeQuestByCycle.webp',
 ];
 
 // -------------------- Background Sync Helpers --------------------
-const DB_NAME = "questbycycle-sync";
-const STORE_NAME = "queued";
+const DB_NAME = 'questbycycle-sync';
+const STORE_NAME = 'queued';
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -43,7 +43,7 @@ function openDB() {
 async function queueRequest(data) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
+    const tx = db.transaction(STORE_NAME, 'readwrite');
     tx.objectStore(STORE_NAME).add(data);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
@@ -53,7 +53,7 @@ async function queueRequest(data) {
 async function iterateRequests(callback) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readonly");
+    const tx = db.transaction(STORE_NAME, 'readonly');
     const store = tx.objectStore(STORE_NAME);
     const cursorReq = store.openCursor();
     cursorReq.onsuccess = async (event) => {
@@ -72,7 +72,7 @@ async function iterateRequests(callback) {
 async function deleteRequest(key) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
+    const tx = db.transaction(STORE_NAME, 'readwrite');
     tx.objectStore(STORE_NAME).delete(key);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
@@ -89,28 +89,28 @@ async function processQueue() {
       });
       await deleteRequest(key);
     } catch (err) {
-      console.error("Background sync failed for", req.url, err);
+      console.error('Background sync failed for', req.url, err);
     }
   });
 }
 
 // Install event
-self.addEventListener("install", (event) => {
+self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
       try {
         await cache.addAll(APP_STATIC_RESOURCES);
-        console.log("Resources cached successfully!");
+        console.log('Resources cached successfully!');
       } catch (error) {
-        console.error("Failed to cache resources:", error);
+        console.error('Failed to cache resources:', error);
       }
     })()
   );
 });
 
 // Activate event
-self.addEventListener("activate", (event) => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       const cacheKeys = await caches.keys();
@@ -136,18 +136,18 @@ self.addEventListener("activate", (event) => {
 function notifyClientsAboutUpdate() {
   self.clients.matchAll().then((clients) => {
     clients.forEach((client) => {
-      client.postMessage({ type: "UPDATE_AVAILABLE" });
+      client.postMessage({ type: 'UPDATE_AVAILABLE' });
     });
   });
 }
 
 // Determine if a request should be cached
 function shouldCacheRequest(request) {
-  if (request.method !== "GET") {
+  if (request.method !== 'GET') {
     return false;
   }
-  const acceptHeader = request.headers.get("Accept") || "";
-  if (acceptHeader.includes("application/json")) {
+  const acceptHeader = request.headers.get('Accept') || '';
+  if (acceptHeader.includes('application/json')) {
     return false;
   }
   const url = new URL(request.url);
@@ -155,31 +155,31 @@ function shouldCacheRequest(request) {
 }
 
 // Fetch event with offline fallback
-self.addEventListener("fetch", (event) => {
+self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
   // Skip cross-origin requests entirely so the browser handles them.
   if (requestUrl.origin !== self.location.origin) {
     return;
   }
   // Queue non-GET requests when offline
-  if (["POST", "PUT", "DELETE"].includes(event.request.method)) {
+  if (['POST', 'PUT', 'DELETE'].includes(event.request.method)) {
     event.respondWith(
       (async () => {
         try {
           return await fetch(event.request.clone());
-        } catch (err) {
+        } catch {
           const headers = {};
           for (const [k, v] of event.request.headers.entries()) {
             headers[k] = v;
           }
           const body = await event.request.clone().text();
           await queueRequest({ url: event.request.url, method: event.request.method, headers, body });
-          if ("sync" in self.registration) {
-            await self.registration.sync.register("sync-requests");
+          if ('sync' in self.registration) {
+            await self.registration.sync.register('sync-requests');
           }
           return new Response(JSON.stringify({ queued: true }), {
             status: 202,
-            headers: { "Content-Type": "application/json" },
+            headers: { 'Content-Type': 'application/json' },
           });
         }
       })()
@@ -187,7 +187,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (event.request.mode === "navigate") {
+  if (event.request.mode === 'navigate') {
     event.respondWith(
       (async () => {
         try {
@@ -195,9 +195,9 @@ self.addEventListener("fetch", (event) => {
           const cache = await caches.open(CACHE_NAME);
           cache.put(event.request, networkResponse.clone());
           return networkResponse;
-        } catch (_) {
+        } catch {
           const cached = await caches.match(event.request);
-          return cached || caches.match("/offline.html");
+          return cached || caches.match('/offline.html');
         }
       })()
     );
@@ -217,13 +217,13 @@ self.addEventListener("fetch", (event) => {
           try {
             cache.put(event.request, networkResponse.clone());
           } catch (err) {
-            console.error("Cache put failed:", err);
+            console.error('Cache put failed:', err);
           }
         }
         return networkResponse;
       } catch (error) {
-        console.error("Fetch failed; returning offline page instead.", error);
-        const offlineResponse = await caches.match("/offline.html");
+        console.error('Fetch failed; returning offline page instead.', error);
+        const offlineResponse = await caches.match('/offline.html');
         return offlineResponse || Response.error();
       }
     })()
@@ -231,15 +231,15 @@ self.addEventListener("fetch", (event) => {
 });
 
 // Triggered when network becomes available
-self.addEventListener("sync", (event) => {
-  if (event.tag === "sync-requests") {
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-requests') {
     event.waitUntil(processQueue());
   }
 });
 
 // Handle messages from clients
-self.addEventListener("message", (event) => {
-  if (event.data.type === "SKIP_WAITING") {
+self.addEventListener('message', (event) => {
+  if (event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
@@ -247,45 +247,45 @@ self.addEventListener("message", (event) => {
 // ---------------------------------------------------------------------------
 // Background sync to refresh notifications
 // ---------------------------------------------------------------------------
-self.addEventListener("sync", (event) => {
-  if (event.tag === "sync-notifications") {
-    event.waitUntil(fetch("/notifications/unread_count"));
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-notifications') {
+    event.waitUntil(fetch('/notifications/unread_count'));
   }
 });
 
 // ---------------------------------------------------------------------------
 // Periodic background sync for notification count
 // ---------------------------------------------------------------------------
-self.addEventListener("periodicsync", (event) => {
-  if (event.tag === "periodic-notifications") {
-    event.waitUntil(fetch("/notifications/unread_count"));
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'periodic-notifications') {
+    event.waitUntil(fetch('/notifications/unread_count'));
   }
 });
 
 // ---------------------------------------------------------------------------
 // Push notifications support
 // ---------------------------------------------------------------------------
-self.addEventListener("push", (event) => {
+self.addEventListener('push', (event) => {
   let data = {};
   if (event.data) {
     try {
       data = event.data.json();
-    } catch (e) {
+    } catch {
       data = { body: event.data.text() };
     }
   }
-  const title = data.title || "QuestByCycle";
+  const title = data.title || 'QuestByCycle';
   const options = {
-    body: data.body || "",
-    icon: "/static/icons/icon_96x96.webp",
+    body: data.body || '',
+    icon: '/static/icons/icon_96x96.webp',
     data,
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-self.addEventListener("notificationclick", (event) => {
+self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow("/notifications/"));
+  event.waitUntil(clients.openWindow('/notifications/'));
   const url = event.notification.data && event.notification.data.url;
   if (url) {
     event.waitUntil(clients.openWindow(url));

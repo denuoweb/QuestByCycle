@@ -40,22 +40,13 @@ const updateMeter = async gameId => {
   }
 };
 
-const previewFile = () => {
-  const preview = document.getElementById('profileImageDisplay');
-  const file    = document.querySelector('input[type=file]')?.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => { preview.src = reader.result; };
-  reader.readAsDataURL(file);
-};
 
 function updateGameName() {
-  const gameHolder = document.getElementById("game_IdHolder");
-  const gameNameHeader = document.getElementById("gameNameHeader");
+  const gameHolder = document.getElementById('game_IdHolder');
+  const gameNameHeader = document.getElementById('gameNameHeader');
   if (!gameHolder || !gameNameHeader) return;
 
-  const gameId = gameHolder.getAttribute("data-game-id");
+  const gameId = gameHolder.getAttribute('data-game-id');
 
   fetch(`/games/get_game/${gameId}`, { credentials: 'same-origin' })
     .then(response => {
@@ -64,18 +55,18 @@ function updateGameName() {
           `Failed fetching game name; URL returned status ${response.status} (${response.statusText})`
         );
         // show a user-friendly message in the header
-        gameNameHeader.textContent = "Error Loading Game";
+        gameNameHeader.textContent = 'Error Loading Game';
         // still throw so downstream .catch() will run
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       return response.json();
     })
     .then(data => {
-      gameNameHeader.textContent = data.name || "Game Not Found";
+      gameNameHeader.textContent = data.name || 'Game Not Found';
     })
     .catch(error => {
-      logger.error("Error retrieving game name:", error);
-      gameNameHeader.textContent = "Error Loading Game";
+      logger.error('Error retrieving game name:', error);
+      gameNameHeader.textContent = 'Error Loading Game';
     });
 }
 

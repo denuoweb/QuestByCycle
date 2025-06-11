@@ -110,7 +110,7 @@ function lazyLoadImages() {
 }
 
 function populateQuestDetails(quest, userCompletionCount, canVerify, questId, nextEligibleTime) {
-    const completeText = userCompletionCount >= quest.completion_limit ? " - complete" : "";
+    const completeText = userCompletionCount >= quest.completion_limit ? ' - complete' : '';
     const elements = {
         'modalQuestTitle': document.getElementById('modalQuestTitle'),
         'modalQuestDescription': document.getElementById('modalQuestDescription'),
@@ -149,16 +149,16 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
     }
     switch (quest.verification_type) {
         case 'photo_comment':
-            elements['modalQuestVerificationType'].innerText = "Must upload a photo to earn points! Comment optional.";
+            elements['modalQuestVerificationType'].innerText = 'Must upload a photo to earn points! Comment optional.';
             break;
         case 'photo':
-            elements['modalQuestVerificationType'].innerText = "Must upload a photo to earn points!";
+            elements['modalQuestVerificationType'].innerText = 'Must upload a photo to earn points!';
             break;
         case 'comment':
-            elements['modalQuestVerificationType'].innerText = "Must upload a comment to earn points!";
+            elements['modalQuestVerificationType'].innerText = 'Must upload a comment to earn points!';
             break;
         case 'qr_code':
-            elements['modalQuestVerificationType'].innerText = "Find the QR code and post a photo to earn points!";
+            elements['modalQuestVerificationType'].innerText = 'Find the QR code and post a photo to earn points!';
             break;
         default:
             elements['modalQuestVerificationType'].innerText = 'Not specified';
@@ -178,11 +178,11 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
         elements['modalCountdown'].innerText = `Next eligible time: ${nextAvailableTime.toLocaleString()}`;
         elements['modalCountdown'].style.color = 'red';
     } else {
-        elements['modalCountdown'].innerText = "You are currently eligible to verify!";
+        elements['modalCountdown'].innerText = 'You are currently eligible to verify!';
         elements['modalCountdown'].style.color = 'green';
     }
 
-    manageVerificationSection(questId, canVerify, quest.verification_type, nextEligibleTime);
+    manageVerificationSection(questId, canVerify, quest.verification_type);
     return true;
 }
 
@@ -195,7 +195,7 @@ function ensureDynamicElementsExistAndPopulate(quest, userCompletionCount, nextE
 
     const dynamicElements = [
         { id: 'modalQuestCompletions', value: `${userCompletionCount || 0}` },
-        { id: 'modalCountdown', value: "" }
+        { id: 'modalCountdown', value: '' }
     ];
 
     dynamicElements.forEach(elem => {
@@ -219,10 +219,10 @@ function updateCountdownElement(countdownElement, nextEligibleTime, canVerify) {
             const timeDiffMs = nextTime - now;
             countdownElement.innerText = `Next eligible time: ${formatTimeDiff(timeDiffMs)}`;
         } else {
-            countdownElement.innerText = "You are currently eligible to verify!";
+            countdownElement.innerText = 'You are currently eligible to verify!';
         }
     } else {
-        countdownElement.innerText = "You are currently eligible to verify!";
+        countdownElement.innerText = 'You are currently eligible to verify!';
     }
 }
 
@@ -234,7 +234,7 @@ function formatTimeDiff(ms) {
     return `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
 
-function manageVerificationSection(questId, canVerify, verificationType, nextEligibleTime) {
+function manageVerificationSection(questId, canVerify, verificationType) {
     const userQuestData = document.querySelector('.user-quest-data');
     if (!userQuestData) {
         logger.error('Parent element .user-quest-data not found');
@@ -336,17 +336,17 @@ function getVerificationFormHTML(verificationType, questId) {
 
     /* ───────────────────────────────── QR CODE ──────────────────────────── */
     case 'qr_code':
-      formHTML += `<p class="epic-message">Find and scan the QR code. No submission required here.</p>`;
+      formHTML += '<p class="epic-message">Find and scan the QR code. No submission required here.</p>';
       break;
 
     /* ─────────────────────────────────  PAUSE  ──────────────────────────── */
     case 'pause':
-      formHTML += `<p class="epic-message">Quest is currently paused.</p>`;
+      formHTML += '<p class="epic-message">Quest is currently paused.</p>';
       break;
 
     /* ───────────────────────────── DEFAULT / ERROR ──────────────────────── */
     default:
-      formHTML += `<p class="epic-message">Submission requirements are not set correctly.</p>`;
+      formHTML += '<p class="epic-message">Submission requirements are not set correctly.</p>';
       break;
   }
 
@@ -356,36 +356,22 @@ function getVerificationFormHTML(verificationType, questId) {
 }
 
 
-function toggleVerificationForm(questId) {
-    const verifyForm = document.getElementById(`verifyQuestForm-${questId}`);
-    verifyForm.style.display = verifyForm.style.display === 'none' ? 'block' : 'none';
-}
-
 function setupSubmissionForm(questId) {
     const container = document.getElementById(`verifyQuestForm-${questId}`);
     if (!container) {
-        logger.error("Form container not found for quest ID:", questId);
+        logger.error('Form container not found for quest ID:', questId);
         return;
     }
 
     const form = container.querySelector('form');
     if (!form) {
-        logger.error("Form element missing for quest ID:", questId);
+        logger.error('Form element missing for quest ID:', questId);
         return;
     }
 
     form.addEventListener('submit', function(event) {
         submitQuestDetails(event, questId);
     });
-}
-
-function verifyQuest(questId) {
-    const verifyForm = document.getElementById(`verifyQuestForm-${questId}`);
-    if (verifyForm.style.display === 'none' || verifyForm.style.display === '') {
-        verifyForm.style.display = 'block';
-    } else {
-        verifyForm.style.display = 'none';
-    }
 }
 
 function toggleLink(el, url) {
@@ -551,15 +537,15 @@ function isValidImageUrl(url) {
         return false;
     }
     try {
-        if (url.startsWith("/")) {
+        if (url.startsWith('/')) {
             return true;
         }
         const parsedUrl = new URL(url);
-        if (parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:") {
+        if (parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:') {
             const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
             return allowedExtensions.some(ext => parsedUrl.pathname.toLowerCase().endsWith(ext));
         }
-    } catch (e) {
+    } catch {
         logger.error(`Invalid URL detected: ${url}`);
         return false;
     }
@@ -628,9 +614,9 @@ function distributeImages(images) {
 }
 
 function toggleContent(element) {
-    const contents = element.querySelectorAll("span, img");
+    const contents = element.querySelectorAll('span, img');
     contents.forEach(content => {
-        content.classList.toggle("hidden");
+        content.classList.toggle('hidden');
     });
 }
 

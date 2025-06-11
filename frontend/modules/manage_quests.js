@@ -1,13 +1,13 @@
-import { getCSRFToken, fetchJson, csrfFetchJson } from '../utils.js';
+import { fetchJson, csrfFetchJson } from '../utils.js';
 import logger from '../logger.js';
 
     let game_Id = null;
     const VerificationTypes = {
-        qr_code: "QR Code",
-        photo: "Photo Upload",
-        comment: "Comment",
-        photo_comment: "Photo Upload and Comment",
-        video: "Video Upload"
+        qr_code: 'QR Code',
+        photo: 'Photo Upload',
+        comment: 'Comment',
+        photo_comment: 'Photo Upload and Comment',
+        video: 'Video Upload'
     };
 
     let badges = [];  // Define badges globally
@@ -45,22 +45,6 @@ import logger from '../logger.js';
         }
     }
 
-    function addQuest() {
-        const formData = new FormData(document.getElementById('addQuestForm'));
-        csrfFetchJson(`/quests/game/${game_Id}/add_quest`, {
-            method: 'POST',
-            body: formData
-        })
-        .then(({ json }) => {
-            if (json.success) {
-                alert('Quest added successfully.');
-                loadQuests(game_Id);
-            } else {
-                alert('Failed to add quest');
-            }
-        })
-        .catch(error => logger.error('Error:', error));
-    }
 
     function editQuest(questId) {
         const card = document.querySelector(`#quest-${questId}`);
@@ -73,7 +57,7 @@ import logger from '../logger.js';
         processVerification(card);
         processFrequency(card);
         processBadge(card);
-        processEditableFields(card, originalData);
+        processEditableFields(card);
         setupEditAndCancelButtons(card, questId, originalData);
     }
 
@@ -129,9 +113,9 @@ import logger from '../logger.js';
         const currentFrequencyValue = frequencyElement.getAttribute('data-value').toLowerCase();
         let frequencySelectHTML = '<select name="frequency" class="editable-select">';
         const frequencyOptions = {
-            daily: "Daily",
-            weekly: "Weekly",
-            monthly: "Monthly",
+            daily: 'Daily',
+            weekly: 'Weekly',
+            monthly: 'Monthly',
         };
         Object.entries(frequencyOptions).forEach(([key, display]) => {
             const isSelected = (currentFrequencyValue === key.toLowerCase()) ? 'selected' : '';
@@ -153,17 +137,17 @@ import logger from '../logger.js';
         badgeCell.innerHTML = badgeSelectHTML;
     }
 
-    function processEditableFields(card, originalData) {
+    function processEditableFields(card) {
         const editableFields = [
-            { name: "title", type: "text" },
-            { name: "description", type: "textarea" },
-            { name: "tips", type: "textarea" },
-            { name: "points", type: "number" },
-            { name: "badge_awarded", type: "number" },
-            { name: "completion_limit", type: "number" },
-            { name: "category", type: "text" },
-            { name: "enabled", type: "select", options: ["Yes", "No"] },
-            { name: "is_sponsored", type: "select", options: ["Yes", "No"] },
+            { name: 'title', type: 'text' },
+            { name: 'description', type: 'textarea' },
+            { name: 'tips', type: 'textarea' },
+            { name: 'points', type: 'number' },
+            { name: 'badge_awarded', type: 'number' },
+            { name: 'completion_limit', type: 'number' },
+            { name: 'category', type: 'text' },
+            { name: 'enabled', type: 'select', options: ['Yes', 'No'] },
+            { name: 'is_sponsored', type: 'select', options: ['Yes', 'No'] },
         ];
 
         editableFields.forEach(field => {
@@ -177,11 +161,11 @@ import logger from '../logger.js';
         let currentValue = cell.getAttribute('data-value') || cell.innerHTML.trim();
         let inputElement;
 
-        if (field.type === "select") {
-            inputElement = document.createElement("select");
+        if (field.type === 'select') {
+            inputElement = document.createElement('select');
             inputElement.name = field.name;
             field.options.forEach(option => {
-                const optionElement = document.createElement("option");
+                const optionElement = document.createElement('option');
                 optionElement.value = option;
                 optionElement.text = option;
                 if (currentValue === optionElement.text) {
@@ -189,12 +173,12 @@ import logger from '../logger.js';
                 }
                 inputElement.appendChild(optionElement);
             });
-        } else if (field.type === "textarea") {
-            inputElement = document.createElement("textarea");
+        } else if (field.type === 'textarea') {
+            inputElement = document.createElement('textarea');
             inputElement.name = field.name;
             inputElement.value = currentValue;
         } else {
-            inputElement = document.createElement("input");
+            inputElement = document.createElement('input');
             inputElement.type = field.type;
             inputElement.name = field.name;
             inputElement.value = currentValue;
@@ -206,13 +190,13 @@ import logger from '../logger.js';
     }
 
     function setupEditAndCancelButtons(card, questId, originalData) {
-        const editButton = card.querySelector(".edit-button");
-        editButton.innerText = "Save";
+        const editButton = card.querySelector('.edit-button');
+        editButton.innerText = 'Save';
         editButton.onclick = () => saveQuest(questId);
 
-        const cancelButton = document.createElement("button");
-        cancelButton.innerText = "Cancel";
-        cancelButton.className = "btn btn-secondary ms-2 cancel-button";
+        const cancelButton = document.createElement('button');
+        cancelButton.innerText = 'Cancel';
+        cancelButton.className = 'btn btn-secondary ms-2 cancel-button';
         cancelButton.onclick = () => {
             cancelEditQuest(card, originalData, editButton, questId);
         };
@@ -228,9 +212,9 @@ import logger from '../logger.js';
             }
         });
 
-        editButton.innerText = "Edit";
+        editButton.innerText = 'Edit';
         editButton.onclick = () => editQuest(questId);
-        card.querySelector(".cancel-button").remove();
+        card.querySelector('.cancel-button').remove();
     }
 
     function saveQuest(questId) {

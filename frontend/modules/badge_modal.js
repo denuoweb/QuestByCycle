@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 import { openModal } from './modal_common.js';
 import { escapeHTML } from '../utils.js';
 import logger from '../logger.js';
@@ -20,7 +20,7 @@ function validateImageUrl(url) {
     if (parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:') {
       return url;
     }
-  } catch (e) {
+  } catch {
     // Invalid URL
   }
   return PLACEHOLDER_IMAGE;
@@ -30,11 +30,11 @@ function validateImageUrl(url) {
  * Fetch badges from the server. Updates the global cache and returns it.
  */
 async function fetchAllBadges() {
-  const gameHolder = document.getElementById("game_IdHolder");
-  const selectedGameId = gameHolder ? gameHolder.getAttribute("data-game-id") : null;
+  const gameHolder = document.getElementById('game_IdHolder');
+  const selectedGameId = gameHolder ? gameHolder.getAttribute('data-game-id') : null;
   // Build the badge endpoint explicitly to avoid accidental path prefixing
   const query = (selectedGameId && !isNaN(parseInt(selectedGameId, 10)) &&
-                 selectedGameId !== "0")
+                 selectedGameId !== '0')
                  ? `?game_id=${selectedGameId}`
                  : '';
   const url = `/badges${query}`;

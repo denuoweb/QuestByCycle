@@ -523,7 +523,7 @@ function deleteAccount() {
     return;
   }
 
-  csrfFetchJson(`/auth/delete_account`, {
+  csrfFetchJson('/auth/delete_account', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' }
   })
