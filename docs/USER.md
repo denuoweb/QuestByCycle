@@ -30,7 +30,7 @@ Welcome to our Ultimate Challenge and Reward Platform! This guide will help you 
 2. **Fill in Your Details**: Enter your username, email, and password.
 3. **Agree to Terms and Conditions**: Check the box to agree to the terms and conditions.
 4. **Submit**: Click on "Create Account" to complete the sign-up process.
-5. **Email Verification**: Check your email for a verification link and click on it to verify your account.
+5. **Email Verification**: If the site is configured with email support, check your inbox for a verification link and click it before you can log in. On instances without email configured you will be logged in automatically.
 
 **Log In**:
 1. **Navigate to the Log-In Page**: Click on the "Log In" button on the homepage.
