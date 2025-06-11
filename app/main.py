@@ -53,6 +53,7 @@ from app.utils import (
     sanitize_html,
     correct_image_orientation,
 )
+from .config import load_config, AppConfig
 from app.tasks import enqueue_email
 
                    
@@ -60,6 +61,9 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 main_bp = Blueprint('main', __name__)
+
+                    
+config: AppConfig = load_config()
 
 
 def get_datetime(activity):
