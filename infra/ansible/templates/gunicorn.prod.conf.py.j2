@@ -1,0 +1,13 @@
+import multiprocessing
+
+bind = '127.0.0.1:5000'
+timeout = 30
+preload_app = True
+max_requests = 100
+max_requests_jitter = 10
+worker_tmp_dir = '/dev/shm'
+loglevel = 'info'
+errorlog = '/opt/QuestByCycle/logs/gunicorn-error-prod.log'
+accesslog = '/opt/QuestByCycle/logs/gunicorn-access-prod.log'
+user = '{{ app_user }}'
+group = '{{ app_user }}'

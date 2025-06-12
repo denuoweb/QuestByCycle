@@ -1,0 +1,50 @@
+---
+# =============================================================================
+# Encrypted vault file for QuestByCycle
+# -----------------------------------------------------------------------------
+# All secret values are pulled from environment variables at runtime.
+# Your CI (GitHub Actions) should inject these from repository Secrets.
+# =============================================================================
+
+# PostgreSQL passwords
+db_prod_password:       "{{ lookup('env', 'DB_PROD_PASSWORD') }}"
+db_dev_password:        "{{ lookup('env', 'DB_DEV_PASSWORD') }}"
+
+# Application (Flask) secrets
+app_secret_key:         "{{ lookup('env', 'FLASK_SECRET_KEY') }}"
+session_cookie_secure:  "{{ lookup('env', 'SESSION_COOKIE_SECURE') }}"
+
+# Default super-admin credentials
+default_super_admin_username: "{{ lookup('env', 'DEFAULT_SUPER_ADMIN_USERNAME') }}"
+default_super_admin_password: "{{ lookup('env', 'DEFAULT_SUPER_ADMIN_PASSWORD') }}"
+default_super_admin_email:    "{{ lookup('env', 'DEFAULT_SUPER_ADMIN_EMAIL') }}"
+
+# Optional full URI override (otherwise templates will assemble from parts)
+sqlalchemy_database_uri:      "{{ lookup('env', 'SQLALCHEMY_DATABASE_URI') }}"
+
+# Mail server credentials
+mail_username:         "{{ lookup('env', 'MAIL_USERNAME') }}"
+mail_password:         "{{ lookup('env', 'MAIL_PASSWORD') }}"
+mail_default_sender:   "{{ lookup('env', 'MAIL_DEFAULT_SENDER') }}"
+
+# Third-party API keys
+openai_api_key:        "{{ lookup('env', 'OPENAI_API_KEY') }}"
+twitter_username:      "{{ lookup('env', 'TWITTER_USERNAME') }}"
+twitter_api_key:       "{{ lookup('env', 'TWITTER_API_KEY') }}"
+twitter_api_secret:    "{{ lookup('env', 'TWITTER_API_SECRET') }}"
+twitter_access_token:  "{{ lookup('env', 'TWITTER_ACCESS_TOKEN') }}"
+twitter_access_token_secret: "{{ lookup('env', 'TWITTER_ACCESS_TOKEN_SECRET') }}"
+
+facebook_app_id:        "{{ lookup('env', 'FACEBOOK_APP_ID') }}"
+facebook_app_secret:    "{{ lookup('env', 'FACEBOOK_APP_SECRET') }}"
+facebook_access_token:  "{{ lookup('env', 'FACEBOOK_ACCESS_TOKEN') }}"
+facebook_page_id:       "{{ lookup('env', 'FACEBOOK_PAGE_ID') }}"
+
+instagram_access_token: "{{ lookup('env', 'INSTAGRAM_ACCESS_TOKEN') }}"
+instagram_user_id:      "{{ lookup('env', 'INSTAGRAM_USER_ID') }}"
+
+# VAPID (Web Push) keys
+twa_sha256_fingerprint: "{{ lookup('env', 'TWA_SHA256_FINGERPRINT') }}"
+vapid_public_key:       "{{ lookup('env', 'VAPID_PUBLIC_KEY') }}"
+vapid_private_key:      "{{ lookup('env', 'VAPID_PRIVATE_KEY') }}"
+vapid_admin_email:      "{{ lookup('env', 'VAPID_ADMIN_EMAIL') }}"

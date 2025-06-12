@@ -1,0 +1,14 @@
+[Unit]
+Description=QuestByCycle Gunicorn (Production)
+After=network.target
+
+[Service]
+User={{ app_user }}
+Group={{ app_user }}
+WorkingDirectory={{ app_dir }}
+ExecStart={{ app_dir }}/.local/bin/poetry run gunicorn --config {{ app_dir }}/gunicorn_prod.conf.py wsgi:app
+Environment="PATH={{ app_dir }}/.local/bin:/usr/bin:/bin"
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

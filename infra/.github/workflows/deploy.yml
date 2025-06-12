@@ -1,0 +1,121 @@
+name: Deploy to GCE via Ansible
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  deploy:
+    runs-on: debian-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      - name: Add SSH key to agent
+        run: |
+          echo "${{ secrets.GCP_SSH_PRIVATE_KEY }}" > /tmp/id_rsa
+          chmod 600 /tmp/id_rsa
+          eval "$(ssh-agent -s)"
+          ssh-add /tmp/id_rsa
+
+      - name: Set up Ansible
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Run Ansible Playbook for prod
+        if: github.ref == 'refs/heads/main'
+        env:
+          # PostgreSQL
+          DB_PROD_PASSWORD:           ${{ secrets.DB_PROD_PASSWORD }}
+          # Flask / session
+          FLASK_SECRET_KEY:           ${{ secrets.FLASK_SECRET_KEY }}
+          SESSION_COOKIE_SECURE:      ${{ secrets.SESSION_COOKIE_SECURE }}
+          # Super‐admin
+          DEFAULT_SUPER_ADMIN_USERNAME: ${{ secrets.DEFAULT_SUPER_ADMIN_USERNAME }}
+          DEFAULT_SUPER_ADMIN_PASSWORD: ${{ secrets.DEFAULT_SUPER_ADMIN_PASSWORD }}
+          DEFAULT_SUPER_ADMIN_EMAIL:    ${{ secrets.DEFAULT_SUPER_ADMIN_EMAIL }}
+          # Full SQLAlchemy URI (optional override)
+          SQLALCHEMY_DATABASE_URI:    ${{ secrets.SQLALCHEMY_DATABASE_URI }}
+          # Mail
+          MAIL_USERNAME:              ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD:              ${{ secrets.MAIL_PASSWORD }}
+          MAIL_DEFAULT_SENDER:        ${{ secrets.MAIL_DEFAULT_SENDER }}
+          # Third-party APIs
+          OPENAI_API_KEY:             ${{ secrets.OPENAI_API_KEY }}
+          TWITTER_USERNAME:           ${{ secrets.TWITTER_USERNAME }}
+          TWITTER_API_KEY:            ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET:         ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN:       ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET:${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+          FACEBOOK_APP_ID:            ${{ secrets.FACEBOOK_APP_ID }}
+          FACEBOOK_APP_SECRET:        ${{ secrets.FACEBOOK_APP_SECRET }}
+          FACEBOOK_ACCESS_TOKEN:      ${{ secrets.FACEBOOK_ACCESS_TOKEN }}
+          FACEBOOK_PAGE_ID:           ${{ secrets.FACEBOOK_PAGE_ID }}
+          INSTAGRAM_ACCESS_TOKEN:     ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          INSTAGRAM_USER_ID:          ${{ secrets.INSTAGRAM_USER_ID }}
+          # VAPID / Push
+          TWA_SHA256_FINGERPRINT:     ${{ secrets.TWA_SHA256_FINGERPRINT }}
+          VAPID_PUBLIC_KEY:           ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY:          ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_ADMIN_EMAIL:          ${{ secrets.VAPID_ADMIN_EMAIL }}
+          # Vault password (if you store it as a secret)
+          ANSIBLE_VAULT_PASSWORD:     ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+        run: |
+          ansible-playbook -i inventory.yml site.yml \
+            --vault-password-file <(echo "$ANSIBLE_VAULT_PASSWORD") \
+            --extra-vars "@/infra/ansible/group_vars/all/vault.yml" \
+            --extra-vars "deploy_env=production"
+
+      - name: Run Ansible Playbook for dev
+        if: github.ref == 'refs/heads/develop'
+        env:
+          # PostgreSQL
+          DB_DEV_PASSWORD:            ${{ secrets.DB_DEV_PASSWORD }}
+          # Flask / session (same secret key & session settings)
+          FLASK_SECRET_KEY:           ${{ secrets.FLASK_SECRET_KEY }}
+          SESSION_COOKIE_SECURE:      ${{ secrets.SESSION_COOKIE_SECURE }}
+          # Super‐admin
+          DEFAULT_SUPER_ADMIN_USERNAME: ${{ secrets.DEFAULT_SUPER_ADMIN_USERNAME }}
+          DEFAULT_SUPER_ADMIN_PASSWORD: ${{ secrets.DEFAULT_SUPER_ADMIN_PASSWORD }}
+          DEFAULT_SUPER_ADMIN_EMAIL:    ${{ secrets.DEFAULT_SUPER_ADMIN_EMAIL }}
+          # Full SQLAlchemy URI (optional override)
+          SQLALCHEMY_DATABASE_URI:    ${{ secrets.SQLALCHEMY_DATABASE_URI }}
+          # Mail
+          MAIL_USERNAME:              ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD:              ${{ secrets.MAIL_PASSWORD }}
+          MAIL_DEFAULT_SENDER:        ${{ secrets.MAIL_DEFAULT_SENDER }}
+          # Third-party APIs
+          OPENAI_API_KEY:             ${{ secrets.OPENAI_API_KEY }}
+          TWITTER_USERNAME:           ${{ secrets.TWITTER_USERNAME }}
+          TWITTER_API_KEY:            ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET:         ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN:       ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET:${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+          FACEBOOK_APP_ID:            ${{ secrets.FACEBOOK_APP_ID }}
+          FACEBOOK_APP_SECRET:        ${{ secrets.FACEBOOK_APP_SECRET }}
+          FACEBOOK_ACCESS_TOKEN:      ${{ secrets.FACEBOOK_ACCESS_TOKEN }}
+          FACEBOOK_PAGE_ID:           ${{ secrets.FACEBOOK_PAGE_ID }}
+          INSTAGRAM_ACCESS_TOKEN:     ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          INSTAGRAM_USER_ID:          ${{ secrets.INSTAGRAM_USER_ID }}
+          # VAPID / Push
+          TWA_SHA256_FINGERPRINT:     ${{ secrets.TWA_SHA256_FINGERPRINT }}
+          VAPID_PUBLIC_KEY:           ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY:          ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_ADMIN_EMAIL:          ${{ secrets.VAPID_ADMIN_EMAIL }}
+          # Vault password
+          ANSIBLE_VAULT_PASSWORD:     ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+        run: |
+          ansible-playbook -i inventory.yml site.yml \
+            --vault-password-file <(echo "$ANSIBLE_VAULT_PASSWORD") \
+            --extra-vars "@/infra/ansible/group_vars/all/vault.yml" \
+            --extra-vars "deploy_env=development"

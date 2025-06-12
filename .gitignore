@@ -189,3 +189,8 @@ welcomeQuestByCycle.mp4
 credentials.json
 node_modules/
 logs/
+# Never commit real .env files:
+*.env
+*.env.*        # if you have any rendered env files
+# Keep only your Jinja templates
+!*.j2

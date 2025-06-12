@@ -1,0 +1,226 @@
+---
+- name: QuestByCycle server provisioning
+  hosts: all
+  become: yes
+
+  vars:
+    app_user: questadmin
+    app_dir: /opt/QuestByCycle
+    repo_url: https://github.com/denuoweb/QuestByCycle.git
+    python_version: python3.11
+    gunicorn_prod_port: 5000
+    gunicorn_dev_port: 5001
+    domains:
+      - questbycycle.org
+      - dev.questbycycle.org
+
+  pre_tasks:
+    - name: Ensure system is up to date
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+  tasks:
+    - name: Install system packages
+      apt:
+        name:
+          - python3-pip
+          - python3-venv
+          - git
+          - nginx
+          - certbot
+          - python3-certbot-nginx
+          - postgresql
+          - postgresql-contrib
+          - ufw
+          - redis-server
+          - ffmpeg
+          - curl
+          - nodejs
+          - npm
+          - geoipupdate
+        state: present
+
+    - name: Create application user and directories
+      user:
+        name: "{{ app_user }}"
+        system: yes
+        home: "{{ app_dir }}"
+        create_home: yes
+        shell: /usr/sbin/nologin
+
+    - name: Create app directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: 0755
+
+    - name: Clone QuestByCycle repository
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ app_dir }}"
+        version: main
+        force: yes
+        update: yes
+        accept_hostkey: yes
+        clone: yes
+      become_user: "{{ app_user }}"
+
+    - name: Copy .env.production
+      template:
+        src: env.production.j2
+        dest: "{{ app_dir }}/.env.production"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0600'
+
+    - name: Copy .env.development
+      template:
+        src: env.development.j2
+        dest: "{{ app_dir }}/.env.development"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0600'
+
+    - name: Copy gunicorn config for production
+      template:
+        src: gunicorn.prod.conf.py.j2
+        dest: "{{ app_dir }}/gunicorn_prod.conf.py"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0644'
+
+    - name: Copy gunicorn config for development
+      template:
+        src: gunicorn.dev.conf.py.j2
+        dest: "{{ app_dir }}/gunicorn_dev.conf.py"
+        owner: "{{ app_user }}"
+        group: "{{ app_user }}"
+        mode: '0644'
+
+    - name: Install Poetry as app user
+      become: yes
+      become_user: "{{ app_user }}"
+      shell: |
+        curl -sSL https://install.python-poetry.org | python3
+        echo "export PATH=$HOME/.local/bin:$PATH" >> $HOME/.bashrc
+
+    - name: Install project dependencies with Poetry (prod)
+      become: yes
+      become_user: "{{ app_user }}"
+      shell: |
+        cd {{ app_dir }}
+        $HOME/.local/bin/poetry install --no-interaction
+
+    - name: Install npm dependencies
+      become: yes
+      become_user: "{{ app_user }}"
+      shell: |
+        cd {{ app_dir }}
+        npm install
+        npm run build
+
+    - name: Set up PostgreSQL user/db (for prod and dev)
+      become: yes
+      become_user: postgres
+      postgresql_db:
+        name: "{{ item.name }}"
+        owner: "{{ item.owner }}"
+        state: present
+      loop:
+        - { name: 'questdb',     owner: 'questuser' }
+        - { name: 'questdb_dev', owner: 'questuser_dev' }
+
+    - name: Ensure PostgreSQL users exist
+      become: yes
+      become_user: postgres
+      postgresql_user:
+        name: "{{ item.user }}"
+        password: "{{ item.password }}"
+        role_attr_flags: "LOGIN"
+        state: present
+      loop:
+        - { user: 'questuser',     password: "{{ db_prod_password }}" }
+        - { user: 'questuser_dev', password: "{{ db_dev_password }}" }
+
+    - name: Ensure privileges for DB users
+      become: yes
+      become_user: postgres
+      postgresql_privs:
+        db: "{{ item.db }}"
+        role: "{{ item.user }}"
+        privs: "ALL"
+        type: database
+        state: present
+      loop:
+        - { db: 'questdb',     user: 'questuser' }
+        - { db: 'questdb_dev', user: 'questuser_dev' }
+
+    - name: Migrate the DB (prod)
+      become: yes
+      become_user: "{{ app_user }}"
+      shell: |
+        cd {{ app_dir }}
+        $HOME/.local/bin/poetry run flask db upgrade
+
+    - name: Migrate the DB (dev)
+      become: yes
+      become_user: "{{ app_user }}"
+      shell: |
+        cd {{ app_dir }}
+        export FLASK_ENV=development
+        $HOME/.local/bin/poetry run flask db upgrade
+
+    - name: Create systemd service for Gunicorn (production)
+      template:
+        src: questbycycle_prod.service.j2
+        dest: /etc/systemd/system/questbycycle_prod.service
+      notify: restart gunicorn prod
+
+    - name: Create systemd service for Gunicorn (development)
+      template:
+        src: questbycycle_dev.service.j2
+        dest: /etc/systemd/system/questbycycle_dev.service
+      notify: restart gunicorn dev
+
+    - name: Enable and start Gunicorn services
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+        state: started
+      loop:
+        - questbycycle_prod.service
+        - questbycycle_dev.service
+
+    - name: Template NGINX config with both domains
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/conf.d/questbycycle.conf
+        mode: 0644
+      notify: reload nginx
+
+    - name: Ensure UFW allows http/https and ssh
+      ufw:
+        rule: allow
+        name: "{{ item }}"
+      loop:
+        - 'OpenSSH'
+        - 'WWW Full'
+
+  handlers:
+    - name: restart gunicorn prod
+      systemd:
+        name: questbycycle_prod.service
+        state: restarted
+
+    - name: restart gunicorn dev
+      systemd:
+        name: questbycycle_dev.service
+        state: restarted
+
+    - name: reload nginx
+      service:
+        name: nginx
+        state: reloaded

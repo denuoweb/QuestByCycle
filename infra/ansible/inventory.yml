@@ -1,0 +1,6 @@
+all:
+  hosts:
+    questbycycle:
+      ansible_host: <PUBLIC_IP_FROM_TERRAFORM>
+      ansible_user: <YOUR_OS_LOGIN_USER>
+      ansible_ssh_extra_args: "-o 'IdentitiesOnly yes' -o 'StrictHostKeyChecking=no'"
