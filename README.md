@@ -54,6 +54,8 @@ This project relies on a variety of open source libraries. The badges below link
 [![Gunicorn](https://img.shields.io/badge/Gunicorn-872729?style=for-the-badge&logo=gunicorn&logoColor=white)](https://github.com/benoitc/gunicorn)
 [![APScheduler](https://img.shields.io/badge/APScheduler-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/agronholm/apscheduler)
 
+For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md).
+
 ### Utility Libraries
 
 [![qrcode](https://img.shields.io/badge/qrcode-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/lincolnloop/python-qrcode)
