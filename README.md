@@ -85,6 +85,7 @@ This project relies on a variety of open source libraries. The badges below link
 - git
 - ffmpeg (optional, for video compression)
 - Poetry (for dependency management)
+- redis-server
 - NGINX with Certbot
 - UFW firewall
 - Postfix (for email)
@@ -101,7 +102,7 @@ This project relies on a variety of open source libraries. The badges below link
    ```
 2. Install Poetry and project dependencies:
    ```bash
-   curl -sSL https://install.python-poetry.org | python3.13
+   curl -sSL https://install.python-poetry.org | python3
    poetry install
    npm install
    npm run build
@@ -159,7 +160,7 @@ These steps assume root access and create a dedicated `appuser` to run QuestByCy
 ```sudo apt-get install -y python3-pip```
 
 5. Install Poetry
-```sudo su -s /bin/bash appuser -c 'curl -sSL https://install.python-poetry.org | python3.13 - && \```
+```sudo su -s /bin/bash appuser -c 'curl -sSL https://install.python-poetry.org | python3 - && \```
 ```echo "export PATH=\"$HOME/.local/bin:\$PATH\"" >> /home/appuser/.bashrc'```
 
 6. Download QuestByCycle
@@ -167,7 +168,7 @@ These steps assume root access and create a dedicated `appuser` to run QuestByCy
 
 7. Install Python VM
 ```cd /opt/QuestByCycle```
-```sudo -u appuser /home/appuser/.local/bin/poetry env use /usr/bin/python3.13```
+```sudo -u appuser /home/appuser/.local/bin/poetry env use /usr/bin/python3```
 ```sudo -u appuser /home/appuser/.local/bin/poetry install```
 
 8. Install NGINX:
