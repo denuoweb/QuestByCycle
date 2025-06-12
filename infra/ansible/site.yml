@@ -2,6 +2,9 @@
 - name: QuestByCycle server provisioning
   hosts: all
   become: yes
+  collections:
+    - community.postgresql
+    - community.general 
 
   vars:
     app_user: questadmin
@@ -26,6 +29,8 @@
         name:
           - python3-pip
           - python3-venv
+          - python3-psycopg2
+          - libpq-dev
           - git
           - nginx
           - certbot

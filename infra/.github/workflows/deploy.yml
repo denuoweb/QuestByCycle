@@ -11,7 +11,8 @@ jobs:
     runs-on: debian-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
 
       - name: Set up Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -27,30 +28,35 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add /tmp/id_rsa
 
-      - name: Set up Ansible
+      - name: Set up Python & Ansible-core
         run: |
+          # Upgrade pip, install ansible-core 2.18.x (includes CLI + runtime)
           python3 -m pip install --upgrade pip
-          pip install ansible
+          pip install --upgrade ansible-core
 
-      - name: Run Ansible Playbook for prod
+          # Verify we're on the right Ansible release
+          ansible --version
+
+      - name: Install Ansible Collections
+        run: |
+          # Install both PostgreSQL modules and UFW modules
+          ansible-galaxy collection install \
+            community.postgresql \
+            community.general
+
+      - name: Run Ansible Playbook for Production
         if: github.ref == 'refs/heads/main'
         env:
-          # PostgreSQL
           DB_PROD_PASSWORD:           ${{ secrets.DB_PROD_PASSWORD }}
-          # Flask / session
           FLASK_SECRET_KEY:           ${{ secrets.FLASK_SECRET_KEY }}
           SESSION_COOKIE_SECURE:      ${{ secrets.SESSION_COOKIE_SECURE }}
-          # Super‐admin
           DEFAULT_SUPER_ADMIN_USERNAME: ${{ secrets.DEFAULT_SUPER_ADMIN_USERNAME }}
           DEFAULT_SUPER_ADMIN_PASSWORD: ${{ secrets.DEFAULT_SUPER_ADMIN_PASSWORD }}
           DEFAULT_SUPER_ADMIN_EMAIL:    ${{ secrets.DEFAULT_SUPER_ADMIN_EMAIL }}
-          # Full SQLAlchemy URI (optional override)
           SQLALCHEMY_DATABASE_URI:    ${{ secrets.SQLALCHEMY_DATABASE_URI }}
-          # Mail
           MAIL_USERNAME:              ${{ secrets.MAIL_USERNAME }}
           MAIL_PASSWORD:              ${{ secrets.MAIL_PASSWORD }}
           MAIL_DEFAULT_SENDER:        ${{ secrets.MAIL_DEFAULT_SENDER }}
-          # Third-party APIs
           OPENAI_API_KEY:             ${{ secrets.OPENAI_API_KEY }}
           TWITTER_USERNAME:           ${{ secrets.TWITTER_USERNAME }}
           TWITTER_API_KEY:            ${{ secrets.TWITTER_API_KEY }}
@@ -63,38 +69,31 @@ jobs:
           FACEBOOK_PAGE_ID:           ${{ secrets.FACEBOOK_PAGE_ID }}
           INSTAGRAM_ACCESS_TOKEN:     ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
           INSTAGRAM_USER_ID:          ${{ secrets.INSTAGRAM_USER_ID }}
-          # VAPID / Push
           TWA_SHA256_FINGERPRINT:     ${{ secrets.TWA_SHA256_FINGERPRINT }}
           VAPID_PUBLIC_KEY:           ${{ secrets.VAPID_PUBLIC_KEY }}
           VAPID_PRIVATE_KEY:          ${{ secrets.VAPID_PRIVATE_KEY }}
           VAPID_ADMIN_EMAIL:          ${{ secrets.VAPID_ADMIN_EMAIL }}
-          # Vault password (if you store it as a secret)
           ANSIBLE_VAULT_PASSWORD:     ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
         run: |
-          ansible-playbook -i inventory.yml site.yml \
+          ansible-playbook \
+            -i inventory.yml site.yml \
             --vault-password-file <(echo "$ANSIBLE_VAULT_PASSWORD") \
             --extra-vars "@/infra/ansible/group_vars/all/vault.yml" \
             --extra-vars "deploy_env=production"
 
-      - name: Run Ansible Playbook for dev
+      - name: Run Ansible Playbook for Development
         if: github.ref == 'refs/heads/develop'
         env:
-          # PostgreSQL
           DB_DEV_PASSWORD:            ${{ secrets.DB_DEV_PASSWORD }}
-          # Flask / session (same secret key & session settings)
           FLASK_SECRET_KEY:           ${{ secrets.FLASK_SECRET_KEY }}
           SESSION_COOKIE_SECURE:      ${{ secrets.SESSION_COOKIE_SECURE }}
-          # Super‐admin
           DEFAULT_SUPER_ADMIN_USERNAME: ${{ secrets.DEFAULT_SUPER_ADMIN_USERNAME }}
           DEFAULT_SUPER_ADMIN_PASSWORD: ${{ secrets.DEFAULT_SUPER_ADMIN_PASSWORD }}
           DEFAULT_SUPER_ADMIN_EMAIL:    ${{ secrets.DEFAULT_SUPER_ADMIN_EMAIL }}
-          # Full SQLAlchemy URI (optional override)
           SQLALCHEMY_DATABASE_URI:    ${{ secrets.SQLALCHEMY_DATABASE_URI }}
-          # Mail
           MAIL_USERNAME:              ${{ secrets.MAIL_USERNAME }}
           MAIL_PASSWORD:              ${{ secrets.MAIL_PASSWORD }}
           MAIL_DEFAULT_SENDER:        ${{ secrets.MAIL_DEFAULT_SENDER }}
-          # Third-party APIs
           OPENAI_API_KEY:             ${{ secrets.OPENAI_API_KEY }}
           TWITTER_USERNAME:           ${{ secrets.TWITTER_USERNAME }}
           TWITTER_API_KEY:            ${{ secrets.TWITTER_API_KEY }}
@@ -107,15 +106,14 @@ jobs:
           FACEBOOK_PAGE_ID:           ${{ secrets.FACEBOOK_PAGE_ID }}
           INSTAGRAM_ACCESS_TOKEN:     ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
           INSTAGRAM_USER_ID:          ${{ secrets.INSTAGRAM_USER_ID }}
-          # VAPID / Push
           TWA_SHA256_FINGERPRINT:     ${{ secrets.TWA_SHA256_FINGERPRINT }}
           VAPID_PUBLIC_KEY:           ${{ secrets.VAPID_PUBLIC_KEY }}
           VAPID_PRIVATE_KEY:          ${{ secrets.VAPID_PRIVATE_KEY }}
           VAPID_ADMIN_EMAIL:          ${{ secrets.VAPID_ADMIN_EMAIL }}
-          # Vault password
           ANSIBLE_VAULT_PASSWORD:     ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
         run: |
-          ansible-playbook -i inventory.yml site.yml \
+          ansible-playbook \
+            -i inventory.yml site.yml \
             --vault-password-file <(echo "$ANSIBLE_VAULT_PASSWORD") \
             --extra-vars "@/infra/ansible/group_vars/all/vault.yml" \
             --extra-vars "deploy_env=development"
