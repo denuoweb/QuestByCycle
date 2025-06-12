@@ -13,7 +13,7 @@ These rules apply to everything within the `docs/` directory.
 
 ## Content Guidelines
 - Keep documentation up to date with the codebase.
-- Explain configuration options referenced in `config.toml` or the application.
+- Explain configuration options referenced in `.env` or the application.
 - When adding new features, update or create documentation describing how to use
   them from both user and developer perspectives.
 - Do not remove existing documentation unless it has become obsolete and the

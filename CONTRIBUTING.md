@@ -13,8 +13,6 @@
 - Im/Ex AdminDB in Web UI
 - Super Admin / Admin Ability to Ban Users and IP
 - Proper Warnings on Bad Task Import
-- Encrypt `config.toml` private values using environment variables and Game model fields
-- Add `config.toml [mail]` to game model and convert index button
 - Add Custom Tasks using LLM
 - Add OpenAI API to game model
 - add limits to task/badge generation AI

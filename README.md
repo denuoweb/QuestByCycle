@@ -109,7 +109,6 @@ This project relies on a variety of open source libraries. The badges below link
    ```
 3. Copy `.env.example` to `.env` and adjust the values, especially
    `SQLALCHEMY_DATABASE_URI` and mail credentials.
-4. Create a `config.toml` file and add your application settings.
 5. Copy `gunicorn.conf.py.example` to `gunicorn.conf.py`.
 6. Run database migrations:
    ```bash
@@ -232,10 +231,9 @@ Vite outputs two entry points: `main.js` for the majority of pages and
 `submitPhoto.js` which is loaded only on `submit_photo.html`.
 
 14. Copy `.env.example` to `.env` and set all variables.
-15. Create a `config.toml` file with your application settings.
 16. Copy `gunicorn.conf.py.example` to `gunicorn.conf.py`.
 17. If you have `ffmpeg` installed, ensure it is accessible or set
-    `FFMPEG_PATH` in `config.toml`. Without `ffmpeg` videos are stored unmodified.
+    `FFMPEG_PATH` in `.env`. Without `ffmpeg` videos are stored unmodified.
 18. Run database migrations
 ```sudo -u APPUSER /home/APPUSER/.local/bin/poetry run flask db upgrade```
 19. Run the server in debug
