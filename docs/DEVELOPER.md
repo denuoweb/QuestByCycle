@@ -127,6 +127,11 @@ Ensure you have the following installed:
 ### Configuration
 
 Update the `.env` file with the appropriate configuration settings for your development environment.
+Important variables include:
+
+- `GCS_BUCKET` – name of the Google Cloud Storage bucket used for uploads
+- `GCS_BASE_URL` – base URL for serving uploaded media
+- `GCS_STORAGE_CLASS` – storage class for uploaded files (`ARCHIVE` is cheapest)
 
 ## Key Components
 

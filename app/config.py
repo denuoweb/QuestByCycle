@@ -64,6 +64,9 @@ class MainConfig:
     FFMPEG_PATH: str
     PLACEHOLDER_IMAGE: str
     SQLALCHEMY_ECHO: bool
+    GCS_BUCKET: str | None
+    GCS_BASE_URL: str | None
+    GCS_STORAGE_CLASS: str
 
 
 @dataclass
@@ -163,6 +166,9 @@ def load_config() -> AppConfig:
             FFMPEG_PATH=_get_env("FFMPEG_PATH", "ffmpeg"),
             PLACEHOLDER_IMAGE=_get_env("PLACEHOLDER_IMAGE", "images/default-placeholder.webp"),
             SQLALCHEMY_ECHO=_get_env_boolean("SQLALCHEMY_ECHO", False),
+            GCS_BUCKET=_get_env_nullable("GCS_BUCKET"),
+            GCS_BASE_URL=_get_env_nullable("GCS_BASE_URL"),
+            GCS_STORAGE_CLASS=_get_env("GCS_STORAGE_CLASS", "ARCHIVE"),
         ),
         encryption=EncryptionConfig(
             DEFAULT_SUPER_ADMIN_USERNAME=_get_env("DEFAULT_SUPER_ADMIN_USERNAME", "test"),

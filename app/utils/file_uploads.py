@@ -1,13 +1,12 @@
 # File upload related helpers
 from __future__ import annotations
-
-import io
 import os
 import shutil
 import subprocess
 import uuid
 
 from flask import current_app, url_for
+from google.cloud import storage
 from werkzeug.utils import secure_filename
 from PIL import Image, ExifTags, UnidentifiedImageError
 
@@ -18,6 +17,45 @@ ALLOWED_VIDEO_EXTENSIONS = {"mp4", "webm", "mov"}
 
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
 MAX_VIDEO_BYTES = 10 * 1024 * 1024
+
+
+def _upload_to_gcs(local_path: str, remote_path: str, *, content_type: str | None = None) -> str | None:
+    bucket_name = current_app.config.get("GCS_BUCKET")
+    if not bucket_name:
+        return None
+
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(remote_path)
+    blob.upload_from_filename(local_path, content_type=content_type)
+
+    storage_class = current_app.config.get("GCS_STORAGE_CLASS", "ARCHIVE")
+    try:
+        blob.update_storage_class(storage_class)
+    except Exception:
+        pass
+
+    try:
+        blob.make_public()
+    except Exception:
+        pass
+
+    base_url = current_app.config.get("GCS_BASE_URL") or f"https://storage.googleapis.com/{bucket_name}"
+    return f"{base_url}/{remote_path}"
+
+
+def _delete_from_gcs(remote_path: str) -> None:
+    bucket_name = current_app.config.get("GCS_BUCKET")
+    if not bucket_name:
+        return
+
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(remote_path)
+    try:
+        blob.delete()
+    except Exception:
+        pass
 
 
 def _get_ffmpeg_bin() -> str | None:
@@ -101,10 +139,16 @@ def save_image_file(
     except UnidentifiedImageError:
         pass
 
+    gcs_url = _upload_to_gcs(file_path, os.path.join(subpath, filename), content_type=image_file.mimetype)
     if old_filename:
         old_path = os.path.join(current_app.static_folder, old_filename)
         if os.path.exists(old_path):
             os.remove(old_path)
+        _delete_from_gcs(old_filename)
+
+    if gcs_url:
+        os.remove(file_path)
+        return gcs_url
 
     return os.path.join(subpath, filename)
 
@@ -247,6 +291,11 @@ def save_submission_video(submission_video_file):
                 os.remove(final_path)
                 current_app.logger.debug("Compressed video exceeded max size and was deleted")
                 raise ValueError("Video exceeds 10 MB limit after compression")
+
+        gcs_url = _upload_to_gcs(final_path, os.path.join("videos", "verifications", final_name), content_type="video/mp4")
+        if gcs_url:
+            os.remove(final_path)
+            return gcs_url
 
         return os.path.join("videos", "verifications", final_name)
     except Exception as e:
