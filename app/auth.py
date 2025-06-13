@@ -460,7 +460,6 @@ def logout():
     Log out the current user.
     """
     logout_user()
-    session.clear()
     flash('Logged out successfully.', 'success')
     return redirect(url_for('main.index'))
 
