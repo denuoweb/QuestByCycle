@@ -1,0 +1,5 @@
+collections:
+  - name: community.postgresql
+  - name: community.general
+  - name: community.crypto
+    version: ">=2.26.1"

@@ -1,0 +1,15 @@
+server {
+    listen 80;
+    server_name dev.questbycycle.org;
+
+    root /opt/QuestByCycle/dev;
+
+    location ^~ /.well-known/acme-challenge/ {
+        default_type "text/plain";
+        try_files $uri =404;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}

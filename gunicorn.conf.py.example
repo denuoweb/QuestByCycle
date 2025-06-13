@@ -4,10 +4,13 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent
 
-command = "gunicorn"
+command = "/home/USERNAME/.cache/pypoetry/virtualenvs/questbycycle-BK-IO7k_-py3.11/bin/gunicorn"
 pythonpath = str(BASE_DIR)
 bind = "127.0.0.1:5000"
 workers = 1
 loglevel = "info"
 errorlog = str(BASE_DIR / "logs" / "gunicorn-error.log")
 accesslog = str(BASE_DIR / "logs" / "gunicorn-access.log")
+
+user = 'USERNAME'
+group = 'USERNAME'

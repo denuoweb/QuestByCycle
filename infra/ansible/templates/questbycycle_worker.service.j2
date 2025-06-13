@@ -1,12 +1,12 @@
 [Unit]
-Description=Gunicorn daemon for QuestByCycle (Production)
+Description=RQ Worker for QuestByCycle
 After=network.target
 
 [Service]
 User={{ app_user }}
 Group={{ app_user }}
 WorkingDirectory={{ app_dir }}/prod
-ExecStart={{ app_dir }}/.local/bin/poetry run gunicorn --config {{ app_dir }}/prod/gunicorn_prod.conf.py wsgi:app
+ExecStart={{ app_dir }}/.local/bin/poetry run rqworker
 Environment="PATH={{ app_dir }}/.local/bin:/usr/bin:/bin"
 Restart=on-failure
 

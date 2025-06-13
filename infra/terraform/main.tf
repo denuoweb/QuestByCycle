@@ -22,7 +22,7 @@ resource "google_compute_instance" "questbycycle" {
     access_config {} # Ephemeral external IP
   }
 
-  tags = ["http-server", "https-server"]
+  tags = ["http-server", "https-server", "ssh-server"]
 
   metadata = {
     # Enables login via OS Login, not via instance SSH keys.

@@ -2,6 +2,13 @@
 
 This guide explains how to provision and configure the production server using Terraform and Ansible.
 
+## Initialize Google Cloud
+1. Authenticate locally:
+
+```bash
+gcloud auth application-default login
+```
+
 ## Terraform Setup
 
 1. Install [Terraform](https://www.terraform.io/downloads) and the Google Cloud CLI.

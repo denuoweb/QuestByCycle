@@ -4,7 +4,8 @@
   become: yes
   collections:
     - community.postgresql
-    - community.general 
+    - community.general
+    - community.crypto
 
   vars:
     app_user: questadmin
@@ -13,15 +14,31 @@
     python_version: python3.11
     gunicorn_prod_port: 5000
     gunicorn_dev_port: 5001
-    domains:
+    # The deploy_env variable passed by -e, defaulting to 'development' if not set
+    domains_prod:
       - questbycycle.org
+      - www.questbycycle.org
+    domains_dev:
       - dev.questbycycle.org
 
   pre_tasks:
-    - name: Ensure system is up to date
+    - name: Ensure APT cache is updated
       apt:
         update_cache: yes
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+
+    - name: Dist-upgrade all packages
+      apt:
         upgrade: dist
+        force_apt_get: yes
+        dpkg_options: "force-confdef,force-confold"
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+
+    - name: Determine deploy environment
+      set_fact:
+        deploy_env_final: "{{ deploy_env | default('development') }}"
 
   tasks:
     - name: Install system packages
@@ -43,10 +60,9 @@
           - curl
           - nodejs
           - npm
-          - geoipupdate
         state: present
 
-    - name: Create application user and directories
+    - name: Create application user and base directories
       user:
         name: "{{ app_user }}"
         system: yes
@@ -54,37 +70,50 @@
         create_home: yes
         shell: /usr/sbin/nologin
 
-    - name: Create app directory
+    - name: Ensure base application directories exist
       file:
-        path: "{{ app_dir }}"
+        path: "{{ app_dir }}/{{ item }}"
         state: directory
         owner: "{{ app_user }}"
         group: "{{ app_user }}"
-        mode: 0755
+        mode: '0755'
+      loop:
+        - ''
+        - prod
+        - dev
 
-    - name: Clone QuestByCycle repository
+    - name: Clone QuestByCycle repository for production
       git:
         repo: "{{ repo_url }}"
-        dest: "{{ app_dir }}"
+        dest: "{{ app_dir }}/prod"
         version: main
         force: yes
         update: yes
         accept_hostkey: yes
-        clone: yes
       become_user: "{{ app_user }}"
 
-    - name: Copy .env.production
+    - name: Clone QuestByCycle repository for development
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ app_dir }}/dev"
+        version: main
+        force: yes
+        update: yes
+        accept_hostkey: yes
+      become_user: "{{ app_user }}"
+
+    - name: Copy and render .env.production into prod
       template:
         src: env.production.j2
-        dest: "{{ app_dir }}/.env.production"
+        dest: "{{ app_dir }}/prod/.env.production"
         owner: "{{ app_user }}"
         group: "{{ app_user }}"
         mode: '0600'
 
-    - name: Copy .env.development
+    - name: Copy and render .env.development into dev
       template:
         src: env.development.j2
-        dest: "{{ app_dir }}/.env.development"
+        dest: "{{ app_dir }}/dev/.env.development"
         owner: "{{ app_user }}"
         group: "{{ app_user }}"
         mode: '0600'
@@ -92,7 +121,7 @@
     - name: Copy gunicorn config for production
       template:
         src: gunicorn.prod.conf.py.j2
-        dest: "{{ app_dir }}/gunicorn_prod.conf.py"
+        dest: "{{ app_dir }}/prod/gunicorn_prod.conf.py"
         owner: "{{ app_user }}"
         group: "{{ app_user }}"
         mode: '0644'
@@ -100,129 +129,334 @@
     - name: Copy gunicorn config for development
       template:
         src: gunicorn.dev.conf.py.j2
-        dest: "{{ app_dir }}/gunicorn_dev.conf.py"
+        dest: "{{ app_dir }}/dev/gunicorn_dev.conf.py"
         owner: "{{ app_user }}"
         group: "{{ app_user }}"
         mode: '0644'
 
-    - name: Install Poetry as app user
-      become: yes
+    - name: Deploy systemd units
+      template:
+        src: "{{ item.src }}"
+        dest: "/etc/systemd/system/{{ item.dest }}"
+      loop:
+        - { src: 'questbycycle_prod.service.j2', dest: 'questbycycle_prod.service' }
+        - { src: 'questbycycle_dev.service.j2', dest: 'questbycycle_dev.service' }
+        - { src: 'questbycycle_worker.service.j2', dest: 'questbycycle_worker.service' }
+      notify:
+        - Reload systemd
+        - Restart Gunicorn (prod)
+        - Restart Gunicorn (dev)
+        - Restart RQ Worker
+
+    - name: Enable and start QuestByCycle services
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+        state: started
+        daemon_reload: yes
+      loop:
+        - questbycycle_prod.service
+        - questbycycle_dev.service
+        - questbycycle_worker.service
+
+    - name: Install Poetry as app_user
       become_user: "{{ app_user }}"
       shell: |
         curl -sSL https://install.python-poetry.org | python3
         echo "export PATH=$HOME/.local/bin:$PATH" >> $HOME/.bashrc
 
-    - name: Install project dependencies with Poetry (prod)
-      become: yes
+    - name: Install project dependencies in prod
       become_user: "{{ app_user }}"
       shell: |
-        cd {{ app_dir }}
+        cd {{ app_dir }}/prod
         $HOME/.local/bin/poetry install --no-interaction
 
-    - name: Install npm dependencies
-      become: yes
+    - name: Install npm dependencies in prod
       become_user: "{{ app_user }}"
       shell: |
-        cd {{ app_dir }}
+        cd {{ app_dir }}/prod
         npm install
         npm run build
 
-    - name: Set up PostgreSQL user/db (for prod and dev)
+    - name: Install project dependencies in dev
+      become_user: "{{ app_user }}"
+      shell: |
+        cd {{ app_dir }}/dev
+        $HOME/.local/bin/poetry install --no-interaction
+
+    - name: Install npm dependencies in dev
+      become_user: "{{ app_user }}"
+      shell: |
+        cd {{ app_dir }}/dev
+        npm install
+        npm run build
+
+    - name: Ensure PostgreSQL users exist
+      community.postgresql.postgresql_user:
+        name: "{{ item.name }}"
+        password: "{{ item.password }}"
+        role_attr_flags: LOGIN
+        state: present
       become: yes
       become_user: postgres
-      postgresql_db:
+      loop: "{{ postgresql_users }}"
+
+    - name: Create PostgreSQL databases
+      community.postgresql.postgresql_db:
         name: "{{ item.name }}"
         owner: "{{ item.owner }}"
         state: present
+      become: yes
+      become_user: postgres
       loop:
-        - { name: 'questdb',     owner: 'questuser' }
+        - { name: 'questdb', owner: 'questuser' }
         - { name: 'questdb_dev', owner: 'questuser_dev' }
 
-    - name: Ensure PostgreSQL users exist
-      become: yes
-      become_user: postgres
-      postgresql_user:
-        name: "{{ item.user }}"
-        password: "{{ item.password }}"
-        role_attr_flags: "LOGIN"
-        state: present
-      loop:
-        - { user: 'questuser',     password: "{{ db_prod_password }}" }
-        - { user: 'questuser_dev', password: "{{ db_dev_password }}" }
-
-    - name: Ensure privileges for DB users
-      become: yes
-      become_user: postgres
-      postgresql_privs:
+    - name: Grant privileges on databases
+      community.postgresql.postgresql_privs:
         db: "{{ item.db }}"
         role: "{{ item.user }}"
-        privs: "ALL"
+        privs: ALL
         type: database
         state: present
+      become: yes
+      become_user: postgres
       loop:
-        - { db: 'questdb',     user: 'questuser' }
+        - { db: 'questdb', user: 'questuser' }
         - { db: 'questdb_dev', user: 'questuser_dev' }
 
-    - name: Migrate the DB (prod)
-      become: yes
-      become_user: "{{ app_user }}"
+    - name: Check for existing tables in production
       shell: |
-        cd {{ app_dir }}
-        $HOME/.local/bin/poetry run flask db upgrade
+        psql -d questdb -tAc "SELECT count(*) FROM pg_tables WHERE schemaname='public';"
+      register: existing_tables
+      changed_when: false
+      become: yes
+      become_user: postgres
 
-    - name: Migrate the DB (dev)
-      become: yes
-      become_user: "{{ app_user }}"
+    - name: Initialize production DB schema
+      when: existing_tables.stdout|int == 0
       shell: |
         cd {{ app_dir }}
+        cp prod/.env.production .env
+        export FLASK_ENV=production
+        $HOME/.local/bin/poetry run python - <<'EOF'
+        from app import create_app, db
+        app = create_app()
+        with app.app_context():
+            db.create_all()
+        EOF
+      become: yes
+      become_user: "{{ app_user }}"
+
+    - name: Check for existing tables in development
+      shell: |
+        psql -d questdb_dev -tAc "SELECT count(*) FROM pg_tables WHERE schemaname='public';"
+      register: existing_tables_dev
+      changed_when: false
+      become: yes
+      become_user: postgres
+
+    - name: Initialize development DB schema
+      when: existing_tables_dev.stdout|int == 0
+      shell: |
+        cd {{ app_dir }}
+        cp dev/.env.development .env
         export FLASK_ENV=development
-        $HOME/.local/bin/poetry run flask db upgrade
+        $HOME/.local/bin/poetry run python - <<'EOF'
+        from app import create_app, db
+        app = create_app()
+        with app.app_context():
+            db.create_all()
+        EOF
+      become: yes
+      become_user: "{{ app_user }}"
 
-    - name: Create systemd service for Gunicorn (production)
+    - name: Create systemd service for RQ Worker
       template:
-        src: questbycycle_prod.service.j2
-        dest: /etc/systemd/system/questbycycle_prod.service
-      notify: restart gunicorn prod
+        src: questbycycle_worker.service.j2
+        dest: /etc/systemd/system/questbycycle_worker.service
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart worker
 
-    - name: Create systemd service for Gunicorn (development)
-      template:
-        src: questbycycle_dev.service.j2
-        dest: /etc/systemd/system/questbycycle_dev.service
-      notify: restart gunicorn dev
-
-    - name: Enable and start Gunicorn services
+    - name: Enable and start RQ Worker service
       systemd:
-        name: "{{ item }}"
+        name: questbycycle_worker.service
         enabled: yes
         state: started
-      loop:
-        - questbycycle_prod.service
-        - questbycycle_dev.service
 
-    - name: Template NGINX config with both domains
+    - name: Remove prod SSL vhost before deploying HTTP-only
+      file:
+        path: /etc/nginx/conf.d/questbycycle_prod_ssl.conf
+        state: absent
+      when: deploy_env_final in ['prod','production']
+
+    - name: Deploy HTTP vhost for production
       template:
-        src: nginx.conf.j2
-        dest: /etc/nginx/conf.d/questbycycle.conf
-        mode: 0644
+        src: questbycycle_prod_http.conf.j2
+        dest: /etc/nginx/conf.d/questbycycle_prod.conf
+      when: deploy_env_final in ['prod','production']
       notify: reload nginx
 
-    - name: Ensure UFW allows http/https and ssh
-      ufw:
-        rule: allow
-        name: "{{ item }}"
-      loop:
-        - 'OpenSSH'
-        - 'WWW Full'
+    - name: Reload nginx for prod HTTP
+      service:
+        name: nginx
+        state: reloaded
+      when: deploy_env_final in ['prod','production']
+
+    - name: Ensure ACME account key exists
+      community.crypto.openssl_privatekey:
+        path: /etc/letsencrypt/account.key
+        size: 2048
+        type: RSA
+        mode: '0600'
+
+    - name: Ensure live directory for prod
+      file:
+        path: "/etc/letsencrypt/live/{{ domains_prod[0] }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0700'
+      when: deploy_env_final in ['prod','production']
+
+    - name: Ensure prod private key exists
+      community.crypto.openssl_privatekey:
+        path: "/etc/letsencrypt/live/{{ domains_prod[0] }}/privkey.pem"
+        size: 2048
+        type: RSA
+        mode: '0600'
+      when: deploy_env_final in ['prod','production']
+
+    - name: Generate CSR for prod
+      community.crypto.openssl_csr:
+        path: /etc/letsencrypt/questbycycle.csr
+        privatekey_path: "/etc/letsencrypt/live/{{ domains_prod[0] }}/privkey.pem"
+        common_name: questbycycle.org
+        subject_alt_name: "DNS:questbycycle.org,DNS:www.questbycycle.org"
+      when: deploy_env_final in ['prod','production']
+
+    - name: Check prod cert exists
+      stat:
+        path: "/etc/letsencrypt/live/{{ domains_prod[0] }}/fullchain.pem"
+      register: prod_cert
+      when: deploy_env_final in ['prod','production']
+
+    - name: Issue prod cert if missing
+      community.crypto.acme_certificate:
+        account_key_src: /etc/letsencrypt/account.key
+        csr: /etc/letsencrypt/questbycycle.csr
+        fullchain_dest: "/etc/letsencrypt/live/{{ domains_prod[0] }}/fullchain.pem"
+        chain_dest:     "/etc/letsencrypt/live/{{ domains_prod[0] }}/chain.pem"
+        acme_directory: https://acme-v02.api.letsencrypt.org/directory
+        acme_version:   2
+        agreement:      yes
+        terms_agreed:   yes
+        challenge:      http-01
+      when: deploy_env_final in ['prod','production'] and not prod_cert.stat.exists
+
+    - name: Deploy SSL vhost for prod
+      template:
+        src: questbycycle_prod_ssl.conf.j2
+        dest: /etc/nginx/conf.d/questbycycle_prod_ssl.conf
+      when: deploy_env_final in ['prod','production'] and prod_cert.stat.exists
+      notify: reload nginx
+
+    - name: Reload nginx for prod SSL
+      service:
+        name: nginx
+        state: reloaded
+      when: deploy_env_final in ['prod','production'] and prod_cert.stat.exists
+
+    - name: Deploy HTTP vhost for dev
+      template:
+        src: questbycycle_dev_http.conf.j2
+        dest: /etc/nginx/conf.d/questbycycle_dev.conf
+      when: deploy_env_final in ['dev','development']
+      notify: reload nginx
+
+    - name: Reload nginx for dev HTTP
+      service:
+        name: nginx
+        state: reloaded
+      when: deploy_env_final in ['dev','development']
+
+    - name: Ensure live directory for dev
+      file:
+        path: "/etc/letsencrypt/live/{{ domains_dev[0] }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0700'
+      when: deploy_env_final in ['dev','development']
+
+    - name: Ensure dev private key
+      community.crypto.openssl_privatekey:
+        path: "/etc/letsencrypt/live/{{ domains_dev[0] }}/privkey.pem"
+        size: 2048
+        type: RSA
+        mode: '0600'
+      when: deploy_env_final in ['dev','development']
+
+    - name: Generate CSR for dev
+      community.crypto.openssl_csr:
+        path: /etc/letsencrypt/dev.questbycycle.csr
+        privatekey_path: "/etc/letsencrypt/live/{{ domains_dev[0] }}/privkey.pem"
+        common_name: dev.questbycycle.org
+        subject_alt_name: "DNS:dev.questbycycle.org"
+      when: deploy_env_final in ['dev','development']
+
+    - name: Check dev cert exists
+      stat:
+        path: "/etc/letsencrypt/live/{{ domains_dev[0] }}/fullchain.pem"
+      register: dev_cert
+      when: deploy_env_final in ['dev','development']
+
+    - name: Issue dev cert if missing (staging)
+      community.crypto.acme_certificate:
+        account_key_src: /etc/letsencrypt/account.key
+        csr: /etc/letsencrypt/dev.questbycycle.csr
+        fullchain_dest: "/etc/letsencrypt/live/{{ domains_dev[0] }}/fullchain.pem"
+        chain_dest:     "/etc/letsencrypt/live/{{ domains_dev[0] }}/chain.pem"
+        acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory
+        acme_version:   2
+        agreement:      yes
+        terms_agreed:   yes
+        challenge:      http-01
+      when: deploy_env_final in ['dev','development'] and not dev_cert.stat.exists
+
+    - name: Deploy SSL vhost for dev
+      template:
+        src: questbycycle_dev_ssl.conf.j2
+        dest: /etc/nginx/conf.d/questbycycle_dev_ssl.conf
+      when: deploy_env_final in ['dev','development'] and dev_cert.stat.exists
+      notify: reload nginx
+
+    - name: Reload nginx for dev SSL
+      service:
+        name: nginx
+        state: reloaded
+      when: deploy_env_final in ['dev','development']
 
   handlers:
-    - name: restart gunicorn prod
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Restart Gunicorn (prod)
       systemd:
         name: questbycycle_prod.service
         state: restarted
 
-    - name: restart gunicorn dev
+    - name: Restart Gunicorn (dev)
       systemd:
         name: questbycycle_dev.service
+        state: restarted
+
+    - name: Restart RQ Worker
+      systemd:
+        name: questbycycle_worker.service
         state: restarted
 
     - name: reload nginx
