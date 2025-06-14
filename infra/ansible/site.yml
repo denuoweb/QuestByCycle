@@ -8,7 +8,7 @@
     - community.crypto
 
   vars:
-    app_user: questadmin
+    app_user: user
     app_dir: /opt/QuestByCycle
     repo_url: https://github.com/denuoweb/QuestByCycle.git
     python_version: python3.11
@@ -209,8 +209,8 @@
       become: yes
       become_user: postgres
       loop:
-        - { name: 'questdb', owner: 'questuser' }
-        - { name: 'questdb_dev', owner: 'questuser_dev' }
+        - { name: 'database', owner: 'user' }
+        - { name: 'database_dev', owner: 'user_dev' }
 
     - name: Grant privileges on databases
       community.postgresql.postgresql_privs:
@@ -222,12 +222,12 @@
       become: yes
       become_user: postgres
       loop:
-        - { db: 'questdb', user: 'questuser' }
-        - { db: 'questdb_dev', user: 'questuser_dev' }
+        - { db: 'database', user: 'user' }
+        - { db: 'database_dev', user: 'user_dev' }
 
     - name: Check for existing tables in production
       shell: |
-        psql -d questdb -tAc "SELECT count(*) FROM pg_tables WHERE schemaname='public';"
+        psql -d database -tAc "SELECT count(*) FROM pg_tables WHERE schemaname='public';"
       register: existing_tables
       changed_when: false
       become: yes
@@ -250,7 +250,7 @@
 
     - name: Check for existing tables in development
       shell: |
-        psql -d questdb_dev -tAc "SELECT count(*) FROM pg_tables WHERE schemaname='public';"
+        psql -d database_dev -tAc "SELECT count(*) FROM pg_tables WHERE schemaname='public';"
       register: existing_tables_dev
       changed_when: false
       become: yes
