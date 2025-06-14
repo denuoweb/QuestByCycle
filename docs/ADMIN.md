@@ -95,6 +95,8 @@ To edit an existing quest:
 2. **Click on "Edit Quest"**: Modify the quest details as needed.
 3. **Save Changes**: Ensure all updates are saved.
 
+The quest list now shows every data point from the Quest model, including the quest ID, completion status, assigned user, evidence URL, verification comment, game ID, and badge ID. This makes it easier to review all quest attributes at a glance.
+
 ### Deleting Quests
 
 To delete a quest:

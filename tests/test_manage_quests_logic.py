@@ -96,6 +96,44 @@ def test_get_quests_per_game(client, admin_user):
     assert ids2 == {q3.id}
 
 
+def test_get_quests_contains_all_fields(client, admin_user):
+    game = create_game("Game Fields", admin_user.id)
+    game.admins.append(admin_user)
+    db.session.add(game)
+    db.session.commit()
+
+    quest = Quest(title="Quest", game=game, verification_type="photo")
+    db.session.add(quest)
+    db.session.commit()
+
+    resp = client.get(f"/quests/game/{game.id}/quests")
+    assert resp.status_code == 200
+    data = resp.get_json()["quests"][0]
+    expected_keys = {
+        "id",
+        "title",
+        "description",
+        "tips",
+        "points",
+        "completion_limit",
+        "completed",
+        "user_id",
+        "evidence_url",
+        "enabled",
+        "is_sponsored",
+        "verification_type",
+        "verification_comment",
+        "game_id",
+        "badge_id",
+        "badge_name",
+        "badge_description",
+        "badge_awarded",
+        "frequency",
+        "category",
+    }
+    assert set(data.keys()) == expected_keys
+
+
 def test_manage_page_requires_admin(client, admin_user):
     game = create_game("Game", admin_user.id)
     game.admins.append(admin_user)
