@@ -194,3 +194,9 @@ logs/
 *.env.*        # if you have any rendered env files
 # Keep only your Jinja templates
 !*.j2
+infra/terraform/terraform.tfstate
+.gitignore
+infra/terraform/.terraform/providers/registry.terraform.io/hashicorp/google/6.39.0/linux_amd64/LICENSE.txt
+infra/terraform/.terraform/providers/registry.terraform.io/hashicorp/google/6.39.0/linux_amd64/terraform-provider-google_v6.39.0_x5
+infra/terraform/terraform.tfstate.backup
+infra/terraform/.terraform.lock.hcl
