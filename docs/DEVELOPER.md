@@ -442,4 +442,11 @@ Before deploying to production, ensure the following settings in your `.env` fil
 10. **Start the task worker**:
     - Run `poetry run rqworker` to process background jobs.
 
+## Calendar Integration
+
+The application can automatically create quests from Google Calendar events. Set
+the `GOOGLE_CALENDAR_CREDENTIALS` environment variable to the path of a Google
+service account JSON file. Each `Game` may define a `google_calendar_id`.
+APScheduler runs a job every 15 minutes to fetch new events and create quests.
+
 By following this guide, you should have a comprehensive understanding of the project's architecture, codebase, and development practices. Happy coding!

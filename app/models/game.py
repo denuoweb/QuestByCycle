@@ -57,6 +57,7 @@ class Game(db.Model):
     facebook_page_id = db.Column(db.String(500), nullable=True)
     instagram_user_id = db.Column(db.String(500), nullable=True)
     instagram_access_token = db.Column(db.String(500), nullable=True)
+    google_calendar_id = db.Column(db.String(255), nullable=True)
     custom_game_code = db.Column(db.String(20), unique=True, nullable=True)
     is_public = db.Column(db.Boolean, default=True)
     allow_joins = db.Column(db.Boolean, default=True)

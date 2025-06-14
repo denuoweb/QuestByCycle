@@ -115,6 +115,13 @@ To generate a quest using AI:
 5. **Review and Edit**: Review the generated quest and make any necessary adjustments.
 6. **Add to Game**: Save the quest to the game.
 
+### Calendar Linked Quests
+
+1. **Set Google Calendar ID**: Edit a game and enter its `google_calendar_id`.
+2. **Create Events**: Add events directly on the linked Google Calendar.
+3. **Automatic Sync**: Every 15 minutes the app reads new events and creates matching quests.
+4. **Event Link Update**: The quest URL is added to the event description.
+
 ## Badge Management
 
 ### Creating Badges

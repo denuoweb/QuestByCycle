@@ -108,6 +108,11 @@ class MailConfig:
 
 
 @dataclass
+class GoogleConfig:
+    calendar_credentials: str | None
+
+
+@dataclass
 class SocialConfig:
     twitter_username: str
     twitter_api_key: str
@@ -151,6 +156,7 @@ class AppConfig:
     push: PushConfig
     twa: TWAConfig
     sqlalchemy_engine_options: SQLAlchemyEngineOptions
+    google: GoogleConfig
 
 
 def load_config() -> AppConfig:
@@ -222,6 +228,9 @@ def load_config() -> AppConfig:
         sqlalchemy_engine_options=SQLAlchemyEngineOptions(
             pool_pre_ping=True,
             pool_recycle=3300,
+        ),
+        google=GoogleConfig(
+            calendar_credentials=_get_env_nullable("GOOGLE_CALENDAR_CREDENTIALS"),
         ),
     )
 

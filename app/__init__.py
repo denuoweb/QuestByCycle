@@ -127,6 +127,7 @@ def create_app(config_overrides=None):
         "FACEBOOK_PAGE_ID": inscopeconfig.social.facebook_page_id,
         "INSTAGRAM_ACCESS_TOKEN": inscopeconfig.social.instagram_access_token,
         "INSTAGRAM_USER_ID": inscopeconfig.social.instagram_user_id,
+        "GOOGLE_CALENDAR_CREDENTIALS": inscopeconfig.google.calendar_credentials,
         "TWA_SHA256_FINGERPRINT": inscopeconfig.twa.SHA256_CERT_FINGERPRINT,
 
         "DEFAULT_SUPER_ADMIN_USERNAME": inscopeconfig.encryption.DEFAULT_SUPER_ADMIN_USERNAME,

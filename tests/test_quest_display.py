@@ -56,7 +56,7 @@ def test_prepare_quests_hides_unbadged_empty(app):
         db.session.add(sub)
         db.session.commit()
 
-        quests, _ = _prepare_quests(game, admin.id, [], datetime.now(timezone.utc))
+        quests, _, _ = _prepare_quests(game, admin.id, [], datetime.now(timezone.utc))
         ids = [q.id for q in quests]
         assert q1.id not in ids
         assert q2.id in ids
@@ -94,7 +94,7 @@ def test_prepare_quests_hides_badgeless_image(app):
         db.session.add(sub)
         db.session.commit()
 
-        quests, _ = _prepare_quests(game, admin.id, [], datetime.now(timezone.utc))
+        quests, _, _ = _prepare_quests(game, admin.id, [], datetime.now(timezone.utc))
         ids = [q.id for q in quests]
         assert q1.id not in ids
         assert q2.id in ids

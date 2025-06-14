@@ -18,6 +18,11 @@ def create_scheduler(app):
         with app.app_context():
             check_and_send_liaison_emails()
 
+    def _run_calendar_sync():
+        with app.app_context():
+            from app.google_calendar import sync_google_calendars
+            sync_google_calendars()
+
     scheduler.add_job(
         func=_run_check_and_send,
         trigger='cron',
@@ -26,6 +31,15 @@ def create_scheduler(app):
         replace_existing=True,
     )
     app.logger.info("Scheduled job 'liaison_email_job'")
+
+    scheduler.add_job(
+        func=_run_calendar_sync,
+        trigger='interval',
+        minutes=15,
+        id='google_calendar_sync',
+        replace_existing=True,
+    )
+    app.logger.info("Scheduled job 'google_calendar_sync'")
 
     scheduler.start()
     app.logger.info("APScheduler started")

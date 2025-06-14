@@ -75,6 +75,7 @@ The dashboard is your central hub for accessing games, quests, and community fea
 1. **Navigate to the Quests Section**: Click on "Quests" from your dashboard.
 2. **Select a Game**: Choose the game for which you want to see quests.
 3. **View Quest Details**: Click on a quest to view its description, tips, and requirements.
+4. **Calendar Quests Tab**: Use the "Calendar Quests" tab to see quests created from Google Calendar events.
 
 ### Quest Verification
 

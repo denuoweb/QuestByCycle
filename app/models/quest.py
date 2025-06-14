@@ -24,6 +24,9 @@ class Quest(db.Model):
     tips = db.Column(db.String(2000), default='', nullable=True)
     completion_limit = db.Column(db.Integer, default=1)
     frequency = db.Column(db.String(50), nullable=True)
+    calendar_event_id = db.Column(db.String(255), nullable=True, unique=True)
+    calendar_event_start = db.Column(db.DateTime(timezone=True), nullable=True)
+    is_calendar = db.Column(db.Boolean, default=False)
     user_quests = db.relationship(
         'UserQuest', back_populates='quest',
         cascade='all, delete', passive_deletes=True

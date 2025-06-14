@@ -127,6 +127,7 @@ def _prepare_quests(game, user_id, user_quests, now):
     Returns a list of quests and sorted activities.
     """
     quests = Quest.query.filter_by(game_id=game.id, enabled=True).all() if game else []
+    calendar_quests = [q for q in quests if q.is_calendar]
     completed_quests = UserQuest.query.filter(UserQuest.completions > 0).order_by(UserQuest.completed_at.desc()).all()
 
     for quest in quests:
@@ -184,7 +185,8 @@ def _prepare_quests(game, user_id, user_quests, now):
     ]
 
     quests.sort(key=lambda x: (-x.is_sponsored, -x.personal_completions, -x.total_completions))
-    return quests, activities
+    calendar_quests.sort(key=lambda x: x.calendar_event_start or datetime.max)
+    return quests, activities, calendar_quests
   
 
 def _prepare_user_data(game_id, profile):
@@ -333,7 +335,7 @@ def index(game_id, quest_id, user_id):
         user_games_list = []
 
                                    
-    quests, activities = _prepare_quests(game, user_id, user_quests, now)
+    quests, activities, calendar_quests = _prepare_quests(game, user_id, user_quests, now)
     categories = sorted({quest.category for quest in quests if quest.category})
 
                                             
@@ -391,6 +393,7 @@ def index(game_id, quest_id, user_id):
         user_games=user_games_list,
         activities=activities,
         quests=quests,
+        calendar_quests=calendar_quests,
         categories=categories,
         show_join_modal=show_join_modal,
         show_join_custom=show_join_custom,
