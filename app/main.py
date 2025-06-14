@@ -532,7 +532,7 @@ def leaderboard_partial():
         User.display_name,
         db.func.sum(UserQuest.points_awarded).label('total_points'),
         db.func.sum(
-            db.case([(UserQuest.completions > 0, 1)], else_=0)
+            db.case((UserQuest.completions > 0, 1), else_=0)
         ).label('completed_quests')
     ).join(UserQuest, UserQuest.user_id == User.id
     ).join(Quest, Quest.id == UserQuest.quest_id
