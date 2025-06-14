@@ -102,34 +102,20 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
    git clone https://github.com/denuoweb/QuestByCycle.git
    cd QuestByCycle
    ```
-2. Install Poetry and project dependencies:
+
+   Install Poetry and project dependencies:
    ```bash
    curl -sSL https://install.python-poetry.org | python3
    poetry install
-   npm install
-   npm run build
-   ```
-3. Copy `.env.example` to `.env` and adjust the values, especially
-   `SQLALCHEMY_DATABASE_URI` and mail credentials.
-5. Copy `gunicorn.conf.py.example` to `gunicorn.conf.py`.
-6. Run database migrations:
-   ```bash
-   poetry run flask db upgrade
-   ```
-7. Start the development server:
-   ```bash
-   poetry run flask --app wsgi:app run --host=127.0.0.1 --port=5000
-   ```
-8. In a separate terminal, start the background worker:
-   ```bash
-   poetry run rqworker
    ```
 
-### Debian 12 Server Setup (Production)
-These steps assume root access and create a dedicated `appuser` to run QuestByCycle.
+   Copy `.env.example` to `.env` and adjust the values.
+
+   Copy `gunicorn.conf.py.example` to `gunicorn.conf.py`.
+
 
 #### RAM Allocation
-1. Allocate Swap on low ram systems:
+  Allocate Swap on low ram systems:
 
 ```sudo fallocate -l 4G /swapfile```
 ```sudo chmod 600 /swapfile```
@@ -138,10 +124,6 @@ These steps assume root access and create a dedicated `appuser` to run QuestByCy
 ```echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab```
 
 #### Database Install and Setup
-2. Install PostgreSQL
-```sudo apt-get update```
-```sudo apt-get install -y postgresql postgresql-contrib```
-
    Secure the postgres superuser
 ```sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'STRONG_SUPERSECRET';"```
 
@@ -150,30 +132,16 @@ These steps assume root access and create a dedicated `appuser` to run QuestByCy
 ```CREATE DATABASE questdb;```
 ```CREATE USER questuser WITH PASSWORD 'questpassword';```
 ```GRANT ALL PRIVILEGES ON DATABASE questdb TO questuser;```
+```\c questdb```
+```ALTER SCHEMA public OWNER TO questuser;```
 ```EOF```
 
    Ensure Postgres listens only on localhost
 ```sudo sed -i "s/^#listen_addresses =.*/listen_addresses = 'localhost'/" /etc/postgresql/*/main/postgresql.conf```
 ```sudo systemctl restart postgresql``
 
-#### Install PIP
-3. Install python dependencies
-```sudo apt-get install -y python3-pip```
 
-5. Install Poetry
-```sudo su -s /bin/bash appuser -c 'curl -sSL https://install.python-poetry.org | python3 - && \```
-```echo "export PATH=\"$HOME/.local/bin:\$PATH\"" >> /home/appuser/.bashrc'```
-
-6. Download QuestByCycle
-```sudo -u appuser git clone https://github.com/denuoweb/QuestByCycle.git /opt/QuestByCycle```
-
-7. Install Python VM
-```cd /opt/QuestByCycle```
-```sudo -u appuser /home/appuser/.local/bin/poetry env use /usr/bin/python3```
-```sudo -u appuser /home/appuser/.local/bin/poetry install```
-
-8. Install NGINX:
-```sudo apt install curl gnupg2 ca-certificates lsb-release debian-archive-keyring python3-certbot-nginx```
+   Install NGINX:
 ```curl https://nginx.org/keys/nginx_signing.key | gpg --dearmor \```
 ```    | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg >/dev/null```
 ```echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] \```
@@ -198,32 +166,12 @@ These steps assume root access and create a dedicated `appuser` to run QuestByCy
 ```sudo systemctl restart nginx.service```
 ```sudo certbot --nginx -d DOMAINNAME```
 
-12. PostgresDB Setup:
-
-```sudo systemctl start postgresql```
-
-```sudo systemctl enable postgresql```
-
-```\c databasename```
-
-```GRANT ALL PRIVILEGES ON DATABASE databasename TO username;```
-
-```GRANT USAGE, CREATE ON SCHEMA public TO username;```
-
-```GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO username;```
-
-```ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO username;```
-
-```\q```
-
-```exit```
-
-13. Set up Emailing
+   Set up Emailing
 ```sudo apt update```
 ```sudo apt install postfix```
 ```sudo nano /etc/postfix/main.cf```
 
-13. Build frontend assets
+   Build frontend assets
 
 ```cd /opt/QuestByCycle```
 ```npm install```
@@ -232,25 +180,16 @@ These steps assume root access and create a dedicated `appuser` to run QuestByCy
 Vite outputs two entry points: `main.js` for the majority of pages and
 `submitPhoto.js` which is loaded only on `submit_photo.html`.
 
-14. Copy `.env.example` to `.env` and set all variables.
-16. Copy `gunicorn.conf.py.example` to `gunicorn.conf.py`.
-17. If you have `ffmpeg` installed, ensure it is accessible or set
+   Copy `.env.example` to `.env` and set all variables.
+   Copy `gunicorn.conf.py.example` to `gunicorn.conf.py`.
+   If you have `ffmpeg` installed, ensure it is accessible or set
     `FFMPEG_PATH` in `.env`. Without `ffmpeg` videos are stored unmodified.
-18. Run database migrations
-```sudo -u APPUSER /home/APPUSER/.local/bin/poetry run flask db upgrade```
-19. Run the server in debug
+   Run the server in debug
 ```sudo -u APPUSER /home/APPUSER/.local/bin/poetry run flask --app wsgi:app run --host=127.0.0.1 --port=5000```
 
-20. Run the server in production:
+   Run the server in production:
 
-Create User
-```sudo adduser --system --group appuser```
-```sudo mkdir -p /opt/QuestByCycle```
-```sudo chown appuser:appuser /opt/QuestByCycle```
-```sudo chmod 755 /opt/QuestByCycle```
-```sudo -u appuser git clone https://github.com/denuoweb/QuestByCycle.git /opt/QuestByCycle```
-
-```sudo nano /etc/systemd/system/questbycycleApp.service```
+```sudo nano /etc/systemd/system/questbycycle.service```
 
 ```markdown
 [Unit]
@@ -270,10 +209,10 @@ WantedBy=multi-user.target
 ```
 Run:
 
-```sudo systemctl start questbycycleApp.service```
-```sudo systemctl enable questbycycleApp.service```
+```sudo systemctl start questbycycle.service```
+```sudo systemctl enable questbycycle.service```
 
-21. Start the background worker:
+   Start the background worker:
 ```sudo -u APPUSER /home/APPUSER/.local/bin/poetry run rqworker```
 
 Update Poetry:
