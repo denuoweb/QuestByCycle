@@ -35,7 +35,7 @@ def create_scheduler(app):
     scheduler.add_job(
         func=_run_calendar_sync,
         trigger='interval',
-        minutes=15,
+        minutes=1,
         id='google_calendar_sync',
         replace_existing=True,
     )

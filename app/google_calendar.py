@@ -1,13 +1,12 @@
 from __future__ import annotations
-
-from datetime import datetime
+import json
 import os
+import base64
+from datetime import datetime
 from typing import Optional
-
 from flask import current_app
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
-
 from app.models import db
 from app.models.game import Game
 from app.models.quest import Quest
@@ -16,12 +15,16 @@ SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 
 def _get_service():
-    cred_path = current_app.config.get("GOOGLE_CALENDAR_CREDENTIALS")
-    if not cred_path or not os.path.exists(cred_path):
+    raw = current_app.config.get("GOOGLE_CALENDAR_CREDENTIALS", "")
+    if not raw:
         current_app.logger.info("Google Calendar credentials not configured")
         return None
-    credentials = Credentials.from_service_account_file(cred_path, scopes=SCOPES)
-    return build("calendar", "v3", credentials=credentials, cache_discovery=False)
+
+    if os.path.exists(raw):
+        creds = Credentials.from_service_account_file(raw, scopes=SCOPES)
+
+    return build("calendar", "v3", credentials=creds, cache_discovery=False)
+
 
 
 def sync_google_calendars() -> None:
