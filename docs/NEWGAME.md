@@ -87,6 +87,11 @@ You will see a form with the following fields. Fill them out as described:
     - **Interaction**: Useful for private or exclusive games where you want to control who can join.
     - **Example**: "SUMMER2024".
 
+13. **Calendar URL**:
+    - **Purpose**: Optional link to an external calendar for the game.
+    - **Interaction**: When provided, participants see a Calendar tab with the embedded calendar.
+    - **Example**: `https://calendar.google.com/calendar/embed?src=your_calendar_id&ctz=America/Los_Angeles`.
+
 ### Step 3: Social Media Integration
 
 Fill in the social media integration fields if your game will use Twitter and Facebook. These fields help automate posts and updates related to the game, enhancing engagement and visibility. If these fields are left blank. They will not auto upload to the various social media platform. There are no repercusions.
