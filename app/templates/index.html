@@ -263,7 +263,12 @@
             </div>
         </div>
         {% if has_joined %}
-            <div class="badge-bar-container">
+            <div class="badge-bar-container" id="available-quests">
+                <div class="wh-tab-navigation">
+                    <button class="wh-tab-button active" data-wh-tab="quests-all">All Quests</button>
+                    <button class="wh-tab-button" data-wh-tab="calendar-quests">Calendar Quests</button>
+                </div>
+                <div class="wh-tab-content active" id="wh-quests-all-tab">
                 <h2>Available Quests</h2>
                 <input type="text" id="questSearchInput" class="form-control mb-3" placeholder="Search for quests...">
                 <div class="form-group">
@@ -316,6 +321,27 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
+                <div class="wh-tab-content" id="wh-calendar-quests-tab">
+                    <table class="table quest-table">
+                        <thead>
+                            <tr>
+                                <th class="quest-table-header title">Quest</th>
+                                <th class="quest-table-header">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for quest in calendar_quests %}
+                            <tr data-quest-id="{{ quest.id }}">
+                                <td>
+                                    <a href="javascript:void(0)" class="quest-title" data-quest-detail="{{ quest.id }}">{{ quest.title }}</a>
+                                </td>
+                                <td>{{ quest.event_start.strftime('%Y-%m-%d') if quest.event_start else '' }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         {% endif %}
         {% if current_user.is_authenticated and current_user.is_admin %}

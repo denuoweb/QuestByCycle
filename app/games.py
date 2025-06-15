@@ -476,6 +476,18 @@ def generate_qr_for_game(game_id):
     return response
 
 
+@games_bp.route('/sync_calendar/<int:game_id>', methods=['POST'])
+@login_required
+@require_admin
+def sync_calendar(game_id):
+    """Synchronize Google Calendar events into quests."""
+    from app.google_calendar import sync_game_calendar
+
+    sync_game_calendar(game_id)
+    flash('Calendar synchronized.', 'info')
+    return redirect(url_for('games.update_game', game_id=game_id))
+
+
 @games_bp.route('/get_game/<int:game_id>', methods=['GET'])
 def get_game(game_id):
     game = Game.query.get_or_404(game_id)

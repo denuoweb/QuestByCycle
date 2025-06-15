@@ -146,6 +146,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const questWidget = document.querySelector('#available-quests');
+  if (questWidget) {
+    const tabButtons  = questWidget.querySelectorAll('.wh-tab-button');
+    const tabContents = questWidget.querySelectorAll('.wh-tab-content');
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-wh-tab');
+        tabButtons.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        questWidget.querySelector(`#wh-${target}-tab`).classList.add('active');
+      });
+    });
+  }
+
   updateGameName();
 });
 

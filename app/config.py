@@ -135,6 +135,11 @@ class TWAConfig:
 
 
 @dataclass
+class GoogleConfig:
+    SERVICE_ACCOUNT_FILE: str | None
+
+
+@dataclass
 class SQLAlchemyEngineOptions:
     pool_pre_ping: bool
     pool_recycle: int
@@ -150,6 +155,7 @@ class AppConfig:
     social: SocialConfig
     push: PushConfig
     twa: TWAConfig
+    google: GoogleConfig
     sqlalchemy_engine_options: SQLAlchemyEngineOptions
 
 
@@ -218,6 +224,9 @@ def load_config() -> AppConfig:
         ),
         twa=TWAConfig(
             SHA256_CERT_FINGERPRINT=_get_env("TWA_SHA256_FINGERPRINT", ""),
+        ),
+        google=GoogleConfig(
+            SERVICE_ACCOUNT_FILE=_get_env("GOOGLE_SERVICE_ACCOUNT_FILE", "")
         ),
         sqlalchemy_engine_options=SQLAlchemyEngineOptions(
             pool_pre_ping=True,
