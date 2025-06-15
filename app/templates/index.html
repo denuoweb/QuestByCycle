@@ -88,8 +88,10 @@
                                     <!-- Tab Navigation -->  
                                     <div class="wh-tab-navigation">
                                         <button class="wh-tab-button active" data-wh-tab="recent-activity">Recent Activity</button>
+                                        {% if game.calendar_url %}
                                         <button class="wh-tab-button"        data-wh-tab="google-calendar">Calendar</button>
                                         <button class="wh-tab-button"        data-wh-tab="calendar-quests">Calendar Quests</button>
+                                        {% endif %}
                                     </div>
                                 </div>  
                                 <!-- Recent Activity Tab -->  
@@ -199,37 +201,15 @@
                                         </div>
                                     </div>
                                 </div>
+                                {% if game.calendar_url %}
                                 <!-- Google Calendar Tab -->
                                 <div class="wh-tab-content" id="wh-google-calendar-tab">
                                     <div class="calendar-container">
-                                        <iframe src="https://calendar.google.com/calendar/embed?src=7641f437a33113e72a9539618fefdb4275bbdc56bcd8090e8598383398dd1bab@group.calendar.google.com&ctz=America%2FLos_Angeles"
+                                        <iframe src="{{ game.calendar_url }}"
                                                 class="border-0" width="100%" height="350" frameborder="0" scrolling="no"></iframe>
                                     </div>
                                 </div>
-                                <!-- Calendar Quests Tab -->
-                                <div class="wh-tab-content" id="wh-calendar-quests-tab">
-                                    <div class="badge-bar-container">
-                                        <table class="table quest-table">
-                                            <thead>
-                                                <tr>
-                                                    <th class="quest-table-header title">Quest</th>
-                                                    <th class="quest-table-header">Starts</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for quest in calendar_quests %}
-                                                <tr class="quest-row" data-quest-id="{{ quest.id }}">
-                                                    <td class="quest-title-cell">
-                                                        <button type="button" class="btn btn-sm btn-outline-primary quest-inline-view-btn" data-quest-detail="{{ quest.id }}">View</button>
-                                                        <a href="javascript:void(0)" class="quest-title text-decoration-none ms-2" data-quest-detail="{{ quest.id }}">{{ quest.title }}</a>
-                                                    </td>
-                                                    <td class="quest-stats-cell">{{ quest.calendar_event_start.strftime('%Y-%m-%d') if quest.calendar_event_start else '' }}</td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
