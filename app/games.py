@@ -47,6 +47,7 @@ def serialize_game(game):
         "game_goal": game.game_goal,
         "is_public": game.is_public,
         "allow_joins": game.allow_joins,
+        "calendar_url": game.calendar_url,
     }
 
 
@@ -70,6 +71,7 @@ def populate_game_from_form(game, form):
         "facebook_page_id",
         "instagram_user_id",
         "instagram_access_token",
+        "calendar_url",
         "social_media_liaison_email",
     ]
 
