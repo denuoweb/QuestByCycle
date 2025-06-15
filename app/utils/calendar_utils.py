@@ -47,13 +47,15 @@ def sync_google_calendar_events() -> None:
             path, scopes=["https://www.googleapis.com/auth/calendar"]
         )
         service = build("calendar", "v3", credentials=creds, cache_discovery=False)
-        start_time = (game.last_calendar_sync or now - timedelta(days=7)).isoformat()
+        start_time = now.isoformat()
+        end_time = (now + timedelta(days=14)).isoformat()
         try:
             events = (
                 service.events()
                 .list(
                     calendarId=calendar_id,
                     timeMin=start_time,
+                    timeMax=end_time,
                     singleEvents=True,
                     orderBy="startTime",
                 )
