@@ -49,19 +49,26 @@ def sync_google_calendar_events() -> None:
         service = build("calendar", "v3", credentials=creds, cache_discovery=False)
         start_time = now.isoformat()
         end_time = (now + timedelta(days=14)).isoformat()
+        events: list[dict] = []
+        page_token: str | None = None
         try:
-            events = (
-                service.events()
-                .list(
-                    calendarId=calendar_id,
-                    timeMin=start_time,
-                    timeMax=end_time,
-                    singleEvents=True,
-                    orderBy="startTime",
+            while True:
+                resp = (
+                    service.events()
+                    .list(
+                        calendarId=calendar_id,
+                        timeMin=start_time,
+                        timeMax=end_time,
+                        singleEvents=True,
+                        orderBy="startTime",
+                        pageToken=page_token,
+                    )
+                    .execute()
                 )
-                .execute()
-                .get("items", [])
-            )
+                events.extend(resp.get("items", []))
+                page_token = resp.get("nextPageToken")
+                if not page_token:
+                    break
         except Exception as exc:  # network or API error
             current_app.logger.error(
                 "Failed to fetch calendar events for game %s: %s", game.id, exc
