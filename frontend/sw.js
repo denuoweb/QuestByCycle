@@ -161,8 +161,12 @@ self.addEventListener('fetch', (event) => {
   if (requestUrl.origin !== self.location.origin) {
     return;
   }
-  // Queue non-GET requests when offline
-  if (['POST', 'PUT', 'DELETE'].includes(event.request.method)) {
+  // Queue non-GET requests when offline. Skip navigations to let the browser
+  // handle full page form submissions correctly.
+  if (
+    ['POST', 'PUT', 'DELETE'].includes(event.request.method) &&
+    event.request.mode !== 'navigate'
+  ) {
     event.respondWith(
       (async () => {
         try {
