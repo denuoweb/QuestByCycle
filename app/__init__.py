@@ -48,13 +48,16 @@ csrf = CSRFProtect()
 if not os.path.exists("logs"):
     os.mkdir("logs")
 
+log_level = logging.DEBUG if os.getenv("FLASK_DEBUG") or os.getenv("DEBUG") else logging.INFO
+
 logging.basicConfig(
-    level=logging.INFO,
+    level=log_level,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         RotatingFileHandler("logs/application.log", maxBytes=10240, backupCount=10),
         logging.StreamHandler(),
     ],
+    force=True,
 )
 logger = logging.getLogger(__name__)
 
