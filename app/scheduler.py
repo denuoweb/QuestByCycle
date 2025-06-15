@@ -5,6 +5,7 @@ from apscheduler.schedulers.base import STATE_RUNNING
 
                                                      
 from app.utils.email_utils import check_and_send_liaison_emails
+from app.utils.calendar_utils import sync_google_calendar_events
 
 def create_scheduler(app):
     scheduler = BackgroundScheduler(
@@ -18,6 +19,10 @@ def create_scheduler(app):
         with app.app_context():
             check_and_send_liaison_emails()
 
+    def _run_calendar_sync():
+        with app.app_context():
+            sync_google_calendar_events()
+
     scheduler.add_job(
         func=_run_check_and_send,
         trigger='cron',
@@ -25,7 +30,15 @@ def create_scheduler(app):
         id='liaison_email_job',
         replace_existing=True,
     )
+    scheduler.add_job(
+        func=_run_calendar_sync,
+        trigger='interval',
+        minutes=15,
+        id='calendar_sync_job',
+        replace_existing=True,
+    )
     app.logger.info("Scheduled job 'liaison_email_job'")
+    app.logger.info("Scheduled job 'calendar_sync_job'")
 
     scheduler.start()
     app.logger.info("APScheduler started")

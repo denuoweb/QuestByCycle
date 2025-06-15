@@ -334,6 +334,9 @@ def index(game_id, quest_id, user_id):
 
                                    
     quests, activities = _prepare_quests(game, user_id, user_quests, now)
+    calendar_quests = [q for q in quests if getattr(q, 'from_calendar', False)]
+    calendar_quests.sort(key=lambda q: q.calendar_event_start or q.id)
+    quests = [q for q in quests if not getattr(q, 'from_calendar', False)]
     categories = sorted({quest.category for quest in quests if quest.category})
 
                                             
@@ -391,6 +394,7 @@ def index(game_id, quest_id, user_id):
         user_games=user_games_list,
         activities=activities,
         quests=quests,
+        calendar_quests=calendar_quests,
         categories=categories,
         show_join_modal=show_join_modal,
         show_join_custom=show_join_custom,

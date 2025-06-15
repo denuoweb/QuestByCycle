@@ -39,6 +39,9 @@ class Quest(db.Model):
         cascade='all, delete-orphan'
     )
     badge_awarded = db.Column(db.Integer, default=1)
+    from_calendar = db.Column(db.Boolean, default=False)
+    calendar_event_id = db.Column(db.String(255), nullable=True)
+    calendar_event_start = db.Column(db.DateTime(timezone=True), nullable=True)
 
     def __repr__(self):
         return f'<Quest {self.id}>'

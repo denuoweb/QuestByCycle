@@ -120,6 +120,19 @@
   &.active { display: block; }
 }
 
+.quest-tab-navigation {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.quest-tab-button {
+  @extend .wh-tab-button;
+}
+
+.quest-tab-content {
+  @extend .wh-tab-content;
+}
+
 @media (max-width: 768px) {
   .wh-tab-button { padding: 8px 15px; font-size: .9rem; }
   .calendar-container { height: 350px; }
