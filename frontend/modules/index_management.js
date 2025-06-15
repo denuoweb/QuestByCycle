@@ -146,6 +146,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const questContainer = document.querySelector('.badge-bar-container');
+  if (questContainer) {
+    const qButtons  = questContainer.querySelectorAll('.quest-tab-button');
+    const qContents = questContainer.querySelectorAll('.quest-tab-content');
+    qButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-quest-tab');
+        qButtons.forEach(b => b.classList.remove('active'));
+        qContents.forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        questContainer.querySelector(`#${target}-tab`).classList.add('active');
+      });
+    });
+  }
+
   updateGameName();
 });
 

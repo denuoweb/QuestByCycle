@@ -265,6 +265,10 @@
         {% if has_joined %}
             <div class="badge-bar-container">
                 <h2>Available Quests</h2>
+                <div class="quest-tab-navigation mb-2">
+                    <button class="quest-tab-button active" data-quest-tab="all-quests">All</button>
+                    <button class="quest-tab-button" data-quest-tab="calendar-quests">Calendar</button>
+                </div>
                 <input type="text" id="questSearchInput" class="form-control mb-3" placeholder="Search for quests...">
                 <div class="form-group">
                     <label for="questCategoryDropdown">Filter by Category:</label>
@@ -275,6 +279,7 @@
                         {% endfor %}
                     </select>
                 </div>
+                <div class="quest-tab-content active" id="all-quests-tab">
                 <table class="table quest-table">
                     <colgroup>
                         <col>
@@ -316,6 +321,38 @@
                         {% endfor %}
                     </tbody>
                 </table>
+                </div>
+                <div class="quest-tab-content" id="calendar-quests-tab">
+                <table class="table quest-table">
+                    <colgroup>
+                        <col>
+                        <col>
+                        <col>
+                        <col>
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th class="quest-table-header title">Quest</th>
+                            <th class="quest-table-header">Your Posts</th>
+                            <th class="quest-table-header">All Posts</th>
+                            <th class="quest-table-header">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for quest in calendar_quests %}
+                        <tr class="quest-row" data-category="{{ quest.category or 'Calendar' }}" data-quest-id="{{ quest.id }}">
+                            <td class="quest-title-cell">
+                                <button type="button" class="btn btn-sm btn-outline-primary quest-inline-view-btn" data-quest-detail="{{ quest.id }}">View</button>
+                                <a href="javascript:void(0)" class="quest-title text-decoration-none ms-2" data-quest-detail="{{ quest.id }}">{{ quest.title }}</a>
+                            </td>
+                            <td class="quest-stats-cell">{{ quest.personal_completions }}</td>
+                            <td class="quest-stats-cell">{{ quest.total_completions }}</td>
+                            <td class="quest-stats-cell">{{ quest.points }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
             </div>
         {% endif %}
         {% if current_user.is_authenticated and current_user.is_admin %}

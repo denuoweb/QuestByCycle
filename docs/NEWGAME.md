@@ -91,6 +91,10 @@ You will see a form with the following fields. Fill them out as described:
     - **Purpose**: Optional link to an external calendar for the game.
     - **Interaction**: When provided, participants see a Calendar tab with the embedded calendar.
     - **Example**: `https://calendar.google.com/calendar/embed?src=your_calendar_id&ctz=America/Los_Angeles`.
+14. **Calendar Service JSON Path**:
+    - **Purpose**: Path to a Google service account JSON file for syncing calendar events.
+    - **Interaction**: When set, new events create quests automatically every 15 minutes.
+    - **Example**: `/home/user/service.json`.
 
 ### Step 3: Social Media Integration
 

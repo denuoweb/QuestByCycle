@@ -195,6 +195,7 @@ class GameForm(FlaskForm):
     instagram_user_id = StringField("Instagram User ID", validators=[Optional()])
     instagram_access_token = StringField("Instagram Access Token", validators=[Optional()])
     calendar_url = StringField("Calendar URL", validators=[Optional(), URL()])
+    calendar_service_json_path = StringField("Calendar Service JSON Path", validators=[Optional()])
     custom_game_code = StringField("Custom Game Code", validators=[Optional()])
     is_public = BooleanField("Public Game", default=True)
     allow_joins = BooleanField("Allow Joining", default=True)

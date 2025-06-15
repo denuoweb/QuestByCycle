@@ -433,6 +433,9 @@ def get_quests_for_game(game_id):
             "badge_awarded": quest.badge_awarded if quest.badge_id else "",
             "frequency": quest.frequency,
             "category": quest.category if quest.category else "Not Set",
+            "from_calendar": quest.from_calendar,
+            "calendar_event_id": quest.calendar_event_id,
+            "calendar_event_start": quest.calendar_event_start.isoformat() if quest.calendar_event_start else None,
         }
         for quest in quests
     ]

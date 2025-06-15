@@ -77,6 +77,7 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
 - **Responsive Design:** Ensuring a seamless and engaging user experience across various devices and screen sizes.
 - **PWA/TWA Support:** Service worker and offline page. See [docs/PWA.md](docs/PWA.md) for configuration.
 - **Push Notifications:** Optional Web Push support keeps users informed even when the site is closed. See [docs/PUSH_NOTIFICATIONS.md](docs/PUSH_NOTIFICATIONS.md) for setup.
+- **Calendar Sync:** Link a Google Calendar to auto-create quests from events.
 
 ## Getting Started
 
