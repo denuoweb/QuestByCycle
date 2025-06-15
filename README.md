@@ -78,6 +78,7 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
 - **PWA/TWA Support:** Service worker and offline page. See [docs/PWA.md](docs/PWA.md) for configuration.
 - **Push Notifications:** Optional Web Push support keeps users informed even when the site is closed. See [docs/PUSH_NOTIFICATIONS.md](docs/PUSH_NOTIFICATIONS.md) for setup.
 - **Calendar Sync:** Link a Google Calendar to auto-create quests from events.
+- **Calendar Quest View:** Upcoming calendar quests are grouped by date, with past events moved to the bottom.
 
 ## Getting Started
 

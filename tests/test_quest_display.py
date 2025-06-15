@@ -6,7 +6,7 @@ from app.models.game import Game
 from app.models.user import User
 from app.models.quest import Quest, QuestSubmission
 from app.models.badge import Badge
-from app.main import _prepare_quests, _prepare_user_data
+from app.main import _prepare_quests, _prepare_user_data, _sort_calendar_quests
 
 
 @pytest.fixture
@@ -158,3 +158,46 @@ def test_prepare_quests_includes_calendar_quests(app):
         quests, _ = _prepare_quests(game, admin.id, [], datetime.now(timezone.utc))
         ids = [q.id for q in quests]
         assert q_cal.id in ids
+
+
+def test_sort_calendar_quests_orders_by_date(app):
+    with app.app_context():
+        admin = User(username="admin5", email="admin5@example.com", license_agreed=True)
+        admin.set_password("pw")
+        db.session.add(admin)
+        db.session.commit()
+
+        game = Game(
+            title="Calendar Game",
+            start_date=datetime.now(timezone.utc) - timedelta(days=1),
+            end_date=datetime.now(timezone.utc) + timedelta(days=1),
+            admin_id=admin.id,
+        )
+        db.session.add(game)
+        game.admins.append(admin)
+        db.session.commit()
+
+        future1 = Quest(
+            title="Future1",
+            game=game,
+            from_calendar=True,
+            calendar_event_start=datetime.now(timezone.utc) + timedelta(days=1),
+        )
+        future2 = Quest(
+            title="Future2",
+            game=game,
+            from_calendar=True,
+            calendar_event_start=datetime.now(timezone.utc) + timedelta(days=2),
+        )
+        past = Quest(
+            title="Past",
+            game=game,
+            from_calendar=True,
+            calendar_event_start=datetime.now(timezone.utc) - timedelta(days=1),
+        )
+        db.session.add_all([future2, future1, past])
+        db.session.commit()
+
+        ordered = _sort_calendar_quests([future2, future1, past], datetime.now(timezone.utc))
+        titles = [q.title for q in ordered]
+        assert titles == ["Future1", "Future2", "Past"]

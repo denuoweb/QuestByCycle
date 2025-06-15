@@ -248,6 +248,21 @@ def _prepare_user_data(game_id, profile):
     return earned, unearned
 
 
+def _sort_calendar_quests(quests, now):
+    """Return calendar quests sorted with upcoming first and past events last."""
+    def aware(dt):
+        if dt is None:
+            return None
+        return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
+
+    upcoming = [q for q in quests if not q.calendar_event_start or aware(q.calendar_event_start) >= now]
+    past = [q for q in quests if q.calendar_event_start and aware(q.calendar_event_start) < now]
+    sentinel = datetime.max.replace(tzinfo=UTC)
+    upcoming.sort(key=lambda q: aware(q.calendar_event_start) or sentinel)
+    past.sort(key=lambda q: aware(q.calendar_event_start) or sentinel)
+    return upcoming + past
+
+
 @main_bp.route('/', defaults={'game_id': None, 'quest_id': None, 'user_id': None})
 @main_bp.route('/<int:game_id>', defaults={'quest_id': None, 'user_id': None})
 @main_bp.route('/<int:game_id>/<int:quest_id>', defaults={'user_id': None})
@@ -335,7 +350,7 @@ def index(game_id, quest_id, user_id):
                                    
     quests, activities = _prepare_quests(game, user_id, user_quests, now)
     calendar_quests = [q for q in quests if getattr(q, 'from_calendar', False)]
-    calendar_quests.sort(key=lambda q: q.calendar_event_start or q.id)
+    calendar_quests = _sort_calendar_quests(calendar_quests, now)
     quests = [q for q in quests if not getattr(q, 'from_calendar', False)]
     categories = sorted({quest.category for quest in quests if quest.category})
 
