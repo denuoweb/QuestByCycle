@@ -270,7 +270,7 @@
                     <button class="quest-tab-button" data-quest-tab="calendar-quests">Calendar</button>
                 </div>
                 <input type="text" id="questSearchInput" class="form-control mb-3" placeholder="Search for quests...">
-                <div class="form-group">
+                <div class="form-group" id="questCategoryGroup">
                     <label for="questCategoryDropdown">Filter by Category:</label>
                     <select id="questCategoryDropdown" class="form-control mb-3">
                         <option value="all">All</option>
@@ -339,7 +339,15 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% set prev_date = None %}
                         {% for quest in calendar_quests %}
+                        {% set qdate = quest.calendar_event_start.date() if quest.calendar_event_start else None %}
+                        {% if qdate != prev_date %}
+                        <tr class="table-secondary">
+                            <td colspan="4">{{ qdate.strftime('%Y-%m-%d') if qdate else 'No Date' }}</td>
+                        </tr>
+                        {% set prev_date = qdate %}
+                        {% endif %}
                         <tr class="quest-row" data-category="{{ quest.category or 'Calendar' }}" data-quest-id="{{ quest.id }}">
                             <td class="quest-title-cell">
                                 <button type="button" class="btn btn-sm btn-outline-primary quest-inline-view-btn" data-quest-detail="{{ quest.id }}">View</button>

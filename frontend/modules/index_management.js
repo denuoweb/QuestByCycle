@@ -146,8 +146,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const qButtons  = document.querySelectorAll('.quest-tab-navigation .quest-tab-button');
-  const qContents = document.querySelectorAll('.quest-tab-content');
+  const qButtons       = document.querySelectorAll('.quest-tab-navigation .quest-tab-button');
+  const qContents      = document.querySelectorAll('.quest-tab-content');
+  const searchInput    = document.getElementById('questSearchInput');
+  const categoryGroup  = document.getElementById('questCategoryGroup');
   if (qButtons.length && qContents.length) {
     qButtons.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -156,6 +158,14 @@ document.addEventListener('DOMContentLoaded', () => {
         qContents.forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById(`${target}-tab`).classList.add('active');
+
+        if (target === 'calendar-quests') {
+          if (searchInput) searchInput.style.display = 'none';
+          if (categoryGroup) categoryGroup.style.display = 'none';
+        } else {
+          if (searchInput) searchInput.style.display = '';
+          if (categoryGroup) categoryGroup.style.display = '';
+        }
       });
     });
   }
