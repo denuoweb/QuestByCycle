@@ -132,3 +132,29 @@ def test_prepare_user_data_hides_badgeless_image(app):
         all_badges = [b['id'] for b in earned + unearned]
         assert b_no_img.id not in all_badges
         assert b_img.id in all_badges
+
+
+def test_prepare_quests_includes_calendar_quests(app):
+    with app.app_context():
+        admin = User(username="admin4", email="admin4@example.com", license_agreed=True)
+        admin.set_password("pw")
+        db.session.add(admin)
+        db.session.commit()
+
+        game = Game(
+            title="Calendar Game",
+            start_date=datetime.now(timezone.utc) - timedelta(days=1),
+            end_date=datetime.now(timezone.utc) + timedelta(days=1),
+            admin_id=admin.id,
+        )
+        db.session.add(game)
+        game.admins.append(admin)
+        db.session.commit()
+
+        q_cal = Quest(title="Calendar", game=game, from_calendar=True)
+        db.session.add(q_cal)
+        db.session.commit()
+
+        quests, _ = _prepare_quests(game, admin.id, [], datetime.now(timezone.utc))
+        ids = [q.id for q in quests]
+        assert q_cal.id in ids
