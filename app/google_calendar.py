@@ -31,6 +31,7 @@ def sync_google_calendars() -> None:
         return
     games = Game.query.filter(Game.google_calendar_id.isnot(None)).all()
     for game in games:
+        current_app.logger.info("Syncing calendar for game %s", game.id)
         _sync_game_calendar(service, game)
 
 
@@ -48,6 +49,7 @@ def _sync_game_calendar(service, game: Game) -> None:
         .execute()
         .get("items", [])
     )
+    current_app.logger.info("Fetched %s events for game %s", len(events), game.id)
     for evt in events:
         evt_id = evt.get("id")
         if not evt_id:
@@ -69,6 +71,7 @@ def _sync_game_calendar(service, game: Game) -> None:
         )
         db.session.add(quest)
         db.session.commit()
+        current_app.logger.info("Created quest %s from event %s", quest.id, evt_id)
 
         view_url = f"https://questbycycle.org/?quest_shortcut={quest.id}"
         new_desc = f"View Quest: {view_url}\n\n{description}"
