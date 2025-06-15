@@ -7,6 +7,7 @@ from urllib.parse import urlparse, parse_qs
 from flask import current_app
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.constants import UTC
@@ -97,9 +98,24 @@ def sync_google_calendar_events() -> None:
                     eventId=ev_id,
                     body={"description": new_desc},
                 ).execute()
-            except Exception:
+            except HttpError as exc:  # permission or API error
+                if getattr(exc.resp, "status", None) == 403:
+                    current_app.logger.warning(
+                        "Calendar service account lacks permission to update event %s for game %s",
+                        ev_id,
+                        game.id,
+                    )
+                else:
+                    current_app.logger.warning(
+                        "Failed to update event description for game %s: %s",
+                        game.id,
+                        exc,
+                    )
+            except Exception as exc:
                 current_app.logger.warning(
-                    "Could not update event description for game %s", game.id
+                    "Could not update event description for game %s: %s",
+                    game.id,
+                    exc,
                 )
         game.last_calendar_sync = now
     try:
