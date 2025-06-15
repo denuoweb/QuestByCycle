@@ -174,7 +174,8 @@ def _prepare_quests(game, user_id, user_quests, now):
                                                                      
     quests = [
         q for q in quests
-        if not (
+        if q.from_calendar
+        or not (
             (
                 q.badge_id is None
                 or (q.badge is not None and not q.badge.image)
