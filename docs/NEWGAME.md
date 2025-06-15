@@ -94,6 +94,7 @@ You will see a form with the following fields. Fill them out as described:
 14. **Calendar Service JSON Path**:
     - **Purpose**: Path to a Google service account JSON file for syncing calendar events.
     - **Interaction**: When set, new events create quests automatically every 15 minutes.
+      Only events scheduled within the next two weeks are imported; past events are ignored.
     - **Example**: `/home/user/service.json`.
 
 ### Step 3: Social Media Integration
