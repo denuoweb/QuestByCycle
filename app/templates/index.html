@@ -340,7 +340,23 @@
                     </thead>
                     <tbody>
                         {% set prev_date = None %}
+                        {% set shown_upcoming = false %}
+                        {% set shown_past = false %}
                         {% for quest in calendar_quests %}
+                        {% set is_past = quest.calendar_event_start and quest.calendar_event_start < now %}
+                        {% if not is_past and not shown_upcoming %}
+                        <tr class="table-primary">
+                            <td colspan="4">Upcoming</td>
+                        </tr>
+                        {% set shown_upcoming = true %}
+                        {% endif %}
+                        {% if is_past and not shown_past %}
+                        <tr class="table-primary">
+                            <td colspan="4">Past</td>
+                        </tr>
+                        {% set prev_date = None %}
+                        {% set shown_past = true %}
+                        {% endif %}
                         {% set qdate = quest.calendar_event_start.date() if quest.calendar_event_start else None %}
                         {% if qdate != prev_date %}
                         <tr class="table-secondary">

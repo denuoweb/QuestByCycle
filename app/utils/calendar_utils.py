@@ -100,7 +100,7 @@ def sync_google_calendar_events() -> None:
             db.session.add(quest)
             db.session.flush()
             quest_url = f"https://questbycycle.org/?quest_shortcut={quest.id}"
-            new_desc = f"View Quest: {quest_url}\n{ev.get('description', '')}"
+            new_desc = f"<a href=\"{quest_url}\">View Quest</a>\n{ev.get('description', '')}"
             try:
                 service.events().patch(
                     calendarId=calendar_id,
