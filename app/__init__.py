@@ -131,6 +131,7 @@ def create_app(config_overrides=None):
         "INSTAGRAM_ACCESS_TOKEN": inscopeconfig.social.instagram_access_token,
         "INSTAGRAM_USER_ID": inscopeconfig.social.instagram_user_id,
         "TWA_SHA256_FINGERPRINT": inscopeconfig.twa.SHA256_CERT_FINGERPRINT,
+        "WTF_CSRF_ENABLED": not inscopeconfig.flask.DEBUG,
 
         "DEFAULT_SUPER_ADMIN_USERNAME": inscopeconfig.encryption.DEFAULT_SUPER_ADMIN_USERNAME,
         "DEFAULT_SUPER_ADMIN_PASSWORD": inscopeconfig.encryption.DEFAULT_SUPER_ADMIN_PASSWORD,
