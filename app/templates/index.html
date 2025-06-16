@@ -323,6 +323,45 @@
                 </table>
                 </div>
                 <div class="quest-tab-content" id="calendar-quests-tab">
+                <h4>Upcoming</h4>
+                <table class="table quest-table mb-4">
+                    <colgroup>
+                        <col>
+                        <col>
+                        <col>
+                        <col>
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th class="quest-table-header title">Quest</th>
+                            <th class="quest-table-header">Your Posts</th>
+                            <th class="quest-table-header">All Posts</th>
+                            <th class="quest-table-header">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set prev_date = None %}
+                        {% for quest in upcoming_calendar_quests %}
+                        {% set qdate = quest.calendar_event_start.date() if quest.calendar_event_start else None %}
+                        {% if qdate != prev_date %}
+                        <tr class="table-secondary">
+                            <td colspan="4">{{ qdate.strftime('%Y-%m-%d') if qdate else 'No Date' }}</td>
+                        </tr>
+                        {% set prev_date = qdate %}
+                        {% endif %}
+                        <tr class="quest-row" data-category="{{ quest.category or 'Calendar' }}" data-quest-id="{{ quest.id }}">
+                            <td class="quest-title-cell">
+                                <button type="button" class="btn btn-sm btn-outline-primary quest-inline-view-btn" data-quest-detail="{{ quest.id }}">View</button>
+                                <a href="javascript:void(0)" class="quest-title text-decoration-none ms-2" data-quest-detail="{{ quest.id }}">{{ quest.title }}</a>
+                            </td>
+                            <td class="quest-stats-cell">{{ quest.personal_completions }}</td>
+                            <td class="quest-stats-cell">{{ quest.total_completions }}</td>
+                            <td class="quest-stats-cell">{{ quest.points }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <h4 class="mt-4">Past</h4>
                 <table class="table quest-table">
                     <colgroup>
                         <col>
@@ -340,23 +379,7 @@
                     </thead>
                     <tbody>
                         {% set prev_date = None %}
-                        {% set shown_upcoming = false %}
-                        {% set shown_past = false %}
-                        {% for quest in calendar_quests %}
-                        {% set is_past = quest.calendar_event_start and quest.calendar_event_start < now %}
-                        {% if not is_past and not shown_upcoming %}
-                        <tr class="table-primary">
-                            <td colspan="4">Upcoming</td>
-                        </tr>
-                        {% set shown_upcoming = true %}
-                        {% endif %}
-                        {% if is_past and not shown_past %}
-                        <tr class="table-primary">
-                            <td colspan="4">Past</td>
-                        </tr>
-                        {% set prev_date = None %}
-                        {% set shown_past = true %}
-                        {% endif %}
+                        {% for quest in past_calendar_quests %}
                         {% set qdate = quest.calendar_event_start.date() if quest.calendar_event_start else None %}
                         {% if qdate != prev_date %}
                         <tr class="table-secondary">
