@@ -2,6 +2,7 @@ import { showLoadingModal, hideLoadingModal } from './loading_modal.js';
 import { showAllSubmissionsModal } from './all_submissions_modal.js';
 import { closeModal } from './modal_common.js';
 import logger from '../logger.js';
+import { csrfFetchJson } from '../utils.js';
 const refreshCSRFToken = async () => {
   try {
     const res  = await fetch('/refresh-csrf');
@@ -171,6 +172,28 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   updateGameName();
+
+  const clearBtn = document.getElementById('clearCalendarQuestsBtn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', async () => {
+      if (!confirm('Delete all upcoming calendar quests?')) return;
+      const gameId = clearBtn.getAttribute('data-game-id');
+      showLoadingModal();
+      try {
+        const { status, json } = await csrfFetchJson(`/quests/game/${gameId}/clear_calendar`, { method: 'DELETE' });
+        if (status === 200 && json.success) {
+          window.location.reload();
+        } else {
+          alert(json.message || 'Failed to clear quests');
+        }
+      } catch (err) {
+        logger.error('Failed to clear calendar quests', err);
+        alert('Failed to clear calendar quests.');
+      } finally {
+        hideLoadingModal();
+      }
+    });
+  }
 });
 
 // Combined filtering function for both search input and category dropdown

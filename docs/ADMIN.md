@@ -104,6 +104,13 @@ To delete a quest:
 1. **Navigate to the Quest Management Page**: Select the quest you want to delete.
 2. **Click on "Delete Quest"**: Confirm the deletion. Note that this action is irreversible.
 
+### Clearing Calendar Quests
+
+Remove upcoming quests imported from a linked calendar without affecting past events.
+
+1. **Open the Calendar Quests Tab**: Navigate to the main page of your game and choose the Calendar Quests tab.
+2. **Click "Clear Upcoming"**: This button appears only for game administrators. It deletes all upcoming calendar quests while keeping past ones.
+
 ### AI-Powered Quest Generation
 
 To generate a quest using AI:

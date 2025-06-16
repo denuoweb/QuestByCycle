@@ -1058,9 +1058,40 @@ def delete_all_quests(game_id):
         Quest.query.filter_by(game_id=game_id).delete(synchronize_session=False)
         db.session.commit()
         return jsonify({"success": True, "message": "All quests deleted successfully."}), 200
-    except Exception:                                
+    except Exception:
         db.session.rollback()
         return
+
+
+@quests_bp.route("/game/<int:game_id>/clear_calendar", methods=["DELETE"])
+@login_required
+def clear_calendar_quests(game_id):
+    """Remove all upcoming calendar quests for a game."""
+    Game.query.get_or_404(game_id)
+
+    if not current_user.is_admin_for_game(game_id):
+        return (
+            jsonify({"success": False, "message": "You do not have permission to clear quests for this game."}),
+            403,
+        )
+
+    now = datetime.now(UTC)
+    upcoming = Quest.query.filter(
+        Quest.game_id == game_id,
+        Quest.from_calendar.is_(True),
+        (Quest.calendar_event_start.is_(None) | (Quest.calendar_event_start >= now)),
+    ).all()
+
+    for q in upcoming:
+        db.session.delete(q)
+
+    try:
+        db.session.commit()
+        return jsonify({"success": True}), 200
+    except Exception as exc:
+        current_app.logger.error("Failed to clear calendar quests for game %s: %s", game_id, exc)
+        db.session.rollback()
+        return jsonify({"success": False, "message": "Failed to clear quests."}), 500
 
 
 @quests_bp.route("/game/<int:game_id>/get_title", methods=["GET"])
