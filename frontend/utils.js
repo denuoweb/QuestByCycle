@@ -17,9 +17,7 @@ export async function fetchJson(url, options = {}) {
 
 export async function csrfFetchJson(url, options = {}) {
   const headers = { ...(options.headers || {}) };
-  if (!isDebugMode()) {
-    headers['X-CSRF-Token'] = getCSRFToken();
-  }
+  headers['X-CSRF-Token'] = getCSRFToken();
   return fetchJson(url, { ...options, headers });
 }
 

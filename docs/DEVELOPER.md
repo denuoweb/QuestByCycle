@@ -302,8 +302,12 @@ If login requests fail with a "CSRF session token is missing" message, the sessi
 sent. Ensure `SECRET_KEY` is defined and access the site using the host specified by
 `LOCAL_DOMAIN` (typically `localhost:5000`).
 
+JavaScript helpers always include CSRF tokens. To disable CSRF checks in a local environment,
+set `WTF_CSRF_ENABLED=false` in your `.env` file.
+
 When `DEBUG=true`, JavaScript helpers skip sending CSRF tokens to simplify local testing.
 CSRF protection on the server is also disabled in this mode so requests succeed without the token.
+
 
 Log messages are saved to `logs/application.log`. Debug messages only appear
 when the application runs with `DEBUG=true` or `flask run --debug`.
