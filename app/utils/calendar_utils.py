@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 from datetime import datetime, timedelta
 from urllib.parse import urlparse, parse_qs
 
@@ -100,7 +101,13 @@ def sync_google_calendar_events() -> None:
             db.session.add(quest)
             db.session.flush()
             quest_url = f"https://questbycycle.org/?quest_shortcut={quest.id}"
-            new_desc = f"<a href=\"{quest_url}\">View Quest</a>\n{ev.get('description', '')}"
+            description = ev.get("description", "") or ""
+            description = re.sub(
+                r'<a href="https://questbycycle.org/\?quest_shortcut=\d+">View Quest</a>\n?',
+                "",
+                description,
+            )
+            new_desc = f"<a href=\"{quest_url}\">View Quest</a>\n{description}"
             try:
                 service.events().patch(
                     calendarId=calendar_id,

@@ -323,7 +323,11 @@
                 </table>
                 </div>
                 <div class="quest-tab-content" id="calendar-quests-tab">
-                <h4>Upcoming</h4>
+                <h4>Upcoming
+                {% if current_user.is_authenticated and current_user.is_admin_for_game(game.id) %}
+                    <button id="clearCalendarQuestsBtn" data-game-id="{{ game.id }}" class="btn btn-sm btn-danger ms-2">Clear Upcoming</button>
+                {% endif %}
+                </h4>
                 <table class="table quest-table mb-4">
                     <colgroup>
                         <col>
