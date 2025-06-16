@@ -156,7 +156,14 @@ def _prepare_quests(game, user_id, user_quests, now):
             quest.last_completion = max((ut.completed_at for ut in relevant_user_quests), default=None)
 
             if quest.personal_completions < quest.completion_limit:
-                quest.can_verify = True
+                start = quest.calendar_event_start
+                if start and not start.tzinfo:
+                    start = start.replace(tzinfo=UTC)
+                if quest.from_calendar and start and now < start:
+                    quest.next_eligible_time = start
+                    quest.can_verify = False
+                else:
+                    quest.can_verify = True
             else:
                 last_submission = max(submissions, key=lambda x: x.timestamp, default=None)
                 if last_submission:

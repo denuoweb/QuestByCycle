@@ -201,3 +201,41 @@ def test_sort_calendar_quests_orders_by_date(app):
         ordered = _sort_calendar_quests([future2, future1, past], datetime.now(timezone.utc))
         titles = [q.title for q in ordered]
         assert titles == ["Future1", "Future2", "Past"]
+
+
+def test_calendar_quest_can_verify_after_start(app):
+    with app.app_context():
+        admin = User(username="admin6", email="admin6@example.com", license_agreed=True)
+        admin.set_password("pw")
+        db.session.add(admin)
+        db.session.commit()
+
+        start_time = datetime.now(timezone.utc) + timedelta(hours=1)
+        game = Game(
+            title="Calendar Game",
+            start_date=datetime.now(timezone.utc) - timedelta(days=1),
+            end_date=datetime.now(timezone.utc) + timedelta(days=1),
+            admin_id=admin.id,
+        )
+        db.session.add(game)
+        game.admins.append(admin)
+        db.session.commit()
+
+        quest = Quest(
+            title="Future Quest",
+            game=game,
+            from_calendar=True,
+            calendar_event_start=start_time,
+        )
+        db.session.add(quest)
+        db.session.commit()
+
+        quests, _ = _prepare_quests(game, admin.id, [], datetime.now(timezone.utc))
+        q = next(q for q in quests if q.id == quest.id)
+        assert not q.can_verify
+        assert q.next_eligible_time == start_time
+
+        later = start_time + timedelta(minutes=1)
+        quests, _ = _prepare_quests(game, admin.id, [], later)
+        q = next(q for q in quests if q.id == quest.id)
+        assert q.can_verify
