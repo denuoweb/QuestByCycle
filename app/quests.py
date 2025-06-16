@@ -182,6 +182,12 @@ def submit_quest(quest_id):
             "message": "This quest cannot be completed outside of the game dates"
         }), 403
 
+    if quest.from_calendar and quest.calendar_event_start and now < quest.calendar_event_start:
+        return jsonify({
+            "success": False,
+            "message": "Submissions open once the event begins."
+        }), 403
+
     can_verify, next_eligible_time = can_complete_quest(current_user.id, quest_id)
     if not can_verify:
         return jsonify({
@@ -750,6 +756,10 @@ def submit_photo(quest_id):
 
     if game.start_date > now or now > game.end_date:
         flash("This quest cannot be completed outside of the game dates.", "error")
+        return redirect(url_for("main.index"))
+
+    if quest.from_calendar and quest.calendar_event_start and now < quest.calendar_event_start:
+        flash("Submissions open once the event begins.", "error")
         return redirect(url_for("main.index"))
 
     if request.method == "POST":
