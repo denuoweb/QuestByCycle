@@ -351,6 +351,15 @@ def index(game_id, quest_id, user_id):
     quests, activities = _prepare_quests(game, user_id, user_quests, now)
     calendar_quests = [q for q in quests if getattr(q, 'from_calendar', False)]
     calendar_quests = _sort_calendar_quests(calendar_quests, now)
+    def _is_past_event(q):
+        if not q.calendar_event_start:
+            return False
+        aware = q.calendar_event_start if q.calendar_event_start.tzinfo else q.calendar_event_start.replace(tzinfo=UTC)
+        return aware < now
+
+    upcoming_calendar_quests = [q for q in calendar_quests if not _is_past_event(q)]
+    past_calendar_quests = [q for q in calendar_quests if _is_past_event(q)]
+
     quests = [q for q in quests if not getattr(q, 'from_calendar', False)]
     categories = sorted({quest.category for quest in quests if quest.category})
 
@@ -409,7 +418,8 @@ def index(game_id, quest_id, user_id):
         user_games=user_games_list,
         activities=activities,
         quests=quests,
-        calendar_quests=calendar_quests,
+        upcoming_calendar_quests=upcoming_calendar_quests,
+        past_calendar_quests=past_calendar_quests,
         categories=categories,
         show_join_modal=show_join_modal,
         show_join_custom=show_join_custom,
