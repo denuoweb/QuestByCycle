@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "node scripts/inject_sw_version.cjs && vite build"
   },
   "devDependencies": {
     "eslint": "^9.28.0",
