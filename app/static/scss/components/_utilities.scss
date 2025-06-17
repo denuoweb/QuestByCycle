@@ -14,3 +14,9 @@
 .gap-half { gap: .5rem; }
 .mt-quarter { margin-top: .25rem; }
 .mt-half { margin-top: .5rem; }
+
+// Override Bootstrap info text color
+.text-info {
+  --bs-text-opacity: 1;
+  color: #000 !important;
+}
