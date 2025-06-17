@@ -85,9 +85,15 @@ def sync_google_calendar_events() -> None:
             start_dt = (
                 datetime.fromisoformat(start_str).astimezone(UTC) if start_str else None
             )
+            description = ev.get("description", "") or ""
+            clean_desc = re.sub(
+                r'<a href="https://questbycycle.org/\?quest_shortcut=\d+">View Quest</a>\n?',
+                "",
+                description,
+            )
             quest = Quest(
                 title=ev.get("summary") or "Calendar Quest",
-                description=ev.get("description") or "",
+                description=clean_desc,
                 points=100,
                 game_id=game.id,
                 completion_limit=1,
@@ -101,13 +107,7 @@ def sync_google_calendar_events() -> None:
             db.session.add(quest)
             db.session.flush()
             quest_url = f"https://questbycycle.org/?quest_shortcut={quest.id}"
-            description = ev.get("description", "") or ""
-            description = re.sub(
-                r'<a href="https://questbycycle.org/\?quest_shortcut=\d+">View Quest</a>\n?',
-                "",
-                description,
-            )
-            new_desc = f"<a href=\"{quest_url}\">View Quest</a>\n{description}"
+            new_desc = f"<a href=\"{quest_url}\">View Quest</a>\n{clean_desc}"
             try:
                 service.events().patch(
                     calendarId=calendar_id,
