@@ -576,7 +576,7 @@ def quest_user_completion(quest_id):
             "image": badge.image,
         }
         if badge
-        else {"name": "Default", "image": current_app.config["PLACEHOLDER_IMAGE"]}
+        else {"name": "Default", "image": None}
     )
 
     quest_info = {
