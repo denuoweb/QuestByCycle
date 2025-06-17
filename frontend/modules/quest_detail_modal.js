@@ -71,7 +71,7 @@ function refreshQuestDetailModal(questId) {
           nextEligibleTime
         )
       ) {
-        logger.error('populateQuestDetails – required element missing');
+        logger.error('populateQuestDetails - required element missing');
         return;
       }
 
