@@ -132,7 +132,9 @@ def create_app(config_overrides=None):
         "INSTAGRAM_USER_ID": inscopeconfig.social.instagram_user_id,
         "TWA_SHA256_FINGERPRINT": inscopeconfig.twa.SHA256_CERT_FINGERPRINT,
         "WTF_CSRF_ENABLED": not inscopeconfig.flask.DEBUG,
-
+        "VAPID_PUBLIC_KEY":  inscopeconfig.push.VAPID_PUBLIC_KEY,
+        "VAPID_PRIVATE_KEY": inscopeconfig.push.VAPID_PRIVATE_KEY,
+        "VAPID_ADMIN_EMAIL": inscopeconfig.push.VAPID_ADMIN_EMAIL,
         "DEFAULT_SUPER_ADMIN_USERNAME": inscopeconfig.encryption.DEFAULT_SUPER_ADMIN_USERNAME,
         "DEFAULT_SUPER_ADMIN_PASSWORD": inscopeconfig.encryption.DEFAULT_SUPER_ADMIN_PASSWORD,
         "DEFAULT_SUPER_ADMIN_EMAIL": inscopeconfig.encryption.DEFAULT_SUPER_ADMIN_EMAIL,
