@@ -2,8 +2,20 @@
 import logger from './logger.js';
 import { openModal } from './modules/modal_common.js';
 
+function sendSkipWaiting(reg) {
+  if (reg.waiting) {
+    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+  }
+}
+
 export function initLayout() {
   if ('serviceWorker' in navigator) {
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
     navigator.serviceWorker
       .register('/sw.js')
       .then((registration) => {
@@ -15,7 +27,7 @@ export function initLayout() {
               navigator.serviceWorker.controller
             ) {
               if (confirm('A new version is available. Reload to update?')) {
-                window.location.reload();
+                sendSkipWaiting(registration);
               }
             }
           });
@@ -48,7 +60,9 @@ export function initLayout() {
     navigator.serviceWorker.addEventListener('message', (event) => {
       if (event.data.type === 'UPDATE_AVAILABLE') {
         if (confirm('A new version is available. Reload to update?')) {
-          window.location.reload();
+          navigator.serviceWorker.getRegistration().then((reg) => {
+            if (reg) sendSkipWaiting(reg);
+          });
         }
       }
     });
