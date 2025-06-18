@@ -6,7 +6,7 @@ QuestByCycle supports optional Web Push notifications so users can receive updat
 
 1. Generate VAPID keys using the `pywebpush` utility:
    ```bash
-   python -m py_vapid generate --mailto you@example.com
+   python -m py_vapid --gen --mailto you@example.com
    ```
    This prints a public and private key pair.
 
