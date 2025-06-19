@@ -349,7 +349,13 @@
                         {% set qdate = quest.calendar_event_start.date() if quest.calendar_event_start else None %}
                         {% if qdate != prev_date %}
                         <tr class="table-secondary">
-                            <td colspan="4">{{ qdate.strftime('%Y-%m-%d') if qdate else 'No Date' }}</td>
+                            <td colspan="4">
+                                {% if qdate %}
+                                    <strong>{{ qdate.strftime('%B') }} {{ qdate.day }}</strong>
+                                {% else %}
+                                    No Date
+                                {% endif %}
+                            </td>
                         </tr>
                         {% set prev_date = qdate %}
                         {% endif %}
@@ -387,7 +393,13 @@
                         {% set qdate = quest.calendar_event_start.date() if quest.calendar_event_start else None %}
                         {% if qdate != prev_date %}
                         <tr class="table-secondary">
-                            <td colspan="4">{{ qdate.strftime('%Y-%m-%d') if qdate else 'No Date' }}</td>
+                            <td colspan="4">
+                                {% if qdate %}
+                                    <strong>{{ qdate.strftime('%B') }} {{ qdate.day }}</strong>
+                                {% else %}
+                                    No Date
+                                {% endif %}
+                            </td>
                         </tr>
                         {% set prev_date = qdate %}
                         {% endif %}
