@@ -39,6 +39,8 @@ def sync_google_calendar_events() -> None:
         if not calendar_id:
             continue
         path = game.calendar_service_json_path
+        if not os.path.isabs(path):
+            path = os.path.join(current_app.static_folder, path)
         if not os.path.isfile(path):
             current_app.logger.warning(
                 "Calendar service JSON missing for game %s", game.id
