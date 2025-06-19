@@ -10,7 +10,7 @@ from app.models.game import Game, Sponsor
 from app.models.quest import QuestSubmission
 from app.forms import SponsorForm
 from app.utils.file_uploads import save_sponsor_logo
-from app.utils import sanitize_html
+from app.utils import sanitize_html, get_int_param
 from app.decorators import require_admin, require_super_admin
 
 admin_bp = Blueprint('admin', __name__)
@@ -279,7 +279,7 @@ def delete_user(user_id):
 @require_admin
 def edit_sponsor(sponsor_id):
     sponsor = Sponsor.query.get_or_404(sponsor_id)
-    game_id = sponsor.game_id if sponsor.game_id else request.args.get('game_id', type=int)
+    game_id = sponsor.game_id if sponsor.game_id else get_int_param('game_id')
 
     form = SponsorForm(obj=sponsor)
     form.game_id.data = game_id                                               
@@ -313,7 +313,7 @@ def edit_sponsor(sponsor_id):
 @require_admin
 def delete_sponsor(sponsor_id):
 
-    game_id = request.form.get('game_id', type=int)                                       
+    game_id = get_int_param('game_id', source=request.form)
 
     sponsor = Sponsor.query.get_or_404(sponsor_id)
     db.session.delete(sponsor)
@@ -331,7 +331,7 @@ def delete_sponsor(sponsor_id):
 
 @admin_bp.route('/sponsors', methods=['GET'])
 def sponsors():
-    game_id = request.args.get('game_id', type=int)
+    game_id = get_int_param('game_id')
     if game_id:
         sponsors = Sponsor.query.filter_by(game_id=game_id).all()
     else:
@@ -344,9 +344,9 @@ def sponsors():
 @require_admin
 def manage_sponsors():
 
-    game_id = request.args.get('game_id', type=int)
+    game_id = get_int_param('game_id')
     if request.method == 'POST':
-        game_id = request.form.get('game_id', type=int)
+        game_id = get_int_param('game_id', source=request.form)
 
     form = SponsorForm()
     form.game_id.data = game_id                           

@@ -178,6 +178,7 @@ Utility functions are organized under `app/utils/` and include:
 - **`update_user_score`**: Updates a user's score.
 - **`award_badges`**: Awards badges to users.
 - **`can_complete_quest`**: Checks if a user can complete a quest.
+- **`get_int_param`**: Safely parses integers from request data.
 - **`send_email`**: Sends emails.
 
 ## Admin Functionality

@@ -21,6 +21,7 @@ from app.decorators import require_admin
 from .forms import BadgeForm
                                                           
 from .utils import save_badge_image
+from app.utils import get_int_param
 from .models import db, Quest, Badge, UserQuest, Game
 from werkzeug.utils import secure_filename
 
@@ -70,7 +71,7 @@ def create_badge():
 
 @badges_bp.route('', methods=['GET'])
 def get_badges():
-    game_id = request.args.get('game_id', type=int)
+    game_id = get_int_param('game_id')
     if game_id:
         game = db.session.get(Game, game_id)
         if not game:
