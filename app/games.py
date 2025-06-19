@@ -27,6 +27,7 @@ from app.utils.file_uploads import (
     save_leaderboard_image,
     generate_smoggy_images,
     allowed_image_file,
+    save_calendar_service_json,
 )
 from app.utils.email_utils import send_social_media_liaison_email
 from app.utils import sanitize_html
@@ -73,7 +74,6 @@ def populate_game_from_form(game, form):
         "instagram_user_id",
         "instagram_access_token",
         "calendar_url",
-        "calendar_service_json_path",
         "social_media_liaison_email",
     ]
 
@@ -117,6 +117,25 @@ def process_leaderboard_upload(game, defer=False):
     return True
 
 
+def process_calendar_service_upload(game):
+    """Save service account JSON from the request."""
+    if (
+        "calendar_service_json_path" not in request.files
+        or not request.files["calendar_service_json_path"].filename
+    ):
+        return False
+
+    json_file = request.files["calendar_service_json_path"]
+    if not json_file or not json_file.filename.lower().endswith(".json"):
+        raise ValueError("Invalid file type for calendar service JSON")
+
+    filename = save_calendar_service_json(
+        json_file, old_filename=game.calendar_service_json_path
+    )
+    game.calendar_service_json_path = filename
+    return True
+
+
 
 @games_bp.route('/create_game', methods=['GET', 'POST'])
 @login_required
@@ -139,8 +158,9 @@ def create_game():
         ).all()
         try:
             process_leaderboard_upload(game, defer=True)
+            process_calendar_service_upload(game)
         except ValueError as error:
-            flash(f'Error saving leaderboard image: {error}', 'error')
+            flash(f'Error saving uploaded file: {error}', 'error')
             return render_template('create_game.html', title='Create Game', form=form)
 
         db.session.add(game)
@@ -185,13 +205,15 @@ def update_game(game_id):
 
         try:
             process_leaderboard_upload(game)
+            process_calendar_service_upload(game)
         except ValueError as error:
-            flash(f'Error saving leaderboard image: {error}', 'error')
+            flash(f'Error saving uploaded file: {error}', 'error')
             return render_template(
                 'update_game.html',
                 form=form,
                 game_id=game_id,
-                leaderboard_image=game.leaderboard_image
+                leaderboard_image=game.leaderboard_image,
+                calendar_service_json_path=game.calendar_service_json_path,
             )
 
         try:
@@ -206,6 +228,7 @@ def update_game(game_id):
         form=form,
         game_id=game_id,
         leaderboard_image=game.leaderboard_image,
+        calendar_service_json_path=game.calendar_service_json_path,
         in_admin_dashboard=True
     )
 

@@ -132,9 +132,12 @@
             <small class="form-text text-muted">Embed link for the game's calendar.</small>
         </div>
         <div class="form-group">
-            <label for="calendar_service_json_path">Calendar Service JSON Path</label>
+            <label for="calendar_service_json_path">Calendar Service JSON File</label>
+            {% if calendar_service_json_path %}
+                <p>Current file: {{ calendar_service_json_path }}</p>
+            {% endif %}
             {{ form.calendar_service_json_path(class_="form-control", id="calendar_service_json_path") }}
-            <small class="form-text text-muted">Path to Google service account JSON.</small>
+            <small class="form-text text-muted">Upload Google service account JSON.</small>
         </div>
         <button type="submit" class="btn btn-primary">Update Game</button>
     </form>

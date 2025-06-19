@@ -17,6 +17,8 @@ ALLOWED_VIDEO_EXTENSIONS = {"mp4", "webm", "mov"}
 
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
 MAX_VIDEO_BYTES = 10 * 1024 * 1024
+MAX_JSON_BYTES = 1 * 1024 * 1024
+ALLOWED_JSON_EXTENSIONS = {"json"}
 
 
 def _upload_to_gcs(local_path: str, remote_path: str, *, content_type: str | None = None) -> str | None:
@@ -149,6 +151,36 @@ def save_image_file(
     if gcs_url:
         os.remove(file_path)
         return gcs_url
+
+    return os.path.join(subpath, filename)
+
+
+def save_json_file(json_file, subpath, *, old_filename=None):
+    """Save ``json_file`` under ``static/<subpath>``."""
+
+    if not json_file or not getattr(json_file, "filename", None):
+        raise ValueError("Invalid file object passed.")
+
+    json_file.seek(0, os.SEEK_END)
+    size = json_file.tell()
+    json_file.seek(0)
+    if size > MAX_JSON_BYTES:
+        raise ValueError("JSON exceeds 1 MB limit")
+
+    ext = json_file.filename.rsplit(".", 1)[-1].lower()
+    if ext not in ALLOWED_JSON_EXTENSIONS:
+        raise ValueError("File extension not allowed.")
+
+    filename = secure_filename(f"{uuid.uuid4()}.json")
+    upload_dir = os.path.join(current_app.static_folder, subpath)
+    os.makedirs(upload_dir, exist_ok=True)
+    file_path = os.path.join(upload_dir, filename)
+    json_file.save(file_path)
+
+    if old_filename:
+        old_path = os.path.join(current_app.static_folder, old_filename)
+        if os.path.exists(old_path):
+            os.remove(old_path)
 
     return os.path.join(subpath, filename)
 
@@ -325,3 +357,17 @@ def save_sponsor_logo(image_file, old_filename=None):
         )
     except Exception as e:
         raise ValueError(f"Failed to save image: {e}") from e
+
+
+def save_calendar_service_json(json_file, old_filename=None):
+    if not json_file or not json_file.filename:
+        raise ValueError("Invalid file type or no file provided.")
+
+    try:
+        return save_json_file(
+            json_file,
+            os.path.join("service_json"),
+            old_filename=old_filename,
+        )
+    except Exception as e:
+        raise ValueError(f"Failed to save file: {e}") from e

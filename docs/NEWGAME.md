@@ -91,14 +91,14 @@ You will see a form with the following fields. Fill them out as described:
     - **Purpose**: Optional link to an external calendar for the game.
     - **Interaction**: When provided, participants see a Calendar tab with the embedded calendar.
     - **Example**: `https://calendar.google.com/calendar/embed?src=your_calendar_id&ctz=America/Los_Angeles`.
-14. **Calendar Service JSON Path**:
-    - **Purpose**: Path to a Google service account JSON file for syncing calendar events.
+14. **Calendar Service JSON File**:
+    - **Purpose**: Upload a Google service account JSON file for syncing calendar events.
     - **Interaction**: When set, new events create quests automatically every 15 minutes.
       Imported calendar quests require a photo submission, award 100 points, and
       cannot be submitted until the event's start time. Submissions remain
       allowed after the event ends. Only events scheduled within the next two
       weeks are imported; past events are ignored.
-    - **Example**: `/home/user/service.json`.
+    - **Example**: select your downloaded `service-account.json` file.
 
 ### Step 3: Social Media Integration
 
