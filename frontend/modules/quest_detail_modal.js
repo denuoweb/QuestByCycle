@@ -58,6 +58,9 @@ export function openQuestDetailModal(questId) {
     });
 }
 
+// Expose function globally for inline event handlers or legacy code
+window.openQuestDetailModal = openQuestDetailModal;
+
 function refreshQuestDetailModal(questId) {
   fetchJson(`/quests/detail/${questId}/user_completion`)
     .then(({ json: data }) => {
