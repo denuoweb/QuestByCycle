@@ -3,6 +3,7 @@ from flask import url_for
 
 from app import create_app
 from app.utils.file_uploads import public_media_url, allowed_image_file
+from app.utils import get_int_param
 
 @pytest.fixture
 def app():
@@ -98,3 +99,12 @@ def test_save_submission_image_too_large(app):
 
     with pytest.raises(ValueError):
         save_submission_image(file)
+
+
+def test_get_int_param_parsing(app):
+    """Ensure get_int_param converts values safely."""
+    with app.test_request_context('/?a=1&b=&c=foo'):
+        assert get_int_param('a') == 1
+        assert get_int_param('b') is None
+        assert get_int_param('c') is None
+        assert get_int_param('missing', default=7) == 7

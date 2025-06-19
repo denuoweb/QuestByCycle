@@ -30,7 +30,7 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 from app.forms import PhotoForm, QuestForm
 from app.social import post_to_social_media
-from app.utils import REQUEST_TIMEOUT, sanitize_html
+from app.utils import REQUEST_TIMEOUT, sanitize_html, get_int_param
 from app.utils.quest_scoring import (
     can_complete_quest,
     check_and_award_badges,
@@ -952,9 +952,9 @@ def get_all_submissions():
         limit   (int): Number of submissions to return (default 10).
     """
 
-    game_id = request.args.get("game_id", type=int)
-    offset = request.args.get("offset", 0, type=int)
-    limit = request.args.get("limit", 10, type=int)
+    game_id = get_int_param("game_id")
+    offset = get_int_param("offset", default=0)
+    limit = get_int_param("limit", default=10)
 
     if game_id is None:
         return

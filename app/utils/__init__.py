@@ -69,6 +69,34 @@ def safe_url_for(*args, **kwargs):
 def sanitize_html(html_content: str) -> str:
     return SANITIZER.sanitize(html_content)
 
+
+def get_int_param(name: str, *, source=None, default: int | None = None) -> int | None:
+    """Safely retrieve an integer parameter from the request.
+
+    Parameters
+    ----------
+    name:
+        The parameter name to fetch.
+    source:
+        The data source, defaults to ``request.args``.
+    default:
+        Value returned if the parameter is missing or invalid.
+
+    Returns
+    -------
+    int | None
+        Parsed integer or ``default`` when conversion fails.
+    """
+
+    source = source or request.args
+    raw = source.get(name)
+    if raw is None or raw == "":
+        return default
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return default
+
 # ----------------------------------------------------------------------------
 # Misc database helpers
 # ----------------------------------------------------------------------------
@@ -316,4 +344,5 @@ __all__ = [
     "get_game_badges",
     "safe_url_for",
     "sanitize_html",
+    "get_int_param",
 ]

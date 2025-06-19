@@ -54,7 +54,7 @@ from app.utils.file_uploads import (
     save_bicycle_picture,
     correct_image_orientation,
 )
-from app.utils import sanitize_html
+from app.utils import sanitize_html, get_int_param
 from .config import load_config, AppConfig
 from app.tasks import enqueue_email
 
@@ -291,7 +291,7 @@ def index(game_id, quest_id, user_id):
 
                                                                        
                                                                              
-    query_game_id = request.args.get('game_id', type=int)
+    query_game_id = get_int_param('game_id')
     if query_game_id is not None:
         game_id = query_game_id
 
@@ -503,8 +503,8 @@ def shout_board_messages(game_id):
     """
     Return JSON: { pinned: [...], messages: [...], has_next: bool }.
     """
-    page     = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 20, type=int)
+    page     = get_int_param('page', default=1)
+    per_page = get_int_param('per_page', default=20)
 
                                     
     pinned = []
@@ -554,7 +554,7 @@ def leaderboard_partial():
     """
     Provide leaderboard data for a specific game.
     """
-    selected_game_id = request.args.get('game_id', type=int)
+    selected_game_id = get_int_param('game_id')
     if not selected_game_id:
         return jsonify({'error': 'Missing or invalid game_id'}), 400
 
@@ -978,7 +978,7 @@ def manifest():
     with open(base_path) as f:
         data = json.load(f)
 
-    game_id = request.args.get('game_id', type=int)
+    game_id = get_int_param('game_id')
     if not game_id and current_user.is_authenticated:
         game_id = current_user.selected_game_id
 
