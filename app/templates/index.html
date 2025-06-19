@@ -15,7 +15,7 @@
             <div class="col-md-6">
                 <div class="card earth-day-card">
                     <h3 class="card-title">
-                        <a href="javascript:void(0)" data-login-game="17">
+                        <a href="#" role="button" data-login-game="17">
                             Earth Day Every Day Game
                         </a>
                     </h3>
@@ -112,7 +112,7 @@
                                                         {% if activity.__tablename__ == 'shout_board_message' %}
                                                             <strong>
                                                                 {{ activity.timestamp.strftime('%m-%d') }} -
-                                                                <a href="javascript:void(0)"
+                                                                  <a href="#" role="button"
                                                                 data-user-profile="{{ activity.user.id }}">
                                                                     {{ activity.user.display_name or activity.user.username }}
                                                                 </a>
@@ -135,14 +135,14 @@
                                                         {% elif activity.__tablename__ == 'user_quests' %}
                                                             <strong>
                                                                 {{ activity.completed_at.strftime('%m-%d') }} -
-                                                                <a href="javascript:void(0)"
+                                                                  <a href="#" role="button"
                                                                 data-user-profile="{{ activity.user.id }}">
                                                                     {{ activity.user.display_name or activity.user.username }}
                                                                 </a>
                                                             </strong>
                                                             <span class="activity-message">
                                                                 completed a quest
-                                                                <a href="javascript:void(0);"
+                                                                  <a href="#" role="button"
                                                                 class="quest-title"
                                                                 data-quest-detail="{{ activity.quest.id }}">
                                                                     {{ activity.quest.title }}
@@ -159,7 +159,7 @@
                                                     {% if activity.__tablename__ == 'shout_board_message' %}
                                                         <strong>
                                                             {{ activity.timestamp.strftime('%m-%d') }} -
-                                                            <a href="javascript:void(0)"
+                                                             <a href="#" role="button"
                                                             data-user-profile="{{ activity.user.id }}">
                                                                 {{ activity.user.display_name or activity.user.username }}
                                                             </a>
@@ -181,14 +181,14 @@
                                                     {% elif activity.__tablename__ == 'user_quests' %}
                                                         <strong>
                                                             {{ activity.completed_at.strftime('%m-%d') }} -
-                                                            <a href="javascript:void(0)"
+                                                             <a href="#" role="button"
                                                             data-user-profile="{{ activity.user.id }}">
                                                                 {{ activity.user.display_name or activity.user.username }}
                                                             </a>
                                                         </strong>
                                                         <span class="activity-message">
                                                             completed a quest
-                                                            <a href="javascript:void(0);"
+                                                             <a href="#" role="button"
                                                             class="quest-title"
                                                             data-quest-detail="{{ activity.quest.id }}">
                                                                 {{ activity.quest.title }}
@@ -307,7 +307,7 @@
                                 View
                                 </button>
                                     <a
-                                        href="javascript:void(0)"
+                                        href="#" role="button"
                                         class="quest-title text-decoration-none ms-2"
                                         data-quest-detail="{{ quest.id }}"
                                         >
@@ -362,7 +362,7 @@
                         <tr class="quest-row" data-category="{{ quest.category or 'Calendar' }}" data-quest-id="{{ quest.id }}">
                             <td class="quest-title-cell">
                                 <button type="button" class="btn btn-sm btn-outline-primary quest-inline-view-btn" data-quest-detail="{{ quest.id }}">View</button>
-                                <a href="javascript:void(0)" class="quest-title text-decoration-none ms-2" data-quest-detail="{{ quest.id }}">{{ quest.title }}</a>
+                                <a href="#" role="button" class="quest-title text-decoration-none ms-2" data-quest-detail="{{ quest.id }}">{{ quest.title }}</a>
                             </td>
                             <td class="quest-stats-cell">{{ quest.personal_completions }}</td>
                             <td class="quest-stats-cell">{{ quest.total_completions }}</td>
@@ -406,7 +406,7 @@
                         <tr class="quest-row" data-category="{{ quest.category or 'Calendar' }}" data-quest-id="{{ quest.id }}">
                             <td class="quest-title-cell">
                                 <button type="button" class="btn btn-sm btn-outline-primary quest-inline-view-btn" data-quest-detail="{{ quest.id }}">View</button>
-                                <a href="javascript:void(0)" class="quest-title text-decoration-none ms-2" data-quest-detail="{{ quest.id }}">{{ quest.title }}</a>
+                                <a href="#" role="button" class="quest-title text-decoration-none ms-2" data-quest-detail="{{ quest.id }}">{{ quest.title }}</a>
                             </td>
                             <td class="quest-stats-cell">{{ quest.personal_completions }}</td>
                             <td class="quest-stats-cell">{{ quest.total_completions }}</td>
