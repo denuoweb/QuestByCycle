@@ -298,31 +298,35 @@ def inbox(username):
         if obj.get('type') == 'Note' and obj.get('inReplyTo'):
             in_to = obj['inReplyTo']
             if '/submissions/' in in_to:
-                sid = int(in_to.rsplit('/',1)[1])
-                                                
-                from app.models.quest import SubmissionReply
-                reply = SubmissionReply(
-                    submission_id=sid,
-                    user_id=(sender.id if sender else None),
-                    content=obj.get('content','')
-                )
-                db.session.add(reply)
-                db.session.commit()
-                                         
-                sub = db.session.get(QuestSubmission, sid)
-                if sub:
-                    db.session.add(Notification(
-                        user_id=sub.user_id,
-                        type='submission_reply',
-                        payload={
-                          'submission_id': sid,
-                          'reply_id'     : reply.id,
-                          'actor_id'     : sender.id,
-                          'actor_name'   : sender.display_name or sender.username,
-                          'content'      : reply.content
-                        }
-                    ))
+                try:
+                    sid = int(in_to.rsplit('/', 1)[1])
+                except (ValueError, IndexError):
+                    sid = None
+                if sid is not None:
+                    from app.models.quest import SubmissionReply
+
+                    reply = SubmissionReply(
+                        submission_id=sid,
+                        user_id=(sender.id if sender else None),
+                        content=obj.get('content', '')
+                    )
+                    db.session.add(reply)
                     db.session.commit()
+
+                    sub = db.session.get(QuestSubmission, sid)
+                    if sub:
+                        db.session.add(Notification(
+                            user_id=sub.user_id,
+                            type='submission_reply',
+                            payload={
+                                'submission_id': sid,
+                                'reply_id': reply.id,
+                                'actor_id': sender.id,
+                                'actor_name': sender.display_name or sender.username,
+                                'content': reply.content
+                            }
+                        ))
+                        db.session.commit()
         return ('', 202)
 
                                
