@@ -41,10 +41,10 @@ server {
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
 
 
-    # Serve Static Files - CSS
-    location /static/css/ {
-        alias /opt/QuestByCycle/app/static/css/;
-        expires 1h; # Cache CSS files for 1 hour
+    # Serve Static Files - Bundled Assets
+    location /static/dist/ {
+        alias /opt/QuestByCycle/app/static/dist/;
+        expires 1h; # Cache bundled assets for 1 hour
         add_header Cache-Control "public, max-age=3600, must-revalidate";
         try_files $uri $uri/ =404;
     }

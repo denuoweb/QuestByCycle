@@ -61,7 +61,6 @@ sudo ufw allow 'WWW Full'
 sudo ufw allow 'OpenSSH'
 sudo ufw enable
 
-sass app/static/scss/main.scss app/static/css/main.css --no-source-map --style=compressed
-
-npm install 
+# Build the frontend assets with Vite
+npm install
 npm run build
