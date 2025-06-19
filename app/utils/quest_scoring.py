@@ -87,7 +87,7 @@ def check_and_award_badges(user_id: int, quest_id: int, game_id: int) -> None:
             msg = (
                 " earned the badge"
                 "<a class='quest-title' href='javascript:void(0);' "
-                "onclick='openBadgeModal(this)' "
+                "data-open-badge "
                 f"data-badge-id='{quest.badge.id}' "
                 f"data-badge-name='{quest.badge.name}' "
                 f"data-badge-description='{quest.badge.description}' "
@@ -98,7 +98,7 @@ def check_and_award_badges(user_id: int, quest_id: int, game_id: int) -> None:
                 f"data-user-completions='{user_quest.completions}'>"
                 f"{quest.badge.name}</a>for completing quest "
                 "<a class='quest-title' href='javascript:void(0);' "
-                f"onclick='openQuestDetailModal({quest.id})'>"
+                f"data-quest-detail='{quest.id}'>"
                 f"{quest.title}</a>"
             )
             sbm = ShoutBoardMessage(message=msg, user_id=user_id, game_id=game_id)
@@ -132,9 +132,9 @@ def check_and_award_badges(user_id: int, quest_id: int, game_id: int) -> None:
                     user.badges.append(badge)
                     msg = (
                         " earned the badge "
-                        "<a class='quest-title' href='javascript:void(0);' "
-                        "onclick='openBadgeModal(this)' "
-                        f"data-badge-id='{badge.id}' "
+                "<a class='quest-title' href='javascript:void(0);' "
+                "data-open-badge "
+                f"data-badge-id='{badge.id}' "
                         f"data-badge-name='{badge.name}' "
                         f"data-badge-description='{badge.description}' "
                         f"data-badge-image='{url}' "
