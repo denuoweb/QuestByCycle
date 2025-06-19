@@ -86,7 +86,7 @@ def check_and_award_badges(user_id: int, quest_id: int, game_id: int) -> None:
             user.badges.append(quest.badge)
             msg = (
                 " earned the badge"
-                "<a class='quest-title' href='javascript:void(0);' "
+                "<a class='quest-title' href='#' role='button' "
                 "data-open-badge "
                 f"data-badge-id='{quest.badge.id}' "
                 f"data-badge-name='{quest.badge.name}' "
@@ -97,7 +97,7 @@ def check_and_award_badges(user_id: int, quest_id: int, game_id: int) -> None:
                 f"data-task-id='{quest.id}' "
                 f"data-user-completions='{user_quest.completions}'>"
                 f"{quest.badge.name}</a>for completing quest "
-                "<a class='quest-title' href='javascript:void(0);' "
+                "<a class='quest-title' href='#' role='button' "
                 f"data-quest-detail='{quest.id}'>"
                 f"{quest.title}</a>"
             )
@@ -132,7 +132,7 @@ def check_and_award_badges(user_id: int, quest_id: int, game_id: int) -> None:
                     user.badges.append(badge)
                     msg = (
                         " earned the badge "
-                "<a class='quest-title' href='javascript:void(0);' "
+                "<a class='quest-title' href='#' role='button' "
                 "data-open-badge "
                 f"data-badge-id='{badge.id}' "
                         f"data-badge-name='{badge.name}' "
