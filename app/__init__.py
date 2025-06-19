@@ -201,7 +201,7 @@ def create_app(config_overrides=None):
 
     @app.errorhandler(404)
     def not_found_error(error):
-        logger.warning(f"404 error: {error}")
+        logger.warning("404 error at %s: %s", request.path, error)
         return render_template("404.html"), 404
 
     @app.errorhandler(500)
