@@ -62,5 +62,12 @@ sudo ufw allow 'OpenSSH'
 sudo ufw enable
 
 # Build the frontend assets with Vite
+
+sudo -u USER bash -c '
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+nvm install 22
+nvm use 22
 npm install
 npm run build
+'
