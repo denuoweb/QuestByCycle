@@ -32,6 +32,7 @@ from datetime import datetime, timedelta
 from PIL import Image, UnidentifiedImageError
 from app.constants import UTC, FREQUENCY_DELTA
 from urllib.parse import urlparse, parse_qs
+from zoneinfo import ZoneInfo
 
 from app.models import db, user_games
 from app.models.game import Game, ShoutBoardMessage
@@ -55,6 +56,7 @@ from app.utils.file_uploads import (
     correct_image_orientation,
 )
 from app.utils import sanitize_html, get_int_param
+from app.utils.calendar_utils import _parse_calendar_tz
 from .config import load_config, AppConfig
 from app.tasks import enqueue_email
 
@@ -270,6 +272,16 @@ def _sort_calendar_quests(quests, now):
     return upcoming + past
 
 
+def _calendar_display_date(dt, tz):
+    """Return event date converted to the calendar timezone if provided."""
+    if dt is None:
+        return None
+    aware = dt if dt.tzinfo else dt.replace(tzinfo=UTC)
+    if tz:
+        aware = aware.astimezone(tz)
+    return aware.date()
+
+
 @main_bp.route('/', defaults={'game_id': None, 'quest_id': None, 'user_id': None})
 @main_bp.route('/<int:game_id>', defaults={'quest_id': None, 'user_id': None})
 @main_bp.route('/<int:game_id>/<int:quest_id>', defaults={'user_id': None})
@@ -317,6 +329,15 @@ def index(game_id, quest_id, user_id):
         game_id = None
     else:
         game, game_id = _select_game(game_id)
+
+    calendar_tz = None
+    if game and game.calendar_url:
+        tz_name = _parse_calendar_tz(game.calendar_url)
+        if tz_name:
+            try:
+                calendar_tz = ZoneInfo(tz_name)
+            except Exception:
+                calendar_tz = None
 
                                        
     if not show_join_custom and (game is None or game_id is None) and request.args.get('show_login') != '1':
@@ -366,6 +387,9 @@ def index(game_id, quest_id, user_id):
 
     upcoming_calendar_quests = [q for q in calendar_quests if not _is_past_event(q)]
     past_calendar_quests = [q for q in calendar_quests if _is_past_event(q)]
+
+    for q in upcoming_calendar_quests + past_calendar_quests:
+        q.display_date = _calendar_display_date(q.calendar_event_start, calendar_tz)
 
     quests = [q for q in quests if not getattr(q, 'from_calendar', False)]
     categories = sorted({quest.category for quest in quests if quest.category})
@@ -450,7 +474,8 @@ def index(game_id, quest_id, user_id):
         register_form=register_form,
         forgot_form=forgot_form,
         reset_form=reset_form,
-        mastodon_form=mastodon_form
+        mastodon_form=mastodon_form,
+        calendar_tz=calendar_tz
     )
 
 

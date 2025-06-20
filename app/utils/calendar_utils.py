@@ -27,6 +27,13 @@ def _parse_calendar_id(url: str) -> str | None:
     return None
 
 
+def _parse_calendar_tz(url: str) -> str | None:
+    """Return timezone name from a Google calendar embed URL if present."""
+    parsed = urlparse(url)
+    qs = parse_qs(parsed.query)
+    return qs.get("ctz", [None])[0]
+
+
 def sync_google_calendar_events() -> None:
     """Create quests from new Google Calendar events."""
     games = Game.query.filter(

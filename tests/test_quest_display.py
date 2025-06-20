@@ -6,7 +6,13 @@ from app.models.game import Game
 from app.models.user import User
 from app.models.quest import Quest, QuestSubmission
 from app.models.badge import Badge
-from app.main import _prepare_quests, _prepare_user_data, _sort_calendar_quests
+from zoneinfo import ZoneInfo
+from app.main import (
+    _prepare_quests,
+    _prepare_user_data,
+    _sort_calendar_quests,
+    _calendar_display_date,
+)
 
 
 @pytest.fixture
@@ -239,3 +245,9 @@ def test_calendar_quest_can_verify_after_start(app):
         quests, _ = _prepare_quests(game, admin.id, [], later)
         q = next(q for q in quests if q.id == quest.id)
         assert q.can_verify
+
+
+def test_calendar_display_date_converts_to_calendar_tz():
+    dt = datetime(2025, 6, 22, 2, 0, tzinfo=timezone.utc)
+    tz = ZoneInfo("America/Los_Angeles")
+    assert _calendar_display_date(dt, tz) == dt.astimezone(tz).date()
