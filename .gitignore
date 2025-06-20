@@ -200,3 +200,9 @@ infra/terraform/.terraform/providers/registry.terraform.io/hashicorp/google/6.39
 infra/terraform/.terraform/providers/registry.terraform.io/hashicorp/google/6.39.0/linux_amd64/terraform-provider-google_v6.39.0_x5
 infra/terraform/terraform.tfstate.backup
 infra/terraform/.terraform.lock.hcl
+
+backup/
+keystore/
+public_key.pem
+private_key.pem
+my-map-key.json
