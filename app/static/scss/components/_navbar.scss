@@ -28,6 +28,7 @@
     align-items: center;
     margin-left: 0;
     gap: pxToRem(16);
+    flex-wrap: wrap;  // allow wrapping to prevent overflow on wide screens
 
     .nav-item {
       position: relative; // <--- ensures dropdowns are anchored here!
