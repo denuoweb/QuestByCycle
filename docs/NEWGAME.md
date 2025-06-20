@@ -99,6 +99,7 @@ You will see a form with the following fields. Fill them out as described:
       allowed after the event ends. Only events scheduled within the next two
       weeks are imported; past events are ignored.
     - **Example**: select your downloaded `service-account.json` file.
+    - Event times use the calendar's timezone, so quest headings match the local date of each event.
 
 ### Step 3: Social Media Integration
 

@@ -84,9 +84,9 @@ def sync_google_calendar_events() -> None:
             if Quest.query.filter_by(calendar_event_id=ev_id, game_id=game.id).first():
                 continue
             start_str = ev.get("start", {}).get("dateTime")
-            start_dt = (
-                datetime.fromisoformat(start_str).astimezone(UTC) if start_str else None
-            )
+            start_dt = datetime.fromisoformat(start_str) if start_str else None
+            if start_dt and not start_dt.tzinfo:
+                start_dt = start_dt.replace(tzinfo=UTC)
             description = ev.get("description", "") or ""
             clean_desc = re.sub(
                 r'<a href="https://questbycycle.org/\?quest_shortcut=\d+">View Quest</a>\n?',
