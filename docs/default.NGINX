@@ -58,10 +58,10 @@ server {
     }
 
 
-    # Serve Static Files - Photos
-    location /static/photos/ {
-        alias /opt/QuestByCycle/app/static/photos/;
-        expires 30d; # Cache photos for 30 days
+    # Serve Static Files - Images
+    location /static/images/ {
+        alias /opt/QuestByCycle/app/static/images/;
+        expires 30d;
         add_header Cache-Control "public, max-age=2592000, must-revalidate";
         try_files $uri $uri/ =404;
     }
