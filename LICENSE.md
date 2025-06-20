@@ -33,4 +33,18 @@ The choice of license depends on your use case:
 ## Questions?
 If you have any questions about which license is right for you, please contact us at [info@questbycycle.org](mailto:info@questbycycle.org).
 
-Please see the individual license files for more detailed information about each type of license.
+    Quest by Cycle is a gamified bicycling platform designed to engage 
+    and motivate the cycling community through environmental stewardship 
+    and social interaction. 
+    
+    Copyright (C) 2025 Denuo Web LLC
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
