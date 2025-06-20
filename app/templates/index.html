@@ -346,7 +346,7 @@
                     <tbody>
                         {% set prev_date = None %}
                         {% for quest in upcoming_calendar_quests %}
-                        {% set qdate = quest.calendar_event_start.date() if quest.calendar_event_start else None %}
+                        {% set qdate = quest.display_date %}
                         {% if qdate != prev_date %}
                         <tr class="table-secondary">
                             <td colspan="4">
@@ -390,7 +390,7 @@
                     <tbody>
                         {% set prev_date = None %}
                         {% for quest in past_calendar_quests %}
-                        {% set qdate = quest.calendar_event_start.date() if quest.calendar_event_start else None %}
+                        {% set qdate = quest.display_date %}
                         {% if qdate != prev_date %}
                         <tr class="table-secondary">
                             <td colspan="4">
