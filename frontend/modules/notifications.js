@@ -24,9 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const apiUrl = menu.dataset.url;
 
   // Pagination state
-  let page       = 0;
-  let totalPages = 1;
-  const perPage  = parseInt(menu.dataset.perPage, 10) || 10;
+  let page           = 0;
+  let totalPages     = 1;
+  const perPage      = parseInt(menu.dataset.perPage, 10) || 10;
+  let displayedCount = 0;
 
   // --------------------------------------------------------------
   // 2) Payload renderers dispatch table
@@ -132,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       page = 0;
+      displayedCount = 0;
     }
 
     // Ensure loader and footer at bottom
@@ -174,9 +176,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const badge = notifBellToggle.querySelector('.badge');
     if (badge) badge.remove();
 
-    // Append each notification
+    // Append each notification with divider between entries
     data.items.forEach(n => {
+      if (displayedCount > 0) {
+        const dividerLi = document.createElement('li');
+        const hr = document.createElement('hr');
+        hr.className = 'dropdown-divider';
+        dividerLi.appendChild(hr);
+        menu.appendChild(dividerLi);
+      }
       menu.appendChild(renderNotification(n));
+      displayedCount += 1;
     });
 
     // Re-add loader/footer
