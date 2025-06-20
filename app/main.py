@@ -591,7 +591,10 @@ def leaderboard_partial():
     ).filter(Quest.game_id == selected_game_id
     ).scalar() or 0
 
-    num_participants = len(game.participants)
+    # Use the user_games association to count participants. Older
+    # `game_participants` table is no longer updated when users join a game,
+    # so relying on `game.participants` returns an incorrect count of zero.
+    num_participants = len(game.game_participants)
     num_quests = Quest.query.filter_by(game_id=selected_game_id).count()
     avg_points = round(total_game_points / num_participants, 2) if num_participants else 0
     secondary_stats = [
