@@ -109,7 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       try { await onClick(); } catch (err) { logger.error(err); }
     });
-    return a;
+    const li = document.createElement('li');
+    li.appendChild(a);
+    return li;
   }
 
   // --------------------------------------------------------------
