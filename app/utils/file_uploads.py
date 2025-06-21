@@ -345,6 +345,32 @@ def public_media_url(path: str | None) -> str | None:
     return url_for("static", filename=filename)
 
 
+def delete_media_file(path: str | None) -> None:
+    """Remove a locally stored or GCS-hosted media file."""
+    if not path:
+        return
+
+    base_url = None
+    bucket = current_app.config.get("GCS_BUCKET")
+    gcs_base = current_app.config.get("GCS_BASE_URL")
+    if bucket:
+        base_url = gcs_base or f"https://storage.googleapis.com/{bucket}"
+
+    if base_url and path.startswith(base_url + "/"):
+        rel = path[len(base_url) + 1 :]
+        _delete_from_gcs(rel)
+        return
+
+    local_path = path.lstrip("/")
+    local_path = local_path.removeprefix("static/")
+    full_path = os.path.join(current_app.static_folder, local_path)
+    if os.path.exists(full_path):
+        try:
+            os.remove(full_path)
+        except OSError:
+            pass
+
+
 def save_sponsor_logo(image_file, old_filename=None):
     if not image_file or not image_file.filename:
         raise ValueError("Invalid file type or no file provided.")

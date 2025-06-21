@@ -137,9 +137,12 @@ def _ensure_demo_game(user):
     Ensure the user is joined to a demo game if no games are participated.
     """
     if not user.participated_games:
-        demo_game = Game.query.filter_by(
-            is_demo=True
-        ).order_by(Game.start_date.desc()).first()
+        demo_game = (
+            Game.query
+            .filter_by(is_demo=True, archived=False)
+            .order_by(Game.start_date.desc())
+            .first()
+        )
         if demo_game:
             user.participated_games.append(demo_game)
             try:

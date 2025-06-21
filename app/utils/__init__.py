@@ -110,6 +110,27 @@ def generate_demo_game():
     if existing_game:
         return
 
+    # Archive previous demo games so users can view past statistics
+    old_demos = Game.query.filter_by(is_demo=True, archived=False).all()
+    for old in old_demos:
+        submissions = (
+            QuestSubmission.query
+            .join(Quest, QuestSubmission.quest_id == Quest.id)
+            .filter(Quest.game_id == old.id, QuestSubmission.image_url.isnot(None))
+            .all()
+        )
+        for submission in submissions:
+            delete_media_file(submission.image_url)
+            submission.image_url = None
+
+        old.is_demo = False
+        old.allow_joins = False
+        old.is_public = False
+        old.archived = True
+
+    if old_demos:
+        db.session.commit()
+
     description = """
     Welcome to the newest Demo Game! Embark on a quest to create a more
     sustainable future while enjoying everyday activities, having fun, and
@@ -285,6 +306,7 @@ from .file_uploads import (
     save_submission_image,
     save_submission_video,
     public_media_url,
+    delete_media_file,
     save_sponsor_logo,
     save_calendar_service_json,
 )
@@ -327,6 +349,7 @@ __all__ = [
     "save_submission_image",
     "save_submission_video",
     "public_media_url",
+    "delete_media_file",
     "save_sponsor_logo",
     "save_calendar_service_json",
     "send_email",
