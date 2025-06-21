@@ -97,7 +97,11 @@ def _select_game(game_id):
 
                                                 
     if game_id is None:
-        default_demo_game = Game.query.filter_by(is_demo=True).order_by(Game.start_date.desc()).first()
+        default_demo_game = (
+            Game.query.filter_by(is_demo=True, archived=False)
+            .order_by(Game.start_date.desc())
+            .first()
+        )
         if default_demo_game:
             game_id = default_demo_game.id
         else:
@@ -341,17 +345,21 @@ def index(game_id, quest_id, user_id):
 
                                        
     if not show_join_custom and (game is None or game_id is None) and request.args.get('show_login') != '1':
-        demo = (Game.query
-                    .filter_by(is_demo=True)
-                    .order_by(Game.start_date.desc())
-                    .first())
+        demo = (
+            Game.query
+            .filter_by(is_demo=True, archived=False)
+            .order_by(Game.start_date.desc())
+            .first()
+        )
         return redirect(url_for('main.index', game_id=demo.id, show_login=1))
 
     if game is None or game_id is None:
-        demo = (Game.query
-                    .filter_by(is_demo=True)
-                    .order_by(Game.start_date.desc())
-                    .first())
+        demo = (
+            Game.query
+            .filter_by(is_demo=True, archived=False)
+            .order_by(Game.start_date.desc())
+            .first()
+        )
         game, game_id = demo, demo.id
 
                              
@@ -399,6 +407,7 @@ def index(game_id, quest_id, user_id):
         Game.custom_game_code.isnot(None),
         Game.is_public.is_(True),
         Game.is_demo.is_(False),
+        Game.archived.is_(False),
         Game.start_date <= now,
         (Game.end_date.is_(None) | (Game.end_date >= now))
     ).all()
@@ -407,18 +416,22 @@ def index(game_id, quest_id, user_id):
         Game.custom_game_code.isnot(None),
         Game.is_public.is_(True),
         Game.is_demo.is_(False),
+        Game.archived.is_(False),
         Game.end_date < now
     ).all()
 
                                  
-    demo_game = (Game.query
-                    .filter(
-                        Game.is_demo.is_(True),
-                        Game.start_date <= now,
-                        (Game.end_date.is_(None) | (Game.end_date >= now))
-                    )
-                    .order_by(Game.start_date.desc())
-                    .first())
+    demo_game = (
+        Game.query
+        .filter(
+            Game.is_demo.is_(True),
+            Game.archived.is_(False),
+            Game.start_date <= now,
+            (Game.end_date.is_(None) | (Game.end_date >= now))
+        )
+        .order_by(Game.start_date.desc())
+        .first()
+    )
 
                          
     has_joined = (current_user.is_authenticated and game in current_user.participated_games)

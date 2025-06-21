@@ -64,6 +64,7 @@ class Game(db.Model):
     is_public = db.Column(db.Boolean, default=True)
     allow_joins = db.Column(db.Boolean, default=True)
     is_demo = db.Column(db.Boolean, default=False)
+    archived = db.Column(db.Boolean, default=False)
     social_media_liaison_email = db.Column(db.String(255), nullable=True)
     social_media_email_frequency = db.Column(db.String(50), default='weekly', nullable=True)
     last_social_media_email_sent = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=True)

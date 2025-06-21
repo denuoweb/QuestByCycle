@@ -2,7 +2,7 @@ import pytest
 from flask import url_for
 
 from app import create_app
-from app.utils.file_uploads import public_media_url, allowed_image_file
+from app.utils.file_uploads import public_media_url, allowed_image_file, delete_media_file
 from app.utils import get_int_param
 
 @pytest.fixture
@@ -108,3 +108,28 @@ def test_get_int_param_parsing(app):
         assert get_int_param('b') is None
         assert get_int_param('c') is None
         assert get_int_param('missing', default=7) == 7
+
+
+def test_delete_media_file_local(app, tmp_path):
+    app.static_folder = tmp_path
+    file_path = tmp_path / "images" / "verifications"
+    file_path.mkdir(parents=True)
+    img = file_path / "foo.png"
+    img.write_bytes(b"1")
+
+    delete_media_file("images/verifications/foo.png")
+    assert not img.exists()
+
+
+def test_delete_media_file_gcs(app, monkeypatch):
+    called = {}
+
+    def fake_delete(path):
+        called["path"] = path
+
+    monkeypatch.setattr("app.utils.file_uploads._delete_from_gcs", fake_delete)
+    app.config["GCS_BUCKET"] = "bucket"
+    url = "https://storage.googleapis.com/bucket/images/foo.png"
+
+    delete_media_file(url)
+    assert called.get("path") == "images/foo.png"

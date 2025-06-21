@@ -191,7 +191,15 @@ The admin dashboard provides an overview of the platform's activity and allows a
 - **Game Management**: Create, update, and delete games.
 - **Quest Management**: Create, update, and delete quests.
 - **Badge Management**: Create, update, and delete badges.
-- **Shout Board Management**: View and delete Shout Board messages.
+ - **Shout Board Management**: View and delete Shout Board messages.
+
+### Demo Game Rotation
+
+When a new demo game is created automatically, any existing demo games are
+archived. Archived games remain visible on user profiles along with their
+points and submissions but are hidden from the join game modal. Users cannot
+select or join an archived demo game. All photo submissions for archived demo
+games are removed from storage to conserve space.
 
 ### Badge Management
 

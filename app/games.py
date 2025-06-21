@@ -419,9 +419,11 @@ def join_demo():
     Join the latest demo game—never deleting any other games,
     just add it and select it.
     """
-    demo = Game.query.filter_by(is_demo=True)\
-                     .order_by(Game.start_date.desc())\
-                     .first_or_404()
+    demo = (
+        Game.query.filter_by(is_demo=True, archived=False)
+        .order_by(Game.start_date.desc())
+        .first_or_404()
+    )
 
                                     
     if demo not in current_user.participated_games:
