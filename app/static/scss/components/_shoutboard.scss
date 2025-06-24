@@ -51,6 +51,9 @@
   border-radius: pxToRem(6);
   padding: pxToRem(8) pxToRem(12);
   margin-bottom: pxToRem(8);
+  position: sticky;
+  top: 0;
+  z-index: 1;
   h4 {
     margin: 0 0 pxToRem(4);
     font-size: pxToRem(18);
