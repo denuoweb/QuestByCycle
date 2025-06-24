@@ -104,11 +104,12 @@
                                         </div>
                                     {% endif %}
                                     <div class="shout-messages-container">
-                                        {% set pinned_activities = activities | selectattr('is_pinned') | list %}
-                                        {% if pinned_activities %}
-                                            <div class="pinned-messages-header">
-                                                {% for activity in pinned_activities %}
-                                                    <div class="activity pinned message-divider">
+                                        <div class="shout-messages">
+                                            {% set pinned_activities = activities | selectattr('is_pinned') | list %}
+                                            {% if pinned_activities %}
+                                                <div class="pinned-messages-header">
+                                                    {% for activity in pinned_activities %}
+                                                        <div class="activity pinned message-divider">
                                                         {% if activity.__tablename__ == 'shout_board_message' %}
                                                             <strong>
                                                                 {{ activity.timestamp.strftime('%m-%d') }} -
@@ -149,11 +150,10 @@
                                                                 </a>
                                                             </span>
                                                         {% endif %}
-                                                    </div>
-                                                {% endfor %}
-                                            </div>
-                                        {% endif %}
-                                        <div class="shout-messages">
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
                                             {% for activity in activities | rejectattr('is_pinned') %}
                                                 <div class="activity message-divider">
                                                     {% if activity.__tablename__ == 'shout_board_message' %}
