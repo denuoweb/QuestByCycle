@@ -1,6 +1,7 @@
 import { openModal, closeModal, resetModalContent } from './modal_common.js';
 import { csrfFetchJson, fetchJson } from '../utils.js';
 import { showUserProfileModal } from './user_profile_modal.js';
+import { refreshQuestDetailModal } from './quest_detail_modal.js';
 
 export let showSubmissionDetail;
 

@@ -61,7 +61,7 @@ export function openQuestDetailModal(questId) {
 // Expose function globally for inline event handlers or legacy code
 window.openQuestDetailModal = openQuestDetailModal;
 
-function refreshQuestDetailModal(questId) {
+export function refreshQuestDetailModal(questId) {
   fetchJson(`/quests/detail/${questId}/user_completion`)
     .then(({ json: data }) => {
       const { quest, userCompletion, canVerify, nextEligibleTime } = data;
@@ -88,10 +88,13 @@ function refreshQuestDetailModal(questId) {
       lazyLoadImages();
       fetchQuestSubmissions(questId);
     })
-    .catch(err => {
+  .catch(err => {
       logger.error('Failed to refresh quest detail modal:', err);
     });
 }
+
+// Make refresh function available globally for other modules
+window.refreshQuestDetailModal = refreshQuestDetailModal;
 
 
 function lazyLoadImages() {
