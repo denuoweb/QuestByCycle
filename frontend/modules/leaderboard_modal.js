@@ -139,7 +139,7 @@ function appendLeaderboardTable(parentElement) {
 
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
-    ['Rank', 'Player', 'Points'].forEach((text, idx) => {
+    ['Rank', 'Player', 'Points', 'Badges'].forEach((text, idx) => {
         const th = document.createElement('th');
         if (idx === 2) {
             th.id = 'leaderboardMetricHeader';
@@ -234,7 +234,7 @@ function updateLeaderboardRows() {
         leaderboardBody.innerHTML = '';
         const row = document.createElement('tr');
         const cell = document.createElement('td');
-        cell.colSpan = 3;
+        cell.colSpan = 4;
         cell.textContent = 'Join a game to see the leaderboard!';
         row.appendChild(cell);
         leaderboardBody.appendChild(row);
@@ -262,6 +262,7 @@ function updateLeaderboardRows() {
         appendTableCell(row, displayName, true, user.user_id);
         const value = leaderboardMetric === 'quests' ? user.completed_quests : user.total_points;
         appendTableCell(row, value);
+        appendTableCell(row, user.badges_awarded);
         leaderboardBody.appendChild(row);
     });
 }
