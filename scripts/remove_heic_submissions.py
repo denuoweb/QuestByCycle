@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+
 from app import create_app
 from app.models import db, QuestSubmission, Quest
 from app.utils.file_uploads import delete_media_file
