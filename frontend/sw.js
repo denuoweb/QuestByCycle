@@ -1,5 +1,5 @@
 // The version of the cache
-const VERSION = '1.1.0-0328093'; // Update this version number when changes are made
+const VERSION = '1.1.0-13da0dc'; // Update this version number when changes are made
 const CACHE_NAME = `questbycycle-${VERSION}`;
 
 // List of static resources to cache
@@ -107,6 +107,7 @@ self.addEventListener('install', (event) => {
       }
     })()
   );
+  self.skipWaiting();
 });
 
 // Activate event
