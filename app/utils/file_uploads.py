@@ -11,7 +11,11 @@ from werkzeug.utils import secure_filename
 from PIL import Image, ExifTags, UnidentifiedImageError
 
 ALLOWED_IMAGE_EXTENSIONS = {
-    "png", "jpg", "jpeg", "gif", "webp", "heif", "heic"
+    "png",
+    "jpg",
+    "jpeg",
+    "gif",
+    "webp",
 }
 ALLOWED_VIDEO_EXTENSIONS = {"mp4", "webm", "mov"}
 

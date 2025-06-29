@@ -83,9 +83,9 @@ def test_save_submission_image_invalid_extension(app, tmp_path):
 
 
 def test_allowed_image_file_heif():
-    """HEIF and HEIC images should be recognized as valid."""
-    assert allowed_image_file("photo.heif")
-    assert allowed_image_file("image.HEIC")
+    """HEIF and HEIC images should be rejected."""
+    assert not allowed_image_file("photo.heif")
+    assert not allowed_image_file("image.HEIC")
 
 
 def test_save_submission_image_too_large(app):
