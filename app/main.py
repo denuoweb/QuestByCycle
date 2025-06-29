@@ -600,28 +600,44 @@ def leaderboard_partial():
     if not game:
         return jsonify({'error': 'Game not found'}), 404
 
-    top_users_query = db.session.query(
-        User.id,
-        User.username,
-        User.display_name,
-        db.func.sum(UserQuest.points_awarded).label('total_points'),
-        db.func.sum(
-            db.case((UserQuest.completions > 0, 1), else_=0)
-        ).label('completed_quests')
-    ).join(UserQuest, UserQuest.user_id == User.id
-    ).join(Quest, Quest.id == UserQuest.quest_id
-    ).filter(Quest.game_id == selected_game_id
-    ).group_by(User.id, User.username, User.display_name
-    ).order_by(db.func.sum(UserQuest.points_awarded).desc()
-    ).all()
+    top_users_query = (
+        db.session.query(
+            User.id,
+            User.username,
+            User.display_name,
+            db.func.sum(UserQuest.points_awarded).label("total_points"),
+            db.func.sum(
+                db.case((UserQuest.completions > 0, 1), else_=0)
+            ).label("completed_quests"),
+            db.func.count(user_badges.c.badge_id).label("badges_awarded"),
+        )
+        .join(UserQuest, UserQuest.user_id == User.id)
+        .join(Quest, Quest.id == UserQuest.quest_id)
+        .outerjoin(user_badges, user_badges.c.user_id == User.id)
+        .filter(Quest.game_id == selected_game_id)
+        .group_by(User.id, User.username, User.display_name)
+        .order_by(db.func.sum(UserQuest.points_awarded).desc())
+        .all()
+    )
 
-    top_users = [{
-        'user_id': uid,
-        'username': username,
-        'display_name': display_name,
-        'total_points': total_points,
-        'completed_quests': completed_quests
-    } for uid, username, display_name, total_points, completed_quests in top_users_query]
+    top_users = [
+        {
+            "user_id": uid,
+            "username": username,
+            "display_name": display_name,
+            "total_points": total_points,
+            "completed_quests": completed_quests,
+            "badges_awarded": badges_awarded,
+        }
+        for (
+            uid,
+            username,
+            display_name,
+            total_points,
+            completed_quests,
+            badges_awarded,
+        ) in top_users_query
+    ]
 
     total_game_points = db.session.query(
         db.func.sum(UserQuest.points_awarded)
