@@ -942,10 +942,7 @@ def refresh_csrf():
 
 @main_bp.route('/resize_image')
 def resize_image():
-    """
-    Resize an image to a given width while maintaining aspect ratio.
-    The image is served in WEBP format.
-    """
+    """Resize an image while honoring the client's accepted formats."""
     image_path = request.args.get('path')
     width_arg  = request.args.get('width')
 
@@ -980,17 +977,24 @@ def resize_image():
             ratio = width / float(img.width)
             height = int(img.height * ratio)
             img_resized = img.resize((width, height), Image.Resampling.LANCZOS)
-            img_io = io.BytesIO()
 
-            if img_resized.mode in ('RGBA', 'LA') or (img_resized.mode == 'P' and 'transparency' in img_resized.info):
-                img_resized = img_resized.convert('RGBA')
-                img_resized.save(img_io, 'WEBP')
+            accept = request.headers.get('Accept', '').lower()
+            supports_webp = 'image/webp' in accept
+            fmt = 'WEBP' if supports_webp else 'JPEG'
+            mime = 'image/webp' if supports_webp else 'image/jpeg'
+
+            has_alpha = img_resized.mode in ('RGBA', 'LA') or (
+                img_resized.mode == 'P' and 'transparency' in img_resized.info
+            )
+            if supports_webp:
+                img_resized = img_resized.convert('RGBA' if has_alpha else 'RGB')
             else:
                 img_resized = img_resized.convert('RGB')
-                img_resized.save(img_io, 'WEBP')
 
+            img_io = io.BytesIO()
+            img_resized.save(img_io, fmt)
             img_io.seek(0)
-            return send_file(img_io, mimetype='image/webp')
+            return send_file(img_io, mimetype=mime)
 
     except UnidentifiedImageError:
         current_app.logger.error(
