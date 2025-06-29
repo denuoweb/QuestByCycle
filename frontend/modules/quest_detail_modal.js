@@ -570,8 +570,8 @@ function distributeImages(images) {
 
     const isLocal   = url => url.startsWith('/static/');
     const localPath = url => url.replace(/^\/static\//, '');    // “images/foo.webp”
-    const onScreenW = window.innerWidth <= 480 ? 70 : 100;      // how wide it’s DRAWN
-    const reqWidth  = onScreenW * (window.devicePixelRatio || 2); // 2× for sharpness
+    const onScreenW = window.innerWidth <= 480 ? 70 : 100;      // how wide it's DRAWN
+    const reqWidth  = Math.round(onScreenW * (window.devicePixelRatio || 2)); // 2× for sharpness
 
     images.forEach(imgData => {
         let thumb;
