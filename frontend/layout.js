@@ -26,9 +26,8 @@ export function initLayout() {
               newWorker.state === 'installed' &&
               navigator.serviceWorker.controller
             ) {
-              if (confirm('A new version is available. Reload to update?')) {
-                sendSkipWaiting(registration);
-              }
+              logger.info('Service worker updated; skipping waiting.');
+              sendSkipWaiting(registration);
             }
           });
         });
@@ -59,11 +58,12 @@ export function initLayout() {
 
     navigator.serviceWorker.addEventListener('message', (event) => {
       if (event.data.type === 'UPDATE_AVAILABLE') {
-        if (confirm('A new version is available. Reload to update?')) {
-          navigator.serviceWorker.getRegistration().then((reg) => {
-            if (reg) sendSkipWaiting(reg);
-          });
-        }
+        navigator.serviceWorker.getRegistration().then((reg) => {
+          if (reg) {
+            logger.info('Update available message received; skipping waiting.');
+            sendSkipWaiting(reg);
+          }
+        });
       }
     });
   }
