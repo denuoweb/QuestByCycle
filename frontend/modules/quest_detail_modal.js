@@ -588,6 +588,7 @@ function distributeImages(images) {
             const thumbSrc = isLocal(rawSrc)
                 ? `/resize_image?path=${encodeURIComponent(localPath(rawSrc))}&width=${reqWidth}`
                 : rawSrc;
+            thumb.src = PLACEHOLDER_IMAGE;
             thumb.setAttribute('data-src', thumbSrc);
             thumb.classList.add('lazyload');
             thumb.alt = imgData.alt || 'Submission Image';
