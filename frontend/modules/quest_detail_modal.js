@@ -391,9 +391,15 @@ function toggleLink(el, url) {
 }
 
 function updateScoreboard(totalPoints) {
-    if (!totalPoints) return;
-    const el = document.getElementById('total-points');
-    if (el) el.innerText = `Total Completed Points: ${totalPoints}`;
+    if (typeof totalPoints !== 'number') return;
+    const container = document.getElementById('total-points');
+    if (!container) return;
+    const span = container.querySelector('.points-emphasized');
+    if (span) {
+        span.textContent = totalPoints;
+    } else {
+        container.textContent = `Your Carbon Reduction Points: ${totalPoints}`;
+    }
 }
 
 function updateQuestRowCounts(questId, personalCount, totalCount) {

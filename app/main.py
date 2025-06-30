@@ -25,7 +25,7 @@ from werkzeug.utils import secure_filename
 from flask_login import current_user, login_required
 from app.decorators import require_admin
 from flask_wtf.csrf import generate_csrf
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from sqlalchemy.orm import joinedload
 from typing import Any, List
 from datetime import datetime, timedelta
@@ -600,6 +600,17 @@ def leaderboard_partial():
     if not game:
         return jsonify({'error': 'Game not found'}), 404
 
+    badge_counts = (
+        db.session.query(
+            user_badges.c.user_id.label("uid"),
+            db.func.count(db.distinct(user_badges.c.badge_id)).label("badge_count")
+        )
+        .join(Badge, Badge.id == user_badges.c.badge_id)
+        .join(Quest, and_(Quest.badge_id == Badge.id, Quest.game_id == selected_game_id))
+        .group_by(user_badges.c.user_id)
+        .subquery()
+    )
+
     top_users_query = (
         db.session.query(
             User.id,
@@ -609,13 +620,13 @@ def leaderboard_partial():
             db.func.sum(
                 db.case((UserQuest.completions > 0, 1), else_=0)
             ).label("completed_quests"),
-            db.func.count(user_badges.c.badge_id).label("badges_awarded"),
+            badge_counts.c.badge_count.label("badges_awarded"),
         )
         .join(UserQuest, UserQuest.user_id == User.id)
         .join(Quest, Quest.id == UserQuest.quest_id)
-        .outerjoin(user_badges, user_badges.c.user_id == User.id)
+        .outerjoin(badge_counts, badge_counts.c.uid == User.id)
         .filter(Quest.game_id == selected_game_id)
-        .group_by(User.id, User.username, User.display_name)
+        .group_by(User.id, User.username, User.display_name, badge_counts.c.badge_count)
         .order_by(db.func.sum(UserQuest.points_awarded).desc())
         .all()
     )

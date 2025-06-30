@@ -302,9 +302,13 @@ def submit_quest(quest_id):
 
         update_user_score(current_user.id)
         check_and_award_badges(current_user.id, quest_id, quest.game_id)
-        total_points = sum(
-            ut.points_awarded for ut in UserQuest.query.filter_by(user_id=current_user.id)
-        )
+        total_points = db.session.query(
+            db.func.sum(UserQuest.points_awarded)
+        ).join(Quest, UserQuest.quest_id == Quest.id
+        ).filter(
+            UserQuest.user_id == current_user.id,
+            Quest.game_id == quest.game_id
+        ).scalar() or 0
         total_completion_count = QuestSubmission.query.filter_by(quest_id=quest_id).count()
 
                                                          
