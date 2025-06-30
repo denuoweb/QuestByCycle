@@ -34,7 +34,7 @@ from app.constants import UTC, FREQUENCY_DELTA
 from urllib.parse import urlparse, parse_qs
 from zoneinfo import ZoneInfo
 
-from app.models import db, user_games
+from app.models import db, user_games, user_badges
 from app.models.game import Game, ShoutBoardMessage
 from app.models.user import User, UserQuest, ProfileWallMessage
 from app.models.quest import Quest, QuestSubmission
