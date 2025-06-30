@@ -108,6 +108,11 @@
       font-size: 1rem;
       line-height: 1.4;
       color: #333;
+      // Allow long comments to wrap instead of truncating
+      white-space: pre-line;
+      overflow: visible;
+      text-overflow: unset;
+      display: block;
     }
     textarea {
       resize: vertical;
