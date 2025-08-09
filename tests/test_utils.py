@@ -2,7 +2,12 @@ import pytest
 from flask import url_for
 
 from app import create_app
-from app.utils.file_uploads import public_media_url, allowed_image_file, delete_media_file
+from app.utils.file_uploads import (
+    public_media_url,
+    allowed_image_file,
+    delete_media_file,
+    save_game_logo,
+)
 from app.utils import get_int_param
 
 @pytest.fixture
@@ -133,3 +138,20 @@ def test_delete_media_file_gcs(app, monkeypatch):
 
     delete_media_file(url)
     assert called.get("path") == "images/foo.png"
+
+
+def test_save_game_logo(app, tmp_path):
+    from io import BytesIO
+    from werkzeug.datastructures import FileStorage
+    from PIL import Image
+
+    app.static_folder = tmp_path
+    img = Image.new("RGB", (1, 1), color="white")
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    file = FileStorage(stream=buf, filename="logo.png", content_type="image/png")
+
+    path = save_game_logo(file)
+    assert path.startswith("images/game_logos/")
+    assert (tmp_path / path).exists()

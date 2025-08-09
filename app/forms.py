@@ -183,6 +183,10 @@ class GameForm(FlaskForm):
         "Leaderboard Background Image (height: 400px; .png only)",
         validators=[FileAllowed(["png"], "Images only!")],
     )
+    logo = FileField(
+        "Game Logo",
+        validators=[Optional(), FileAllowed(["jpg", "jpeg", "png"], "Images only!")],
+    )
     twitter_username = StringField("Twitter Username")
     twitter_api_key = StringField("Twitter API Key")
     twitter_api_secret = StringField("Twitter API Secret")

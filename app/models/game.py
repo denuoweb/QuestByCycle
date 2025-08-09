@@ -46,6 +46,7 @@ class Game(db.Model):
         cascade='all, delete-orphan'
     )
     leaderboard_image = db.Column(db.String(500), nullable=True)
+    logo = db.Column(db.String(255), nullable=True)
     twitter_username = db.Column(db.String(500), nullable=True)
     twitter_api_key = db.Column(db.String(500), nullable=True)
     twitter_api_secret = db.Column(db.String(500), nullable=True)
