@@ -426,6 +426,47 @@ document.addEventListener('click', e => {
   openModal(btn.getAttribute('data-open-modal'));
 });
 
+// handle special login-game triggers that open the register modal
+document.addEventListener('click', e => {
+  const card = e.target.closest('[data-login-game]');
+  if (!card) return;
+  e.preventDefault();
+  const gameId = card.getAttribute('data-login-game');
+  const nextPath = `/?game_id=${encodeURIComponent(gameId)}&show_join_custom=0`;
+  openRegisterModalWithOptions({
+    gameId,
+    showJoinCustom: 0,
+    next: nextPath
+  });
+});
+
+// allow keyboard activation for data-login-game elements
+document.addEventListener('keydown', e => {
+  const card = e.target.closest('[data-login-game]');
+  if (!card) return;
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    const gameId = card.getAttribute('data-login-game');
+    const nextPath = `/?game_id=${encodeURIComponent(gameId)}&show_join_custom=0`;
+    openRegisterModalWithOptions({
+      gameId,
+      showJoinCustom: 0,
+      next: nextPath
+    });
+  }
+});
+
+// switch from register modal to login modal preserving context
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-open-login-from-register]');
+  if (!btn) return;
+  e.preventDefault();
+  const gameId = document.getElementById('registerGameId')?.value || '';
+  const questId = document.getElementById('registerQuestId')?.value || '';
+  closeModal('registerModal');
+  openLoginModalWithGame({ gameId, questId });
+});
+
 // wire up any [data-modal-url] triggers
 document.addEventListener('click', e => {
   const button = e.target.closest('[data-modal-url]');
