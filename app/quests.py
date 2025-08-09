@@ -302,6 +302,28 @@ def submit_quest(quest_id):
 
         update_user_score(current_user.id)
         check_and_award_badges(current_user.id, quest_id, quest.game_id)
+
+        db.session.add(Notification(
+            user_id=current_user.id,
+            type='quest_complete',
+            payload={
+                'quest_id': quest_id,
+                'quest_title': quest.title,
+                'submission_id': new_submission.id
+            }
+        ))
+        db.session.commit()
+
+        db.session.add(Notification(
+            user_id=current_user.id,
+            type='quest_complete',
+            payload={
+                'quest_id': quest_id,
+                'quest_title': quest.title,
+                'submission_id': new_submission.id
+            }
+        ))
+        db.session.commit()
         total_points = db.session.query(
             db.func.sum(UserQuest.points_awarded)
         ).join(Quest, UserQuest.quest_id == Quest.id

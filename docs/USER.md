@@ -93,6 +93,10 @@ The dashboard is your central hub for accessing games, quests, and community fea
 3. **Submit Verification**: Upload your photo and/or comment.
 4. **Submit Quest**: Click on "Submit" to complete your quest.
 
+**Notifications**:
+- After submitting a quest you will receive a notification confirming completion.
+- Click the notification to view the submitted photo or video.
+
 **Track Your Submissions**:
 1. **Navigate to Your Profile**: Click on your username and go to "Profile."
 2. **View Submissions**: Check the "Quest Submissions" section to see all quests you have submitted.
