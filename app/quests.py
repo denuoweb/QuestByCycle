@@ -500,35 +500,39 @@ def import_quests(game_id):
         imported_badges = []
         with open(filepath, mode="r", encoding="utf-8") as csv_file:
             quests_data = csv.DictReader(csv_file)
-            for quest_info in quests_data:
-                badge = Badge.query.filter_by(
-                    name=sanitize_html(quest_info["badge_name"])
-                ).first()
-                if not badge:
-                    badge = Badge(
-                        name=sanitize_html(quest_info["badge_name"]),
-                        description=sanitize_html(quest_info["badge_description"]),
+            try:
+                for quest_info in quests_data:
+                    badge = Badge.query.filter_by(
+                        name=sanitize_html(quest_info["badge_name"])
+                    ).first()
+                    if not badge:
+                        badge = Badge(
+                            name=sanitize_html(quest_info["badge_name"]),
+                            description=sanitize_html(quest_info["badge_description"]),
+                        )
+                        db.session.add(badge)
+                        db.session.flush()
+                        imported_badges.append(badge.id)
+
+                    new_quest = Quest(
+                        category=sanitize_html(quest_info["category"]),
+                        title=sanitize_html(quest_info["title"]),
+                        description=sanitize_html(quest_info["description"]),
+                        tips=sanitize_html(quest_info["tips"]),
+                        points=int(quest_info["points"].replace(",", "") or 0),
+                        completion_limit=int(quest_info["completion_limit"] or 0),
+                        frequency=sanitize_html(quest_info["frequency"]),
+                        verification_type=sanitize_html(quest_info["verification_type"]),
+                        badge_id=badge.id,
+                        badge_awarded=int(quest_info.get("badge_awarded", 1) or 1),
+                        game_id=game_id,
                     )
-                    db.session.add(badge)
-                    db.session.flush()
-                    imported_badges.append(badge.id)
-
-                new_quest = Quest(
-                    category=sanitize_html(quest_info["category"]),
-                    title=sanitize_html(quest_info["title"]),
-                    description=sanitize_html(quest_info["description"]),
-                    tips=sanitize_html(quest_info["tips"]),
-                    points=quest_info["points"].replace(",", ""),
-                    completion_limit=quest_info["completion_limit"],
-                    frequency=sanitize_html(quest_info["frequency"]),
-                    verification_type=sanitize_html(quest_info["verification_type"]),
-                    badge_id=badge.id,
-                    badge_awarded=quest_info["badge_awarded"],
-                    game_id=game_id,
-                )
-                db.session.add(new_quest)
-
-            db.session.commit()
+                    db.session.add(new_quest)
+                db.session.commit()
+            except (KeyError, ValueError):
+                db.session.rollback()
+                os.remove(filepath)
+                return jsonify(success=False, message="Invalid CSV format"), 400
             os.remove(filepath)
 
         return jsonify(
