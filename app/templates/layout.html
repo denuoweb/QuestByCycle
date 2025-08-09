@@ -93,7 +93,7 @@
           <span class="mx-2 fs-3 fw-bold align-middle">&times;</span>
           {% if selected_game.logo_url %}
               <a href="{{ selected_game.logo_url }}" target="_blank" rel="noopener">
-                  <img src="{{ url_for('main.resize_image', path=selected_game.logo, width=80) }}"
+                  <img src="{{ url_for('main.resize_image', path=selected_game.logo, width=120) }}"
                        alt="{{ selected_game.title }} logo" class="align-middle">
               </a>
           {% else %}
