@@ -52,6 +52,7 @@ def serialize_game(game):
         "calendar_url": game.calendar_url,
         "calendar_service_json_path": game.calendar_service_json_path,
         "logo": game.logo,
+        "logo_url": game.logo_url,
     }
 
 
@@ -76,6 +77,7 @@ def populate_game_from_form(game, form):
         "instagram_user_id",
         "instagram_access_token",
         "calendar_url",
+        "logo_url",
         "social_media_liaison_email",
     ]
 

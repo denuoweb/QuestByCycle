@@ -47,6 +47,7 @@ class Game(db.Model):
     )
     leaderboard_image = db.Column(db.String(500), nullable=True)
     logo = db.Column(db.String(255), nullable=True)
+    logo_url = db.Column(db.String(500), nullable=True)
     twitter_username = db.Column(db.String(500), nullable=True)
     twitter_api_key = db.Column(db.String(500), nullable=True)
     twitter_api_secret = db.Column(db.String(500), nullable=True)
