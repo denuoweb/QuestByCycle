@@ -72,6 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const img = await r.json();
         showSubmissionDetail(img);
       }
+    }),
+    quest_complete: ({ quest_title, submission_id }) => ({
+      text: `Quest “${quest_title}” completed`,
+      onClick: async () => {
+        const r = await fetch(`/quests/submissions/${submission_id}`, { credentials: 'same-origin' });
+        const img = await r.json();
+        showSubmissionDetail(img);
+      }
     })
     // Add new types here as needed
   };

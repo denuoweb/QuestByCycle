@@ -19,10 +19,10 @@
 
 # Activity Pub Profile
 
-- Edit Submission Ability
+- Edit Submission Ability *(Completed)*
 - Implement Notification Alert *(Completed)*
-- Add commenting and likes on submission detail page
-- User Notification on Task Completion
+- Add commenting and likes on submission detail page *(Completed)*
+- User Notification on Task Completion *(Completed)*
 - Move New Task Submission in Profile to Top (Reverse Order) *(Completed)*
 - Put a calendar somewhere on the QbC site for keeping track of events listed in Available Quests.  
   _Note: Tomoko has started a Google calendar that could be embedded into the page._
@@ -49,7 +49,7 @@
 - After Validating a Task, the Total Posts Variable Doesn't Change on the Task List
 - Get loading modal working for task submissions *(Completed)*
 - Register and login emails are not validated dynamically
-- add mastodon selection modal and add terms and privacy requirement
+- add mastodon selection modal and add terms and privacy requirement *(Completed)*
 
 ## Completed
 
@@ -62,4 +62,8 @@
 - Sponsors link at bottom
 - Add Additional Comment When Submitting a Task Item That Uses QR Verification
 - Implement Notification Alert
+- Edit Submission Ability
+- Add commenting and likes on submission detail page
+- User Notification on Task Completion
+- add mastodon selection modal and add terms and privacy requirement
 

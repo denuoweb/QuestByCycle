@@ -187,6 +187,7 @@ class GameForm(FlaskForm):
         "Game Logo",
         validators=[Optional(), FileAllowed(["jpg", "jpeg", "png"], "Images only!")],
     )
+    logo_url = StringField("Logo URL", validators=[Optional(), URL()])
     twitter_username = StringField("Twitter Username")
     twitter_api_key = StringField("Twitter API Key")
     twitter_api_secret = StringField("Twitter API Secret")
