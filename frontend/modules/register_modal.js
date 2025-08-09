@@ -39,9 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorDiv = document.getElementById('loginError');  
       
     // Get hidden field values  
-    const gameId = document.getElementById('gameIdField').value;  
-    const questId = document.getElementById('questIdField').value;  
-    const next = document.getElementById('nextField').value;  
+    const gameId = document.getElementById('registerGameId').value;
+    const questId = document.getElementById('registerQuestId').value;
+    const next = document.getElementById('registerNext').value;
+    const showJoin = document.getElementById('registerShowJoinCustom').value;
       
     // Create form data  
     const formData = new FormData();  
@@ -50,9 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
     formData.append('remember_me', 'true');  
       
     // Add context  
-    if (gameId) formData.append('game_id', gameId);  
-    if (questId) formData.append('quest_id', questId);  
-    if (next) formData.append('next', next);  
+    if (gameId) formData.append('game_id', gameId);
+    if (questId) formData.append('quest_id', questId);
+    if (next) formData.append('next', next);
+    if (showJoin) formData.append('show_join_custom', showJoin);
       
     // Try to log in  
     fetch('{{ url_for("auth.login") }}', {  
