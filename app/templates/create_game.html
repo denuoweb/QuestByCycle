@@ -6,7 +6,7 @@
 <div class="container">
     <a href="{{ url_for('admin.admin_dashboard') }}" class="button">Back to Dashboard</a>
     <h1>Create a New QuestByCycle Game</h1>
-    <form method="POST" action="">
+    <form method="POST" action="" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         <div class="form-group">
             <label for="title">Game Title</label>
@@ -89,6 +89,10 @@
         <div class="form-group">
             <label for="leaderboard_image">Leaderboard Background Image (height: 400px; .png only)</label>
             {{ form.leaderboard_image(class_="form-control", id="leaderboard_image") }}
+        </div>
+        <div class="form-group">
+            <label for="logo">Game Logo</label>
+            {{ form.logo(class_="form-control", id="logo") }}
         </div>
         <div class="form-check form-switch">
             {{ form.is_public(class_="form-check-input", id="is_public") }}

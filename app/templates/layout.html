@@ -89,6 +89,10 @@
           <img src="{{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=175) }}"
                 alt="Quest by Cycle" class="align-middle">
       </a>
+      {% if selected_game and selected_game.logo %}
+          <img src="{{ url_for('main.resize_image', path=selected_game.logo, width=60) }}"
+               alt="{{ selected_game.title }} logo" class="align-middle ms-2">
+      {% endif %}
       <!-- Hamburger for mobile -->
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
               data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"

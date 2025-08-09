@@ -196,6 +196,17 @@ def save_leaderboard_image(image_file):
         raise ValueError(f"Failed to save image: {e}") from e
 
 
+def save_game_logo(image_file, old_filename=None):
+    try:
+        return save_image_file(
+            image_file,
+            os.path.join("images", "game_logos"),
+            old_filename=old_filename,
+        )
+    except Exception as e:
+        raise ValueError(f"Failed to save image: {e}") from e
+
+
 def create_smog_effect(image, smog_level):
     smog_overlay = Image.new("RGBA", image.size, (169, 169, 169, int(255 * smog_level)))
     return Image.alpha_composite(image.convert("RGBA"), smog_overlay)

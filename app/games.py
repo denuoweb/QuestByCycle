@@ -28,6 +28,7 @@ from app.utils.file_uploads import (
     generate_smoggy_images,
     allowed_image_file,
     save_calendar_service_json,
+    save_game_logo,
 )
 from app.utils.email_utils import send_social_media_liaison_email
 from app.utils import sanitize_html
@@ -50,6 +51,7 @@ def serialize_game(game):
         "allow_joins": game.allow_joins,
         "calendar_url": game.calendar_url,
         "calendar_service_json_path": game.calendar_service_json_path,
+        "logo": game.logo,
     }
 
 
@@ -117,6 +119,20 @@ def process_leaderboard_upload(game, defer=False):
     return True
 
 
+def process_logo_upload(game):
+    """Save logo image from the request."""
+    if "logo" not in request.files or not request.files["logo"].filename:
+        return False
+
+    image_file = request.files["logo"]
+    if not image_file or not allowed_image_file(image_file.filename):
+        raise ValueError("Invalid file type for logo")
+
+    filename = save_game_logo(image_file, old_filename=getattr(game, "logo", None))
+    game.logo = filename
+    return True
+
+
 def process_calendar_service_upload(game):
     """Save service account JSON from the request."""
     if (
@@ -159,6 +175,7 @@ def create_game():
         try:
             process_leaderboard_upload(game, defer=True)
             process_calendar_service_upload(game)
+            process_logo_upload(game)
         except ValueError as error:
             flash(f'Error saving uploaded file: {error}', 'error')
             return render_template('create_game.html', title='Create Game', form=form)
@@ -206,6 +223,7 @@ def update_game(game_id):
         try:
             process_leaderboard_upload(game)
             process_calendar_service_upload(game)
+            process_logo_upload(game)
         except ValueError as error:
             flash(f'Error saving uploaded file: {error}', 'error')
             return render_template(
@@ -214,6 +232,7 @@ def update_game(game_id):
                 game_id=game_id,
                 leaderboard_image=game.leaderboard_image,
                 calendar_service_json_path=game.calendar_service_json_path,
+                logo=game.logo,
             )
 
         try:
@@ -229,6 +248,7 @@ def update_game(game_id):
         game_id=game_id,
         leaderboard_image=game.leaderboard_image,
         calendar_service_json_path=game.calendar_service_json_path,
+        logo=game.logo,
         in_admin_dashboard=True
     )
 

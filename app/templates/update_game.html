@@ -50,6 +50,13 @@
             {% endif %}
             {{ form.leaderboard_image(class_="form-control", id="leaderboard_image") }}
         </div>
+        <div class="form-group">
+            <label for="logo">Game Logo</label>
+            {% if logo %}
+                <img src="{{ url_for('static', filename=logo) }}" alt="Game Logo" class="img-thumbnail">
+            {% endif %}
+            {{ form.logo(class_="form-control", id="logo") }}
+        </div>
         <div class="form-check form-switch">
             {{ form.is_public(class_="form-check-input", id="is_public") }}
             <label class="form-check-label" for="is_public">Is Public</label>
