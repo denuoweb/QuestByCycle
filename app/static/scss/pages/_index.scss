@@ -11,7 +11,7 @@
 }
   
   .earth-day-card {
-    background: linear-gradient(135deg, #ffffff, #f1ff28);
+    background: linear-gradient(135deg, #16c64f, #53284e);
     border: 2px solid #ddd;
     border-radius: 15px;
     padding: 1.5rem;     // matches .p-4
@@ -25,7 +25,7 @@
 
       a {
         font-size: 3rem;
-        color: inherit;
+        color: white;
         text-decoration: none;
       }
     }
@@ -38,10 +38,12 @@
       font-family: 'Georgia', serif;
       font-size: 1.4rem;
       font-style: italic;
+      color: white;
       margin-bottom: 0.5rem;
     }
   
     .card-text {
+      color: white;
       font-size: 1.2rem;
     }
   }
