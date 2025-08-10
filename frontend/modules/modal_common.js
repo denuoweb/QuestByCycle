@@ -405,6 +405,11 @@ export async function submitFormJson(form) {
     body: new FormData(form),
     credentials: 'same-origin'
   });
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    window.location.href = res.url;
+    return { status: res.status, json: {} };
+  }
   const json = await res.json();
   return { status: res.status, json };
 }

@@ -34,6 +34,7 @@ rq                   = "^2.3.3"
 psycopg2-binary = "^2.9.10"
 google-cloud-storage = "^2.16.0"
 google-api-python-client = "^2.126.0"
+flask-humanify = "^0.2.3"
 
 [tool.poetry.scripts]
 rqworker = "rq_worker:main"

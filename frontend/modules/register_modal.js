@@ -66,13 +66,19 @@ document.addEventListener('DOMContentLoaded', () => {
         body: formData,
         credentials: 'same-origin'
       })
-      .then(response => response.json().then(payload => ({ payload })))
-      .then(({ payload }) => {
+      .then(response => {
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          window.location.href = response.url;
+          return null;
+        }
+        return response.json();
+      })
+      .then(payload => {
+        if (!payload) return;
         if (payload.success) {
-          // Successful login → redirect
           window.location.href = payload.redirect;
         } else {
-          // Show error
           errorDiv.textContent = payload.error;
           errorDiv.style.display = 'block';
         }

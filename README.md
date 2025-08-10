@@ -48,6 +48,7 @@ This project relies on a variety of open source libraries. The badges below link
 [![cryptography](https://img.shields.io/badge/cryptography-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/pyca/cryptography)
 [![PyJWT](https://img.shields.io/badge/PyJWT-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/jpadilla/pyjwt)
 [![html-sanitizer](https://img.shields.io/badge/html--sanitizer-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/matthiask/html-sanitizer)
+[![flask-Humanify](https://img.shields.io/badge/flask--Humanify-555?style=for-the-badge&logo=python&logoColor=white)](https://github.com/tn3w/flask-Humanify)
 
 ### Infrastructure & Runtime
 
@@ -71,6 +72,7 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
 ## Features
 
 - **User Authentication:** Secure sign-up and login functionality to manage user access and personalize user experiences.
+- **Bot Protection:** Login and registration forms are guarded by flask-Humanify to challenge automated requests.
 - **Leaderboard/Homepage:** A dynamic display of participants, their rankings, and badges earned, fostering a sense of competition and achievement.
 - **Quest Submission:** An interface for users to submit completed quests or missions, facilitating the review and award of badges.
 - **User Profiles:** Dedicated pages for users to view their badges, completed quests, and ranking within the community.
