@@ -137,7 +137,9 @@ def get_badges():
 @login_required
 @require_admin
 def manage_badges():
-    game_id = get_int_param('game_id')
+    game_id = get_int_param("game_id")
+    if game_id is None:
+        game_id = get_int_param("game_id", source=request.form)
     if not current_user.is_super_admin and not current_user.is_admin_for_game(game_id):
         abort(403)
 
