@@ -2,8 +2,11 @@
 Admin and Admin Dashboard related routes.
 """
 import logging
+
+from sqlalchemy import or_
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
 from flask_login import login_required, current_user
+
 from app.models import db, user_games
 from app.models.user import User, UserIP
 from app.models.game import Game, Sponsor
@@ -68,7 +71,15 @@ def create_super_admin(app):
 @login_required
 @require_admin
 def admin_dashboard():
-    games = Game.query.all()                              
+    if current_user.is_super_admin:
+        games = Game.query.order_by(Game.title).all()
+    else:
+        games = Game.query.filter(
+            or_(
+                Game.admin_id == current_user.id,
+                Game.admins.any(id=current_user.id)
+            )
+        ).order_by(Game.title).all()
     return render_template('admin_dashboard.html', in_admin_dashboard=True, games=games)
 
 

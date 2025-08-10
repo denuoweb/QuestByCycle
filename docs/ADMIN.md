@@ -34,6 +34,8 @@ Welcome to the Admin Guide for your Ultimate Challenge and Reward Platform. This
 
 As an admin, you have the ability to create, manage, and moderate games, quests, badges, and users. Your role is crucial in maintaining an engaging and supportive community. This guide will help you understand and utilize the various features available to you.
 
+Admins only see games they created or have been assigned to on the admin dashboard. This scoping ensures that badge and quest management remain limited to their designated games.
+
 ## Creating and Managing Games
 
 ### Creating a Game
