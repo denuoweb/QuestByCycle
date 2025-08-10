@@ -70,6 +70,7 @@ class Game(db.Model):
     social_media_liaison_email = db.Column(db.String(255), nullable=True)
     social_media_email_frequency = db.Column(db.String(50), default='weekly', nullable=True)
     last_social_media_email_sent = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=True)
+    storage_quota_gb = db.Column(db.Integer, nullable=True)
 
     @staticmethod
     def generate_unique_code():

@@ -71,7 +71,8 @@ The project is organized as follows:
 - `migrations/`: Database migration scripts.
 - `venv/`: Virtual environment directory.
 - `.gitignore`: Git ignore file.
-- `.env`: Environment configuration file.
+- `.env`: Environment configuration file. Set `PAYPAL_CLIENT_ID`,
+  `PAYPAL_CLIENT_SECRET`, and `PAYPAL_API_BASE` for PayPal integration.
 - `LICENSE.md`: License information.
 - `README.md`: Project overview and setup instructions.
 - `pyproject.toml`: Project configuration and Python dependencies managed by Poetry.
@@ -252,7 +253,7 @@ Users can manage their profiles using the following routes:
 - **View Profile**: `/profile/<int:user_id>`
 - **Edit Profile**: `/profile/<int:user_id>/edit`
 - Upgrading via the edit route sets `is_admin` to `True` and applies default
-  limits (5&nbsp;GB storage and 60&nbsp;day retention).
+  game limits (5&nbsp;GB storage and 60&nbsp;day retention).
 - **Post Message on Profile Wall**: `/profile/<int:user_id>/messages`
 - **Delete Profile Wall Message**: `/profile/<int:user_id>/messages/<int:message_id>/delete`
 - **Reply to Profile Wall Message**: `/profile/<int:user_id>/messages/<int:message_id>/reply`

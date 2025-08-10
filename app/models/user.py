@@ -81,7 +81,7 @@ class User(UserMixin, db.Model):
     bike_description = db.Column(db.String(500), nullable=True)
     upload_to_socials = db.Column(db.Boolean, default=True)
     upload_to_mastodon = db.Column(db.Boolean, default=False)
-    storage_limit_gb = db.Column(db.Integer, default=0)
+    storage_limit_gb = db.Column(db.Integer, nullable=True)
     data_retention_days = db.Column(db.Integer, default=0)
     show_carbon_game = db.Column(db.Boolean, default=True)
     onboarded = db.Column(db.Boolean, default=False, nullable=True)
