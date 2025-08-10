@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const modal = document.getElementById('registerModal');
   const checkUrlBase = modal?.dataset.checkUrl || '/auth/check_email';
+  const loginUrl = modal?.dataset.loginUrl || '/auth/login';
   const loginSection = document.getElementById('existingUserLogin');
   if (!loginSection) return;
     
@@ -56,13 +57,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (next) formData.append('next', next);
     if (showJoin) formData.append('show_join_custom', showJoin);
       
-    // Try to log in  
-    fetch('{{ url_for("auth.login") }}', {  
-      method: 'POST',  
-      headers: { 'X-Requested-With': 'XMLHttpRequest' },  
-      body: formData,  
-      credentials: 'same-origin'  
-    })  
+    // Try to log in
+    fetch(loginUrl, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      body: formData,
+      credentials: 'same-origin'
+    })
     .then(response => response.json().then(payload => ({ payload })))
     .then(({ payload }) => {
       if (payload.success) {  
