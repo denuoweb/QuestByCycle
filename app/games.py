@@ -215,7 +215,8 @@ def update_game(game_id):
     form.admins.choices = [
         (u.id, u.username) for u in User.query.filter_by(is_admin=True).all()
     ]
-    form.admins.data = [admin.id for admin in game.admins]
+    if request.method == "GET":
+        form.admins.data = [admin.id for admin in game.admins]
     if form.validate_on_submit():
         populate_game_from_form(game, form)
         game.admins = User.query.filter(User.id.in_(form.admins.data)).all()
