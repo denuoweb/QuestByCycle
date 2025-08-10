@@ -41,11 +41,10 @@ def allowed_file(filename):
 @login_required
 @require_admin
 def create_badge():
+    game_id = get_int_param('game_id')
 
-                                              
     quest_categories = db.session.query(Quest.category).filter(Quest.category.isnot(None)).distinct().all()
 
-                                        
     category_choices = sorted([category.category for category in quest_categories])
 
     form = BadgeForm(category_choices=category_choices)
@@ -60,7 +59,8 @@ def create_badge():
             name=sanitize_html(form.name.data),
             description=sanitize_html(form.description.data),
             image=filename,
-            category=sanitize_html(form.category.data)
+            category=sanitize_html(form.category.data),
+            game_id=game_id,
         )
         db.session.add(new_badge)
         db.session.commit()
@@ -76,11 +76,7 @@ def get_badges():
         game = db.session.get(Game, game_id)
         if not game:
             return jsonify(error="Game not found"), 404
-                                                                       
-        badges = Badge.query.join(Quest).filter(
-            Quest.game_id == game_id,
-            Quest.badge_id.isnot(None)
-        ).distinct().all()
+        badges = Badge.query.filter_by(game_id=game_id).all()
     else:
         badges = Badge.query.all()
     
@@ -164,7 +160,8 @@ def manage_badges():
                     name=sanitize_html(form.name.data),
                     description=sanitize_html(form.description.data),
                     image=filename,
-                    category=sanitize_html(request.form['category'])
+                    category=sanitize_html(request.form['category']),
+                    game_id=game_id,
                 )
                 db.session.add(new_badge)
                 db.session.commit()
@@ -177,12 +174,7 @@ def manage_badges():
         return redirect(url_for('badges.manage_badges', game_id=game_id))
 
     if game_id:
-        badges = (
-            Badge.query.join(Quest)
-            .filter(Quest.game_id == game_id)
-            .order_by(Badge.name)
-            .all()
-        )
+        badges = Badge.query.filter_by(game_id=game_id).order_by(Badge.name).all()
     else:
         badges = Badge.query.order_by(Badge.name).all()
 
@@ -335,7 +327,12 @@ def bulk_upload():
             badge_image = image_dict.get(f"{badge_filename}.png")
 
             if badge_image:
-                new_badge = Badge(name=badge_name, description=badge_description, image=badge_image)
+                new_badge = Badge(
+                    name=badge_name,
+                    description=badge_description,
+                    image=badge_image,
+                    game_id=game_id,
+                )
                 db.session.add(new_badge)
             else:
                 flash(f'Image for badge "{badge_name}" not found.', 'warning')

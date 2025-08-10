@@ -76,10 +76,11 @@ def test_badge_option_none(user, game):
 
 
 def test_badge_option_individual(user, game):
-    ind_badge = Badge(name="Ind", description="i")
-    cat_badge = Badge(name="Cat", description="c", category="C")
+    ind_badge = Badge(name="Ind", description="i", game_id=game.id)
+    cat_badge = Badge(name="Cat", description="c", category="C", game_id=game.id)
     db.session.add_all([ind_badge, cat_badge])
-    db.session.flush()
+    db.session.commit()
+
     quest = Quest(
         title="Q",
         game_id=game.id,
@@ -116,10 +117,11 @@ def test_badge_option_category(user, game):
 
 
 def test_badge_option_both(user, game):
-    ind_badge = Badge(name="Ind", description="i")
-    cat_badge = Badge(name="Cat", description="c", category="C2")
+    ind_badge = Badge(name="Ind", description="i", game_id=game.id)
+    cat_badge = Badge(name="Cat", description="c", category="C2", game_id=game.id)
     db.session.add_all([ind_badge, cat_badge])
-    db.session.flush()
+    db.session.commit()
+
     quest = Quest(
         title="Q",
         game_id=game.id,

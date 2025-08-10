@@ -85,8 +85,8 @@ def test_prepare_quests_hides_badgeless_image(app):
         game.admins.append(admin)
         db.session.commit()
 
-        b_no_img = Badge(name="B1")
-        b_img = Badge(name="B2", image="img.png")
+        b_no_img = Badge(name="B1", game_id=game.id)
+        b_img = Badge(name="B2", image="img.png", game_id=game.id)
         db.session.add_all([b_no_img, b_img])
         db.session.commit()
 
@@ -124,8 +124,8 @@ def test_prepare_user_data_hides_badgeless_image(app):
         game.admins.append(admin)
         db.session.commit()
 
-        b_no_img = Badge(name="B1")
-        b_img = Badge(name="B2", image="img.png")
+        b_no_img = Badge(name="B1", game_id=game.id)
+        b_img = Badge(name="B2", image="img.png", game_id=game.id)
         db.session.add_all([b_no_img, b_img])
         db.session.commit()
 

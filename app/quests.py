@@ -121,6 +121,7 @@ def add_quest(game_id):
                     name=sanitize_html(form.badge_name.data),
                     description=sanitize_html(form.badge_description.data),
                     image=badge_image_file,
+                    game_id=game_id,
                 )
                 db.session.add(new_badge)
                 db.session.flush()
