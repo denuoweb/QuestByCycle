@@ -10,6 +10,13 @@ import logger from '../logger.js';
         video: 'Video Upload'
     };
 
+    const BadgeOptions = {
+        none: 'No Badge (points only)',
+        individual: 'Individual Badge',
+        category: 'Category Badge',
+        both: 'Both Individual and Category'
+    };
+
     let badges = [];  // Define badges globally
 
     function initManageQuests() {
@@ -57,6 +64,7 @@ import logger from '../logger.js';
         processVerification(card);
         processFrequency(card);
         processBadge(card);
+        processBadgeOption(card);
         processEditableFields(card);
         setupEditAndCancelButtons(card, questId, originalData);
     }
@@ -123,6 +131,35 @@ import logger from '../logger.js';
         });
         frequencySelectHTML += '</select>';
         frequencyElement.innerHTML = frequencySelectHTML;
+    }
+
+    function processBadgeOption(card) {
+        const optionElement = card.querySelector('.editable[data-name="badge_option"]');
+        const currentOption = optionElement.getAttribute('data-value') || optionElement.innerText.trim();
+        let optionSelectHTML = '<select name="badge_option" class="editable-select">';
+        Object.entries(BadgeOptions).forEach(([key, label]) => {
+            const selected = (currentOption === key) ? 'selected' : '';
+            optionSelectHTML += `<option value="${key}" ${selected}>${label}</option>`;
+        });
+        optionSelectHTML += '</select>';
+        optionElement.innerHTML = optionSelectHTML;
+
+        const badgeSelect = card.querySelector('select[name="badge_id"]');
+        const optionSelect = optionElement.querySelector('select');
+
+        function toggleBadge() {
+            if (['none', 'category'].includes(optionSelect.value)) {
+                badgeSelect.value = '';
+                badgeSelect.disabled = true;
+            } else {
+                badgeSelect.disabled = false;
+            }
+        }
+
+        if (badgeSelect) {
+            toggleBadge();
+            optionSelect.addEventListener('change', toggleBadge);
+        }
     }
 
     function processBadge(card) {
@@ -271,6 +308,7 @@ import logger from '../logger.js';
                 const frequencyDisplayText = quest.frequency || 'Not Set';
                 const categoryText = quest.category || 'Not Set';
                 const badgeAwarded = quest.badge_awarded || 'Not Set';
+                const badgeOptionText = BadgeOptions[quest.badge_option] || quest.badge_option;
 
                 card.innerHTML = `
                     <div class="card-body">
@@ -284,6 +322,8 @@ import logger from '../logger.js';
                         <p class="card-text"><strong>Verification:</strong> <span class="editable" data-name="verification_type" data-value="${quest.verification_type}">${verificationTypeText}</span></p>
                         <p class="card-text"><strong>Badge:</strong> <span class="editable" data-name="badge_name">${badgeName}</span></p>
                         <p class="card-text"><strong>Badge Awarded:</strong> <span class="editable" data-name="badge_awarded">${badgeAwarded}</span></p>
+                        <p class="card-text"><strong>Badge Option:</strong> <span class="editable"
+                            data-name="badge_option" data-value="${quest.badge_option}">${badgeOptionText}</span></p>
                         <p class="card-text"><strong>Frequency:</strong> <span class="editable" data-name="frequency" data-value="${quest.frequency}">${frequencyDisplayText}</span></p>
                         <p class="card-text"><strong>Category:</strong> <span class="editable" data-name="category">${categoryText}</span></p>
                         <p class="card-text"><strong>Quest ID:</strong> ${quest.id}</p>

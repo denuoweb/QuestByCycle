@@ -90,8 +90,8 @@ def test_prepare_quests_hides_badgeless_image(app):
         db.session.add_all([b_no_img, b_img])
         db.session.commit()
 
-        q1 = Quest(title="q1", game=game, badge_id=b_no_img.id)
-        q2 = Quest(title="q2", game=game, badge_id=b_img.id)
+        q1 = Quest(title="q1", game=game, badge_id=b_no_img.id, badge_option="individual")
+        q2 = Quest(title="q2", game=game, badge_id=b_img.id, badge_option="individual")
         q3 = Quest(title="q3", game=game, badge_id=b_no_img.id)
         db.session.add_all([q1, q2, q3])
         db.session.commit()
@@ -129,8 +129,8 @@ def test_prepare_user_data_hides_badgeless_image(app):
         db.session.add_all([b_no_img, b_img])
         db.session.commit()
 
-        q1 = Quest(title="q1", game=game, badge_id=b_no_img.id)
-        q2 = Quest(title="q2", game=game, badge_id=b_img.id)
+        q1 = Quest(title="q1", game=game, badge_id=b_no_img.id, badge_option="individual")
+        q2 = Quest(title="q2", game=game, badge_id=b_img.id, badge_option="individual")
         db.session.add_all([q1, q2])
         db.session.commit()
 
