@@ -114,6 +114,7 @@ def create_app(config_overrides=None):
         "GCS_BUCKET": inscopeconfig.main.GCS_BUCKET,
         "GCS_BASE_URL": inscopeconfig.main.GCS_BASE_URL,
         "GCS_STORAGE_CLASS": inscopeconfig.main.GCS_STORAGE_CLASS,
+        "ASSET_VERSION": inscopeconfig.main.ASSET_VERSION,
         "MAIL_SERVER": inscopeconfig.mail.MAIL_SERVER,
         "MAIL_PORT": inscopeconfig.mail.MAIL_PORT,
         "MAIL_USE_SSL": inscopeconfig.mail.MAIL_USE_SSL,
@@ -265,6 +266,10 @@ def create_app(config_overrides=None):
             return dict(selected_game_id=current_user.selected_game_id or 0)
         else:
             return dict(selected_game_id=None)
+
+    @app.context_processor
+    def inject_asset_version():
+        return dict(asset_version=current_app.config["ASSET_VERSION"])
 
     if not (app.debug and os.environ.get("WERKZEUG_RUN_MAIN") is None):
         create_scheduler(app)

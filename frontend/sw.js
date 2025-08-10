@@ -1,28 +1,28 @@
 // The version of the cache
-const VERSION = '1.1.0-3392bf2'; // Update this version number when changes are made
+const VERSION = '1.2.0-713596f'; // Update this version number when changes are made
 const CACHE_NAME = `questbycycle-${VERSION}`;
 
 // List of static resources to cache
 const APP_STATIC_RESOURCES = [
-  // Root
-  '/',
-  '/offline.html',
+  // Offline fallback
+  "/offline.html",
 
   // CSS Files
-  '/static/dist/style.css',
+  `/static/dist/style.css?v=${VERSION}`,
 
-  // JavaScript bundle
-  '/static/dist/main.js',
+  // JavaScript bundles
+  `/static/dist/main.js?v=${VERSION}`,
+  `/static/dist/submitPhoto.js?v=${VERSION}`,
 
   // Icons
-  '/static/icons/icon_48x48.webp',
-  '/static/icons/icon_96x96.webp',
-  '/static/icons/icon_192x192.webp',
-  '/static/icons/icon_512x512.webp',
-  '/static/icons/apple-touch-icon-180x180.png',
+  "/static/icons/icon_48x48.webp",
+  "/static/icons/icon_96x96.webp",
+  "/static/icons/icon_192x192.webp",
+  "/static/icons/icon_512x512.webp",
+  "/static/icons/apple-touch-icon-180x180.png",
 
   // Images (Add specific files if needed)
-  '/static/images/welcomeQuestByCycle.webp',
+  "/static/images/welcomeQuestByCycle.webp",
 ];
 
 // -------------------- Background Sync Helpers --------------------
@@ -125,7 +125,7 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
-      await clients.claim();
+      await self.clients.claim();
       if (isUpdate) {
         notifyClientsAboutUpdate();
       }
@@ -147,8 +147,11 @@ function shouldCacheRequest(request) {
   if (request.method !== 'GET') {
     return false;
   }
-  const acceptHeader = request.headers.get('Accept') || '';
-  if (acceptHeader.includes('application/json')) {
+  const acceptHeader = request.headers.get("Accept") || "";
+  if (
+    acceptHeader.includes("application/json") ||
+    acceptHeader.includes("text/html")
+  ) {
     return false;
   }
   const url = new URL(request.url);
@@ -192,19 +195,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (event.request.mode === 'navigate') {
+  if (event.request.mode === "navigate") {
     event.respondWith(
-      (async () => {
-        try {
-          const networkResponse = await fetch(event.request);
-          const cache = await caches.open(CACHE_NAME);
-          cache.put(event.request, networkResponse.clone());
-          return networkResponse;
-        } catch {
-          const cached = await caches.match(event.request);
-          return cached || caches.match('/offline.html');
-        }
-      })()
+      fetch(event.request).catch(() => caches.match("/offline.html"))
     );
     return;
   }

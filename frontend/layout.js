@@ -16,8 +16,10 @@ export function initLayout() {
       refreshing = true;
       window.location.reload();
     });
+    const assetVersion =
+      document.querySelector("meta[name='asset-version']")?.content || "";
     navigator.serviceWorker
-      .register('/sw.js')
+      .register(`/sw.js?v=${assetVersion}`)
       .then((registration) => {
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
