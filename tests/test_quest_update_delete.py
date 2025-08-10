@@ -90,6 +90,40 @@ def test_update_quest_returns_error_on_commit_failure(app, admin_user):
     assert data["success"] is False
 
 
+def test_update_quest_ignores_empty_numeric_fields(app, admin_user):
+    quest = setup_quest(admin_user)
+    quest.points = 5
+    quest.completion_limit = 2
+    quest.badge_awarded = 3
+    db.session.commit()
+
+    with app.test_request_context(
+        f"/quests/quest/{quest.id}/update",
+        method="POST",
+        json={
+            "title": "",
+            "description": "",
+            "tips": "",
+            "points": "",
+            "completion_limit": "",
+            "badge_awarded": "",
+            "category": "",
+            "verification_type": "",
+            "frequency": "",
+            "badge_option": "none",
+        },
+    ):
+        login_user(admin_user)
+        response = update_quest(quest.id)
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["success"] is True
+    assert quest.points == 5
+    assert quest.completion_limit == 2
+    assert quest.badge_awarded == 3
+
+
 def test_delete_quest_returns_error_on_commit_failure(app, admin_user):
     quest = setup_quest(admin_user)
     with app.test_request_context(

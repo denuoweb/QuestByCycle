@@ -389,9 +389,25 @@ def update_quest(quest_id):
     quest.title = sanitize_html(data.get("title", quest.title))
     quest.description = sanitize_html(data.get("description", quest.description))
     quest.tips = sanitize_html(data.get("tips", quest.tips))
-    quest.points = data.get("points", quest.points)
-    quest.completion_limit = data.get("completion_limit", quest.completion_limit)
-    quest.badge_awarded = data.get("badge_awarded", quest.badge_awarded)
+
+    def parse_int(field_name: str, current_value: int) -> int:
+        value = data.get(field_name)
+        if value in (None, ""):
+            return current_value
+        try:
+            return int(value)
+        except ValueError as err:  # pragma: no cover - defensive programming
+            raise ValueError(f"Invalid {field_name}") from err
+
+    try:
+        quest.points = parse_int("points", quest.points)
+        quest.completion_limit = parse_int(
+            "completion_limit", quest.completion_limit
+        )
+        quest.badge_awarded = parse_int("badge_awarded", quest.badge_awarded)
+    except ValueError as error:
+        return jsonify({"success": False, "message": "Invalid input for quest field(s)."}), 400
+
     quest.enabled = data.get("enabled", quest.enabled)
     quest.is_sponsored = data.get("is_sponsored", quest.is_sponsored)
     quest.category = sanitize_html(data.get("category", quest.category))
