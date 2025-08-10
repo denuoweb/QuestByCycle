@@ -2,6 +2,7 @@
 
 {% block content %}
 <div class="container">
+    <div id="game_IdHolder" data-game-id="{{ game_id }}" class="d-none"></div>
     {% if current_user.is_authenticated %}
         <!-- Display Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}

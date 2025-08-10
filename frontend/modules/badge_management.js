@@ -9,13 +9,23 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+function getGameId() {
+    const holder = document.getElementById('game_IdHolder');
+    if (!holder) {
+        return null;
+    }
+    const value = holder.getAttribute('data-game-id');
+    return value && value !== '0' ? value : null;
+}
+
 function loadBadges() {
     const badgesBody = document.getElementById('badgesBody');
     if (!badgesBody) {
         return;
     }
-
-    fetch('/badges')
+    const gameId = getGameId();
+    const query = gameId ? `?game_id=${gameId}` : '';
+    fetch(`/badges${query}`)
         .then(response => response.json())
         .then(data => {
             badgesBody.innerHTML = '';
@@ -52,7 +62,9 @@ function toggleForm(formId) {
 }
 
 function setCategoryOptions(currentCategory) {
-    return fetch('/badges/categories')
+    const gameId = getGameId();
+    const query = gameId ? `?game_id=${gameId}` : '';
+    return fetch(`/badges/categories${query}`)
         .then(response => response.json())
         .then(data => {
             const categories = data.categories || [];

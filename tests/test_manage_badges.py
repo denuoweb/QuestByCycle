@@ -5,7 +5,7 @@ import pytest
 from flask_login import login_user
 
 from app import create_app, db
-from app.models import Game, Badge, User
+from app.models import Game, Badge, User, Quest
 
 
 @pytest.fixture
@@ -105,3 +105,34 @@ def test_manage_badges_filters_by_game(client, admin_user):
     new_badge = Badge.query.filter_by(name="New Badge").first()
     assert new_badge is not None
     assert new_badge.game_id == game1.id
+
+
+def test_get_badges_filters_by_game(client, admin_user):
+    game1 = create_game("Game 1", admin_user)
+    game2 = create_game("Game 2", admin_user)
+    b1 = Badge(name="B1", description="d1", game_id=game1.id)
+    b2 = Badge(name="B2", description="d2", game_id=game2.id)
+    db.session.add_all([b1, b2])
+    db.session.commit()
+
+    resp = client.get(f"/badges?game_id={game1.id}")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    names = [b["name"] for b in data["badges"]]
+    assert "B1" in names
+    assert "B2" not in names
+
+
+def test_categories_filter_by_game(client, admin_user):
+    game1 = create_game("Game 1", admin_user)
+    game2 = create_game("Game 2", admin_user)
+    q1 = Quest(title="Q1", game_id=game1.id, category="Cat1")
+    q2 = Quest(title="Q2", game_id=game2.id, category="Cat2")
+    db.session.add_all([q1, q2])
+    db.session.commit()
+
+    resp = client.get(f"/badges/categories?game_id={game1.id}")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert "Cat1" in data["categories"]
+    assert "Cat2" not in data["categories"]
