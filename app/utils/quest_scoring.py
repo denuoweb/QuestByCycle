@@ -167,9 +167,11 @@ def check_and_revoke_badges(user_id: int, game_id: int | None = None) -> None:
     badges_to_remove = []
     for badge in user.badges:
         if badge.category:
+            query = Quest.query.filter_by(category=badge.category)
+            if game_id is not None:
+                query = query.filter_by(game_id=game_id)
             current_category_quests = (
-                Quest.query.filter_by(category=badge.category, game_id=game_id)
-                .filter(Quest.badge_option.in_(["category", "both"]))
+                query.filter(Quest.badge_option.in_(["category", "both"]))
                 .all()
             )
             completed_quests = {
@@ -177,12 +179,12 @@ def check_and_revoke_badges(user_id: int, game_id: int | None = None) -> None:
                 for ut in user.user_quests
                 if (
                     ut.quest.category == badge.category
-                    and ut.quest.game_id == game_id
+                    and (game_id is None or ut.quest.game_id == game_id)
                     and ut.quest.badge_option in ("category", "both")
                     and ut.completions >= 1
                 )
             }
-            if set(current_category_quests) != set(completed_quests):
+            if len(completed_quests) != len(current_category_quests):
                 badges_to_remove.append(badge)
         else:
             all_met = True
