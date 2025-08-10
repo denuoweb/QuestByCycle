@@ -130,6 +130,7 @@ def test_get_quests_contains_all_fields(client, admin_user):
         "badge_awarded",
         "frequency",
         "category",
+        "badge_option",
         "from_calendar",
         "calendar_event_id",
         "calendar_event_start",

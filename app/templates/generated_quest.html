@@ -58,6 +58,15 @@
                                                                'photo_comment' }}">
     </div>
     <div class="form-group">
+        <label for="badge_option">Badge Option</label>
+        <select class="form-control" id="badge_option" name="badge_option">
+            <option value="none">No Badge (points only)</option>
+            <option value="individual">Individual Badge</option>
+            <option value="category">Category Badge</option>
+            <option value="both">Both Individual and Category</option>
+        </select>
+    </div>
+    <div class="form-group">
         <label for="badge_name">Badge Name</label>
         <input type="text" class="form-control" id="badge_name" name="badge_name" value="{{ quest['Badge Name'] }}">
     </div>

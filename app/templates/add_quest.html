@@ -65,6 +65,10 @@
         <fieldset class="mb-4">
             <legend>Badge Information</legend>
             <div class="mb-3">
+                <label for="{{ form.badge_option.id }}" class="form-label">{{ form.badge_option.label }}</label>
+                {{ form.badge_option(class="form-control") }}
+            </div>
+            <div class="mb-3">
                 <label for="{{ form.badge_id.id }}" class="form-label">{{ form.badge_id.label }}</label>
                 {{ form.badge_id(class="form-control") }}
                 <div class="form-text">Select "None" to create a new badge or choose an existing one.</div>

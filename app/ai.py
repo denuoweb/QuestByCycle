@@ -37,30 +37,37 @@ def create_quest():
     form.process(form_data)
 
     if form.validate():
-        badge_id = form.badge_id.data if form.badge_id.data and form.badge_id.data != '0' else None
-        ai_badge_filename = sanitize_html(form_data.get('ai_badge_filename', None))
+        badge_option = form.badge_option.data
+        badge_id = None
+        if badge_option in ("individual", "both"):
+            badge_id = (
+                form.badge_id.data
+                if form.badge_id.data and form.badge_id.data != '0'
+                else None
+            )
+            ai_badge_filename = sanitize_html(form_data.get('ai_badge_filename', None))
 
-        if not badge_id and form.badge_name.data:
-            badge_image_file = ai_badge_filename
-            if 'badge_image_filename' in request.files and not ai_badge_filename:
-                badge_image_file = request.files['badge_image_filename']
-                if badge_image_file and badge_image_file.filename != '':
-                    badge_image_file = save_badge_image(badge_image_file)
+            if not badge_id and form.badge_name.data:
+                badge_image_file = ai_badge_filename
+                if 'badge_image_filename' in request.files and not ai_badge_filename:
+                    badge_image_file = request.files['badge_image_filename']
+                    if badge_image_file and badge_image_file.filename != '':
+                        badge_image_file = save_badge_image(badge_image_file)
+                    else:
+                        return jsonify({"success": False, "message": "No badge image selected for upload."}), 400
+                elif ai_badge_filename:
+                    badge_image_file = ai_badge_filename
                 else:
                     return jsonify({"success": False, "message": "No badge image selected for upload."}), 400
-            elif ai_badge_filename:
-                badge_image_file = ai_badge_filename
-            else:
-                return jsonify({"success": False, "message": "No badge image selected for upload."}), 400
 
-            new_badge = Badge(
-                name=sanitize_html(form.badge_name.data),
-                description=sanitize_html(form.badge_description.data),
-                image=badge_image_file
-            )
-            db.session.add(new_badge)
-            db.session.flush()
-            badge_id = new_badge.id
+                new_badge = Badge(
+                    name=sanitize_html(form.badge_name.data),
+                    description=sanitize_html(form.badge_description.data),
+                    image=badge_image_file
+                )
+                db.session.add(new_badge)
+                db.session.flush()
+                badge_id = new_badge.id
 
         game_id = sanitize_html(form_data.get('game_id'))
         if not game_id:
@@ -76,7 +83,9 @@ def create_quest():
             frequency=sanitize_html(form.frequency.data),
             category=sanitize_html(form.category.data),
             verification_type=sanitize_html(form.verification_type.data),
+            badge_awarded=form.badge_awarded.data,
             badge_id=badge_id,
+            badge_option=badge_option,
         )
         db.session.add(new_quest)
         try:

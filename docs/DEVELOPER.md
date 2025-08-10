@@ -226,6 +226,17 @@ Admins can manage quests using the following routes:
 - **Update Quest**: `/quests/quest/<int:quest_id>/update`
 - **Delete Quest**: `/quests/quest/<int:quest_id>/delete`
 
+#### Badge Options
+
+Each quest has a `badge_option` field determining how badges are awarded:
+
+- `none` – the quest only gives points.
+- `individual` – the quest awards its own badge after the required completions.
+- `category` – completing all quests in the same category awards the category badge.
+- `both` – the quest awards its own badge and contributes to the category badge.
+
+Select the appropriate option when creating or updating a quest.
+
 ### Shout Board
 
 The Shout Board allows admins to post and pin messages that are viewable by all users. Admins can manage Shout Board messages using the following routes:
