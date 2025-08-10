@@ -16,6 +16,7 @@ Welcome to the Developer Guide for our Ultimate Challenge and Reward Platform! T
     - [Database Models](#database-models)
     - [Forms](#forms)
     - [Utilities](#utilities)
+    - [Bot Protection](#bot-protection)
 4. [Admin Functionality](#admin-functionality)
     - [Admin Dashboard](#admin-dashboard)
     - [Badge Management](#badge-management)
@@ -182,6 +183,10 @@ Utility functions are organized under `app/utils/` and include:
 - **`can_complete_quest`**: Checks if a user can complete a quest.
 - **`get_int_param`**: Safely parses integers from request data.
 - **`send_email`**: Sends emails.
+
+### Bot Protection
+
+The application uses [flask-Humanify](https://github.com/tn3w/flask-Humanify) to challenge suspicious requests on login and registration endpoints, reducing automated abuse.
 
 ## Admin Functionality
 

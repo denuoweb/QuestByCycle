@@ -35,12 +35,14 @@ from .config import load_config
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from datetime import timedelta
 from logging.handlers import RotatingFileHandler
+from flask_humanify import Humanify
 
                         
                             
                         
 login_manager = LoginManager()
 csrf = CSRFProtect()
+humanify = Humanify(challenge_type="one_click")
 
                         
                 
@@ -161,6 +163,13 @@ def create_app(config_overrides=None):
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+
+    if not app.config.get("TESTING"):
+        humanify.init_app(app)
+        humanify.register_middleware(
+            action="challenge",
+            endpoint_patterns=["auth.login", "auth.register"],
+        )
 
                                                 
     with app.app_context():
