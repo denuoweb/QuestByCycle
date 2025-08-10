@@ -96,32 +96,35 @@ def add_quest(game_id):
         return redirect(url_for("main.index", game_id=game_id))
 
     form = QuestForm()
-    form.game_id.data = game_id                                     
+    form.game_id.data = game_id
 
     if form.validate_on_submit():
-        badge_id = (
-            form.badge_id.data
-            if form.badge_id.data and form.badge_id.data != "0"
-            else None
-        )
-
-        if not badge_id and form.badge_name.data:
-            badge_image_file = None
-            if "badge_image_filename" in request.files:
-                badge_image_file = request.files["badge_image_filename"]
-                if badge_image_file and badge_image_file.filename != "":
-                    badge_image_file = save_badge_image(badge_image_file)
-                else:
-                    flash("No badge image selected for upload.", "error")
-
-            new_badge = Badge(
-                name=sanitize_html(form.badge_name.data),
-                description=sanitize_html(form.badge_description.data),
-                image=badge_image_file,
+        badge_option = form.badge_option.data
+        badge_id = None
+        if badge_option in ("individual", "both"):
+            badge_id = (
+                form.badge_id.data
+                if form.badge_id.data and form.badge_id.data != "0"
+                else None
             )
-            db.session.add(new_badge)
-            db.session.flush()
-            badge_id = new_badge.id
+
+            if not badge_id and form.badge_name.data:
+                badge_image_file = None
+                if "badge_image_filename" in request.files:
+                    badge_image_file = request.files["badge_image_filename"]
+                    if badge_image_file and badge_image_file.filename != "":
+                        badge_image_file = save_badge_image(badge_image_file)
+                    else:
+                        flash("No badge image selected for upload.", "error")
+
+                new_badge = Badge(
+                    name=sanitize_html(form.badge_name.data),
+                    description=sanitize_html(form.badge_description.data),
+                    image=badge_image_file,
+                )
+                db.session.add(new_badge)
+                db.session.flush()
+                badge_id = new_badge.id
 
         new_quest = Quest(
             title=sanitize_html(form.title.data),
@@ -137,6 +140,7 @@ def add_quest(game_id):
             category=sanitize_html(form.category.data),
             verification_type=sanitize_html(form.verification_type.data),
             badge_id=badge_id,
+            badge_option=badge_option,
         )
         db.session.add(new_quest)
         try:
@@ -395,12 +399,16 @@ def update_quest(quest_id):
     )
     quest.frequency = sanitize_html(data.get("frequency", quest.frequency))
 
+    quest.badge_option = data.get("badge_option", quest.badge_option)
+
     badge_id = data.get("badge_id")
-    if badge_id is not None:
+    if badge_id is not None and quest.badge_option in ("individual", "both"):
         try:
             quest.badge_id = int(badge_id)
         except ValueError:
             return jsonify({"success": False, "message": "Invalid badge ID"}), 400
+    elif quest.badge_option in ("none", "category"):
+        quest.badge_id = None
 
     try:
         db.session.commit()
@@ -465,6 +473,7 @@ def get_quests_for_game(game_id):
             "badge_awarded": quest.badge_awarded if quest.badge_id else "",
             "frequency": quest.frequency,
             "category": quest.category if quest.category else "Not Set",
+            "badge_option": quest.badge_option,
             "from_calendar": quest.from_calendar,
             "calendar_event_id": quest.calendar_event_id,
             "calendar_event_start": quest.calendar_event_start.isoformat() if quest.calendar_event_start else None,
@@ -619,6 +628,7 @@ def quest_user_completion(quest_id):
         "badge_awarded": quest.badge_awarded,
         "category": quest.category,
         "frequency": quest.frequency,
+        "badge_option": quest.badge_option,
         "enabled": quest.enabled,
         "is_sponsored": quest.is_sponsored,
         "verification_type": quest.verification_type,

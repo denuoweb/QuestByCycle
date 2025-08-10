@@ -212,6 +212,7 @@ def _prepare_user_data(game_id, profile):
              .filter(
                  Quest.game_id == game_id,
                  Quest.badge_id.isnot(None),
+                 Quest.badge_option.in_(["individual", "both"]),
                  Badge.image.isnot(None)
              )
              .distinct()
@@ -609,7 +610,14 @@ def leaderboard_partial():
             db.func.count(db.distinct(user_badges.c.badge_id)).label("badge_count")
         )
         .join(Badge, Badge.id == user_badges.c.badge_id)
-        .join(Quest, and_(Quest.badge_id == Badge.id, Quest.game_id == selected_game_id))
+        .join(
+            Quest,
+            and_(
+                Quest.badge_id == Badge.id,
+                Quest.game_id == selected_game_id,
+                Quest.badge_option.in_(["individual", "both"]),
+            ),
+        )
         .group_by(user_badges.c.user_id)
         .subquery()
     )

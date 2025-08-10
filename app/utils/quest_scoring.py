@@ -75,7 +75,11 @@ def check_and_award_badges(user_id: int, quest_id: int, game_id: int) -> None:
     if not user_quest:
         return
 
-    if quest.badge and user_quest.completions >= quest.badge_awarded:
+    if (
+        quest.badge_option in ("individual", "both")
+        and quest.badge
+        and user_quest.completions >= quest.badge_awarded
+    ):
         existing_award = ShoutBoardMessage.query.filter_by(
             user_id=user_id,
             game_id=game_id,
@@ -105,8 +109,12 @@ def check_and_award_badges(user_id: int, quest_id: int, game_id: int) -> None:
             db.session.add(sbm)
             db.session.commit()
 
-    if quest.category and game_id:
-        category_quests = Quest.query.filter_by(category=quest.category, game_id=game_id).all()
+    if quest.badge_option in ("category", "both") and quest.category and game_id:
+        category_quests = (
+            Quest.query.filter_by(category=quest.category, game_id=game_id)
+            .filter(Quest.badge_option.in_(["category", "both"]))
+            .all()
+        )
         if not category_quests:
             return
         completed_quests = [
@@ -115,6 +123,7 @@ def check_and_award_badges(user_id: int, quest_id: int, game_id: int) -> None:
             if (
                 ut.quest.category == quest.category
                 and ut.quest.game_id == game_id
+                and ut.quest.badge_option in ("category", "both")
                 and ut.completions >= 1
             )
         ]
@@ -158,13 +167,18 @@ def check_and_revoke_badges(user_id: int, game_id: int | None = None) -> None:
     badges_to_remove = []
     for badge in user.badges:
         if badge.category:
-            current_category_quests = Quest.query.filter_by(category=badge.category, game_id=game_id).all()
+            current_category_quests = (
+                Quest.query.filter_by(category=badge.category, game_id=game_id)
+                .filter(Quest.badge_option.in_(["category", "both"]))
+                .all()
+            )
             completed_quests = {
                 ut.quest
                 for ut in user.user_quests
                 if (
                     ut.quest.category == badge.category
                     and ut.quest.game_id == game_id
+                    and ut.quest.badge_option in ("category", "both")
                     and ut.completions >= 1
                 )
             }
@@ -173,7 +187,11 @@ def check_and_revoke_badges(user_id: int, game_id: int | None = None) -> None:
         else:
             all_met = True
             for quest in badge.quests:
-                user_quest = UserQuest.query.filter_by(user_id=user_id, quest_id=quest.id).first()
+                if quest.badge_option not in ("individual", "both"):
+                    continue
+                user_quest = UserQuest.query.filter_by(
+                    user_id=user_id, quest_id=quest.id
+                ).first()
                 if not user_quest or user_quest.completions < quest.badge_awarded:
                     all_met = False
                     break
@@ -192,9 +210,17 @@ def enhance_badges_with_task_info(badges, game_id: int | None = None, user_id: i
     enhanced_badges = []
     for badge in badges:
         if game_id:
-            awarding_quests = [quest for quest in badge.quests if quest.game_id == game_id]
+            awarding_quests = [
+                quest
+                for quest in badge.quests
+                if quest.game_id == game_id and quest.badge_option in ("individual", "both")
+            ]
         else:
-            awarding_quests = badge.quests
+            awarding_quests = [
+                quest
+                for quest in badge.quests
+                if quest.badge_option in ("individual", "both")
+            ]
         if awarding_quests:
             task_names = ", ".join(quest.title for quest in awarding_quests)
             task_ids = ", ".join(str(quest.id) for quest in awarding_quests)

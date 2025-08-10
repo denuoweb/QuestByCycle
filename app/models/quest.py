@@ -1,7 +1,17 @@
 from datetime import datetime
+from enum import StrEnum
 
 from app.constants import UTC
 from . import db
+
+
+class BadgeOption(StrEnum):
+    """Enumeration of badge options for a quest."""
+
+    NONE = "none"
+    INDIVIDUAL = "individual"
+    CATEGORY = "category"
+    BOTH = "both"
 
 
 class Quest(db.Model):
@@ -39,6 +49,7 @@ class Quest(db.Model):
         cascade='all, delete-orphan'
     )
     badge_awarded = db.Column(db.Integer, default=1)
+    badge_option = db.Column(db.String(20), nullable=False, default=BadgeOption.NONE)
     from_calendar = db.Column(db.Boolean, default=False)
     calendar_event_id = db.Column(db.String(255), nullable=True)
     calendar_event_start = db.Column(db.DateTime(timezone=True), nullable=True)

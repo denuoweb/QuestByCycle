@@ -255,6 +255,16 @@ class QuestForm(FlaskForm):
         choices=[("daily", "Daily"), ("weekly", "Weekly"), ("monthly", "Monthly")],
         validators=[DataRequired()],
     )
+    badge_option = SelectField(
+        "Badge Option",
+        choices=[
+            ("none", "No Badge (points only)"),
+            ("individual", "Individual Badge"),
+            ("category", "Category Badge"),
+            ("both", "Both Individual and Category"),
+        ],
+        default="none",
+    )
     badge_id = SelectField("Badge", coerce=int, choices=[], validators=[Optional()])
     badge_name = StringField("Badge Name", validators=[Optional()])
     badge_description = TextAreaField("Badge Description", validators=[Optional()])
