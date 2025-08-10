@@ -119,6 +119,13 @@ import{l as m,c as v,f as $,g as Ee,e as A,s as z,h as X}from"./chunk-NMvYiMni.j
                                 ${t.user.upload_to_mastodon?"checked":""}>
                         <label class="form-check-label" for="uploadToMastodon">Cross post to your federation server?</label>
                       </div>
+                      ${t.user.is_admin?"":`
+                      <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="upgradeToAdmin" name="upgrade_to_admin">
+                        <label class="form-check-label" for="upgradeToAdmin">
+                          Upgrade to Admin ($10/month, 5 GB storage, 60-day retention)
+                        </label>
+                      </div>`}
                       <div class="d-flex justify-content-between">
                         <button type="button" class="btn btn-success" id="saveProfileBtn">
                           <i class="bi bi-save me-2"></i>Save Profile

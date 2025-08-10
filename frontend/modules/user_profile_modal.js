@@ -141,6 +141,13 @@ export function showUserProfileModal(userId) {
                                 ${data.user.upload_to_mastodon?'checked':''}>
                         <label class="form-check-label" for="uploadToMastodon">Cross post to your federation server?</label>
                       </div>
+                      ${!data.user.is_admin ? `
+                      <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="upgradeToAdmin" name="upgrade_to_admin">
+                        <label class="form-check-label" for="upgradeToAdmin">
+                          Upgrade to Admin ($10/month, 5 GB storage, 60-day retention)
+                        </label>
+                      </div>` : ''}
                       <div class="d-flex justify-content-between">
                         <button type="button" class="btn btn-success" id="saveProfileBtn">
                           <i class="bi bi-save me-2"></i>Save Profile

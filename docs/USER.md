@@ -43,7 +43,9 @@ Welcome to our Ultimate Challenge and Reward Platform! This guide will help you 
 1. **Navigate to Your Profile**: Click on your username at the top right corner and select "Profile."
 2. **Edit Profile Information**: Click on "Edit Profile" to update your display name, interests, and age group.
 3. **Upload a Profile Picture**: Click on the profile picture area to upload a new picture.
-4. **Save Changes**: Ensure you click "Save" to update your profile information.
+4. **Upgrade to Admin**: Check "Upgrade to Admin" to enable administrative tools. The upgrade costs $10 per month and includes
+   5&nbsp;GB of storage with 60&nbsp;days of data retention.
+5. **Save Changes**: Ensure you click "Save" to update your profile information.
 
 ## Navigating the Platform
 
