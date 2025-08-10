@@ -1,0 +1,105 @@
+import pytest
+from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
+
+from app import create_app, db
+from app.models.game import Game
+from app.models.quest import Quest
+from app.models.user import User
+from app.quests import update_quest, delete_quest
+from flask_login import login_user
+
+
+@pytest.fixture
+def app():
+    app = create_app({
+        "TESTING": True,
+        "WTF_CSRF_ENABLED": False,
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+        "MAIL_SERVER": None,
+    })
+    ctx = app.app_context()
+    ctx.push()
+    db.create_all()
+    yield app
+    db.session.remove()
+    db.drop_all()
+    ctx.pop()
+
+
+@pytest.fixture
+def admin_user(app):
+    user = User(
+        username="admin",
+        email="admin@example.com",
+        is_admin=True,
+        license_agreed=True,
+        email_verified=True,
+    )
+    user.set_password("pw")
+    user.created_at = datetime.now(timezone.utc)
+    db.session.add(user)
+    db.session.commit()
+    return user
+
+
+def create_game(title, admin_id):
+    game = Game(
+        title=title,
+        start_date=datetime.now(timezone.utc) - timedelta(days=1),
+        end_date=datetime.now(timezone.utc) + timedelta(days=1),
+        admin_id=admin_id,
+    )
+    return game
+
+
+def setup_quest(admin_user):
+    game = create_game("Game", admin_user.id)
+    game.admins.append(admin_user)
+    db.session.add(game)
+    db.session.commit()
+
+    quest = Quest(title="Quest", game=game)
+    db.session.add(quest)
+    db.session.commit()
+    return quest
+
+
+def test_update_quest_returns_error_on_commit_failure(app, admin_user):
+    quest = setup_quest(admin_user)
+    with app.test_request_context(
+        f"/quests/quest/{quest.id}/update",
+        method="POST",
+        json={
+            "title": "New Title",
+            "description": "",
+            "tips": "",
+            "category": "",
+            "verification_type": "",
+            "frequency": "",
+            "badge_option": "none",
+        },
+    ):
+        login_user(admin_user)
+        with patch(
+            "app.quests.db.session.commit", side_effect=Exception("DB failure")
+        ):
+            response, status = update_quest(quest.id)
+    assert status == 500
+    data = response.get_json()
+    assert data["success"] is False
+
+
+def test_delete_quest_returns_error_on_commit_failure(app, admin_user):
+    quest = setup_quest(admin_user)
+    with app.test_request_context(
+        f"/quests/quest/{quest.id}/delete", method="DELETE"
+    ):
+        login_user(admin_user)
+        with patch(
+            "app.quests.db.session.commit", side_effect=Exception("DB failure")
+        ):
+            response, status = delete_quest(quest.id)
+    assert status == 500
+    data = response.get_json()
+    assert data["success"] is False
