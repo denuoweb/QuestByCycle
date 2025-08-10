@@ -135,6 +135,15 @@ class TWAConfig:
 
 
 @dataclass
+class PayPalConfig:
+    """Configuration for PayPal API access."""
+
+    PAYPAL_CLIENT_ID: str
+    PAYPAL_CLIENT_SECRET: str
+    PAYPAL_API_BASE: str
+
+
+@dataclass
 class SQLAlchemyEngineOptions:
     pool_pre_ping: bool
     pool_recycle: int
@@ -149,6 +158,7 @@ class AppConfig:
     mail: MailConfig
     social: SocialConfig
     push: PushConfig
+    paypal: PayPalConfig
     twa: TWAConfig
     sqlalchemy_engine_options: SQLAlchemyEngineOptions
 
@@ -215,6 +225,11 @@ def load_config() -> AppConfig:
             VAPID_PUBLIC_KEY=_get_env("VAPID_PUBLIC_KEY", ""),
             VAPID_PRIVATE_KEY=_get_env("VAPID_PRIVATE_KEY", ""),
             VAPID_ADMIN_EMAIL=_get_env("VAPID_ADMIN_EMAIL", "push@example.com"),
+        ),
+        paypal=PayPalConfig(
+            PAYPAL_CLIENT_ID=_get_env("PAYPAL_CLIENT_ID", ""),
+            PAYPAL_CLIENT_SECRET=_get_env("PAYPAL_CLIENT_SECRET", ""),
+            PAYPAL_API_BASE=_get_env("PAYPAL_API_BASE", "https://api-m.sandbox.paypal.com"),
         ),
         twa=TWAConfig(
             SHA256_CERT_FINGERPRINT=_get_env("TWA_SHA256_FINGERPRINT", ""),

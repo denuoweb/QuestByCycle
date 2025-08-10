@@ -38,6 +38,8 @@ Admins only see games they created or have been assigned to on the admin dashboa
 
 Individual admins are isolated from one another. They cannot view or modify games owned by other admins unless explicitly added as a co‑admin for a specific game. User accounts are similarly scoped: an admin can view users only after those users join their game, and only the super admin may edit user settings or change roles.
 
+Game quotas are set per game by its admin. Free users do not have individual quotas.
+
 ## Creating and Managing Games
 
 ### Creating a Game
