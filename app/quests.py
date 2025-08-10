@@ -406,7 +406,7 @@ def update_quest(quest_id):
         )
         quest.badge_awarded = parse_int("badge_awarded", quest.badge_awarded)
     except ValueError as error:
-        return jsonify({"success": False, "message": str(error)}), 400
+        return jsonify({"success": False, "message": "Invalid input for quest field(s)."}), 400
 
     quest.enabled = data.get("enabled", quest.enabled)
     quest.is_sponsored = data.get("is_sponsored", quest.is_sponsored)
