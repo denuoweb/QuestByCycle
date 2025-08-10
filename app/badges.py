@@ -244,8 +244,11 @@ def delete_badge(badge_id):
 
 @badges_bp.route('/categories', methods=['GET'])
 def get_quest_categories():
-                                                
-    quest_categories = db.session.query(Quest.category).filter(Quest.category.isnot(None)).distinct().all()
+    game_id = get_int_param('game_id')
+    query = db.session.query(Quest.category).filter(Quest.category.isnot(None))
+    if game_id:
+        query = query.filter(Quest.game_id == game_id)
+    quest_categories = query.distinct().all()
     categories = [category.category for category in quest_categories]
     return jsonify(categories=sorted(categories))
 

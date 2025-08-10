@@ -1,5 +1,5 @@
 // The version of the cache
-const VERSION = '1.1.0-fb5b8cf'; // Update this version number when changes are made
+const VERSION = '1.1.0-3392bf2'; // Update this version number when changes are made
 const CACHE_NAME = `questbycycle-${VERSION}`;
 
 // List of static resources to cache
