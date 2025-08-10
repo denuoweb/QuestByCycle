@@ -186,7 +186,9 @@ Utility functions are organized under `app/utils/` and include:
 
 ### Bot Protection
 
-The application uses [flask-Humanify](https://github.com/tn3w/flask-Humanify) to challenge suspicious requests on login and registration endpoints, reducing automated abuse.
+The application uses [flask-Humanify](https://github.com/tn3w/flask-Humanify)
+with a grid challenge on login and registration endpoints,
+reducing automated abuse.
 
 ## Admin Functionality
 
