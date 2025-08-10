@@ -108,7 +108,11 @@
         </div>
         <div class="form-group">
             <label for="admins">Game Admins</label>
-            {{ form.admins(class_="form-control", id="admins", multiple=True) }}
+            <select class="form-control" id="admins" name="{{ form.admins.name }}" multiple>
+                {% for value, label in form.admins.choices %}
+                    <option value="{{ value }}" {% if value in form.admins.data %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
         </div>
         <div class="form-group">
             <label for="custom_game_code">Custom Game Code</label>
