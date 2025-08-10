@@ -43,7 +43,7 @@ from flask_humanify import Humanify
 login_manager = LoginManager()
 csrf = CSRFProtect()
 # Use a grid-based challenge to make automated registrations harder.
-humanify = Humanify(challenge_type="grid")
+humanify = Humanify(challenge_type="one_click")
 
                         
                 
