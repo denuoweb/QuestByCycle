@@ -141,13 +141,18 @@ def get_badges():
 @login_required
 @require_admin
 def manage_badges():
+    game_id = get_int_param('game_id')
+    if not current_user.is_super_admin and not current_user.is_admin_for_game(game_id):
+        abort(403)
 
-                                              
-    quest_categories = db.session.query(Quest.category).filter(Quest.category.isnot(None)).distinct().all()
+    quest_categories = (
+        db.session.query(Quest.category)
+        .filter(Quest.category.isnot(None))
+        .distinct()
+        .all()
+    )
 
-                                        
     category_choices = sorted([category.category for category in quest_categories])
-
     form = BadgeForm(category_choices=category_choices)
 
     if form.validate_on_submit():
@@ -169,11 +174,25 @@ def manage_badges():
         else:
             flash('No file part in the request.', 'error')
 
-        return redirect(url_for('badges.manage_badges'))
+        return redirect(url_for('badges.manage_badges', game_id=game_id))
 
-    badges = Badge.query.all()
-    return render_template('manage_badges.html', form=form, badges=badges,
-        in_admin_dashboard=True)
+    if game_id:
+        badges = (
+            Badge.query.join(Quest)
+            .filter(Quest.game_id == game_id)
+            .order_by(Badge.name)
+            .all()
+        )
+    else:
+        badges = Badge.query.order_by(Badge.name).all()
+
+    return render_template(
+        'manage_badges.html',
+        form=form,
+        badges=badges,
+        in_admin_dashboard=True,
+        game_id=game_id,
+    )
 
 
 @badges_bp.route('/update/<int:badge_id>', methods=['POST'])
@@ -243,6 +262,9 @@ def get_quest_categories():
 @login_required
 @require_admin
 def upload_images():
+    game_id = get_int_param('game_id')
+    if not current_user.is_super_admin and not current_user.is_admin_for_game(game_id):
+        abort(403)
 
     uploaded_files = request.files.getlist('file')
     images_folder = os.path.join(current_app.root_path, 'static', 'images', 'badge_images')
@@ -272,35 +294,39 @@ def upload_images():
 @login_required
 @require_admin
 def bulk_upload():
+    game_id = get_int_param('game_id')
+    if not current_user.is_super_admin and not current_user.is_admin_for_game(game_id):
+        abort(403)
 
     csv_file = request.files.get('csv_file')
     image_files = request.files.getlist('image_files')
 
     if not csv_file or not allowed_file(csv_file.filename):
         flash('Invalid or missing CSV file.', 'danger')
-        return redirect(url_for('badges.manage_badges'))
+        return redirect(url_for('badges.manage_badges', game_id=game_id))
 
-                                 
     image_dict = {}
     for image_file in image_files:
         if allowed_file(image_file.filename):
             filename = secure_filename(image_file.filename)
-            image_path = os.path.join(current_app.root_path, 'static', 'images', 'badge_images', filename)
+            image_path = os.path.join(
+                current_app.root_path, 'static', 'images', 'badge_images', filename
+            )
             image_file.save(image_path)
             image_dict[filename] = filename
-                 
+
     try:
         csv_data = csv_file.read().decode('utf-8').splitlines()
 
-                                
         csv_reader = csv.DictReader(csv_data, delimiter='\t')
         headers = csv_reader.fieldnames
         if headers is None or len(headers) == 1:
-                                      
             csv_reader = csv.DictReader(csv_data, delimiter=',')
             headers = csv_reader.fieldnames
         if 'badge_name' not in headers or 'badge_description' not in headers:
-            raise ValueError("CSV file does not contain required headers: 'badge_name' and 'badge_description'")
+            raise ValueError(
+                "CSV file does not contain required headers: 'badge_name' and 'badge_description'"
+            )
 
         for row in csv_reader:
             badge_name = row['badge_name']
@@ -314,11 +340,10 @@ def bulk_upload():
             else:
                 flash(f'Image for badge "{badge_name}" not found.', 'warning')
                 logger.warning('Image for badge "%s" not found.', badge_name)
-
     except Exception:
         flash('Error processing CSV file.', 'danger')
-        return redirect(url_for('badges.manage_badges'))
+        return redirect(url_for('badges.manage_badges', game_id=game_id))
 
     db.session.commit()
     flash('Badges and images uploaded successfully.', 'success')
-    return redirect(url_for('badges.manage_badges'))
+    return redirect(url_for('badges.manage_badges', game_id=game_id))

@@ -189,7 +189,8 @@ def _prepare_quests(game, user_id, user_quests, now):
         for q in quests
         if q.from_calendar
         or not (
-            q.badge_id is None and q.total_completions == 0
+            (q.badge is None or q.badge.image is None)
+            and q.total_completions == 0
         )
     ]
 

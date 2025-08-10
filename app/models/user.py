@@ -226,10 +226,22 @@ class User(UserMixin, db.Model):
         return total_score
 
     def is_admin_for_game(self, game_id):
-        """Return True if the user is an admin for the given game."""
+        """Return ``True`` if the user can administer the given game.
+
+        A user is considered an admin for a game if they either created the
+        game, were explicitly added as an admin, or have super admin rights.
+        """
         from .game import Game
+
         game = db.session.get(Game, game_id)
-        return bool(game and (self in game.admins or self.is_super_admin))
+        return bool(
+            game
+            and (
+                self.is_super_admin
+                or self in game.admins
+                or game.admin_id == self.id
+            )
+        )
 
     @property
     def unread_notifications_count(self):

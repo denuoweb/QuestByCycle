@@ -31,7 +31,7 @@
     <div id="uploadForm" class="form-container d-none">
         <h2>Upload Badge Images</h2>
         <h5>Uploaded folder of images match their filename to existing Badges (Badge Name: Nature Lover)(Uploaded image: nature_lover.png)</h5>
-        <form method="post" enctype="multipart/form-data" action="/badges/upload_images">
+        <form method="post" enctype="multipart/form-data" action="{{ url_for('badges.upload_images', game_id=game_id) }}">
             {{ form.hidden_tag() }}
             <input type="file" id="imageUpload" name="file" class="button" multiple webkitdirectory>
             <button type="submit" class="button">Upload Images</button>
@@ -42,7 +42,7 @@
         <p><h2>Add a Category Badge</h2></p>
         <h5>Added Category Badges are awarded upon completing the set of Quests with the same Category one time.</h5>
         <div class="badge-form">
-            <form action="{{ url_for('badges.manage_badges') }}" method="post" enctype="multipart/form-data">
+            <form action="{{ url_for('badges.manage_badges', game_id=game_id) }}" method="post" enctype="multipart/form-data">
                 {{ form.hidden_tag() }}
                 <div class="form-group">
                     {{ form.name.label }} {{ form.name() }}
@@ -64,7 +64,7 @@
     <div id="bulkUploadForm" class="form-container d-none">
         <h2>Bulk Upload Badges from a CSV file</h2>
         <h5>Uploaded images match their filename to Badge Name</h5>
-        <form method="post" enctype="multipart/form-data" action="/badges/bulk_upload">
+        <form method="post" enctype="multipart/form-data" action="{{ url_for('badges.bulk_upload', game_id=game_id) }}">
             {{ form.hidden_tag() }}
             <div class="form-group">
                 <label for="csvFile">CSV File</label>
