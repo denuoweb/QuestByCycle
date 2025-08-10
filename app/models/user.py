@@ -193,7 +193,6 @@ class User(UserMixin, db.Model):
 
     def delete_user(self):
         """Delete the user and all associated records."""
-        from .profile_wall_message import ProfileWallMessage
         for user_quest in self.user_quests:
             db.session.delete(user_quest)
         for quest_like in self.quest_likes:
