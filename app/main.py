@@ -189,16 +189,6 @@ def _prepare_quests(game, user_id, user_quests, now):
     activities.sort(key=get_datetime, reverse=True)
 
                                                                      
-    quests = [
-        q
-        for q in quests
-        if q.from_calendar
-        or not (
-            (q.badge is None or q.badge.image is None)
-            and q.total_completions == 0
-        )
-    ]
-
     quests.sort(key=lambda x: (-x.is_sponsored, -x.personal_completions, -x.total_completions))
     return quests, activities
   

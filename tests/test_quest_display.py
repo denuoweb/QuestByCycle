@@ -32,7 +32,7 @@ def app():
     ctx.pop()
 
 
-def test_prepare_quests_hides_unbadged_empty(app):
+def test_prepare_quests_includes_unbadged_empty(app):
     with app.app_context():
         admin = User(username="admin", email="admin@example.com", license_agreed=True)
         admin.set_password("pw")
@@ -64,11 +64,11 @@ def test_prepare_quests_hides_unbadged_empty(app):
 
         quests, _ = _prepare_quests(game, admin.id, [], datetime.now(timezone.utc))
         ids = [q.id for q in quests]
-        assert q1.id not in ids
+        assert q1.id in ids
         assert q2.id in ids
 
 
-def test_prepare_quests_hides_badgeless_image(app):
+def test_prepare_quests_includes_badgeless_quests(app):
     with app.app_context():
         admin = User(username="admin2", email="admin2@example.com", license_agreed=True)
         admin.set_password("pw")
@@ -102,7 +102,7 @@ def test_prepare_quests_hides_badgeless_image(app):
 
         quests, _ = _prepare_quests(game, admin.id, [], datetime.now(timezone.utc))
         ids = [q.id for q in quests]
-        assert q1.id not in ids
+        assert q1.id in ids
         assert q2.id in ids
         assert q3.id in ids
 
