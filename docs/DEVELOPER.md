@@ -163,7 +163,8 @@ The database models are defined in `app/models.py` and include:
 
 Forms are defined using WTForms in `app/forms.py` and include:
 
-- **`ProfileForm`**: Form for updating user profiles.
+- **`ProfileForm`**: Form for updating user profiles, including an
+  `upgrade_to_admin` option.
 - **`ShoutBoardForm`**: Form for posting messages on the Shout Board.
 - **`QuestForm`**: Form for creating and updating quests.
  - **`PhotoForm`**: Form for submitting photos or videos for quest verification.
@@ -250,6 +251,8 @@ Users can manage their profiles using the following routes:
 
 - **View Profile**: `/profile/<int:user_id>`
 - **Edit Profile**: `/profile/<int:user_id>/edit`
+- Upgrading via the edit route sets `is_admin` to `True` and applies default
+  limits (5&nbsp;GB storage and 60&nbsp;day retention).
 - **Post Message on Profile Wall**: `/profile/<int:user_id>/messages`
 - **Delete Profile Wall Message**: `/profile/<int:user_id>/messages/<int:message_id>/delete`
 - **Reply to Profile Wall Message**: `/profile/<int:user_id>/messages/<int:message_id>/reply`

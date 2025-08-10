@@ -36,6 +36,8 @@ As an admin, you have the ability to create, manage, and moderate games, quests,
 
 Admins only see games they created or have been assigned to on the admin dashboard. This scoping ensures that badge and quest management remain limited to their designated games.
 
+Individual admins are isolated from one another. They cannot view or modify games owned by other admins unless explicitly added as a co‑admin for a specific game. User accounts are similarly scoped: an admin can view users only after those users join their game, and only the super admin may edit user settings or change roles.
+
 ## Creating and Managing Games
 
 ### Creating a Game

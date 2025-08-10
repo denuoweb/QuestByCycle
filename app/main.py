@@ -30,7 +30,12 @@ from sqlalchemy.orm import joinedload
 from typing import Any, List
 from datetime import datetime, timedelta
 from PIL import Image, UnidentifiedImageError
-from app.constants import UTC, FREQUENCY_DELTA
+from app.constants import (
+    UTC,
+    FREQUENCY_DELTA,
+    ADMIN_STORAGE_GB,
+    ADMIN_RETENTION_DAYS,
+)
 from urllib.parse import urlparse, parse_qs
 from zoneinfo import ZoneInfo
 
@@ -733,6 +738,9 @@ def user_profile(user_id):
             'bike_description': user.bike_description,
             'upload_to_socials': user.upload_to_socials,
             'upload_to_mastodon': user.upload_to_mastodon,
+            'is_admin': user.is_admin,
+            'storage_limit_gb': user.storage_limit_gb,
+            'data_retention_days': user.data_retention_days,
             'show_carbon_game': user.show_carbon_game,
             'badges': [{'id': badge.id, 'name': badge.name, 'description': badge.description,
                         'category': badge.category, 'image': badge.image} for badge in badges],
@@ -842,6 +850,10 @@ def edit_profile(user_id):
         user.ride_description = form.ride_description.data
         user.upload_to_socials = form.upload_to_socials.data
         user.upload_to_mastodon = form.upload_to_mastodon.data
+        if form.upgrade_to_admin.data and not user.is_admin:
+            user.is_admin = True
+            user.storage_limit_gb = ADMIN_STORAGE_GB
+            user.data_retention_days = ADMIN_RETENTION_DAYS
         user.show_carbon_game = form.show_carbon_game.data
 
         db.session.commit()
