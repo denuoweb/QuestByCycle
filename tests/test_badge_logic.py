@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from app import create_app, db
 from app.models import Quest, Badge, Game, User, UserQuest
-from app.utils.quest_scoring import check_and_award_badges
+from app.utils.quest_scoring import check_and_award_badges, check_and_revoke_badges
 
 
 @pytest.fixture
@@ -137,3 +137,22 @@ def test_badge_option_both(user, game):
     check_and_award_badges(user.id, quest.id, game.id)
     db.session.refresh(user)
     assert {b.name for b in user.badges} == {"Ind", "Cat"}
+
+
+def test_category_badge_not_revoked_without_game_id(user, game):
+    cat_badge = Badge(name="Cat", description="c", category="C", game_id=game.id)
+    quest = Quest(
+        title="Q",
+        game_id=game.id,
+        badge_awarded=1,
+        category="C",
+        badge_option="category",
+    )
+    db.session.add_all([cat_badge, quest])
+    db.session.commit()
+    _complete_quest(user.id, quest.id)
+
+    check_and_award_badges(user.id, quest.id, game.id)
+    check_and_revoke_badges(user.id)
+    db.session.refresh(user)
+    assert {b.name for b in user.badges} == {"Cat"}
