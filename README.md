@@ -72,7 +72,7 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
 ## Features
 
 - **User Authentication:** Secure sign-up and login functionality to manage user access and personalize user experiences.
-- **Bot Protection:** Login and registration forms are guarded by flask-Humanify to challenge automated requests.
+- **Bot Protection:** Login and registration forms are guarded by flask-Humanify using a grid challenge to thwart automated requests.
 - **Leaderboard/Homepage:** A dynamic display of participants, their rankings, and badges earned, fostering a sense of competition and achievement.
 - **Quest Submission:** An interface for users to submit completed quests or missions, facilitating the review and award of badges.
 - **User Profiles:** Dedicated pages for users to view their badges, completed quests, and ranking within the community.
