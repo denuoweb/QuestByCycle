@@ -414,9 +414,13 @@ def update_quest(quest_id):
     try:
         db.session.commit()
         return jsonify({"success": True, "message": "Quest updated successfully"})
-    except Exception:                                
+    except Exception as error:
         db.session.rollback()
-        return
+        current_app.logger.error("Failed to update quest %s: %s", quest_id, error)
+        return jsonify({
+            "success": False,
+            "message": "An unexpected error occurred while updating the quest.",
+        }), 500
 
 
 @quests_bp.route("/quest/<int:quest_id>/delete", methods=["DELETE"])
@@ -437,10 +441,15 @@ def delete_quest(quest_id):
     try:
         db.session.commit()
         return jsonify({"success": True, "message": "Quest deleted successfully"})
-    except Exception as error:                                
+    except Exception as error:
         db.session.rollback()
-        current_app.logger.error(f"Failed to delete quest {quest_id}: {error}")
-        return
+        current_app.logger.error(
+            "Failed to delete quest %s: %s", quest_id, error
+        )
+        return jsonify({
+            "success": False,
+            "message": "An unexpected error occurred while deleting the quest.",
+        }), 500
 
 
 @quests_bp.route("/game/<int:game_id>/quests", methods=["GET"])
