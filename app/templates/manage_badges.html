@@ -45,6 +45,7 @@
         <div class="badge-form">
             <form action="{{ url_for('badges.manage_badges', game_id=game_id) }}" method="post" enctype="multipart/form-data">
                 {{ form.hidden_tag() }}
+                <input type="hidden" name="game_id" value="{{ game_id }}">
                 <div class="form-group">
                     {{ form.name.label }} {{ form.name() }}
                 </div>

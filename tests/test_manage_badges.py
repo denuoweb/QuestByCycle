@@ -107,6 +107,33 @@ def test_manage_badges_filters_by_game(client, admin_user):
     assert new_badge.game_id == game1.id
 
 
+def test_manage_badges_uses_form_game_id(client, admin_user):
+    game = create_game("Game", admin_user)
+    login_as(client, admin_user)
+
+    data = {
+        "name": "Form Badge",
+        "description": "Desc",
+        "category": "none",
+        "game_id": str(game.id),
+        "image": (io.BytesIO(PNG_BYTES), "badge.png"),
+    }
+    resp = client.post(
+        "/badges/manage_badges",
+        data=data,
+        content_type="multipart/form-data",
+    )
+    assert resp.status_code == 302
+
+    badge = Badge.query.filter_by(name="Form Badge").first()
+    assert badge is not None
+    assert badge.game_id == game.id
+
+    resp = client.get(f"/badges/manage_badges?game_id={game.id}")
+    html = resp.get_data(as_text=True)
+    assert "Form Badge" in html
+
+
 def test_get_badges_filters_by_game(client, admin_user):
     game1 = create_game("Game 1", admin_user)
     game2 = create_game("Game 2", admin_user)
