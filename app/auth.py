@@ -474,9 +474,15 @@ def logout():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
+    """Register a new user."""
+    if request.method == "POST" and not current_app.config.get("TESTING"):
+        from app import humanify as humanify_ext
+
+        if not humanify_ext.has_valid_clearance_token:
+            return humanify_ext.challenge()
+
     form = RegistrationForm()
 
-                                    
     game_id = (request.args.get('game_id') or request.form.get('game_id') or None)
     custom_game_code = request.args.get('custom_game_code') or request.form.get('custom_game_code')
     quest_id = (request.args.get('quest_id') or request.form.get('quest_id') or None)
