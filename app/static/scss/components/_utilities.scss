@@ -20,3 +20,8 @@
   --bs-text-opacity: 1;
   color: #000 !important;
 }
+
+#admins option:checked {
+  background-color: var(--bs-primary);
+  color: #fff;
+}
