@@ -71,6 +71,7 @@ class Game(db.Model):
     social_media_email_frequency = db.Column(db.String(50), default='weekly', nullable=True)
     last_social_media_email_sent = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=True)
     storage_quota_gb = db.Column(db.Integer, nullable=True)
+    badges = db.relationship('Badge', back_populates='game', cascade='all, delete-orphan', lazy=True)
 
     @staticmethod
     def generate_unique_code():

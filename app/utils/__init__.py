@@ -274,13 +274,7 @@ def get_game_badges(game_id):
     game = db.session.get(Game, game_id)
     if not game:
         return []
-    badges = (
-        Badge.query.join(Quest)
-        .filter(Quest.game_id == game_id, Quest.badge_id.isnot(None))
-        .distinct()
-        .all()
-    )
-    return badges
+    return Badge.query.filter_by(game_id=game_id).all()
 
 # ----------------------------------------------------------------------------
 # Re-export grouped helpers
