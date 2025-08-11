@@ -401,8 +401,8 @@ def index(game_id, quest_id, user_id):
         Game.is_public.is_(True),
         Game.is_demo.is_(False),
         Game.archived.is_(False),
-        Game.start_date <= now,
-        (Game.end_date.is_(None) | (Game.end_date >= now))
+        (Game.end_date.is_(None) | (Game.end_date >= now)),
+        (Game.allow_joins.is_(True) | (Game.start_date > now))
     ).all()
 
     closed_games = Game.query.filter(
