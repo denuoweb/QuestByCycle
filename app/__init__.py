@@ -31,6 +31,7 @@ from app.tasks import init_queue
 from app.activitypub_utils import ap_bp
 from app.ai import ai_bp
 from app.models import db
+from app.utils import generate_demo_game
 from .config import load_config
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from datetime import timedelta
@@ -178,6 +179,7 @@ def create_app(config_overrides=None):
         db.create_all()
         create_super_admin(app)
         init_queue(app)
+        generate_demo_game()
 
                             
     app.register_blueprint(auth_bp, url_prefix="/auth")
