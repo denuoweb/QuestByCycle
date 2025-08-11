@@ -163,16 +163,20 @@ def create_game():
     """
     form = GameForm()
     form.admins.choices = [
-        (u.id, u.username) for u in User.query.filter_by(is_admin=True).all()
+        (u.id, u.username)
+        for u in User.query.filter_by(is_admin=True, is_super_admin=False).all()
     ]
-    if not form.admins.data:
+    if request.method == "GET" and not current_user.is_super_admin:
         form.admins.data = [current_user.id]
     if form.validate_on_submit():
         game = Game()
         populate_game_from_form(game, form)
-        game.admin_id = form.admins.data[0] if form.admins.data else current_user.id
+        selected_admin_ids = set(form.admins.data or [])
+        if not current_user.is_super_admin:
+            selected_admin_ids.add(current_user.id)
+        game.admin_id = current_user.id
         game.admins = User.query.filter(
-            User.id.in_(form.admins.data or [current_user.id])
+            User.id.in_(selected_admin_ids), User.is_super_admin.is_(False)
         ).all()
         try:
             process_leaderboard_upload(game, defer=True)
@@ -213,13 +217,18 @@ def update_game(game_id):
         return redirect(url_for('main.index'))
     form = GameForm(obj=game)
     form.admins.choices = [
-        (u.id, u.username) for u in User.query.filter_by(is_admin=True).all()
+        (u.id, u.username)
+        for u in User.query.filter_by(is_admin=True, is_super_admin=False).all()
     ]
     if request.method == "GET":
-        form.admins.data = [admin.id for admin in game.admins]
+        form.admins.data = [
+            admin.id for admin in game.admins if not admin.is_super_admin
+        ]
     if form.validate_on_submit():
         populate_game_from_form(game, form)
-        game.admins = User.query.filter(User.id.in_(form.admins.data)).all()
+        game.admins = User.query.filter(
+            User.id.in_(form.admins.data), User.is_super_admin.is_(False)
+        ).all()
         if form.admins.data:
             game.admin_id = form.admins.data[0]
 
