@@ -17,7 +17,8 @@ from flask_login import LoginManager, current_user
 from werkzeug.exceptions import HTTPException
 
 from app.auth import auth_bp
-from app.admin import admin_bp, create_super_admin
+from app.admin import admin_bp
+from app import admin as admin_module
 from app.main import main_bp
 from app.games import games_bp
 from app.quests import quests_bp
@@ -177,7 +178,7 @@ def create_app(config_overrides=None):
                                                 
     with app.app_context():
         db.create_all()
-        create_super_admin(app)
+        admin_module.create_super_admin(app)
         init_queue(app)
         generate_demo_game()
 

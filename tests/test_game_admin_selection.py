@@ -60,6 +60,66 @@ def test_create_game_highlights_current_admin(client):
     assert selected == {admin.id}
 
 
+def test_create_game_attaches_creator_and_selected_admins(client):
+    creator = User(
+        username="creator",
+        email="creator@example.com",
+        is_admin=True,
+        license_agreed=True,
+        email_verified=True,
+    )
+    creator.set_password("pw")
+    extra_admin = User(
+        username="extra",
+        email="extra@example.com",
+        is_admin=True,
+        license_agreed=True,
+        email_verified=True,
+    )
+    extra_admin.set_password("pw")
+    db.session.add_all([creator, extra_admin])
+    db.session.commit()
+
+    login_as(client, creator)
+    resp = client.post(
+        "/games/create_game",
+        data={
+            "title": "Game",
+            "description": "Desc",
+            "description2": "Rules",
+            "start_date": "2024-01-01",
+            "end_date": "2024-01-02",
+            "admins": [str(extra_admin.id)],
+            "is_public": "y",
+            "allow_joins": "y",
+            "details": "",
+            "awards": "",
+            "beyond": "",
+            "twitter_username": "",
+            "twitter_api_key": "",
+            "twitter_api_secret": "",
+            "twitter_access_token": "",
+            "twitter_access_token_secret": "",
+            "facebook_app_id": "",
+            "facebook_app_secret": "",
+            "facebook_access_token": "",
+            "facebook_page_id": "",
+            "instagram_user_id": "",
+            "instagram_access_token": "",
+            "calendar_url": "",
+            "logo_url": "",
+            "social_media_liaison_email": "",
+        },
+        follow_redirects=True,
+    )
+    assert resp.status_code == 200
+    game = Game.query.filter_by(title="Game").first()
+    assert game is not None
+    assert game.admin_id == creator.id
+    admin_ids = {u.id for u in game.admins}
+    assert admin_ids == {creator.id, extra_admin.id}
+
+
 def test_update_game_highlights_existing_admins(client):
     admin1 = User(
         username="admin1",
@@ -97,3 +157,113 @@ def test_update_game_highlights_existing_admins(client):
     soup = BeautifulSoup(html, "html.parser")
     selected = {int(opt["value"]) for opt in soup.select("#admins option[selected]")}
     assert selected == {admin1.id, admin2.id}
+
+
+def test_super_admin_hidden_from_admin_selection(client):
+    super_admin = User(
+        username="super",
+        email="super@example.com",
+        is_admin=True,
+        is_super_admin=True,
+        license_agreed=True,
+        email_verified=True,
+    )
+    super_admin.set_password("pw")
+    other_admin = User(
+        username="other",
+        email="other@example.com",
+        is_admin=True,
+        license_agreed=True,
+        email_verified=True,
+    )
+    other_admin.set_password("pw")
+    db.session.add_all([super_admin, other_admin])
+    db.session.commit()
+
+    login_as(client, super_admin)
+    resp = client.get("/games/create_game")
+    assert resp.status_code == 200
+    soup = BeautifulSoup(resp.get_data(as_text=True), "html.parser")
+    options = {int(opt["value"]) for opt in soup.select("#admins option")}
+    assert super_admin.id not in options
+    assert other_admin.id in options
+
+    resp = client.post(
+        "/games/create_game",
+        data={
+            "title": "Game",
+            "description": "Desc",
+            "description2": "Rules",
+            "start_date": "2024-01-01",
+            "end_date": "2024-01-02",
+            "admins": [str(other_admin.id)],
+            "is_public": "y",
+            "allow_joins": "y",
+            "details": "",
+            "awards": "",
+            "beyond": "",
+            "twitter_username": "",
+            "twitter_api_key": "",
+            "twitter_api_secret": "",
+            "twitter_access_token": "",
+            "twitter_access_token_secret": "",
+            "facebook_app_id": "",
+            "facebook_app_secret": "",
+            "facebook_access_token": "",
+            "facebook_page_id": "",
+            "instagram_user_id": "",
+            "instagram_access_token": "",
+            "calendar_url": "",
+            "logo_url": "",
+            "social_media_liaison_email": "",
+        },
+        follow_redirects=True,
+    )
+    assert resp.status_code == 200
+    game = Game.query.filter_by(title="Game").first()
+    assert game is not None
+    admin_ids = {u.id for u in game.admins}
+    assert super_admin.id not in admin_ids
+    assert other_admin.id in admin_ids
+
+
+def test_update_game_hides_super_admin(client):
+    super_admin = User(
+        username="super",
+        email="super@example.com",
+        is_admin=True,
+        is_super_admin=True,
+        license_agreed=True,
+        email_verified=True,
+    )
+    super_admin.set_password("pw")
+    admin = User(
+        username="admin",
+        email="admin@example.com",
+        is_admin=True,
+        license_agreed=True,
+        email_verified=True,
+    )
+    admin.set_password("pw")
+    db.session.add_all([super_admin, admin])
+    db.session.commit()
+
+    game = Game(
+        title="Game",
+        admin_id=super_admin.id,
+        start_date=datetime.now(timezone.utc),
+        end_date=datetime.now(timezone.utc) + timedelta(days=1),
+    )
+    game.admins.extend([super_admin, admin])
+    db.session.add(game)
+    db.session.commit()
+
+    login_as(client, admin)
+    resp = client.get(f"/games/update_game/{game.id}")
+    assert resp.status_code == 200
+    soup = BeautifulSoup(resp.get_data(as_text=True), "html.parser")
+    options = {int(opt["value"]) for opt in soup.select("#admins option")}
+    assert super_admin.id not in options
+    selected = {int(opt["value"]) for opt in soup.select("#admins option[selected]")}
+    assert super_admin.id not in selected
+    assert admin.id in selected
