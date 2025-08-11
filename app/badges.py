@@ -43,7 +43,16 @@ def allowed_file(filename):
 def create_badge():
     game_id = get_int_param('game_id')
 
-    quest_categories = db.session.query(Quest.category).filter(Quest.category.isnot(None)).distinct().all()
+    if not current_user.is_super_admin and not current_user.is_admin_for_game(game_id):
+        abort(403)
+
+    quest_categories = (
+        db.session.query(Quest.category)
+        .filter(Quest.game_id == game_id)
+        .filter(Quest.category.isnot(None))
+        .distinct()
+        .all()
+    )
 
     category_choices = sorted([category.category for category in quest_categories])
 
@@ -82,13 +91,20 @@ def get_badges():
     
     badges_data = []
     for badge in badges:
-                                                                   
+
         if game_id:
-            awarding_quests = [quest for quest in badge.quests if quest.game_id == game_id]
+            awarding_quests = [
+                quest
+                for quest in badge.quests
+                if quest.game_id == game_id and quest.badge_option in ("individual", "both")
+            ]
         else:
-            awarding_quests = badge.quests
-        
-                                                             
+            awarding_quests = [
+                quest
+                for quest in badge.quests
+                if quest.badge_option in ("individual", "both")
+            ]
+
         if awarding_quests:
             task_names = ", ".join(quest.title for quest in awarding_quests)
             task_ids = ", ".join(str(quest.id) for quest in awarding_quests)
@@ -143,12 +159,10 @@ def manage_badges():
     if not current_user.is_super_admin and not current_user.is_admin_for_game(game_id):
         abort(403)
 
-    quest_categories = (
-        db.session.query(Quest.category)
-        .filter(Quest.category.isnot(None))
-        .distinct()
-        .all()
-    )
+    category_query = db.session.query(Quest.category).filter(Quest.category.isnot(None))
+    if game_id:
+        category_query = category_query.filter(Quest.game_id == game_id)
+    quest_categories = category_query.distinct().all()
 
     category_choices = sorted([category.category for category in quest_categories])
     form = BadgeForm(category_choices=category_choices)
@@ -189,17 +203,26 @@ def manage_badges():
     )
 
 
-@badges_bp.route('/update/<int:badge_id>', methods=['POST'])
+@badges_bp.route("/update/<int:badge_id>", methods=["POST"])
 @login_required
+@require_admin
 def update_badge(badge_id):
                                                                   
     badge = db.session.get(Badge, badge_id)
     if not badge:
         abort(404)
-                                              
-    quest_categories = db.session.query(Quest.category).filter(Quest.category.isnot(None)).distinct().all()
 
-                                        
+    if not current_user.is_super_admin and not current_user.is_admin_for_game(badge.game_id):
+        abort(403)
+                                              
+    quest_categories = (
+        db.session.query(Quest.category)
+        .filter(Quest.game_id == badge.game_id)
+        .filter(Quest.category.isnot(None))
+        .distinct()
+        .all()
+    )
+
     category_choices = sorted([category.category for category in quest_categories])
 
     form = BadgeForm(category_choices=category_choices, formdata=request.form)
@@ -238,10 +261,10 @@ def delete_badge(badge_id):
     try:
         db.session.delete(badge)
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Badge deleted successfully'})
+        return jsonify({"success": True, "message": "Badge deleted successfully"})
     except Exception:
         db.session.rollback()
-        return
+        return jsonify({"success": False, "message": "Failed to delete badge"}), 500
 
 
 @badges_bp.route('/categories', methods=['GET'])

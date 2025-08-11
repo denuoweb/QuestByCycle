@@ -58,7 +58,7 @@ def _complete_quest(user_id, quest_id, completions=1):
 
 
 def test_badge_option_none(user, game):
-    badge = Badge(name="Cat", description="c", category="C")
+    badge = Badge(name="Cat", description="c", category="C", game_id=game.id)
     quest = Quest(
         title="Q",
         game_id=game.id,
@@ -99,7 +99,7 @@ def test_badge_option_individual(user, game):
 
 
 def test_badge_option_category(user, game):
-    cat_badge = Badge(name="Cat", description="c", category="C")
+    cat_badge = Badge(name="Cat", description="c", category="C", game_id=game.id)
     quest = Quest(
         title="Q",
         game_id=game.id,
@@ -156,3 +156,29 @@ def test_category_badge_not_revoked_without_game_id(user, game):
     check_and_revoke_badges(user.id)
     db.session.refresh(user)
     assert {b.name for b in user.badges} == {"Cat"}
+
+
+def test_category_badges_are_game_specific(user, game):
+    game2 = Game(
+        title="G2",
+        start_date=datetime.now(timezone.utc) - timedelta(days=1),
+        end_date=datetime.now(timezone.utc) + timedelta(days=1),
+        admin_id=user.id,
+    )
+    game2.admins.append(user)
+    db.session.add(game2)
+    db.session.commit()
+
+    badge1 = Badge(name="Cat1", description="d1", category="C", game_id=game.id)
+    badge2 = Badge(name="Cat2", description="d2", category="C", game_id=game2.id)
+    quest = Quest(
+        title="Q", game_id=game.id, badge_awarded=1, category="C", badge_option="category"
+    )
+    db.session.add_all([badge1, badge2, quest])
+    db.session.commit()
+
+    _complete_quest(user.id, quest.id)
+
+    check_and_award_badges(user.id, quest.id, game.id)
+    db.session.refresh(user)
+    assert {b.name for b in user.badges} == {"Cat1"}

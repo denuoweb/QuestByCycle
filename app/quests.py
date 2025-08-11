@@ -103,10 +103,24 @@ def add_quest(game_id):
         badge_id = None
         if badge_option in ("individual", "both"):
             badge_id = (
-                form.badge_id.data
+                int(form.badge_id.data)
                 if form.badge_id.data and form.badge_id.data != "0"
                 else None
             )
+
+            if badge_id:
+                badge = db.session.get(Badge, badge_id)
+                if not badge or badge.game_id != game_id:
+                    if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
+                        return jsonify(success=False, message="Invalid badge for this game"), 400
+                    flash("Invalid badge for this game.", "error")
+                    return redirect(
+                        url_for(
+                            "quests.manage_game_quests",
+                            game_id=game_id,
+                            in_admin_dashboard=True,
+                        )
+                    )
 
             if not badge_id and form.badge_name.data:
                 badge_image_file = None
@@ -308,26 +322,17 @@ def submit_quest(quest_id):
         update_user_score(current_user.id)
         check_and_award_badges(current_user.id, quest_id, quest.game_id)
 
-        db.session.add(Notification(
-            user_id=current_user.id,
-            type='quest_complete',
-            payload={
-                'quest_id': quest_id,
-                'quest_title': quest.title,
-                'submission_id': new_submission.id
-            }
-        ))
-        db.session.commit()
-
-        db.session.add(Notification(
-            user_id=current_user.id,
-            type='quest_complete',
-            payload={
-                'quest_id': quest_id,
-                'quest_title': quest.title,
-                'submission_id': new_submission.id
-            }
-        ))
+        db.session.add(
+            Notification(
+                user_id=current_user.id,
+                type="quest_complete",
+                payload={
+                    "quest_id": quest_id,
+                    "quest_title": quest.title,
+                    "submission_id": new_submission.id,
+                },
+            )
+        )
         db.session.commit()
         total_points = db.session.query(
             db.func.sum(UserQuest.points_awarded)
@@ -384,6 +389,9 @@ def update_quest(quest_id):
     """
 
     quest = Quest.query.get_or_404(quest_id)
+    if not current_user.is_super_admin and not current_user.is_admin_for_game(quest.game_id):
+        return jsonify({"success": False, "message": "Permission denied"}), 403
+
     data = request.get_json()
 
     quest.title = sanitize_html(data.get("title", quest.title))
@@ -421,9 +429,13 @@ def update_quest(quest_id):
     badge_id = data.get("badge_id")
     if badge_id is not None and quest.badge_option in ("individual", "both"):
         try:
-            quest.badge_id = int(badge_id)
+            badge_id_int = int(badge_id)
         except ValueError:
             return jsonify({"success": False, "message": "Invalid badge ID"}), 400
+        badge = db.session.get(Badge, badge_id_int)
+        if not badge or badge.game_id != quest.game_id:
+            return jsonify({"success": False, "message": "Invalid badge for this quest"}), 400
+        quest.badge_id = badge_id_int
     elif quest.badge_option in ("none", "category"):
         quest.badge_id = None
 

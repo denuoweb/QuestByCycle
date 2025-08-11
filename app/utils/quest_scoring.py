@@ -78,6 +78,7 @@ def check_and_award_badges(user_id: int, quest_id: int, game_id: int) -> None:
     if (
         quest.badge_option in ("individual", "both")
         and quest.badge
+        and quest.badge.game_id == game_id
         and user_quest.completions >= quest.badge_awarded
     ):
         existing_award = ShoutBoardMessage.query.filter_by(
@@ -128,7 +129,9 @@ def check_and_award_badges(user_id: int, quest_id: int, game_id: int) -> None:
             )
         ]
         if len(completed_quests) == len(category_quests):
-            category_badges = Badge.query.filter_by(category=quest.category).all()
+            category_badges = Badge.query.filter_by(
+                category=quest.category, game_id=game_id
+            ).all()
             for badge in category_badges:
                 existing_award = ShoutBoardMessage.query.filter_by(
                     user_id=user_id,
