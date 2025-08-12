@@ -230,9 +230,10 @@ function formatTimeDiff(ms) {
     const seconds = Math.floor((ms / 1000) % 60);
     const minutes = Math.floor((ms / (1000 * 60)) % 60);
     const hours = Math.floor((ms / (1000 * 60 * 60)) % 24);
-    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+const days = Math.floor(ms / (1000 * 60 * 60 * 24));
     return `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
+
 
 function manageVerificationSection(questId, canVerify, verificationType) {
     const userQuestData = document.querySelector('.user-quest-data');
@@ -248,112 +249,145 @@ function manageVerificationSection(questId, canVerify, verificationType) {
         verifyForm.className = 'verify-quest-form';
         verifyForm.style.display = 'block';
 
-        const formHTML = getVerificationFormHTML(
+        const formElement = getVerificationFormElement(
           verificationType.trim().toLowerCase(),
           questId
         );
-        verifyForm.innerHTML = formHTML;
+        verifyForm.appendChild(formElement);
         userQuestData.appendChild(verifyForm);
 
         setupSubmissionForm(questId);
     }
 }
 
-function getVerificationFormHTML(verificationType, questId) {
-  // container + heading ------------------------------------------------------
-  let formHTML = `
-    <form enctype="multipart/form-data" class="epic-form" method="post" action="/quests/quest/${questId}/submit">
-      <input type="hidden" name="csrf_token" value="${CSRF_TOKEN}">
-      <h2 style="text-align:center;">Verify Your Quest</h2>
-  `;
+function getVerificationFormElement(verificationType, questId) {
+    const form = document.createElement('form');
+    form.enctype = 'multipart/form-data';
+    form.className = 'epic-form';
+    form.method = 'post';
+    form.action = `/quests/quest/${questId}/submit`;
 
-  switch (verificationType) {
-    /* ─────────────────────────────── PHOTO ONLY ─────────────────────────── */
-    case 'photo':
-      formHTML += `
-        <div class="form-group">
-          <label for="image" class="epic-label">Upload a Photo</label>
-          <input type="file" id="image" name="image"
-                 class="epic-input" accept="image/*" required>
-        </div>
-        <div class="form-group">
-          <button type="submit">Submit Verification</button>
-        </div>
-      `;
-      break;
+    const csrf = document.createElement('input');
+    csrf.type = 'hidden';
+    csrf.name = 'csrf_token';
+    csrf.value = CSRF_TOKEN;
+    form.appendChild(csrf);
 
-    /* ─────────────────────────────── COMMENT ONLY ───────────────────────── */
-    case 'comment':
-      formHTML += `
-        <div class="form-group">
-          <label for="verificationComment" class="epic-label">Enter a Comment</label>
-          <textarea id="verificationComment" name="verificationComment"
-                    class="epic-textarea" placeholder="Enter a comment..." required></textarea>
-        </div>
-        <div class="form-group">
-          <button type="submit">Submit Verification</button>
-        </div>
-      `;
-      break;
+    const heading = document.createElement('h2');
+    heading.style.textAlign = 'center';
+    heading.textContent = 'Verify Your Quest';
+    form.appendChild(heading);
 
-    /* ──────────────────────────── PHOTO + COMMENT ───────────────────────── */
-    case 'photo_comment':
-      formHTML += `
-        <div class="form-group">
-          <label for="image" class="epic-label">Upload a Photo</label>
-          <input type="file" id="image" name="image"
-                 class="epic-input" accept="image/*" required>
-        </div>
-        <div class="form-group">
-          <label for="verificationComment" class="epic-label">Enter a Comment (optional)</label>
-          <textarea id="verificationComment" name="verificationComment"
-                    class="epic-textarea" placeholder="Enter a comment..."></textarea>
-        </div>
-        <div class="form-group">
-          <button type="submit">Submit Verification</button>
-        </div>
-      `;
-      break;
+    switch (verificationType) {
+        case 'photo':
+            form.appendChild(createFileInput('image', 'Upload a Photo', 'image/*', true));
+            form.appendChild(createSubmitButton());
+            break;
+        case 'comment':
+            form.appendChild(
+                createTextarea('verificationComment', 'Enter a Comment', 'Enter a comment...', true)
+            );
+            form.appendChild(createSubmitButton());
+            break;
+        case 'photo_comment':
+            form.appendChild(createFileInput('image', 'Upload a Photo', 'image/*', true));
+            form.appendChild(
+                createTextarea('verificationComment', 'Enter a Comment (optional)', 'Enter a comment...', false)
+            );
+            form.appendChild(createSubmitButton());
+            break;
+        case 'video':
+            form.appendChild(createFileInput('video', 'Upload a Video', 'video/*', true));
+            form.appendChild(
+                createTextarea(
+                    'verificationComment',
+                    'Add a Comment (optional)',
+                    'Enter an optional comment...',
+                    false
+                )
+            );
+            form.appendChild(createSubmitButton());
+            break;
+        case 'qr_code': {
+            const p = document.createElement('p');
+            p.className = 'epic-message';
+            p.textContent = 'Find and scan the QR code. No submission required here.';
+            form.appendChild(p);
+            break;
+        }
+        case 'pause': {
+            const p = document.createElement('p');
+            p.className = 'epic-message';
+            p.textContent = 'Quest is currently paused.';
+            form.appendChild(p);
+            break;
+        }
+        default: {
+            const p = document.createElement('p');
+            p.className = 'epic-message';
+            p.textContent = 'Submission requirements are not set correctly.';
+            form.appendChild(p);
+        }
+    }
 
-    /* ─────────────────────────────── VIDEO ─────────────────────────────── */
-    case 'video':
-      formHTML += `
-        <div class="form-group">
-          <label for="video" class="epic-label">Upload a Video</label>
-          <input type="file" id="video" name="video"
-                 class="epic-input" accept="video/*" required>
-        </div>
-        <div class="form-group">
-          <label for="verificationComment" class="epic-label">Add a Comment (optional)</label>
-          <textarea id="verificationComment" name="verificationComment"
-                    class="epic-textarea" placeholder="Enter an optional comment..."></textarea>
-        </div>
-        <div class="form-group">
-          <button type="submit">Submit Verification</button>
-        </div>
-      `;
-      break;
-
-    /* ───────────────────────────────── QR CODE ──────────────────────────── */
-    case 'qr_code':
-      formHTML += '<p class="epic-message">Find and scan the QR code. No submission required here.</p>';
-      break;
-
-    /* ─────────────────────────────────  PAUSE  ──────────────────────────── */
-    case 'pause':
-      formHTML += '<p class="epic-message">Quest is currently paused.</p>';
-      break;
-
-    /* ───────────────────────────── DEFAULT / ERROR ──────────────────────── */
-    default:
-      formHTML += '<p class="epic-message">Submission requirements are not set correctly.</p>';
-      break;
-  }
-
-  /* close form ------------------------------------------------------------- */
-  formHTML += '</form>';
-  return formHTML;
+    return form;
 }
+
+function createFileInput(id, labelText, accept, required) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'form-group';
+
+    const label = document.createElement('label');
+    label.htmlFor = id;
+    label.className = 'epic-label';
+    label.textContent = labelText;
+    wrapper.appendChild(label);
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.id = id;
+    input.name = id;
+    input.className = 'epic-input';
+    input.accept = accept;
+    if (required) input.required = true;
+    wrapper.appendChild(input);
+
+    return wrapper;
+}
+
+function createTextarea(id, labelText, placeholder, required) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'form-group';
+
+    const label = document.createElement('label');
+    label.htmlFor = id;
+    label.className = 'epic-label';
+    label.textContent = labelText;
+    wrapper.appendChild(label);
+
+    const textarea = document.createElement('textarea');
+    textarea.id = id;
+    textarea.name = id;
+    textarea.className = 'epic-textarea';
+    textarea.placeholder = placeholder;
+    if (required) textarea.required = true;
+    wrapper.appendChild(textarea);
+
+    return wrapper;
+}
+
+function createSubmitButton() {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'form-group';
+
+    const button = document.createElement('button');
+    button.type = 'submit';
+    button.textContent = 'Submit Verification';
+    wrapper.appendChild(button);
+
+    return wrapper;
+}
+
 
 
 function setupSubmissionForm(questId) {
