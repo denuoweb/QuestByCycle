@@ -23,6 +23,7 @@ from app.utils import safe_url_for
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.security import generate_password_hash
 from app.constants import UTC
 from urllib.parse import urljoin
 from app.models import db
@@ -98,21 +99,14 @@ def _auto_verify_and_login(user):
     return True
 
 
-def _join_game_if_provided(user):
-    """
-    Join the game if a game_id is provided in the request.
-    Additionally, set the user's selected_game_id to that game.
-    Checks both request.args and request.form.
-    """
-                                              
-    game_id = request.args.get('game_id')
-                                                                                
-    if not game_id:
-        game_id = request.form.get('game_id')
-    
+def _join_game_if_provided(user, game_id: str | None = None):
+    """Join the game if a game_id is provided."""
+
+    if game_id is None:
+        game_id = request.args.get("game_id") or request.form.get("game_id")
+
     if game_id is not None:
         try:
-                                                     
             game_id = int(game_id)
         except ValueError:
             current_app.logger.error("Invalid game_id provided: %s", game_id)
@@ -120,16 +114,70 @@ def _join_game_if_provided(user):
 
         game = Game.query.get(game_id)
         if game:
-                                                                                   
             if game not in user.participated_games:
                 user.participated_games.append(game)
-                                                        
+
             user.selected_game_id = game.id
             try:
                 db.session.commit()
                 current_app.logger.debug("User %s joined game %s", user.id, game.id)
             except Exception:
                 db.session.rollback()
+
+
+def _finalize_registration(
+    user: User,
+    game_id: str | None,
+    quest_id: str | None,
+    next_page: str | None,
+):
+    """Handle post-registration actions and redirect."""
+
+    create_activitypub_actor(user)
+    mail_server = current_app.config.get("MAIL_SERVER")
+    if mail_server:
+        _send_verification_email(user)
+        flash(
+            "Registration successful! Please verify your email before logging in.",
+            "info",
+        )
+    else:
+        _auto_verify_and_login(user)
+
+    if game_id:
+        _join_game_if_provided(user, game_id)
+
+    if next_page and _is_safe_url(next_page):
+        return redirect(next_page)
+
+    if quest_id:
+        return redirect(
+            safe_url_for(
+                "quests.submit_photo",
+                quest_id=quest_id,
+                _external=True,
+            )
+        )
+
+    if game_id:
+        return redirect(
+            safe_url_for(
+                "main.index",
+                show_join_custom=0,
+                game_id=game_id,
+                quest_id=quest_id,
+                next=next_page,
+                _external=True,
+            )
+        )
+
+    return redirect(
+        safe_url_for(
+            "main.index",
+            show_join_custom=1,
+            _external=True,
+        )
+    )
 
 
 def _ensure_demo_game(user):
@@ -475,11 +523,7 @@ def logout():
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     """Register a new user."""
-    if request.method == "POST" and not current_app.config.get("TESTING"):
-        from app import humanify as humanify_ext
-
-        if not humanify_ext.has_valid_clearance_token:
-            return humanify_ext.challenge()
+    from app import humanify as humanify_ext
 
     form = RegistrationForm()
 
@@ -488,7 +532,54 @@ def register():
     quest_id = (request.args.get('quest_id') or request.form.get('quest_id') or None)
     next_page = request.args.get('next') or request.form.get('next')
 
-                               
+
+    pending = session.pop('pending_registration', None)
+    if request.method == 'GET' and pending and humanify_ext.has_valid_clearance_token:
+        email = pending['email']
+        username = _generate_username(email)
+        user = User(
+            username=username,
+            email=email,
+            license_agreed=True,
+            email_verified=False,
+            is_admin=False,
+            created_at=datetime.now(UTC),
+            score=0,
+        )
+        user.password_hash = pending['password_hash']
+        db.session.add(user)
+        try:
+            db.session.commit()
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            current_app.logger.error(f'Failed to register user: {exc}')
+            flash('Registration failed due to an unexpected error. Please try again.', 'error')
+            return redirect(
+                safe_url_for(
+                    'main.index',
+                    show_register=1,
+                    game_id=pending.get('game_id'),
+                    custom_game_code=custom_game_code,
+                    quest_id=pending.get('quest_id'),
+                    next=pending.get('next_page'),
+                    _external=True,
+                )
+            )
+        return _finalize_registration(user, pending.get('game_id'), pending.get('quest_id'), pending.get('next_page'))
+
+    if request.method == 'POST' and not current_app.config.get('TESTING') and not humanify_ext.has_valid_clearance_token:
+        if form.validate_on_submit() and form.accept_license.data:
+            email = sanitize_html(form.email.data or '').lower()
+            if not User.query.filter_by(email=email).first():
+                session['pending_registration'] = {
+                    'email': email,
+                    'password_hash': generate_password_hash(form.password.data),
+                    'game_id': game_id,
+                    'quest_id': quest_id,
+                    'next_page': next_page,
+                }
+        return humanify_ext.challenge()
+
     if request.method == 'GET':
                                                              
         if not game_id and next_page:
