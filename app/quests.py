@@ -45,14 +45,14 @@ from app.utils.file_uploads import (
     public_media_url,
 )
 from app.activitypub_utils import (
-    post_activitypub_create_activity, 
+    post_activitypub_create_activity,
     post_activitypub_like_activity,
     post_activitypub_comment_activity
 )
 from .models import (
     db, Badge, Game, Quest, QuestSubmission,
     User, UserQuest, SubmissionLike, SubmissionReply,
-    Notification
+    Notification, user_games
 )
 from app.constants import UTC
 
@@ -850,6 +850,18 @@ def submit_photo(quest_id):
     form = PhotoForm()
     quest = Quest.query.get_or_404(quest_id)
     game = Game.query.get_or_404(quest.game_id)
+    # Join the quest's game automatically when a user arrives via a direct link.
+    if game not in current_user.participated_games:
+        db.session.execute(
+            user_games.insert().values(user_id=current_user.id, game_id=game.id)
+        )
+        current_user.selected_game_id = game.id
+        db.session.commit()
+        if request.method == "GET":
+            base = url_for("main.index")
+            query = f"?game_id={game.id}&quest_id={quest_id}"
+            return redirect(base + query)
+
     now = datetime.now(UTC)
 
     if not quest.enabled:

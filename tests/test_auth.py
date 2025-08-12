@@ -228,3 +228,55 @@ def test_submit_photo_redirects_to_login(client, user_normal):
     params = parse_qs(parsed.query)
     assert parsed.path == "/auth/login"
     assert params["next"][0].endswith(f"/quests/submit_photo/{quest.id}")
+
+
+def test_submit_photo_login_auto_joins_and_opens_quest(client, user_normal):
+    from datetime import datetime, timezone
+    from app.models.game import Game
+    from app.models.quest import Quest
+    from app.models.user import User
+    from app import db
+
+    game = Game(
+        title="Quest Game",
+        description="Test",
+        start_date=datetime.now(timezone.utc),
+        end_date=datetime.now(timezone.utc),
+        admin_id=user_normal.id,
+    )
+    db.session.add(game)
+    db.session.commit()
+
+    quest = Quest(
+        title="Photo Quest",
+        verification_type="photo",
+        game_id=game.id,
+        points=5,
+    )
+    db.session.add(quest)
+    db.session.commit()
+
+    login_resp = client.post(
+        "/auth/login",
+        data={
+            "email": user_normal.email,
+            "password": "secret",
+            "remember_me": "y",
+            "next": f"/quests/submit_photo/{quest.id}",
+        },
+        follow_redirects=False,
+    )
+    assert login_resp.status_code == 302
+    assert login_resp.headers["Location"].endswith(f"/quests/submit_photo/{quest.id}")
+
+    resp = client.get(login_resp.headers["Location"], follow_redirects=False)
+    assert resp.status_code == 302
+    loc = resp.headers["Location"]
+    parsed = urlparse(loc)
+    qs = parse_qs(parsed.query)
+    assert parsed.path == "/"
+    assert qs["game_id"] == [str(game.id)]
+    assert qs["quest_id"] == [str(quest.id)]
+
+    user = db.session.get(User, user_normal.id)
+    assert game in user.participated_games

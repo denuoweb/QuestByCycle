@@ -138,7 +138,7 @@ export function openRegisterModalWithOptions(options = {}) {
   }
 
 
-export function openLoginModalWithGame({ gameId, questId = '' }) {
+export function openLoginModalWithGame({ gameId, questId = '', nextPath = null }) {
     const loginForm       = document.getElementById('loginForm');
     const loginGameId     = document.getElementById('loginGameId');
     const loginQuestId    = document.getElementById('loginQuestId');
@@ -146,28 +146,27 @@ export function openLoginModalWithGame({ gameId, questId = '' }) {
     const loginShowJoin   = document.getElementById('loginShowJoinCustom');
     // If you forward custom codes through login, add:
     // const loginCustomCode = document.getElementById('loginCustomGameCode');
-  
-    // 1) Build the “next” path so that after login we land back in game context
-    const nextPath = `/?game_id=${encodeURIComponent(gameId)}&show_join_custom=0`;
-  
-    // 2) Set the hidden inputs so registerFromLogin() can read them
+
+    const computedNext = nextPath ?? `/?game_id=${encodeURIComponent(gameId)}&show_join_custom=0`;
+
+    // Set the hidden inputs so registerFromLogin() can read them
     loginGameId.value        = gameId;
     loginQuestId.value       = questId;
     loginShowJoin.value      = '0';
-    loginNext.value          = nextPath;
+    loginNext.value          = computedNext;
     // loginCustomCode.value  = customCode; // if you need it
-  
-    // 3) Also embed them in the form’s action URL for non‐AJAX fallbacks
+
+    // Also embed them in the form’s action URL for non‐AJAX fallbacks
     const baseAction = loginForm.getAttribute('action').split('?')[0];
     const params     = new URLSearchParams({
       game_id:         gameId,
       quest_id:        questId,
       show_join_custom: 0,
-      next:            nextPath
+      next:            computedNext
     });
     loginForm.setAttribute('action', `${baseAction}?${params.toString()}`);
-  
-    // 4) Finally, show the modal
+
+    // Finally, show the modal
     openModal('loginModal');
   }
   
@@ -303,28 +302,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const showLogin = params.get('show_login') === '1';
   if (!showLogin) return;
 
+  const rawNext = params.get('next') || '';
+
   // 1. Try to read explicit game_id param
   let gameId = params.get('game_id') || '';
 
   // 2. If none, parse it out of `next` (e.g. /17)
-  if (!gameId) {
-    const rawNext = params.get('next');
-    if (rawNext) {
-      try {
-        const parsed = new URL(rawNext, window.location.origin);
-        const candidate = parsed.pathname.replace(/^\/+/, '');  // "17"
-        if (/^\d+$/.test(candidate)) {
-          gameId = candidate;
-        }
-      } catch (e) {
-        logger.warn('Failed to parse next URL for gameId:', e);
+  if (!gameId && rawNext) {
+    try {
+      const parsed = new URL(rawNext, window.location.origin);
+      const candidate = parsed.pathname.replace(/^\/+/, '');  // "17"
+      if (/^\d+$/.test(candidate)) {
+        gameId = candidate;
       }
+    } catch (e) {
+      logger.warn('Failed to parse next URL for gameId:', e);
     }
   }
 
   // 3. And now open the login modal *exactly* as if they had clicked your
   //    openLoginModalWithGame({ gameId: 17 }) link:
-  openLoginModalWithGame({ gameId, questId: '' });
+  openLoginModalWithGame({ gameId, questId: '', nextPath: rawNext });
 });
 
 // ─────────────────────────────────────────────────────────────────
@@ -364,7 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Now open the login modal just as if they clicked openLoginModalWithGame({gameId})
-  openLoginModalWithGame({ gameId, questId: '' });
+  openLoginModalWithGame({ gameId, questId: '', nextPath: rawNext });
 });
 
 /**
@@ -468,8 +466,9 @@ document.addEventListener('click', e => {
   e.preventDefault();
   const gameId = document.getElementById('registerGameId')?.value || '';
   const questId = document.getElementById('registerQuestId')?.value || '';
+  const next    = document.getElementById('registerNext')?.value || '';
   closeModal('registerModal');
-  openLoginModalWithGame({ gameId, questId });
+  openLoginModalWithGame({ gameId, questId, nextPath: next });
 });
 
 // wire up any [data-modal-url] triggers
