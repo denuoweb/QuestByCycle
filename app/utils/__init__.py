@@ -243,7 +243,7 @@ def import_quests_and_badges_from_csv(game_id, csv_path):
                     db.session.add(badge)
                     db.session.flush()
                 quest = Quest(
-                    category=sanitize_html(row["category"]),
+                    category=(sanitize_html(row["category"]) or None),
                     title=sanitize_html(row["title"]),
                     description=sanitize_html(row["description"]),
                     tips=sanitize_html(row["tips"]),
