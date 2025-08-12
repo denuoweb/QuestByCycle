@@ -188,8 +188,6 @@ def get_instagram_permalink(media_id, access_token):
     else:
         raise Exception("Permalink not available yet.")
 
-    return None, "Failed to retrieve permalink after multiple attempts."
-
 
 def post_to_instagram(image_url, caption, user_id, access_token):
                                     
