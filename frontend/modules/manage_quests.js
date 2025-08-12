@@ -327,10 +327,6 @@ import logger from '../logger.js';
                         <p class="card-text"><strong>Frequency:</strong> <span class="editable" data-name="frequency" data-value="${quest.frequency}">${frequencyDisplayText}</span></p>
                         <p class="card-text"><strong>Category:</strong> <span class="editable" data-name="category">${categoryText}</span></p>
                         <p class="card-text"><strong>Quest ID:</strong> ${quest.id}</p>
-                        <p class="card-text"><strong>Completed:</strong> ${quest.completed ? 'Yes' : 'No'}</p>
-                        <p class="card-text"><strong>User ID:</strong> ${quest.user_id ?? 'N/A'}</p>
-                        <p class="card-text"><strong>Evidence URL:</strong> ${quest.evidence_url || 'N/A'}</p>
-                        <p class="card-text"><strong>Verification Comment:</strong> ${quest.verification_comment || ''}</p>
                         <p class="card-text"><strong>Game ID:</strong> ${quest.game_id}</p>
                         <p class="card-text"><strong>Badge ID:</strong> ${quest.badge_id ?? 'N/A'}</p>
                         <div class="d-flex justify-content-between">
