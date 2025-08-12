@@ -214,6 +214,7 @@
     </div>
 
     {% if current_user.is_authenticated %}
+        {% if earned_badges or unearned_badges %}
         <div class="badge-bar-container">
         <h2>Available Badges</h2>
             <div class="badge-bar">
@@ -236,7 +237,7 @@
                 <div class="badge-name">{{ badge.name }}</div>
                 </div>
                 {% endfor %}
-        
+
                 {% for badge in unearned_badges %}
                 <div class="badge-item"
                     data-badge-id="{{ badge.id }}"
@@ -258,6 +259,7 @@
                 {% endfor %}
             </div>
         </div>
+        {% endif %}
         {% if has_joined %}
             <div class="badge-bar-container">
                 <h2>Available Quests</h2>
