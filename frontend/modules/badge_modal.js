@@ -169,9 +169,6 @@ export async function openBadgeModal(element) {
   openModal('badgeModal');
 }
 
-// Expose globally for legacy inline handlers
-window.openBadgeModal = openBadgeModal;
-
 // Preload badge cache on DOMContentLoaded.
 document.addEventListener('DOMContentLoaded', () => {
   ensureBadgeCache();
