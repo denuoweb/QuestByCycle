@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from app import create_app
-from app.models import db, QuestSubmission, Quest
+from app.models import db, QuestSubmission
 from app.utils.file_uploads import delete_media_file
 
 
@@ -16,12 +16,6 @@ def _remove_submission(submission: QuestSubmission) -> None:
     """Delete submission and associated media."""
     delete_media_file(submission.image_url)
     db.session.delete(submission)
-
-
-def _clear_quest_image(quest: Quest) -> None:
-    """Remove HEIC/HEIF evidence images from quests."""
-    delete_media_file(quest.evidence_url)
-    quest.evidence_url = None
 
 
 def remove_heic_content() -> None:
@@ -39,15 +33,8 @@ def remove_heic_content() -> None:
         for sub in submissions:
             _remove_submission(sub)
 
-        quests = (
-            Quest.query.filter(Quest.evidence_url.ilike("%.heic")).all()
-            + Quest.query.filter(Quest.evidence_url.ilike("%.heif")).all()
-        )
-        for quest in quests:
-            _clear_quest_image(quest)
-
         db.session.commit()
-        print(f"Removed {len(submissions)} submissions and {len(quests)} quests")
+        print(f"Removed {len(submissions)} submissions")
 
 
 if __name__ == "__main__":

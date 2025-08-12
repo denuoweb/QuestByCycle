@@ -19,13 +19,9 @@ class Quest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(140))
     description = db.Column(db.String(2000))
-    completed = db.Column(db.Boolean, default=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    evidence_url = db.Column(db.String(500))
     enabled = db.Column(db.Boolean, default=True)
     is_sponsored = db.Column(db.Boolean, default=False, nullable=False)
     verification_type = db.Column(db.String(50))
-    verification_comment = db.Column(db.String(1000), default="")
     game_id = db.Column(
         db.Integer, db.ForeignKey('game.id', ondelete='CASCADE')
     )
