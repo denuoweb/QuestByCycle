@@ -227,7 +227,7 @@ class QuestForm(FlaskForm):
     """Form for creating or editing a quest."""
     enabled = BooleanField("Enabled", default=True)
     is_sponsored = BooleanField("Is Sponsored", default=False)
-    category = StringField("Category", validators=[DataRequired()])
+    category = StringField("Category", validators=[Optional()])
     verification_type_choices = [
         ("qr_code", "QR Code"),
         ("photo", "Photo Upload"),

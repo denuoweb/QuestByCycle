@@ -141,6 +141,9 @@ def add_quest(game_id):
                 db.session.flush()
                 badge_id = new_badge.id
 
+        category = (
+            sanitize_html(form.category.data) if form.category.data else None
+        )
         new_quest = Quest(
             title=sanitize_html(form.title.data),
             description=sanitize_html(form.description.data),
@@ -152,7 +155,7 @@ def add_quest(game_id):
             frequency=sanitize_html(form.frequency.data),
             enabled=form.enabled.data,
             is_sponsored=form.is_sponsored.data,
-            category=sanitize_html(form.category.data),
+            category=category,
             verification_type=sanitize_html(form.verification_type.data),
             badge_id=badge_id,
             badge_option=badge_option,
@@ -418,7 +421,10 @@ def update_quest(quest_id):
 
     quest.enabled = data.get("enabled", quest.enabled)
     quest.is_sponsored = data.get("is_sponsored", quest.is_sponsored)
-    quest.category = sanitize_html(data.get("category", quest.category))
+    category_data = data.get("category")
+    if category_data is not None:
+        category = sanitize_html(category_data)
+        quest.category = category or None
     quest.verification_type = sanitize_html(
         data.get("verification_type", quest.verification_type)
     )
@@ -558,7 +564,9 @@ def import_quests(game_id):
                         imported_badges.append(badge.id)
 
                     new_quest = Quest(
-                        category=sanitize_html(quest_info["category"]),
+                        category=(
+                            sanitize_html(quest_info["category"]) or None
+                        ),
                         title=sanitize_html(quest_info["title"]),
                         description=sanitize_html(quest_info["description"]),
                         tips=sanitize_html(quest_info["tips"]),

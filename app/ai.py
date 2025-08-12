@@ -82,7 +82,9 @@ def create_quest():
             game_id=game_id,
             completion_limit=form.completion_limit.data,
             frequency=sanitize_html(form.frequency.data),
-            category=sanitize_html(form.category.data),
+            category=(
+                sanitize_html(form.category.data) if form.category.data else None
+            ),
             verification_type=sanitize_html(form.verification_type.data),
             badge_awarded=form.badge_awarded.data,
             badge_id=badge_id,

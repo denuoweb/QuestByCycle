@@ -6,6 +6,7 @@ from app import create_app, db
 from app.models.game import Game
 from app.models.quest import Quest
 from app.models.user import User
+from app.quests import add_quest
 from flask_login import login_user
 
 @pytest.fixture
@@ -144,3 +145,31 @@ def test_manage_page_requires_admin(client, admin_user):
     resp = client.get(f"/quests/{game.id}/manage_quests")
     assert resp.status_code == 200
     assert bytes(game.title, "utf-8") in resp.data
+
+
+def test_add_quest_allows_null_category(client, admin_user):
+    game = create_game("Game", admin_user.id)
+    game.admins.append(admin_user)
+    db.session.add(game)
+    db.session.commit()
+
+    form_data = {
+        "title": "Quest",
+        "description": "Desc",
+        "tips": "",
+        "points": "1",
+        "completion_limit": "1",
+        "frequency": "daily",
+        "verification_type": "photo",
+        "badge_option": "none",
+        "category": "",
+    }
+    with client.application.test_request_context(
+        f"/quests/game/{game.id}/add_quest", method="POST", data=form_data
+    ):
+        login_user(admin_user)
+        add_quest(game.id)
+
+    quest = Quest.query.filter_by(game_id=game.id, title="Quest").first()
+    assert quest is not None
+    assert quest.category is None
