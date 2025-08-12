@@ -69,7 +69,7 @@ def test_login_redirect_if_authenticated_next_unsafe(client, normal_user):
     login_as(client, normal_user)
     resp = client.get("/auth/login?next=http://evil.com", follow_redirects=False)
     assert resp.status_code == 302
-    expected = url_for_path(client.application, "main.index", show_login=0, next="http://evil.com", _external=False)
+    expected = url_for_path(client.application, "main.index", show_login=0, _external=False)
     assert resp.headers["Location"].endswith(expected)
 
 def test_unverified_email_non_ajax(client, app, normal_user):

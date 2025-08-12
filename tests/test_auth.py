@@ -92,6 +92,19 @@ def test_get_login_opens_modal(client):
     assert params["next"] == ["/foo/bar"]
 
 
+def test_get_login_drops_unsafe_next(client):
+    resp = client.get("/auth/login?next=http://evil.com", follow_redirects=False)
+    assert resp.status_code == 302
+    loc = resp.headers["Location"]
+    parsed = urlparse(loc)
+    params = parse_qs(parsed.query)
+    from flask import url_for
+    with client.application.test_request_context():
+        expected_path = url_for("main.index")
+    assert parsed.path == expected_path
+    assert "next" not in params
+
+
 
 @pytest.mark.parametrize("headers,status_code,error,show_forgot", [
     ({}, 302, None, None),                                  

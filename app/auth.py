@@ -160,16 +160,14 @@ def _finalize_registration(
         )
 
     if game_id:
-        return redirect(
-            safe_url_for(
-                "main.index",
-                show_join_custom=0,
-                game_id=game_id,
-                quest_id=quest_id,
-                next=next_page,
-                _external=True,
-            )
-        )
+        params = {
+            "show_join_custom": 0,
+            "game_id": game_id,
+            "quest_id": quest_id,
+            "_external": True,
+        }
+        params.update(_next_params(next_page))
+        return redirect(safe_url_for("main.index", **params))
 
     return redirect(
         safe_url_for(
@@ -353,14 +351,23 @@ def mastodon_callback():
     return redirect(url_for('main.index'))
 
 
-def _is_safe_url(target):
-    """
-    Ensure that the URL is local to our server.
-    """
+def _is_safe_url(target: str | None) -> bool:
+    """Return True if the redirect target is local to our server."""
+
+    if not target:
+        return False
+    target = target.replace("\\", "")
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
-    return (test_url.scheme in ('http', 'https') and
-            ref_url.netloc == test_url.netloc)
+    return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
+
+
+def _next_params(next_page: str | None) -> dict[str, str]:
+    """Return a ``next`` parameter dict when the URL is safe."""
+
+    if next_page and _is_safe_url(next_page):
+        return {"next": next_page}
+    return {}
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
@@ -380,28 +387,24 @@ def login():
                                            
     if current_user.is_authenticated:
         if next_page and _is_safe_url(next_page):
-            target = next_page
-        else:
-            target = url_for('main.index', show_login=0, next=next_page)
-        return redirect(target)
+            return redirect(next_page)
+        return redirect(url_for('main.index', show_login=0))
 
                                                           
     if request.method == 'GET':
         if show_join == '1':
             show_login_flag = 1
         else:
-            show_login_flag = 0 if next_page else 1
+            show_login_flag = 0 if (next_page and _is_safe_url(next_page)) else 1
 
-        return redirect(
-            safe_url_for(
-                'main.index',
-                show_login=show_login_flag,
-                show_join_custom=show_join,
-                game_id=game_id,
-                quest_id=quest_id,
-                next=next_page,
-            )
-        )
+        params = {
+            'show_login': show_login_flag,
+            'show_join_custom': show_join,
+            'game_id': game_id,
+            'quest_id': quest_id,
+        }
+        params.update(_next_params(next_page))
+        return redirect(safe_url_for('main.index', **params))
 
                            
     form    = LoginForm()
@@ -418,14 +421,14 @@ def login():
                 'show_forgot': False
             }), 400
         flash(msg, 'warning')
-        return redirect(
-            url_for('main.index',
-                    show_login=1,
-                    game_id=game_id,
-                    quest_id=quest_id,
-                    show_join_custom=show_join,
-                    next=next_page)
-        )
+        params = {
+            'show_login': 1,
+            'game_id': game_id,
+            'quest_id': quest_id,
+            'show_join_custom': show_join,
+        }
+        params.update(_next_params(next_page))
+        return redirect(url_for('main.index', **params))
 
                      
     user = User.query.filter_by(email=form.email.data.lower()).first()
@@ -440,14 +443,14 @@ def login():
                 'show_forgot': True
             }), 401
         flash(msg, 'danger')
-        return redirect(
-            url_for('main.index',
-                    show_login=1,
-                    game_id=game_id,
-                    quest_id=quest_id,
-                    show_join_custom=show_join,
-                    next=next_page)
-        )
+        params = {
+            'show_login': 1,
+            'game_id': game_id,
+            'quest_id': quest_id,
+            'show_join_custom': show_join,
+        }
+        params.update(_next_params(next_page))
+        return redirect(url_for('main.index', **params))
 
                                                       
     if current_app.config.get('MAIL_SERVER') and not user.email_verified:
@@ -460,14 +463,14 @@ def login():
                 'show_forgot': False
             }), 409
         flash(warning, 'warning')
-        return redirect(
-            url_for('main.index',
-                    show_login=1,
-                    game_id=game_id,
-                    quest_id=quest_id,
-                    show_join_custom=show_join,
-                    next=next_page)
-        )
+        params = {
+            'show_login': 1,
+            'game_id': game_id,
+            'quest_id': quest_id,
+            'show_join_custom': show_join,
+        }
+        params.update(_next_params(next_page))
+        return redirect(url_for('main.index', **params))
 
                  
     login_user(user, remember=form.remember_me.data)
@@ -476,16 +479,14 @@ def login():
         _join_game_if_provided(user)
 
                             
-    target = next_page if next_page and _is_safe_url(next_page) else url_for('main.index',
-                                                                            game_id=game_id,
-                                                                            show_join_custom=0)
+    if next_page and _is_safe_url(next_page):
+        if is_ajax:
+            return jsonify({'success': True, 'redirect': next_page}), 200
+        return redirect(next_page)
 
+    target = url_for('main.index', game_id=game_id, show_join_custom=0)
     if is_ajax:
-        return jsonify({
-            'success': True,
-            'redirect': target
-        }), 200
-
+        return jsonify({'success': True, 'redirect': target}), 200
     return redirect(target)
 
 
@@ -554,18 +555,21 @@ def register():
             db.session.rollback()
             current_app.logger.error(f'Failed to register user: {exc}')
             flash('Registration failed due to an unexpected error. Please try again.', 'error')
-            return redirect(
-                safe_url_for(
-                    'main.index',
-                    show_register=1,
-                    game_id=pending.get('game_id'),
-                    custom_game_code=custom_game_code,
-                    quest_id=pending.get('quest_id'),
-                    next=pending.get('next_page'),
-                    _external=True,
-                )
-            )
-        return _finalize_registration(user, pending.get('game_id'), pending.get('quest_id'), pending.get('next_page'))
+            params = {
+                'show_register': 1,
+                'game_id': pending.get('game_id'),
+                'custom_game_code': custom_game_code,
+                'quest_id': pending.get('quest_id'),
+                '_external': True,
+            }
+            params.update(_next_params(pending.get('next_page')))
+            return redirect(safe_url_for('main.index', **params))
+        return _finalize_registration(
+            user,
+            pending.get('game_id'),
+            pending.get('quest_id'),
+            pending.get('next_page'),
+        )
 
     if request.method == 'POST' and not current_app.config.get('TESTING') and not humanify_ext.has_valid_clearance_token:
         if form.validate_on_submit() and form.accept_license.data:
@@ -576,69 +580,62 @@ def register():
                     'password_hash': generate_password_hash(form.password.data),
                     'game_id': game_id,
                     'quest_id': quest_id,
-                    'next_page': next_page,
+                    'next_page': next_page if _is_safe_url(next_page) else None,
                 }
         return humanify_ext.challenge()
 
     if request.method == 'GET':
-                                                             
-        if not game_id and next_page:
+
+        if not game_id and next_page and _is_safe_url(next_page):
             parsed = urlparse(next_page)
-            if parsed.netloc in (urlparse(request.host_url).netloc, '')\
+            if parsed.netloc in (urlparse(request.host_url).netloc, '') \
                and parsed.path.lstrip('/').isdigit():
                 game_id = parsed.path.lstrip('/')
-                                                           
+
                 custom_game_code = ''
 
-        return redirect(
-            safe_url_for(
-                'main.index',
-                show_register=1,
-                game_id=game_id,
-                custom_game_code=custom_game_code,
-                quest_id=quest_id,
-                next=next_page,
-                _external=True,
-            )
-        )
+        params = {
+            'show_register': 1,
+            'game_id': game_id,
+            'custom_game_code': custom_game_code,
+            'quest_id': quest_id,
+            '_external': True,
+        }
+        params.update(_next_params(next_page))
+        return redirect(safe_url_for('main.index', **params))
 
                                                      
     if not form.validate_on_submit():
         flash('Please correct the errors in the registration form.', 'warning')
-        return redirect(
-            safe_url_for(
-                'main.index',
-                show_register=1,
-                game_id=game_id,
-                custom_game_code=custom_game_code,
-                quest_id=quest_id,
-                next=next_page,
-                _external=True,
-            )
-        )
+        params = {
+            'show_register': 1,
+            'game_id': game_id,
+            'custom_game_code': custom_game_code,
+            'quest_id': quest_id,
+            '_external': True,
+        }
+        params.update(_next_params(next_page))
+        return redirect(safe_url_for('main.index', **params))
 
     if not form.accept_license.data:
         flash('You must agree to the terms of service, license agreement, and privacy policy.', 'warning')
-        return redirect(
-            safe_url_for(
-                'main.index',
-                show_register=1,
-                game_id=game_id,
-                custom_game_code=custom_game_code,
-                quest_id=quest_id,
-                next=next_page,
-                _external=True,
-            )
-        )
+        params = {
+            'show_register': 1,
+            'game_id': game_id,
+            'custom_game_code': custom_game_code,
+            'quest_id': quest_id,
+            '_external': True,
+        }
+        params.update(_next_params(next_page))
+        return redirect(safe_url_for('main.index', **params))
 
                  
     email = sanitize_html(form.email.data or "").lower()
     if User.query.filter_by(email=email).first():
         flash('Email already registered. Please use a different email.', 'warning')
-        return redirect(url_for('auth.register',
-                                game_id=game_id,
-                                quest_id=quest_id,
-                                next=next_page))
+        params = {'game_id': game_id, 'quest_id': quest_id}
+        params.update(_next_params(next_page))
+        return redirect(url_for('auth.register', **params))
 
     username = _generate_username(email)
     user = User(username=username,
@@ -656,17 +653,15 @@ def register():
         db.session.rollback()
         current_app.logger.error(f'Failed to register user: {exc}')
         flash('Registration failed due to an unexpected error. Please try again.', 'error')
-        return redirect(
-            safe_url_for(
-                'main.index',
-                show_register=1,
-                game_id=game_id,
-                custom_game_code=custom_game_code,
-                quest_id=quest_id,
-                next=next_page,
-                _external=True,
-            )
-        )
+        params = {
+            'show_register': 1,
+            'game_id': game_id,
+            'custom_game_code': custom_game_code,
+            'quest_id': quest_id,
+            '_external': True,
+        }
+        params.update(_next_params(next_page))
+        return redirect(safe_url_for('main.index', **params))
 
                                      
     create_activitypub_actor(user)
@@ -706,16 +701,14 @@ def register():
         )
 
     if game_id:
-        return redirect(
-            safe_url_for(
-                'main.index',
-                show_join_custom=0,
-                game_id=game_id,
-                quest_id=quest_id,
-                next=next_page,
-                _external=True,
-            )
-        )
+        params = {
+            'show_join_custom': 0,
+            'game_id': game_id,
+            'quest_id': quest_id,
+            '_external': True,
+        }
+        params.update(_next_params(next_page))
+        return redirect(safe_url_for('main.index', **params))
 
                                                 
     return redirect(
