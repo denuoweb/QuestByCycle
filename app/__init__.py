@@ -202,7 +202,10 @@ def create_app(config_overrides=None):
     @login_manager.unauthorized_handler
     def unauthorized_callback():
         """Return JSON response for unauthorized AJAX requests."""
-        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.accept_mimetypes.accept_json:
+        if (
+            request.headers.get("X-Requested-With") == "XMLHttpRequest"
+            or request.accept_mimetypes.best == "application/json"
+        ):
             return jsonify({"error": "Unauthorized"}), 401
         return redirect(url_for("auth.login", next=request.url))
 
