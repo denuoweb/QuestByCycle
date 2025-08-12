@@ -9,7 +9,13 @@ export function isDebugMode() {
 }
 
 export async function fetchJson(url, options = {}) {
-  const opts = { credentials: 'same-origin', ...options };
+  const headers = { Accept: 'application/json', ...(options.headers || {}) };
+  const opts = {
+    credentials: 'same-origin',
+    cache: 'no-store',
+    ...options,
+    headers,
+  };
   const res = await fetch(url, opts);
   const json = await res.json().catch(() => ({}));
   return { status: res.status, json };

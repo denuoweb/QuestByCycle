@@ -76,14 +76,24 @@ def manage_game_quests(game_id):
 
     form = QuestForm()
     quests = Quest.query.filter_by(game_id=game_id).all()
-    return render_template(
-        "manage_quests.html",
-        game=game,
-        quests=quests,
-        form=form,
-        game_id=game_id,
-        in_admin_dashboard=True
+    response = make_response(
+        render_template(
+            "manage_quests.html",
+            game=game,
+            quests=quests,
+            form=form,
+            game_id=game_id,
+            in_admin_dashboard=True,
+        )
     )
+    response.headers.update(
+        {
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        }
+    )
+    return response
 
 
 @quests_bp.route("/game/<int:game_id>/add_quest", methods=["GET", "POST"])
@@ -516,11 +526,21 @@ def get_quests_for_game(game_id):
             "badge_option": quest.badge_option,
             "from_calendar": quest.from_calendar,
             "calendar_event_id": quest.calendar_event_id,
-            "calendar_event_start": quest.calendar_event_start.isoformat() if quest.calendar_event_start else None,
+            "calendar_event_start": quest.calendar_event_start.isoformat()
+            if quest.calendar_event_start
+            else None,
         }
         for quest in quests
     ]
-    return jsonify(quests=quests_data)
+    response = jsonify(quests=quests_data)
+    response.headers.update(
+        {
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        }
+    )
+    return response
 
 
 @quests_bp.route("/game/<int:game_id>/import_quests", methods=["POST"])
