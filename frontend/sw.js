@@ -1,5 +1,5 @@
 // The version of the cache
-const VERSION = '1.2.0-9d33b71'; // Update this version number when changes are made
+const VERSION = '1.2.1-6603ad4'; // Update this version number when changes are made
 const CACHE_NAME = `questbycycle-${VERSION}`;
 
 // List of static resources to cache
@@ -147,11 +147,8 @@ function shouldCacheRequest(request) {
   if (request.method !== 'GET') {
     return false;
   }
-  const acceptHeader = request.headers.get("Accept") || "";
-  if (
-    acceptHeader.includes("application/json") ||
-    acceptHeader.includes("text/html")
-  ) {
+  const cacheableDestinations = ['style', 'script', 'image', 'font'];
+  if (!cacheableDestinations.includes(request.destination)) {
     return false;
   }
   const url = new URL(request.url);
