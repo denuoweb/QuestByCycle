@@ -195,7 +195,7 @@ import logger from '../logger.js';
     }
 
     function updateEditableField(cell, field) {
-        let currentValue = cell.getAttribute('data-value') || cell.innerHTML.trim();
+        let currentValue = cell.getAttribute('data-value') || cell.textContent.trim();
         let inputElement;
 
         if (field.type === 'select') {
@@ -260,6 +260,9 @@ import logger from '../logger.js';
 
         card.querySelectorAll('input, select, textarea').forEach(input => {
             let value = input.value;
+            if (typeof value === 'string') {
+                value = value.trim();
+            }
             if (input.name === 'enabled') {
                 value = input.value === 'Yes';
             } else if (input.name === 'is_sponsored') {
