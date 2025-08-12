@@ -33,21 +33,50 @@ function loadBadges() {
                 const row = document.createElement('tr');
                 row.dataset.badgeId = badge.id;
 
-                const imageHTML = badge.image ? `<img src="${badge.image}" height="50" alt="Badge Image">` : 'No Image';
+                const imageCell = document.createElement('td');
+                imageCell.className = 'badge-image-manage';
+                if (badge.image) {
+                    const img = document.createElement('img');
+                    img.src = badge.image;
+                    img.height = 50;
+                    img.alt = 'Badge Image';
+                    imageCell.appendChild(img);
+                } else {
+                    imageCell.textContent = 'No Image';
+                }
+                row.appendChild(imageCell);
 
-                row.innerHTML = `
-                    <td class="badge-image-manage">${imageHTML}</td>
-                    <td class="badge-name">${badge.name}</td>
-                    <td class="badge-description">${badge.description}</td>
-                    <td class="badge-category">${badge.category || 'None'}</td>
-                    <td>
-                        <button class="edit-badge" data-badge-id="${badge.id}">Edit</button>
-                        <button class="delete-badge" data-badge-id="${badge.id}">Delete</button>
-                    </td>
-                `;
+                const nameCell = document.createElement('td');
+                nameCell.className = 'badge-name';
+                nameCell.textContent = badge.name;
+                row.appendChild(nameCell);
 
-                row.querySelector('.edit-badge').addEventListener('click', () => editBadge(badge.id));
-                row.querySelector('.delete-badge').addEventListener('click', () => deleteBadge(badge.id));
+                const descCell = document.createElement('td');
+                descCell.className = 'badge-description';
+                descCell.textContent = badge.description;
+                row.appendChild(descCell);
+
+                const categoryCell = document.createElement('td');
+                categoryCell.className = 'badge-category';
+                categoryCell.textContent = badge.category || 'None';
+                row.appendChild(categoryCell);
+
+                const actionCell = document.createElement('td');
+                const editBtn = document.createElement('button');
+                editBtn.className = 'edit-badge';
+                editBtn.dataset.badgeId = badge.id;
+                editBtn.textContent = 'Edit';
+                editBtn.addEventListener('click', () => editBadge(badge.id));
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-badge';
+                deleteBtn.dataset.badgeId = badge.id;
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.addEventListener('click', () => deleteBadge(badge.id));
+
+                actionCell.appendChild(editBtn);
+                actionCell.appendChild(deleteBtn);
+                row.appendChild(actionCell);
 
                 badgesBody.appendChild(row);
             });

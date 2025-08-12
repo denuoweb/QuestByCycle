@@ -63,11 +63,11 @@ function initSubmitPhotoForm() {
     function displayFlashMessage(message, category) {
         const flashMessagesDiv = document.getElementById('flash-messages');
         if (flashMessagesDiv) {
-            flashMessagesDiv.innerHTML = `
-                <div class="flash-message ${category}">
-                    ${message}
-                </div>
-            `;
+            flashMessagesDiv.innerHTML = '';
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flash-message ${category}`;
+            msgDiv.textContent = message;
+            flashMessagesDiv.appendChild(msgDiv);
         } else {
             logger.warn('Flash messages container not found.');
         }

@@ -246,15 +246,19 @@ document.addEventListener('DOMContentLoaded', () => {
           const div = document.createElement('div');
           div.className = 'reply mb-1';
 
-          // Render the reply author as a clickable link
-          div.innerHTML = `
-            <a href="#" class="reply-user-link" data-user-id="${rep.user_id}">
-              <strong>${rep.user_display}</strong>
-            </a>: ${rep.content}
-          `;
+          // Render the reply author as a clickable link without using innerHTML
+          const userLink = document.createElement('a');
+          userLink.href = '#';
+          userLink.className = 'reply-user-link';
+          userLink.dataset.userId = rep.user_id;
+
+          const strong = document.createElement('strong');
+          strong.textContent = rep.user_display;
+          userLink.appendChild(strong);
+          div.appendChild(userLink);
+          div.appendChild(document.createTextNode(`: ${rep.content}`));
 
           // Wire up profile-opening
-          const userLink = div.querySelector('.reply-user-link');
           userLink.addEventListener('click', e => {
             e.preventDefault();
             showUserProfileModal(rep.user_id);
@@ -326,7 +330,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const list = $('#submissionRepliesList');
       const div = document.createElement('div');
       div.className = 'reply mb-1';
-      div.innerHTML = `<strong>${body.reply.user_display}</strong>: ${body.reply.content}`;
+      const strong = document.createElement('strong');
+      strong.textContent = body.reply.user_display;
+      div.appendChild(strong);
+      div.appendChild(document.createTextNode(`: ${body.reply.content}`));
       list.insertBefore(div, list.firstChild);
 
       textarea.value = '';

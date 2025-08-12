@@ -108,11 +108,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const a = document.createElement('a');
     a.href = '#';
     a.className = `dropdown-item ${cls}`;
-    a.innerHTML = `
-      ${text}
-      <small class="text-muted d-block text-center">
-        ${new Date(n.when).toLocaleString()}
-      </small>`;
+
+    // Avoid interpreting notification text as HTML
+    a.appendChild(document.createTextNode(text));
+    const timeEl = document.createElement('small');
+    timeEl.className = 'text-muted d-block text-center';
+    timeEl.textContent = new Date(n.when).toLocaleString();
+    a.appendChild(timeEl);
+
     a.addEventListener('click', async (e) => {
       e.preventDefault();
       try { await onClick(); } catch (err) { logger.error(err); }
