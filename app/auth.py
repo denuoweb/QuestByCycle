@@ -392,10 +392,7 @@ def login():
 
                                                           
     if request.method == 'GET':
-        if show_join == '1':
-            show_login_flag = 1
-        else:
-            show_login_flag = 0 if (next_page and _is_safe_url(next_page)) else 1
+        show_login_flag = 1
 
         params = {
             'show_login': show_login_flag,
