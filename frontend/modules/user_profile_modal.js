@@ -169,9 +169,12 @@ export function showUserProfileModal(userId) {
                     </form>
                   </div>` : `
                   <div id="profileViewMode">
-                    <p><img src="/static/${data.user.profile_picture}"
-                        class="profile-picture rounded-circle shadow-lg border border-white border-4 w-50"
-                        alt="Profile Picture"></p>
+                    ${data.user.profile_picture ? `
+                    <div class="profile-picture-container position-relative mx-auto mb-3">
+                      <img src="/static/${data.user.profile_picture}"
+                          class="profile-picture rounded-circle shadow-lg border border-white border-4"
+                          alt="Profile Picture">
+                    </div>` : ''}
                     <p><strong>Display Name:</strong> ${data.user.display_name || ''}</p>
                     <p><strong>Age Group:</strong> ${data.user.age_group || ''}</p>
                     <p><strong>Interests:</strong> ${data.user.interests || ''}</p>

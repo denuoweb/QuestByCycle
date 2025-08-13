@@ -147,9 +147,12 @@ import{l as u,c as v,f as x,g as Be,e as F,s as K,h as Z}from"./chunk-PuTOKCwV.j
                     </form>
                   </div>`:`
                   <div id="profileViewMode">
-                    <p><img src="/static/${t.user.profile_picture}"
-                        class="profile-picture rounded-circle shadow-lg border border-white border-4 w-50"
-                        alt="Profile Picture"></p>
+                    ${t.user.profile_picture?`
+                    <div class="profile-picture-container position-relative mx-auto mb-3">
+                      <img src="/static/${t.user.profile_picture}"
+                          class="profile-picture rounded-circle shadow-lg border border-white border-4"
+                          alt="Profile Picture">
+                    </div>`:""}
                     <p><strong>Display Name:</strong> ${t.user.display_name||""}</p>
                     <p><strong>Age Group:</strong> ${t.user.age_group||""}</p>
                     <p><strong>Interests:</strong> ${t.user.interests||""}</p>
