@@ -197,7 +197,7 @@ def test_successful_login_with_next_param(client, user_normal):
 
 
 def test_submit_photo_redirects_to_login(client, user_normal):
-    from datetime import datetime, timezone
+    from datetime import datetime, timezone, timedelta
     from app.models.game import Game
     from app.models.quest import Quest
     from app import db
@@ -205,8 +205,8 @@ def test_submit_photo_redirects_to_login(client, user_normal):
     game = Game(
         title="Quest Game",
         description="Test",
-        start_date=datetime.now(timezone.utc),
-        end_date=datetime.now(timezone.utc),
+        start_date=datetime.now(timezone.utc) - timedelta(days=1),
+        end_date=datetime.now(timezone.utc) + timedelta(days=1),
         admin_id=user_normal.id,
     )
     db.session.add(game)
@@ -231,7 +231,7 @@ def test_submit_photo_redirects_to_login(client, user_normal):
 
 
 def test_submit_photo_login_auto_joins_and_opens_quest(client, user_normal):
-    from datetime import datetime, timezone
+    from datetime import datetime, timezone, timedelta
     from app.models.game import Game
     from app.models.quest import Quest
     from app.models.user import User
@@ -240,8 +240,8 @@ def test_submit_photo_login_auto_joins_and_opens_quest(client, user_normal):
     game = Game(
         title="Quest Game",
         description="Test",
-        start_date=datetime.now(timezone.utc),
-        end_date=datetime.now(timezone.utc),
+        start_date=datetime.now(timezone.utc) - timedelta(days=1),
+        end_date=datetime.now(timezone.utc) + timedelta(days=1),
         admin_id=user_normal.id,
     )
     db.session.add(game)
@@ -270,13 +270,8 @@ def test_submit_photo_login_auto_joins_and_opens_quest(client, user_normal):
     assert login_resp.headers["Location"].endswith(f"/quests/submit_photo/{quest.id}")
 
     resp = client.get(login_resp.headers["Location"], follow_redirects=False)
-    assert resp.status_code == 302
-    loc = resp.headers["Location"]
-    parsed = urlparse(loc)
-    qs = parse_qs(parsed.query)
-    assert parsed.path == "/"
-    assert qs["game_id"] == [str(game.id)]
-    assert qs["quest_id"] == [str(quest.id)]
+    assert resp.status_code == 200
+    assert b"submitPhotoForm" in resp.data
 
     user = db.session.get(User, user_normal.id)
     assert game in user.participated_games

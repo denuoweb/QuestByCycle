@@ -4,7 +4,7 @@ from urllib.parse import urlparse, parse_qs
 from app import create_app, db
 from tests.helpers import url_for_path
 from app.models.user import User
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from sqlalchemy.exc import SQLAlchemyError
 
 @pytest.fixture
@@ -180,7 +180,66 @@ def test_register_with_quest_id(client):
     loc = resp.headers["Location"]
     assert "/quests/submit_photo/" in loc or "/quests/submit_photo?quest_id=99" in loc
 
-                                                                    
+
+def test_register_via_submit_photo_link_auto_joins_game(client, app):
+    from app.models.game import Game
+    from app.models.quest import Quest
+    from app.models.user import User
+    from app import db
+
+    app.config["MAIL_SERVER"] = None
+
+    admin = User(
+        username="admin",
+        email="admin@example.com",
+        license_agreed=True,
+        email_verified=True,
+    )
+    admin.set_password("secret")
+    admin.created_at = datetime.now(timezone.utc)
+    db.session.add(admin)
+    db.session.commit()
+
+    game = Game(
+        title="Quest Game",
+        description="Test",
+        start_date=datetime.now(timezone.utc) - timedelta(days=1),
+        end_date=datetime.now(timezone.utc) + timedelta(days=1),
+        admin_id=admin.id,
+    )
+    db.session.add(game)
+    db.session.commit()
+
+    quest = Quest(
+        title="Photo Quest",
+        verification_type="photo",
+        game_id=game.id,
+        points=5,
+    )
+    db.session.add(quest)
+    db.session.commit()
+
+    data = {
+        "email": "quester@example.com",
+        "password": "questpwd",
+        "confirm_password": "questpwd",
+        "accept_license": "y",
+    }
+
+    resp = client.post(
+        f"/auth/register?next=/quests/submit_photo/{quest.id}",
+        data=data,
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    assert resp.headers["Location"].endswith(f"/quests/submit_photo/{quest.id}")
+
+    page = client.get(resp.headers["Location"], follow_redirects=True)
+    assert page.status_code == 200
+
+    user = User.query.filter_by(email=data["email"]).first()
+    assert game in user.participated_games
+
 
 def test_register_db_failure(client, monkeypatch):
     """

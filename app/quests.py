@@ -857,24 +857,31 @@ def submit_photo(quest_id):
         )
         current_user.selected_game_id = game.id
         db.session.commit()
-        if request.method == "GET":
-            base = url_for("main.index")
-            query = f"?game_id={game.id}&quest_id={quest_id}"
-            return redirect(base + query)
 
     now = datetime.now(UTC)
+
+    start_date = game.start_date
+    end_date = game.end_date
+    if start_date.tzinfo is None:
+        start_date = start_date.replace(tzinfo=UTC)
+    if end_date.tzinfo is None:
+        end_date = end_date.replace(tzinfo=UTC)
 
     if not quest.enabled:
         flash("This quest is not enabled.", "error")
         return redirect(url_for("main.index"))
 
-    if game.start_date > now or now > game.end_date:
+    if start_date > now or now > end_date:
         flash("This quest cannot be completed outside of the game dates.", "error")
         return redirect(url_for("main.index"))
 
-    if quest.from_calendar and quest.calendar_event_start and now < quest.calendar_event_start:
-        flash("Submissions open once the event begins.", "error")
-        return redirect(url_for("main.index"))
+    if quest.from_calendar and quest.calendar_event_start:
+        event_start = quest.calendar_event_start
+        if event_start.tzinfo is None:
+            event_start = event_start.replace(tzinfo=UTC)
+        if now < event_start:
+            flash("Submissions open once the event begins.", "error")
+            return redirect(url_for("main.index"))
 
     if request.method == "POST":
         can_verify, next_eligible_time = can_complete_quest(current_user.id, quest_id)
