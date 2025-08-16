@@ -64,6 +64,17 @@
             {% endif %}
         </div>
         <div class="form-group">
+            <label for="timezone">Timezone</label>
+            {{ form.timezone(class_="form-control", id="timezone") }}
+            {% if form.timezone.errors %}
+                <div class="alert alert-danger" role="alert">
+                    {% for error in form.timezone.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        <div class="form-group">
             <label for="game_goal">Game Goal</label>
             {{ form.game_goal(class_="form-control", id="game_goal") }}
             {% if form.game_goal.errors %}

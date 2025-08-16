@@ -82,6 +82,7 @@ export function showUserProfileModal(userId) {
                       </div>` : ''}
                     <p><strong>Display Name:</strong> ${data.user.display_name || ''}</p>
                     <p><strong>Age Group:</strong> ${data.user.age_group || ''}</p>
+                    <p><strong>Timezone:</strong> ${data.user.timezone || ''}</p>
                     <p><strong>Interests:</strong> ${data.user.interests || ''}</p>
                     <p><strong>Riding Preferences:</strong> ${data.user.riding_preferences.join(', ')}</p>
                     <p><strong>Ride Description:</strong> ${data.user.ride_description || ''}</p>
@@ -106,6 +107,14 @@ export function showUserProfileModal(userId) {
                           <option value="teen" ${data.user.age_group==='teen'? 'selected':''}>Teen</option>
                           <option value="adult" ${data.user.age_group==='adult'? 'selected':''}>Adult</option>
                           <option value="senior" ${data.user.age_group==='senior'? 'selected':''}>Senior</option>
+                        </select>
+                      </div>
+                      <div class="form-group mb-3">
+                        <label for="timezone">Timezone:</label>
+                        <select class="form-select" id="timezone" name="timezone">
+                          ${data.timezone_choices.map(tz => `
+                            <option value="${tz}" ${data.user.timezone===tz?'selected':''}>${tz}</option>
+                          `).join('')}
                         </select>
                       </div>
                       <div class="form-group mb-3">
@@ -177,6 +186,7 @@ export function showUserProfileModal(userId) {
                     </div>` : ''}
                     <p><strong>Display Name:</strong> ${data.user.display_name || ''}</p>
                     <p><strong>Age Group:</strong> ${data.user.age_group || ''}</p>
+                    <p><strong>Timezone:</strong> ${data.user.timezone || ''}</p>
                     <p><strong>Interests:</strong> ${data.user.interests || ''}</p>
                     <p><strong>Riding Preferences:</strong> ${data.user.riding_preferences.join(', ')}</p>
                     <p><strong>Ride Description:</strong> ${data.user.ride_description || ''}</p>

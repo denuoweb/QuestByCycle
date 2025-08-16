@@ -24,6 +24,7 @@ class Game(db.Model):
         nullable=False,
         default=lambda: datetime.now(UTC)
     )
+    timezone = db.Column(db.String(50), nullable=False, default="UTC")
     admin_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     admins = db.relationship(
         'User', secondary=game_admins,

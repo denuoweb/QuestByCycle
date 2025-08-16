@@ -7,7 +7,7 @@ This module contains WTForms definitions for various forms used throughout the a
                           
 import os
 
-                     
+
 from flask import current_app
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
@@ -32,9 +32,13 @@ from wtforms.validators import (
     URL,
     ValidationError,
 )
+from zoneinfo import available_timezones
 
-                           
+
 from app.models.badge import Badge
+
+
+TIMEZONE_CHOICES = sorted(available_timezones())
 
                                                                                
                       
@@ -175,6 +179,12 @@ class GameForm(FlaskForm):
     )
     start_date = DateField("Start Date", format="%Y-%m-%d", validators=[DataRequired()])
     end_date = DateField("End Date", format="%Y-%m-%d", validators=[DataRequired()])
+    timezone = SelectField(
+        "Timezone",
+        choices=[(tz, tz) for tz in TIMEZONE_CHOICES],
+        default="UTC",
+        validators=[DataRequired()],
+    )
     details = TextAreaField("Game Details")
     awards = TextAreaField("Awards Details")
     beyond = TextAreaField("Sustainability Details")
@@ -331,6 +341,11 @@ class ProfileForm(FlaskForm):
     age_group = SelectField(
         "Age Group",
         choices=[("teen", "Teen"), ("adult", "Adult"), ("senior", "Senior")],
+    )
+    timezone = SelectField(
+        "Timezone",
+        choices=[(tz, tz) for tz in TIMEZONE_CHOICES],
+        default="UTC",
     )
     interests = StringField("Interests", validators=[Optional()])
     ride_description = StringField(

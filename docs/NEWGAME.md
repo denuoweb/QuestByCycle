@@ -52,46 +52,51 @@ You will see a form with the following fields. Fill them out as described:
    - **Interaction**: Participants can no longer complete quests or log activities after this date.
    - **Example**: "06/29/2024".
 
-6. **Game Goal**:
+6. **Timezone**:
+   - **Purpose**: Sets the local timezone where the game takes place.
+   - **Interaction**: Start and end dates are stored using this timezone so players see accurate times.
+   - **Example**: "America/Los_Angeles".
+
+7. **Game Goal**:
    - **Purpose**: Sets the main objective or target for the game.
    - **Interaction**: Helps participants understand the main focus and end-goal of the game.
    - **Example**: "Complete 1000 push-ups".
 
-7. **Game Details**:
+8. **Game Details**:
    - **Purpose**: Provides additional, detailed information about the game.
    - **Interaction**: Available to participants who want to learn more about the game structure, rules, or background.
    - **Example**: "Participants must log their activities daily to accumulate points."
 
-8. **Awards Information**:
+9. **Awards Information**:
    - **Purpose**: Describes the prizes or awards that participants can win.
    - **Interaction**: Motivates participants by showing what they can achieve through participation.
    - **Example**: "Top 3 participants will receive a fitness tracker."
 
-9. **Beyond the Game**:
-   - **Purpose**: Includes any activities or events related to the game that take place beyond the game itself.
-   - **Interaction**: Provides additional value and engagement opportunities for participants.
-   - **Example**: "Join our weekly webinars on fitness and nutrition."
+10. **Beyond the Game**:
+    - **Purpose**: Includes any activities or events related to the game that take place beyond the game itself.
+    - **Interaction**: Provides additional value and engagement opportunities for participants.
+    - **Example**: "Join our weekly webinars on fitness and nutrition."
 
-10. **Is Public**:
+11. **Is Public**:
     - **Purpose**: Determines if the game is visible to all users or only to invited participants.
     - **Interaction**: Public games are searchable and joinable by any user, while private games require an invitation or a code.
     - **Example**: Check the box to make the game public.
 
-11. **Allow Joining**:
+12. **Allow Joining**:
     - **Purpose**: Allows or restricts new participants from joining the game after it has started.
     - **Interaction**: Ensures that only those who join before a certain point can participate, or keeps the game open for new participants throughout its duration.
     - **Example**: Check the box to allow joining.
 
-12. **Custom Game Code**:
+13. **Custom Game Code**:
     - **Purpose**: Provides a unique code that participants can use to join the game.
     - **Interaction**: Useful for private or exclusive games where you want to control who can join.
     - **Example**: "SUMMER2024".
 
-13. **Calendar URL**:
+14. **Calendar URL**:
     - **Purpose**: Optional link to an external calendar for the game.
     - **Interaction**: When provided, participants see a Calendar tab with the embedded calendar.
     - **Example**: `https://calendar.google.com/calendar/embed?src=your_calendar_id&ctz=America/Los_Angeles`.
-14. **Calendar Service JSON File**:
+15. **Calendar Service JSON File**:
     - **Purpose**: Upload a Google service account JSON file for syncing calendar events.
     - **Interaction**: When set, new events create quests automatically every 15 minutes.
       Imported calendar quests require a photo submission, award 100 points, and

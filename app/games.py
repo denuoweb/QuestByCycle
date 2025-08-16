@@ -2,6 +2,8 @@
 import os
 import base64
 import qrcode
+from datetime import datetime, time
+from zoneinfo import ZoneInfo
 
 from flask import (
     Blueprint,
@@ -53,6 +55,7 @@ def serialize_game(game):
         "calendar_service_json_path": game.calendar_service_json_path,
         "logo": game.logo,
         "logo_url": game.logo_url,
+        "timezone": game.timezone,
     }
 
 
@@ -79,11 +82,10 @@ def populate_game_from_form(game, form):
         "calendar_url",
         "logo_url",
         "social_media_liaison_email",
+        "timezone",
     ]
 
     raw_fields = [
-        "start_date",
-        "end_date",
         "game_goal",
         "is_public",
         "allow_joins",
@@ -97,6 +99,13 @@ def populate_game_from_form(game, form):
     for field in raw_fields:
         if hasattr(form, field):
             setattr(game, field, getattr(form, field).data)
+
+    # Convert dates to timezone-aware datetimes
+    tzinfo = ZoneInfo(game.timezone or "UTC")
+    if hasattr(form, "start_date") and form.start_date.data:
+        game.start_date = datetime.combine(form.start_date.data, time.min, tzinfo)
+    if hasattr(form, "end_date") and form.end_date.data:
+        game.end_date = datetime.combine(form.end_date.data, time.min, tzinfo)
 
 
 def process_leaderboard_upload(game, defer=False):
