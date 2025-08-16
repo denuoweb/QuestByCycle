@@ -128,12 +128,92 @@ Ensure you have the following installed:
 
 ### Configuration
 
-Update the `.env` file with the appropriate configuration settings for your development environment.
-Important variables include:
+Update the `.env` file with settings appropriate for your environment. The application reads the following variables:
 
-- `GCS_BUCKET` – name of the Google Cloud Storage bucket used for uploads
-- `GCS_BASE_URL` – base URL for serving uploaded media
-- `GCS_STORAGE_CLASS` – storage class for uploaded files (`ARCHIVE` is cheapest)
+#### Main
+
+- `UPLOAD_FOLDER`: Directory used for user uploads.
+- `VERIFICATIONS`: Directory for verification images.
+- `BADGE_IMAGE_DIR`: Directory for badge graphics.
+- `TASKCSV`: Directory containing bulk quest CSV files.
+- `LOCAL_DOMAIN`: Base domain for generating absolute URLs.
+- `FFMPEG_PATH`: Path to the `ffmpeg` executable for video processing.
+- `PLACEHOLDER_IMAGE`: Default image path used when no image is provided.
+- `SQLALCHEMY_ECHO`: Set to `true` to log SQL statements.
+- `ASSET_VERSION`: Cache-busting string appended to static asset URLs.
+
+#### Google Cloud Storage
+
+- `GCS_BUCKET`: Name of the bucket used for uploads.
+- `GCS_BASE_URL`: Base URL for serving uploaded media.
+- `GCS_STORAGE_CLASS`: Storage class for uploaded files (`ARCHIVE` is cheapest).
+
+#### Security and Sessions
+
+- `DEFAULT_SUPER_ADMIN_USERNAME`: Username for the initial super admin account.
+- `DEFAULT_SUPER_ADMIN_PASSWORD`: Password for the initial super admin.
+- `DEFAULT_SUPER_ADMIN_EMAIL`: Email for the initial super admin.
+- `SECRET_KEY`: Secret used to sign session cookies.
+- `SESSION_COOKIE_SECURE`: Require HTTPS for the session cookie.
+- `SESSION_COOKIE_NAME`: Name of the session cookie.
+- `SESSION_COOKIE_SAMESITE`: SameSite policy for the session cookie.
+- `SESSION_COOKIE_DOMAIN`: Domain attribute for the session cookie, if needed.
+- `SESSION_REFRESH_EACH_REQUEST`: Refresh session on every request when `true`.
+- `REMEMBER_COOKIE_DURATION_DAYS`: Lifetime of the remember-me cookie in days.
+
+#### Flask
+
+- `DEBUG`: Enables Flask debug mode.
+- `SQLALCHEMY_DATABASE_URI`: Database connection string.
+
+#### OpenAI
+
+- `OPENAI_API_KEY`: API key used for AI quest generation.
+
+#### Mail
+
+- `MAIL_SERVER`: Hostname of the mail server.
+- `MAIL_PORT`: Port for the mail server.
+- `MAIL_USE_TLS`: Enable TLS for outgoing mail.
+- `MAIL_USE_SSL`: Enable SSL for outgoing mail.
+- `MAIL_USERNAME`: Username for the mail server.
+- `MAIL_PASSWORD`: Password for the mail server.
+- `MAIL_DEFAULT_SENDER`: Default address used as the sender.
+
+#### Social Media
+
+- `TWITTER_USERNAME`: Twitter handle used for updates.
+- `TWITTER_API_KEY`: Twitter API key.
+- `TWITTER_API_SECRET`: Twitter API secret.
+- `TWITTER_ACCESS_TOKEN`: Twitter access token.
+- `TWITTER_ACCESS_TOKEN_SECRET`: Twitter access token secret.
+- `FACEBOOK_APP_ID`: Facebook app ID.
+- `FACEBOOK_APP_SECRET`: Facebook app secret.
+- `FACEBOOK_ACCESS_TOKEN`: Facebook access token.
+- `FACEBOOK_PAGE_ID`: Facebook page ID.
+- `INSTAGRAM_ACCESS_TOKEN`: Instagram access token.
+- `INSTAGRAM_USER_ID`: Instagram user ID.
+
+#### PayPal
+
+- `PAYPAL_CLIENT_ID`: PayPal REST client ID.
+- `PAYPAL_CLIENT_SECRET`: PayPal REST client secret.
+- `PAYPAL_API_BASE`: Base URL for the PayPal API.
+
+#### Push Notifications
+
+- `VAPID_PUBLIC_KEY`: VAPID public key for web push.
+- `VAPID_PRIVATE_KEY`: VAPID private key for web push.
+- `VAPID_ADMIN_EMAIL`: Contact email for VAPID registration.
+
+#### Trusted Web Activity
+
+- `TWA_SHA256_FINGERPRINT`: SHA256 certificate fingerprint for the TWA.
+
+#### Background Tasks
+
+- `USE_TASK_QUEUE`: Enable Redis-backed task queue when `true`.
+- `REDIS_URL`: Redis connection URL for the task queue.
 
 ## Key Components
 
