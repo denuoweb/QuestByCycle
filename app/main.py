@@ -805,8 +805,10 @@ def _coerce_to_list(raw: Any) -> List[str]:
             loaded = json.loads(raw)
             if isinstance(loaded, list):
                 return loaded
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError as exc:
+            current_app.logger.debug(
+                "Failed to decode list from JSON: %s", exc
+            )
 
                                           
         return [item.strip() for item in raw.split(',') if item.strip()]
