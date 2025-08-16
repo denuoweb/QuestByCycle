@@ -18,10 +18,12 @@ from app.models.quest import Quest
 
 
 def _parse_calendar_id(url: str) -> str | None:
+    """Return calendar ID from a Google calendar embed URL if present."""
     parsed = urlparse(url)
     qs = parse_qs(parsed.query)
-    if "src" in qs:
-        return qs["src"][0]
+    calendar_id = qs.get("src", [None])[0]
+    if calendar_id:
+        return calendar_id
     if parsed.path:
         return parsed.path.rstrip("/").split("/")[-1]
     return None
