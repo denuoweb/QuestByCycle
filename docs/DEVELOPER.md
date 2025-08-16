@@ -165,7 +165,7 @@ The database models are defined in `app/models.py` and include:
 
 Forms are defined using WTForms in `app/forms.py` and include:
 
-- **`ProfileForm`**: Form for updating user profiles, including an
+- **`ProfileForm`**: Form for updating user profiles with a timezone selector and an
   `upgrade_to_admin` option.
 - **`ShoutBoardForm`**: Form for posting messages on the Shout Board.
 - **`QuestForm`**: Form for creating and updating quests.
@@ -272,6 +272,7 @@ Users can manage their profiles using the following routes:
 - **Edit Profile**: `/profile/<int:user_id>/edit`
 - Upgrading via the edit route sets `is_admin` to `True` and applies default
   game limits (5&nbsp;GB storage and 60&nbsp;day retention).
+- **Set Timezone**: `/profile/<int:user_id>/timezone`
 - **Post Message on Profile Wall**: `/profile/<int:user_id>/messages`
 - **Delete Profile Wall Message**: `/profile/<int:user_id>/messages/<int:message_id>/delete`
 - **Reply to Profile Wall Message**: `/profile/<int:user_id>/messages/<int:message_id>/reply`

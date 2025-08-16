@@ -89,6 +89,7 @@ def test_create_game_attaches_creator_and_selected_admins(client):
             "description2": "Rules",
             "start_date": "2024-01-01",
             "end_date": "2024-01-02",
+            "timezone": "UTC",
             "admins": [str(extra_admin.id)],
             "is_public": "y",
             "allow_joins": "y",
@@ -145,6 +146,7 @@ def test_update_game_highlights_existing_admins(client):
         admin_id=admin1.id,
         start_date=datetime.now(timezone.utc),
         end_date=datetime.now(timezone.utc) + timedelta(days=1),
+        timezone="UTC",
     )
     game.admins.extend([admin1, admin2])
     db.session.add(game)
@@ -196,6 +198,7 @@ def test_super_admin_hidden_from_admin_selection(client):
             "description2": "Rules",
             "start_date": "2024-01-01",
             "end_date": "2024-01-02",
+            "timezone": "UTC",
             "admins": [str(other_admin.id)],
             "is_public": "y",
             "allow_joins": "y",
@@ -253,6 +256,7 @@ def test_update_game_hides_super_admin(client):
         admin_id=super_admin.id,
         start_date=datetime.now(timezone.utc),
         end_date=datetime.now(timezone.utc) + timedelta(days=1),
+        timezone="UTC",
     )
     game.admins.extend([super_admin, admin])
     db.session.add(game)

@@ -1,6 +1,7 @@
 
 import logger from './logger.js';
 import { openModal } from './modules/modal_common.js';
+import { csrfFetchJson } from './utils.js';
 
 function sendSkipWaiting(reg) {
   if (reg.waiting) {
@@ -82,6 +83,16 @@ export function initLayout() {
     } else {
       manualInstall.hidden = true;
     }
+  }
+
+  const userId = document.body.getAttribute('data-user-id');
+  if (userId && userId !== 'none') {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    csrfFetchJson(`/profile/${userId}/timezone`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ timezone: tz })
+    }).catch(err => logger.error('Failed to send timezone:', err));
   }
 
   if (installButton) {

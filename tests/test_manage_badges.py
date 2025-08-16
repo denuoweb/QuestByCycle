@@ -59,6 +59,7 @@ def create_game(title, admin):
         start_date=datetime.now(timezone.utc) - timedelta(days=1),
         end_date=datetime.now(timezone.utc) + timedelta(days=1),
         admin_id=admin.id,
+        timezone="UTC",
     )
     game.admins.append(admin)
     db.session.add(game)

@@ -11,7 +11,7 @@ from app.models import db, user_games
 from app.models.user import User, UserIP
 from app.models.game import Game, Sponsor
 from app.models.quest import QuestSubmission
-from app.forms import SponsorForm
+from app.forms import SponsorForm, TIMEZONE_CHOICES
 from app.utils.file_uploads import save_sponsor_logo
 from app.utils import sanitize_html, get_int_param
 from app.decorators import require_admin, require_super_admin
@@ -196,6 +196,7 @@ def edit_user(user_id):
             user.display_name = request.form.get('display_name')
             user.profile_picture = request.form.get('profile_picture')
             user.age_group = request.form.get('age_group')
+            user.timezone = request.form.get('timezone')
             user.interests = request.form.get('interests')
             user.email_verified = 'email_verified' in request.form
 
@@ -263,7 +264,8 @@ def edit_user(user_id):
         participated_games=participated_games,
         user_submissions=user_submissions,
         user_ips=user_ips,
-        games=games
+        games=games,
+        timezone_choices=TIMEZONE_CHOICES,
     )
 
 @admin_bp.route('/delete_user/<int:user_id>', methods=['POST'])

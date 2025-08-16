@@ -56,6 +56,7 @@ class User(UserMixin, db.Model):
     display_name = db.Column(db.String(100))
     profile_picture = db.Column(db.String(200))
     age_group = db.Column(db.String(50))
+    timezone = db.Column(db.String(50), default="UTC", nullable=False)
     interests = db.Column(db.String(500))
     quest_likes = db.relationship(
         'QuestLike', backref='user', lazy='dynamic',

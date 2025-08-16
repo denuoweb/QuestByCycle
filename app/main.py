@@ -54,6 +54,7 @@ from app.forms import (
     ForgotPasswordForm,
     ResetPasswordForm,
     MastodonLoginForm,
+    TIMEZONE_CHOICES,
 )
 from app.utils.file_uploads import (
     save_profile_picture,
@@ -729,6 +730,7 @@ def user_profile(user_id):
             'display_name': user.display_name,
             'interests': user.interests,
             'age_group': user.age_group,
+            'timezone': user.timezone,
             'riding_preferences': user.riding_preferences or [],
             'ride_description': user.ride_description,
             'bike_picture': user.bike_picture,
@@ -776,7 +778,8 @@ def user_profile(user_id):
              'instagram_url': submission.instagram_url}
             for submission in quest_submissions
         ],
-        'riding_preferences_choices': riding_preferences_choices
+        'riding_preferences_choices': riding_preferences_choices,
+        'timezone_choices': TIMEZONE_CHOICES,
     }
 
                                                                   
@@ -842,6 +845,7 @@ def edit_profile(user_id):
 
         user.display_name = form.display_name.data
         user.age_group = form.age_group.data
+        user.timezone = form.timezone.data
         user.interests = form.interests.data or []
         user.riding_preferences = _coerce_to_list(form.riding_preferences.data)
         user.ride_description = form.ride_description.data
@@ -861,6 +865,24 @@ def edit_profile(user_id):
         db.session.rollback()
         logger.error('Exception occurred: %s', exc)
         return jsonify({'error': 'Internal server error'}), 500
+
+
+@main_bp.route('/profile/<int:user_id>/timezone', methods=['POST'])
+@login_required
+def set_timezone(user_id):
+    """Update a user's timezone using JSON payload."""
+    if user_id != current_user.id:
+        logger.warning('Unauthorized timezone update attempt by user %s', current_user.id)
+        return jsonify({'error': 'Unauthorized access'}), 403
+
+    tz = (request.get_json() or {}).get('timezone')
+    if not tz or tz not in TIMEZONE_CHOICES:
+        return jsonify({'error': 'Invalid timezone'}), 400
+
+    user = User.query.get_or_404(user_id)
+    user.timezone = tz
+    db.session.commit()
+    return jsonify({'success': True})
 
 
 @main_bp.route('/profile/<int:user_id>/edit-bike', methods=['POST'])
