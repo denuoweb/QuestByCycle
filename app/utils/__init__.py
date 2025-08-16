@@ -101,7 +101,9 @@ def get_int_param(name: str, *, source=None, default: int | None = None) -> int 
 # Misc database helpers
 # ----------------------------------------------------------------------------
 
-def generate_demo_game():
+def generate_demo_game() -> Game | None:
+    """Create a demo game for the current quarter if one does not exist."""
+
     current_quarter = (datetime.now(UTC).month - 1) // 3 + 1
     year = datetime.now(UTC).year
     title = f"Demo Game - Q{current_quarter} {year}"
@@ -208,13 +210,16 @@ def generate_demo_game():
         )
         db.session.add(pinned_message)
         db.session.commit()
-    except Exception:
+    except Exception as exc:  # pragma: no cover - log and rollback
         db.session.rollback()
+        current_app.logger.error("Failed to pin demo message: %s", exc)
 
     return demo_game
 
 
-def import_quests_and_badges_from_csv(game_id, csv_path):
+def import_quests_and_badges_from_csv(game_id: int, csv_path: str) -> None:
+    """Populate a game with quests and badges described in a CSV file."""
+
     try:
         with open(csv_path, mode="r", encoding="utf-8") as csv_file:
             data = csv.DictReader(csv_file)
@@ -257,11 +262,16 @@ def import_quests_and_badges_from_csv(game_id, csv_path):
                 )
                 db.session.add(quest)
             db.session.commit()
-    except Exception:
+    except Exception as exc:  # pragma: no cover - log and rollback
         db.session.rollback()
+        current_app.logger.error(
+            "Failed to import quests and badges from %s: %s", csv_path, exc
+        )
 
 
-def log_user_ip(user):
+def log_user_ip(user: User) -> None:
+    """Store the user's current IP address if it hasn't been logged before."""
+
     ip_address = request.remote_addr
     existing_ip = UserIP.query.filter_by(user_id=user.id, ip_address=ip_address).first()
     if not existing_ip:
@@ -270,7 +280,9 @@ def log_user_ip(user):
         db.session.commit()
 
 
-def get_game_badges(game_id):
+def get_game_badges(game_id: int) -> list[Badge]:
+    """Return all badges associated with a game."""
+
     game = db.session.get(Game, game_id)
     if not game:
         return []
