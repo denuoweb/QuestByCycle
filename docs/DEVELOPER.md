@@ -52,7 +52,6 @@ The project is organized as follows:
     - `webfonts/`: Font files.
   - `templates/`: Contains HTML templates for rendering views.
     - `modals/`: Templates for modal dialogs.
-  - `frontend/`: Modern ES modules compiled with Vite.
   - `__init__.py`: Initializes the Flask application.
   - `admin.py`: Admin-specific routes and logic.
   - `ai.py`: AI quest generation logic.
@@ -63,14 +62,20 @@ The project is organized as follows:
   - `games.py`: Game management logic.
   - `main.py`: Main routes and views.
   - `models.py`: SQLAlchemy models.
+  - `notifications.py`: Email helpers and Web Push utilities.
+  - `paypal.py`: PayPal API integration.
   - `profile.py`: User profile management logic.
-  - `social.py`: Social media integration logic.
+  - `push.py`: Endpoints for managing push subscriptions.
   - `quests.py`: Quest management and submission logic.
+  - `scheduler.py`: Schedules recurring jobs.
+  - `social.py`: Social media integration logic.
+  - `tasks.py`: Background job functions executed by RQ workers.
   - `utils.py`: Utility functions.
+  - `activitypub_utils.py`, `constants.py`, `decorators.py`, `webfinger.py`: Supporting modules.
 - `csv/`: Contains CSV files for bulk data import.
 - `docs/`: Documentation files.
+- `frontend/`: Vite-based JavaScript and SCSS source files.
 - `migrations/`: Database migration scripts.
-- `venv/`: Virtual environment directory.
 - `.gitignore`: Git ignore file.
 - `.env`: Environment configuration file. Set `PAYPAL_CLIENT_ID`,
   `PAYPAL_CLIENT_SECRET`, and `PAYPAL_API_BASE` for PayPal integration.
@@ -84,6 +89,12 @@ The project is organized as follows:
 - **`app/__init__.py`**: Initializes the Flask application and registers blueprints.
 - **`app/models.py`**: Defines the database models.
 - **`app/forms.py`**: Defines the forms used in the application.
+- **`app/config.py`**: Centralized configuration loaded from environment variables.
+- **`app/notifications.py`**: Email helpers and Web Push utilities.
+- **`app/push.py`**: Push notification subscription and delivery endpoints.
+- **`app/scheduler.py`**: Schedules recurring maintenance jobs.
+- **`app/tasks.py`**: Background jobs executed by RQ workers.
+- **`app/paypal.py`**: PayPal API integration.
 - **`app/utils/`**: Package of utility modules used across the application.
 - **`app/templates/`**: Contains HTML templates for rendering views.
 - **`pyproject.toml`**: Lists the dependencies required for the project and is managed by Poetry.
@@ -94,10 +105,12 @@ The project is organized as follows:
 
 Ensure you have the following installed:
 
-- Python 3.x
+- Python 3.11
 - PostgreSQL
-- Virtualenv
+- Redis
+- Node.js 22 and npm
 - ffmpeg (optional for video compression)
+- Poetry
 
 ### Installation
 
@@ -107,15 +120,15 @@ Ensure you have the following installed:
    cd your-project
    \`\`\`
 
-2. **Create a virtual environment**:
-   \`\`\`bash
-   python3 -m venv venv
-   source venv/bin/activate
-   \`\`\`
-
-3. **Install dependencies**:
+2. **Install Python dependencies**:
    \`\`\`bash
    poetry install
+   \`\`\`
+
+3. **Install frontend dependencies and build assets**:
+   \`\`\`bash
+   npm install
+   npm run build
    \`\`\`
 
 4. **Set up the database**:
@@ -271,6 +284,20 @@ Utility functions are organized under `app/utils/` and include:
 The application uses [flask-Humanify](https://github.com/tn3w/flask-Humanify)
 with a grid challenge on login and registration endpoints,
 reducing automated abuse.
+
+### Notifications and Push
+
+Email and browser notifications keep users informed:
+
+- **`notifications.py`**: Helper functions for sending emails and Web Push messages.
+- **`push.py`**: REST endpoints for managing subscriptions and dispatching push payloads.
+
+### Background Tasks
+
+Long running work is executed outside of the request cycle:
+
+- **`tasks.py`**: RQ task definitions for jobs like media processing and email delivery.
+- **`scheduler.py`**: Configures recurring jobs using APScheduler.
 
 ## Admin Functionality
 
