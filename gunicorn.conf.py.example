@@ -1,18 +1,36 @@
-import os
+import os, sys, subprocess, signal
 
-# Bind to the container interface and honor $PORT if provided by the platform
-bind = f"0.0.0.0:{os.getenv('PORT', '5000')}"
-
-# Reasonable worker model; adjust if you have CPU-bound tasks
-workers = int(os.getenv("WEB_CONCURRENCY", "2"))
+bind = f"0.0.0.0:{os.getenv('PORT','5000')}"
+workers = int(os.getenv("WEB_CONCURRENCY", "2"))      # you can scale back up now
 threads = int(os.getenv("GUNICORN_THREADS", "4"))
 timeout = int(os.getenv("GUNICORN_TIMEOUT", "120"))
-
-# Log to stdout/stderr so the platform captures logs
 accesslog = "-"
-errorlog = "-"
+errorlog  = "-"
+wsgi_app  = os.getenv("WSGI_APP", "wsgi:app")
 
-# Tell Gunicorn where your WSGI app is. Your script already exports WSGI_APP=wsgi:app
-wsgi_app = os.getenv("WSGI_APP", "wsgi:app")
+_mem_proc = None
 
-# IMPORTANT: deliberately do NOT set `user` or `group` here.
+def when_ready(server):
+    """Called in the master just before starting workers."""
+    if os.getenv("ENABLE_MEMORY_SERVER", "1") != "1":
+        server.log.info("Memory server disabled by env")
+        return
+
+    port = os.getenv("MEMORY_SERVER_PORT", "9876")
+    # Adjust the module/entrypoint below to your actual memory server launcher.
+    # The key point: it must be a non-blocking subprocess.
+    cmd = [sys.executable, "-m", "yourpkg.memory_server", "--port", port]
+    server.log.info("Launching memory server: %s", " ".join(cmd))
+    global _mem_proc
+    _mem_proc = subprocess.Popen(cmd)
+
+def on_exit(server):
+    """Called in the master on graceful shutdown."""
+    global _mem_proc
+    if _mem_proc and _mem_proc.poll() is None:
+        server.log.info("Terminating memory server pid=%s", _mem_proc.pid)
+        _mem_proc.terminate()
+        try:
+            _mem_proc.wait(timeout=10)
+        except Exception:
+            _mem_proc.kill()
