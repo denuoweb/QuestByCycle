@@ -144,23 +144,24 @@ def get_facebook_page_access_token(user_access_token, page_id):
 
 
 def upload_image_to_facebook(page_id, image_path, access_token):
+    """Upload an image to Facebook without publishing it."""
     mime_type, _ = mimetypes.guess_type(image_path)
     if not mime_type:
-        mime_type = 'image/jpeg'
-
-    files = {'file': (image_path, open(image_path, 'rb'), mime_type)}
-    data = {
-        'access_token': access_token,
-        'published': 'false'
-    }
+        mime_type = "image/jpeg"
 
     url = f"https://graph.facebook.com/v19.0/{page_id}/photos"
-    response = requests.post(url, files=files, data=data, timeout=REQUEST_TIMEOUT)
+    data = {
+        "access_token": access_token,
+        "published": "false",
+    }
+
+    with open(image_path, "rb") as image_file:
+        files = {"file": (image_path, image_file, mime_type)}
+        response = requests.post(url, files=files, data=data, timeout=REQUEST_TIMEOUT)
 
     if response.status_code == 200:
         return response.json()
-    else:
-        return None
+    return None
 
 
 def post_to_facebook_with_image(page_id, message, media_object_id, access_token):
