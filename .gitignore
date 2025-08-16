@@ -181,7 +181,6 @@ cython_debug/
 #.idea/
 config.toml
 .DS_Store
-gunicorn.conf.py
 logs/gunicorn-error.log
 logs/gunicorn-access.log
 app/static/videos/welcomeQuestByCycle.mp4
