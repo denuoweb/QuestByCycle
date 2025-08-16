@@ -31,7 +31,7 @@ from app.utils.file_uploads import (
     save_game_logo,
 )
 from app.utils.email_utils import send_social_media_liaison_email
-from app.utils import sanitize_html
+from app.utils import sanitize_html, format_db_error
 from io import BytesIO
 
 
@@ -198,7 +198,11 @@ def create_game():
             return redirect(url_for('admin.admin_dashboard'))
         except SQLAlchemyError as error:
             db.session.rollback()
-            flash(f'An error occurred while creating the game: {error}', 'error')
+            message = format_db_error(error)
+            flash(
+                f"An error occurred while creating the game: {message}",
+                "error",
+            )
     return render_template('create_game.html', title='Create Game', form=form,
         in_admin_dashboard=True)
 
@@ -253,7 +257,11 @@ def update_game(game_id):
             return redirect(url_for('main.index', game_id=game_id))
         except SQLAlchemyError as error:
             db.session.rollback()
-            flash(f'An error occurred while updating the game: {error}', 'error')
+            message = format_db_error(error)
+            flash(
+                f"An error occurred while updating the game: {message}",
+                "error",
+            )
     return render_template(
         'update_game.html',
         form=form,
@@ -298,10 +306,11 @@ def register_game(game_id):
         return redirect(url_for('main.index', game_id=game_id))
     except SQLAlchemyError as error:
         db.session.rollback()
+        message = format_db_error(error)
         current_app.logger.error(
-            f'Failed to register user for game {game_id}: {error}'
+            "Failed to register user for game %s: %s", game_id, message
         )
-        flash('An error occurred. Please try again.', 'error')
+        flash("An error occurred. Please try again.", "error")
     return redirect(url_for('main.index', game_id=game_id))
 
 
@@ -329,7 +338,12 @@ def delete_game(game_id):
 
     except SQLAlchemyError as error:
         db.session.rollback()
-        flash(f'An error occurred while deleting the game: {error}', 'error')
+        message = format_db_error(error)
+        current_app.logger.error("Failed to delete game %s: %s", game_id, message)
+        flash(
+            f"An error occurred while deleting the game: {message}",
+            "error",
+        )
 
     return redirect(url_for('admin.admin_dashboard'))
 

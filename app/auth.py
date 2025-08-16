@@ -19,7 +19,13 @@ from flask import (
     session,
     jsonify,
 )
-from app.utils import safe_url_for
+from app.utils import (
+    safe_url_for,
+    log_user_ip,
+    REQUEST_TIMEOUT,
+    sanitize_html,
+    format_db_error,
+)
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
@@ -32,7 +38,6 @@ from app.models.game import Game
 from app.forms import (LoginForm, RegistrationForm, ForgotPasswordForm,
                        ResetPasswordForm, UpdatePasswordForm, MastodonLoginForm)
 from app.utils.email_utils import send_email
-from app.utils import log_user_ip, REQUEST_TIMEOUT, sanitize_html
 from app.tasks import enqueue_email
 from app.activitypub_utils import create_activitypub_actor
 
@@ -91,7 +96,9 @@ def _auto_verify_and_login(user):
         db.session.commit()
     except SQLAlchemyError as exc:
         db.session.rollback()
-        current_app.logger.error(f'Failed to auto verify user: {exc}')
+        current_app.logger.error(
+            "Failed to auto verify user: %s", format_db_error(exc)
+        )
         flash('Registration failed due to an unexpected error. '
               'Please try again.', 'error')
         return False
@@ -195,7 +202,9 @@ def _ensure_demo_game(user):
                 db.session.commit()
             except SQLAlchemyError as exc:
                 db.session.rollback()
-                current_app.logger.error(f'Failed to join demo game: {exc}')
+                current_app.logger.error(
+                    "Failed to join demo game: %s", format_db_error(exc)
+                )
 
 
 @auth_bp.route('/login/mastodon', methods=['GET', 'POST'])
@@ -550,7 +559,9 @@ def register():
             db.session.commit()
         except SQLAlchemyError as exc:
             db.session.rollback()
-            current_app.logger.error(f'Failed to register user: {exc}')
+            current_app.logger.error(
+                "Failed to register user: %s", format_db_error(exc)
+            )
             flash('Registration failed due to an unexpected error. Please try again.', 'error')
             params = {
                 'show_register': 1,
@@ -648,7 +659,9 @@ def register():
         db.session.commit()
     except SQLAlchemyError as exc:
         db.session.rollback()
-        current_app.logger.error(f'Failed to register user: {exc}')
+        current_app.logger.error(
+            "Failed to register user: %s", format_db_error(exc)
+        )
         flash('Registration failed due to an unexpected error. Please try again.', 'error')
         params = {
             'show_register': 1,
@@ -915,9 +928,11 @@ def delete_account():
         flash('Your account has been deleted.', 'success')
         logout_user()
         return redirect(url_for('main.index'))
-    except Exception as exc:                                
+    except Exception as exc:
         db.session.rollback()
-        current_app.logger.error(f"Error deleting user: {exc}")
+        current_app.logger.error(
+            "Error deleting user: %s", format_db_error(exc)
+        )
         flash('An error occurred while deleting your account.', 'error')
         return redirect(url_for('main.index'))
 
