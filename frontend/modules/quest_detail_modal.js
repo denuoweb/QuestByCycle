@@ -132,6 +132,19 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
         }
     }
 
+    const cards = {
+        badge: elements['modalQuestBadgeImage']?.closest('.quest-detail-item'),
+        badgeAwarded: elements['modalQuestBadgeAwarded']?.closest('.quest-detail-item'),
+        category: elements['modalQuestCategory']?.closest('.quest-detail-item')
+    };
+
+    for (let key in cards) {
+        if (!cards[key]) {
+            logger.error(`Error: Missing card element ${key}`);
+            return false;
+        }
+    }
+
     elements['modalQuestTitle'].innerText = `${quest.title}${completeText}`;
     elements['modalQuestDescription'].textContent = quest.description;
     elements['modalQuestTips'].textContent = quest.tips || 'No tips available';
@@ -170,6 +183,16 @@ function populateQuestDetails(quest, userCompletionCount, canVerify, questId, ne
     elements['modalQuestBadgeImage'].src = PLACEHOLDER_IMAGE;
     elements['modalQuestBadgeImage'].classList.add('lazyload');
     elements['modalQuestBadgeImage'].alt = quest.badge && quest.badge.name ? `Badge: ${quest.badge.name}` : 'Default Badge';
+
+    if (quest.badge_option === 'none') {
+        cards.badge.classList.add('hidden');
+        cards.badgeAwarded.classList.add('hidden');
+        cards.category.classList.add('hidden');
+    } else {
+        cards.badge.classList.remove('hidden');
+        cards.badgeAwarded.classList.remove('hidden');
+        cards.category.classList.remove('hidden');
+    }
 
     elements['modalQuestCompletions'].innerText = `Total Completions: ${userCompletionCount}`;
 
