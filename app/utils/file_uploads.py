@@ -25,6 +25,33 @@ MAX_JSON_BYTES = 1 * 1024 * 1024
 ALLOWED_JSON_EXTENSIONS = {"json"}
 
 
+def _validate_upload_file(
+    file_obj,
+    allowed_extensions: set[str],
+    max_bytes: int,
+    size_error: str,
+) -> str:
+    """Validate an uploaded file and return its extension.
+
+    The file is checked for presence, size limits and allowed extensions.
+    """
+
+    if not file_obj or not getattr(file_obj, "filename", None):
+        raise ValueError("Invalid file object passed.")
+
+    file_obj.seek(0, os.SEEK_END)
+    size = file_obj.tell()
+    file_obj.seek(0)
+    if size > max_bytes:
+        raise ValueError(size_error)
+
+    ext = file_obj.filename.rsplit(".", 1)[-1].lower()
+    if ext not in allowed_extensions:
+        raise ValueError("File extension not allowed.")
+
+    return ext
+
+
 def _upload_to_gcs(local_path: str, remote_path: str, *, content_type: str | None = None) -> str | None:
     bucket_name = current_app.config.get("GCS_BUCKET")
     if not bucket_name:
@@ -114,20 +141,12 @@ def save_image_file(
     output_ext=None,
 ):
     """Save ``image_file`` under ``static/<subpath>``."""
-
-    if not image_file or not getattr(image_file, "filename", None):
-        raise ValueError("Invalid file object passed.")
-
-    image_file.seek(0, os.SEEK_END)
-    size = image_file.tell()
-    image_file.seek(0)
-    if size > MAX_IMAGE_BYTES:
-        raise ValueError("Image exceeds 8 MB limit")
-
-    ext = image_file.filename.rsplit(".", 1)[-1].lower()
-    if ext not in allowed_extensions:
-        raise ValueError("File extension not allowed.")
-
+    ext = _validate_upload_file(
+        image_file,
+        allowed_extensions,
+        MAX_IMAGE_BYTES,
+        "Image exceeds 8 MB limit",
+    )
     if output_ext:
         ext = output_ext.lstrip(".").lower()
 
@@ -161,19 +180,12 @@ def save_image_file(
 
 def save_json_file(json_file, subpath, *, old_filename=None):
     """Save ``json_file`` under ``static/<subpath>``."""
-
-    if not json_file or not getattr(json_file, "filename", None):
-        raise ValueError("Invalid file object passed.")
-
-    json_file.seek(0, os.SEEK_END)
-    size = json_file.tell()
-    json_file.seek(0)
-    if size > MAX_JSON_BYTES:
-        raise ValueError("JSON exceeds 1 MB limit")
-
-    ext = json_file.filename.rsplit(".", 1)[-1].lower()
-    if ext not in ALLOWED_JSON_EXTENSIONS:
-        raise ValueError("File extension not allowed.")
+    _validate_upload_file(
+        json_file,
+        ALLOWED_JSON_EXTENSIONS,
+        MAX_JSON_BYTES,
+        "JSON exceeds 1 MB limit",
+    )
 
     filename = secure_filename(f"{uuid.uuid4()}.json")
     upload_dir = os.path.join(current_app.static_folder, subpath)
