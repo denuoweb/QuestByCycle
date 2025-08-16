@@ -1,16 +1,18 @@
-"""Default Gunicorn configuration for QuestByCycle."""
+import os
 
-from pathlib import Path
+# Bind to the container interface and honor $PORT if provided by the platform
+bind = f"0.0.0.0:{os.getenv('PORT', '5000')}"
 
-BASE_DIR = Path(__file__).resolve().parent
+# Reasonable worker model; adjust if you have CPU-bound tasks
+workers = int(os.getenv("WEB_CONCURRENCY", "2"))
+threads = int(os.getenv("GUNICORN_THREADS", "4"))
+timeout = int(os.getenv("GUNICORN_TIMEOUT", "120"))
 
-command = "/home/USERNAME/.cache/pypoetry/virtualenvs/questbycycle-BK-IO7k_-py3.11/bin/gunicorn"
-pythonpath = str(BASE_DIR)
-bind = "127.0.0.1:5000"
-workers = 1
-loglevel = "info"
-errorlog = str(BASE_DIR / "logs" / "gunicorn-error.log")
-accesslog = str(BASE_DIR / "logs" / "gunicorn-access.log")
+# Log to stdout/stderr so the platform captures logs
+accesslog = "-"
+errorlog = "-"
 
-user = 'USERNAME'
-group = 'USERNAME'
+# Tell Gunicorn where your WSGI app is. Your script already exports WSGI_APP=wsgi:app
+wsgi_app = os.getenv("WSGI_APP", "wsgi:app")
+
+# IMPORTANT: deliberately do NOT set `user` or `group` here.
