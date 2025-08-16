@@ -81,7 +81,8 @@ The project is organized as follows:
 
 ### Important Files
 
-- **`app/__init__.py`**: Initializes the Flask application and registers blueprints.
+- **`app/__init__.py`**: Provides the `create_app` factory, loads configuration via `load_config`,
+  overrides `url_for` for testing, initializes extensions, and registers blueprints.
 - **`app/models.py`**: Defines the database models.
 - **`app/forms.py`**: Defines the forms used in the application.
 - **`app/utils/`**: Package of utility modules used across the application.

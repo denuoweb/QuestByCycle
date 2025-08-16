@@ -1,3 +1,5 @@
+"""Application factory and configuration for the QuestByCycle Flask app."""
+
 import logging
 import os
 
@@ -69,7 +71,15 @@ logger = logging.getLogger(__name__)
                         
 _original_url_for = url_for
 
+
 def _url_for(*args, **kwargs):
+    """Build URLs outside a request context and strip scheme during tests.
+
+    Falls back to a temporary request context when `url_for` is called without an
+    active request, allowing helpers such as `url_for('static', ...)` to work
+    in background tasks. When the application is in testing mode the generated
+    URL is converted to a relative path so assertions remain stable.
+    """
     try:
         url = _original_url_for(*args, **kwargs)
     except RuntimeError:
@@ -87,9 +97,13 @@ def _url_for(*args, **kwargs):
                       
                         
 def create_app(config_overrides=None):
+    """Create and configure the Flask application instance.
+
+    Loads settings via :func:`load_config`, applies optional overrides, initializes
+    extensions and blueprints, and returns the ready-to-use app.
+    """
     app = Flask(__name__)
 
-                                   
     inscopeconfig = load_config()
 
                                                     
@@ -199,7 +213,7 @@ def create_app(config_overrides=None):
 
     @login_manager.unauthorized_handler
     def unauthorized_callback():
-        """Return JSON response for unauthorized AJAX requests."""
+        """Return JSON for unauthorized AJAX requests or redirect to login."""
         if (
             request.headers.get("X-Requested-With") == "XMLHttpRequest"
             or request.accept_mimetypes.best == "application/json"
@@ -209,6 +223,7 @@ def create_app(config_overrides=None):
 
     @login_manager.user_loader
     def load_user(user_id):
+        """Retrieve a user for Flask-Login by primary key."""
         from app.models import db
         from app.models.user import User
         try:
@@ -219,22 +234,26 @@ def create_app(config_overrides=None):
 
     @app.errorhandler(404)
     def not_found_error(error):
+        """Render the 404 template and log missing resources."""
         logger.warning("404 error at %s: %s", request.path, error)
         return render_template("404.html"), 404
 
     @app.errorhandler(500)
     def internal_error(error):
+        """Handle unexpected errors by rolling back the session and logging."""
         logger.error(f"500 error: {error}")
         db.session.rollback()
         return render_template("500.html"), 500
 
     @app.errorhandler(429)
     def too_many_requests(e):
+        """Return a rate limit response when too many requests are made."""
         logger.warning(f"429 error: {e}")
         return render_template("429.html"), 429
 
     @app.errorhandler(CSRFError)
     def handle_csrf_error(e):
+        """Return a JSON response when CSRF validation fails."""
         logger.warning(
             "CSRF failure on %s: %s form=%s headers=%s",
             request.path,
@@ -246,6 +265,7 @@ def create_app(config_overrides=None):
 
     @app.errorhandler(Exception)
     def handle_exception(e):
+        """Convert uncaught exceptions into user friendly responses."""
         if isinstance(e, HTTPException):
             return e
         logger.error(f"Unhandled Exception: {e}")
@@ -254,6 +274,7 @@ def create_app(config_overrides=None):
 
     @app.context_processor
     def inject_logout_form():
+        """Provide a logout form and placeholder image to templates."""
         from app.forms import LogoutForm
         placeholder_url = url_for(
             'static', filename=current_app.config['PLACEHOLDER_IMAGE']
@@ -266,6 +287,7 @@ def create_app(config_overrides=None):
 
     @app.context_processor
     def inject_selected_game_id():
+        """Inject the ID of the user's currently selected game."""
         if current_user.is_authenticated:
             return dict(selected_game_id=current_user.selected_game_id or 0)
         else:
@@ -273,6 +295,7 @@ def create_app(config_overrides=None):
 
     @app.context_processor
     def inject_asset_version():
+        """Expose the static asset version for cache busting."""
         return dict(asset_version=current_app.config["ASSET_VERSION"])
 
     return app
