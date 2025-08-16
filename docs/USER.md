@@ -1,6 +1,6 @@
 # USER GUIDE
 
-Welcome to our Ultimate Challenge and Reward Platform! This guide will help you get started and make the most out of your experience. Whether you are here to complete exciting quests, earn badges, or simply join a community of like-minded individuals, this document covers everything you need to know.
+Welcome to QuestByCycle, a gamified bicycling platform! This guide will help you get started and make the most out of your experience. Whether you are here to complete exciting quests, earn badges, or join a community of like-minded individuals, this document covers everything you need to know.
 
 ## Table of Contents
 

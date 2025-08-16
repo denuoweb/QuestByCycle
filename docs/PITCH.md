@@ -1,12 +1,12 @@
-# Welcome to Your Ultimate Challenge and Reward Platform
+# Welcome to QuestByCycle
 
 ## Introduction
 
-Welcome to our innovative platform that brings together the excitement of challenges, the joy of achievements, and the power of community. Whether you're looking to push your limits, engage in friendly competition, or simply have fun, our platform is designed to offer something for everyone. Here's everything you need to know about why this platform is the perfect place for you.
+QuestByCycle brings together the excitement of challenges, the joy of achievements, and the power of community for bicycling enthusiasts. Whether you're looking to push your limits, engage in friendly competition, or simply have fun, the platform offers something for everyone. Here's everything you need to know about why QuestByCycle is the perfect place for you.
 
 ## What is This Application?
 
-Our application is a versatile platform where users can create, manage, and participate in a variety of games and challenges. These games are crafted to encourage activity, promote healthy competition, and reward participants for their dedication and accomplishments.
+Our application is a versatile platform where users can create, manage, and participate in a variety of bicycling games and challenges. These games are crafted to encourage activity, promote healthy competition, and reward participants for their dedication and accomplishments.
 
 ### Key Features
 

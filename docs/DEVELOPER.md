@@ -1,6 +1,6 @@
 # DEVELOPER.md
 
-Welcome to the Developer Guide for our Ultimate Challenge and Reward Platform! This document will provide you with an in-depth understanding of the architecture, codebase, and development practices. Whether you're adding new features, fixing bugs, or maintaining the system, this guide will help you navigate the code and understand its intricacies.
+Welcome to the Developer Guide for QuestByCycle, a gamified bicycling platform. This document provides an in-depth understanding of the architecture, codebase, and development practices. Whether you're adding new features, fixing bugs, or maintaining the system, this guide will help you navigate the code and understand its intricacies.
 
 ## Table of Contents
 
@@ -231,15 +231,17 @@ The application is modularized using Flask Blueprints:
 
 ### Database Models
 
-The database models are defined in `app/models.py` and include:
+The database models live in `app/models/` and include:
 
 - **`User`**: Represents a user in the system.
 - **`Game`**: Represents a game that users can participate in.
 - **`Quest`**: Represents a quest that users can complete.
 - **`Badge`**: Represents a badge that users can earn.
-- **`UserQuest`**: Represents a user's completion of a quest.
 - **`QuestSubmission`**: Represents a user's submission for a quest.
+- **`UserQuest`**: Tracks a user's progress on a quest.
 - **`ShoutBoardMessage`**: Represents a message posted on the Shout Board.
+- **`Sponsor`**: Details sponsors associated with a game.
+- **`Notification`**: Stores notifications sent to users.
 
 ### Forms
 
@@ -259,7 +261,7 @@ Utility functions are organized under `app/utils/` and include:
 - **`save_profile_picture`**: Saves profile pictures.
 - **`save_badge_image`**: Saves badge images.
 - **`update_user_score`**: Updates a user's score.
-- **`award_badges`**: Awards badges to users.
+- **`check_and_award_badges`**: Checks quest completion and awards badges.
 - **`can_complete_quest`**: Checks if a user can complete a quest.
 - **`get_int_param`**: Safely parses integers from request data.
 - **`send_email`**: Sends emails.

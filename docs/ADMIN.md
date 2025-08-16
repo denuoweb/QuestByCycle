@@ -1,6 +1,6 @@
 # ADMIN GUIDE
 
-Welcome to the Admin Guide for your Ultimate Challenge and Reward Platform. This document provides a comprehensive overview of the administrative features, how to use them effectively, and best practices to ensure a seamless and engaging user experience.
+Welcome to the Admin Guide for QuestByCycle, a gamified bicycling platform. This document provides a comprehensive overview of the administrative features, how to use them effectively, and best practices to ensure a seamless and engaging user experience.
 
 ## Table of Contents
 
