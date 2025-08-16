@@ -13,7 +13,7 @@ from app.models.game import Game, Sponsor
 from app.models.quest import QuestSubmission
 from app.forms import SponsorForm
 from app.utils.file_uploads import save_sponsor_logo
-from app.utils import sanitize_html, get_int_param
+from app.utils import sanitize_html, get_int_param, format_db_error
 from app.decorators import require_admin, require_super_admin
 
 admin_bp = Blueprint('admin', __name__)
@@ -64,7 +64,10 @@ def create_super_admin(app):
             db.session.commit()
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"Error creating or updating super admin user: {e}")
+            current_app.logger.error(
+                "Error creating or updating super admin user: %s",
+                format_db_error(e),
+            )
 
 
 @admin_bp.route('/admin_dashboard')
@@ -160,7 +163,9 @@ def update_user(user_id):
         flash('User updated successfully.', 'success')
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error updating user: {e}")
+        current_app.logger.error(
+            "Error updating user: %s", format_db_error(e)
+        )
         flash('An error occurred while updating the user.', 'error')
     return redirect(url_for('admin.user_management'))
 
@@ -221,8 +226,8 @@ def edit_user(user_id):
             flash('User updated successfully.', 'success')
         except Exception as e:
             db.session.rollback()
-            logging.error("Error updating user: %s", e)
-            flash(f'Error updating user: {e}', 'error')
+            logging.error("Error updating user: %s", format_db_error(e))
+            flash(f"Error updating user: {format_db_error(e)}", 'error')
             return redirect(url_for('admin.edit_user', user_id=user.id))
 
         return redirect(url_for('admin.edit_user', user_id=user.id))
@@ -280,7 +285,9 @@ def delete_user(user_id):
         flash('User deleted successfully.', 'success')
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error deleting user: {e}")
+        current_app.logger.error(
+            "Error deleting user: %s", format_db_error(e)
+        )
         flash('An error occurred while deleting the user.', 'error')
     return redirect(url_for('admin.user_management'))
 
@@ -333,7 +340,7 @@ def delete_sponsor(sponsor_id):
         flash('Sponsor deleted successfully!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'Error occurred: {e}', 'danger')
+        flash(f"Error occurred: {format_db_error(e)}", 'danger')
     
                                                            
     return redirect(url_for('admin.manage_sponsors', game_id=game_id))
@@ -386,7 +393,10 @@ def manage_sponsors():
             flash('Sponsor added successfully!', 'success')
         except Exception as e:
             db.session.rollback()
-            flash(f'An error occurred while adding the sponsor: {e}', 'error')
+            flash(
+                f"An error occurred while adding the sponsor: {format_db_error(e)}",
+                'error',
+            )
         return redirect(url_for('admin.manage_sponsors', game_id=game_id))
 
     sponsors = Sponsor.query.filter_by(game_id=game_id).all() if game_id else Sponsor.query.all()

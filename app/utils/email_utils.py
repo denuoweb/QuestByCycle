@@ -11,6 +11,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from flask import current_app, url_for
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
+from app.utils import format_db_error
 from textwrap import dedent
 from PIL import Image
 
@@ -73,7 +74,9 @@ def send_social_media_liaison_email(
         game = db.session.get(Game, game_id)
     except Exception as e:
         current_app.logger.error(
-            "Database error while fetching Game id=%s: %s", game_id, e
+            "Database error while fetching Game id=%s: %s",
+            game_id,
+            format_db_error(e),
         )
         return False
 
@@ -103,7 +106,9 @@ def send_social_media_liaison_email(
         )
     except Exception as e:
         current_app.logger.error(
-            "Database error fetching submissions for game_id=%s: %s", game_id, e
+            "Database error fetching submissions for game_id=%s: %s",
+            game_id,
+            format_db_error(e),
         )
         return False
 
@@ -248,7 +253,7 @@ def send_social_media_liaison_email(
             current_app.logger.error(
                 "Email sent, but failed to update last_social_media_email_sent for game_id=%s: %s",
                 game_id,
-                db_err,
+                format_db_error(db_err),
             )
         return True
     current_app.logger.warning(

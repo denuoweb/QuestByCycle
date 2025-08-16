@@ -97,6 +97,20 @@ def get_int_param(name: str, *, source=None, default: int | None = None) -> int 
     except (TypeError, ValueError):
         return default
 
+
+def format_db_error(error: Exception) -> str:
+    """Return a concise description for a database error."""
+    orig = getattr(error, "orig", None)
+    if orig is None:
+        return str(error)
+    diag = getattr(orig, "diag", None)
+    primary = getattr(diag, "message_primary", None) if diag else None
+    detail = getattr(diag, "message_detail", None) if diag else None
+    message = primary or str(orig)
+    if detail:
+        message = f"{message}: {detail}"
+    return message
+
 # ----------------------------------------------------------------------------
 # Misc database helpers
 # ----------------------------------------------------------------------------

@@ -30,7 +30,7 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 from app.forms import PhotoForm, QuestForm
 from app.social import post_to_social_media
-from app.utils import REQUEST_TIMEOUT, sanitize_html, get_int_param
+from app.utils import REQUEST_TIMEOUT, sanitize_html, get_int_param, format_db_error
 from app.utils.quest_scoring import (
     can_complete_quest,
     check_and_award_badges,
@@ -382,7 +382,9 @@ def submit_quest(quest_id):
             "activity": activity                                                             
         })
     except Exception as error:
-        current_app.logger.error("Quest submission failed: %s", error)
+        current_app.logger.error(
+            "Quest submission failed: %s", format_db_error(error)
+        )
         db.session.rollback()
         return jsonify({
             "success": False,
@@ -460,7 +462,9 @@ def update_quest(quest_id):
         return jsonify({"success": True, "message": "Quest updated successfully"})
     except Exception as error:
         db.session.rollback()
-        current_app.logger.error("Failed to update quest %s: %s", quest_id, error)
+        current_app.logger.error(
+            "Failed to update quest %s: %s", quest_id, format_db_error(error)
+        )
         return jsonify({
             "success": False,
             "message": "An unexpected error occurred while updating the quest.",
@@ -488,7 +492,7 @@ def delete_quest(quest_id):
     except Exception as error:
         db.session.rollback()
         current_app.logger.error(
-            "Failed to delete quest %s: %s", quest_id, error
+            "Failed to delete quest %s: %s", quest_id, format_db_error(error)
         )
         return jsonify({
             "success": False,
@@ -1210,7 +1214,11 @@ def clear_calendar_quests(game_id):
         db.session.commit()
         return jsonify({"success": True}), 200
     except Exception as exc:
-        current_app.logger.error("Failed to clear calendar quests for game %s: %s", game_id, exc)
+        current_app.logger.error(
+            "Failed to clear calendar quests for game %s: %s",
+            game_id,
+            format_db_error(exc),
+        )
         db.session.rollback()
         return jsonify({"success": False, "message": "Failed to clear quests."}), 500
 

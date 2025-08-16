@@ -11,6 +11,8 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.utils import format_db_error
+
 from app.constants import UTC
 from app.models import db
 from app.models.game import Game
@@ -148,5 +150,7 @@ def sync_google_calendar_events() -> None:
     try:
         db.session.commit()
     except SQLAlchemyError as exc:
-        current_app.logger.error("Calendar sync commit failed: %s", exc)
+        current_app.logger.error(
+            "Calendar sync commit failed: %s", format_db_error(exc)
+        )
         db.session.rollback()
