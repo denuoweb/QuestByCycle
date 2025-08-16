@@ -6,9 +6,10 @@ import subprocess
 import uuid
 
 from flask import current_app, url_for
+from google.api_core.exceptions import GoogleAPIError
 from google.cloud import storage
+from PIL import ExifTags, Image, UnidentifiedImageError
 from werkzeug.utils import secure_filename
-from PIL import Image, ExifTags, UnidentifiedImageError
 
 ALLOWED_IMAGE_EXTENSIONS = {
     "png",
@@ -65,13 +66,17 @@ def _upload_to_gcs(local_path: str, remote_path: str, *, content_type: str | Non
     storage_class = current_app.config.get("GCS_STORAGE_CLASS", "ARCHIVE")
     try:
         blob.update_storage_class(storage_class)
-    except Exception:
-        pass
+    except GoogleAPIError as exc:
+        current_app.logger.warning(
+            "Failed to set storage class for %s: %s", remote_path, exc
+        )
 
     try:
         blob.make_public()
-    except Exception:
-        pass
+    except GoogleAPIError as exc:
+        current_app.logger.warning(
+            "Failed to make %s public: %s", remote_path, exc
+        )
 
     base_url = current_app.config.get("GCS_BASE_URL") or f"https://storage.googleapis.com/{bucket_name}"
     return f"{base_url}/{remote_path}"
@@ -87,8 +92,10 @@ def _delete_from_gcs(remote_path: str) -> None:
     blob = bucket.blob(remote_path)
     try:
         blob.delete()
-    except Exception:
-        pass
+    except GoogleAPIError as exc:
+        current_app.logger.warning(
+            "Failed to delete %s from GCS: %s", remote_path, exc
+        )
 
 
 def _get_ffmpeg_bin() -> str | None:
@@ -127,8 +134,10 @@ def correct_image_orientation(img: Image.Image) -> Image.Image:
             rotation = {3: 180, 6: -90, 8: 90}.get(orientation)
             if rotation:
                 img = img.rotate(rotation, expand=True)
-    except Exception:
-        pass
+    except Exception as exc:
+        current_app.logger.debug(
+            "Failed to adjust image orientation: %s", exc
+        )
     return img
 
 
