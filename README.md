@@ -113,7 +113,8 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
    poetry install
    ```
 
-   Copy `.env.example` to `.env` and adjust the values.
+   Copy `.env.example` to `.env` and adjust the values. See
+   [docs/DEVELOPER.md](docs/DEVELOPER.md#configuration) for a description of each option.
 
    Copy `gunicorn.conf.py.example` to `gunicorn.conf.py`.
 
