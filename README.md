@@ -184,8 +184,6 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
 Vite outputs two entry points: `main.js` for the majority of pages and
 `submitPhoto.js` which is loaded only on `submit_photo.html`.
 
-   Copy `.env.example` to `.env` and set all variables.
-   Copy `gunicorn.conf.py.example` to `gunicorn.conf.py`.
    If you have `ffmpeg` installed, ensure it is accessible or set
     `FFMPEG_PATH` in `.env`. Without `ffmpeg` videos are stored unmodified.
    Run the server in debug
