@@ -10,6 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  const userId = document.body?.dataset?.userId;
+  if (!userId || userId === 'none') {
+    return;
+  }
+
   navigator.serviceWorker.ready.then(async (reg) => {
     try {
       const res = await fetch('/push/public_key');
