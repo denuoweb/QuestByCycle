@@ -79,6 +79,8 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
 - **Responsive Design:** Ensuring a seamless and engaging user experience across various devices and screen sizes.
 - **PWA/TWA Support:** Service worker and offline page. See [docs/PWA.md](docs/PWA.md) for configuration.
 - **Push Notifications:** Optional Web Push support keeps users informed even when the site is closed. See [docs/PUSH_NOTIFICATIONS.md](docs/PUSH_NOTIFICATIONS.md) for setup.
+- **AI-Powered Quest Generation:** Automatic quest suggestions are generated using the OpenAI API when enabled.
+- **Background Tasks and Scheduling:** Redis-backed RQ workers handle long running jobs and scheduled maintenance tasks.
 - **Calendar Sync:** Link a Google Calendar to auto-create quests from events.
 - **Calendar Quest View:** Upcoming and past calendar quests are shown in separate tables for clarity.
 
@@ -97,7 +99,7 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
 - Postfix (for email)
 - GeoIP2 module and database
 - Sass CLI for building CSS
-- Node.js and npm
+ - Node.js 22 and npm
 
 ### Quick Developer Setup
 
@@ -116,6 +118,12 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
    Copy `.env.example` to `.env` and adjust the values.
 
    Copy `gunicorn.conf.py.example` to `gunicorn.conf.py`.
+
+   Install frontend dependencies and build assets:
+   ```bash
+   npm install
+   npm run build
+   ```
 
 
 #### RAM Allocation

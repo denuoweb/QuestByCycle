@@ -28,7 +28,8 @@ Welcome to the Admin Guide for your Ultimate Challenge and Reward Platform. This
     - [Pinning Messages](#pinning-messages)
     - [Liking Messages](#liking-messages)
 7. [Social Media Integration](#social-media-integration)
-8. [Best Practices](#best-practices)
+8. [Notifications](#notifications)
+9. [Best Practices](#best-practices)
 
 ## Overview
 
@@ -229,6 +230,13 @@ To manage social media integration:
 2. **Link Accounts**: Link your Twitter and Facebook accounts.
 3. **Configure Settings**: Set up how and when updates are posted to social media.
 4. **Save Changes**: Ensure all updates are saved.
+
+## Notifications
+
+Admins can send updates directly to users:
+
+- **Email**: Compose messages that are delivered using the configured mail server.
+- **Web Push**: Broadcast real-time alerts to browsers that have granted permission.
 
 ## Best Practices
 
