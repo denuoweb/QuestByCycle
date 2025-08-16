@@ -7,7 +7,7 @@
 [![Let's Encrypt](https://img.shields.io/badge/Let%27s_Encrypt-003A70.svg?style=for-the-badge&logo=letsencrypt&logoColor=white)](https://letsencrypt.org/) [![UFW](https://img.shields.io/badge/UFW-000000.svg?style=for-the-badge&logo=ufw&logoColor=white)](https://help.ubuntu.com/community/UFW) [![Postfix](https://img.shields.io/badge/Postfix-E60033.svg?style=for-the-badge&logo=postfix&logoColor=white)](http://www.postfix.org/)
 [![GeoIP2](https://img.shields.io/badge/GeoIP2-0072B5.svg?style=for-the-badge&logo=maxmind&logoColor=white)](https://www.maxmind.com/en/geoip2-services-and-databases) [![Sass](https://img.shields.io/badge/Sass-CC6699.svg?style=for-the-badge&logo=sass&logoColor=white)](https://sass-lang.com/) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/denuoweb/QuestByCycle)
 
-A gamified bicycling platform built with Flask.
+A gamified bicycling platform built with Flask and a Vite-powered frontend.
 
 ## Table of Contents
 - [Overview](#overview)
@@ -22,7 +22,11 @@ A gamified bicycling platform built with Flask.
 
 ## Overview
 
-QuestByCycle is a Flask-based web application designed to engage and motivate the bicycling community through a gamified approach, promoting environmental sustainability and climate activism. Participants complete quests or missions related to bicycling and environmental stewardship, earning badges and recognition among the community. The platform features a competitive yet collaborative environment where users can view their standings on a leaderboard, track their progress through profile pages, and contribute to a greener planet.
+QuestByCycle is a Flask-based web application with a Vite-built frontend designed to engage and motivate the
+bicycling community through a gamified approach, promoting environmental sustainability and climate activism.
+Participants complete quests or missions related to bicycling and environmental stewardship, earning badges and
+recognition among the community. The platform features a competitive yet collaborative environment where users can
+view their standings on a leaderboard, track their progress through profile pages, and contribute to a greener planet.
 
 ## Package Icons
 
@@ -111,6 +115,12 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
    ```bash
    curl -sSL https://install.python-poetry.org | python3
    poetry install
+   ```
+
+   Install Node dependencies and build the frontend assets:
+   ```bash
+   npm install
+   npm run build
    ```
 
    Copy `.env.example` to `.env` and adjust the values.
