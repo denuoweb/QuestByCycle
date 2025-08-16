@@ -1,6 +1,5 @@
 import logging
 import os
-import atexit
 
 from flask import (
     current_app,
@@ -27,7 +26,6 @@ from app.profile import profile_bp
 from app.webfinger import webfinger_bp
 from app.notifications import notifications_bp
 from app.push import push_bp
-from .scheduler import create_scheduler, shutdown_scheduler
 from app.tasks import init_queue
 from app.activitypub_utils import ap_bp
 from app.ai import ai_bp
@@ -276,9 +274,5 @@ def create_app(config_overrides=None):
     @app.context_processor
     def inject_asset_version():
         return dict(asset_version=current_app.config["ASSET_VERSION"])
-
-    if not (app.debug and os.environ.get("WERKZEUG_RUN_MAIN") is None):
-        create_scheduler(app)
-        atexit.register(lambda: shutdown_scheduler(app, wait=False))
 
     return app
