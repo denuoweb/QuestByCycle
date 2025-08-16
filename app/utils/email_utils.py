@@ -20,8 +20,12 @@ from app.constants import UTC
 from app.tasks import enqueue_email
 
 
-def send_email(to: str, subject: str, html_content: str,
-               inline_images: list[tuple[str, bytes, str]] | None = None) -> bool:
+def send_email(
+    to: str,
+    subject: str,
+    html_content: str,
+    inline_images: list[tuple[str, bytes, str]] | None = None,
+) -> bool:
     """Send an email using SMTP settings from the Flask app."""
     msg_root = MIMEMultipart("related")
     msg_root["Subject"] = subject
@@ -39,24 +43,25 @@ def send_email(to: str, subject: str, html_content: str,
         img.add_header("Content-Disposition", "inline", filename=f"{cid}.{subtype}")
         msg_root.attach(img)
 
+    config = current_app.config
+    mail_server = config.get("MAIL_SERVER")
+    mail_port = config.get("MAIL_PORT")
+    use_tls = config.get("MAIL_USE_TLS", False)
+    use_ssl = config.get("MAIL_USE_SSL", False)
+    mail_username = config.get("MAIL_USERNAME")
+    mail_password = config.get("MAIL_PASSWORD")
+
+    smtp_class = smtplib.SMTP_SSL if use_ssl else smtplib.SMTP
     try:
-        mail_server = current_app.config.get("MAIL_SERVER")
-        mail_port = current_app.config.get("MAIL_PORT")
-        use_tls = current_app.config.get("MAIL_USE_TLS", False)
-        use_ssl = current_app.config.get("MAIL_USE_SSL", False)
-        mail_username = current_app.config.get("MAIL_USERNAME")
-        mail_password = current_app.config.get("MAIL_PASSWORD")
-
-        smtp_conn = smtplib.SMTP_SSL(mail_server, mail_port) if use_ssl else smtplib.SMTP(mail_server, mail_port)
-        smtp_conn.ehlo()
-        if use_tls:
-            smtp_conn.starttls()
+        with smtp_class(mail_server, mail_port) as smtp_conn:
             smtp_conn.ehlo()
-        if mail_username and mail_password:
-            smtp_conn.login(mail_username, mail_password)
+            if use_tls:
+                smtp_conn.starttls()
+                smtp_conn.ehlo()
+            if mail_username and mail_password:
+                smtp_conn.login(mail_username, mail_password)
 
-        smtp_conn.sendmail(msg_root["From"], [to], msg_root.as_string())
-        smtp_conn.quit()
+            smtp_conn.sendmail(msg_root["From"], [to], msg_root.as_string())
         current_app.logger.info("Email sent successfully to %s.", to)
         return True
     except Exception as exc:
