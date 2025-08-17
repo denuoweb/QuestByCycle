@@ -6,9 +6,14 @@ It contains routes for the index page, profile management, image resizing,
 shout board interactions, leaderboard data, and contact submissions.
 """
 import io
+import json
 import logging
 import os
-import json
+from datetime import datetime, timedelta
+from typing import Any, List
+from urllib.parse import urlparse, parse_qs
+from zoneinfo import ZoneInfo
+
 from flask import (
     Blueprint,
     jsonify,
@@ -23,21 +28,21 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 from flask_login import current_user, login_required
-from app.decorators import require_admin
 from flask_wtf.csrf import generate_csrf
 from sqlalchemy import func, and_
 from sqlalchemy.orm import joinedload
 from typing import Any, List
 from datetime import datetime, timedelta
 from PIL import Image, UnidentifiedImageError, features
+
+from app.decorators import require_admin
 from app.constants import (
     UTC,
     FREQUENCY_DELTA,
     ADMIN_STORAGE_GB,
     ADMIN_RETENTION_DAYS,
 )
-from urllib.parse import urlparse, parse_qs
-from zoneinfo import ZoneInfo
+from app import limiter
 
 from app.models import db, user_games, user_badges
 from app.models.game import Game, ShoutBoardMessage
@@ -989,11 +994,11 @@ def refresh_csrf():
     new_csrf_token = generate_csrf()
     response = jsonify({'csrf_token': new_csrf_token})
     response.set_cookie(
-        'csrf_token',
+        "csrf_token",
         new_csrf_token,
-        secure=True,
+        secure=current_app.config.get("SESSION_COOKIE_SECURE", False),
         httponly=True,
-        samesite='Strict'
+        samesite="Strict",
     )
     return response
 
@@ -1143,6 +1148,8 @@ def robots_txt():
 
 
 @main_bp.route('/share-target', methods=['POST'])
+@limiter.limit("10/minute")
+@limiter.limit("50/minute")
 def share_target_handler():
     """Handle incoming data from the Web Share Target API."""
     file = request.files.get('file')

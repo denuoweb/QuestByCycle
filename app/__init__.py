@@ -2,6 +2,9 @@
 
 import logging
 import os
+from datetime import timedelta
+from logging.handlers import RotatingFileHandler
+from urllib.parse import urlparse, urlunparse
 
 from flask import (
     current_app,
@@ -13,9 +16,14 @@ from flask import (
     jsonify,
     request,
 )
-from urllib.parse import urlparse, urlunparse
 from flask_login import LoginManager, current_user
 from werkzeug.exceptions import HTTPException
+from flask_wtf.csrf import CSRFProtect, CSRFError
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_humanify import Humanify
+
+limiter = Limiter(key_func=get_remote_address)
 
 from app.auth import auth_bp
 from app.admin import admin_bp
@@ -34,10 +42,6 @@ from app.ai import ai_bp
 from app.models import db
 from app.utils import generate_demo_game
 from .config import load_config
-from flask_wtf.csrf import CSRFProtect, CSRFError
-from datetime import timedelta
-from logging.handlers import RotatingFileHandler
-from flask_humanify import Humanify
 
                         
                             
@@ -113,6 +117,7 @@ def create_app(config_overrides=None):
         "DEBUG": inscopeconfig.flask.DEBUG,
         "SQLALCHEMY_ECHO": inscopeconfig.main.SQLALCHEMY_ECHO,
         "SESSION_COOKIE_SECURE": inscopeconfig.encryption.SESSION_COOKIE_SECURE,
+        "SESSION_COOKIE_HTTPONLY": inscopeconfig.encryption.SESSION_COOKIE_HTTPONLY,
         "SESSION_COOKIE_NAME": inscopeconfig.encryption.SESSION_COOKIE_NAME,
         "SESSION_COOKIE_SAMESITE": inscopeconfig.encryption.SESSION_COOKIE_SAMESITE,
         "SESSION_COOKIE_DOMAIN": inscopeconfig.encryption.SESSION_COOKIE_DOMAIN,
@@ -179,6 +184,11 @@ def create_app(config_overrides=None):
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
+    app.config.setdefault("RATELIMIT_HEADERS_ENABLED", True)
+    app.config["RATELIMIT_ENABLED"] = (
+        inscopeconfig.flask.RATE_LIMIT_ENABLED and not app.config.get("TESTING")
+    )
+    limiter.init_app(app)
 
     if not app.config.get("TESTING"):
         humanify.init_app(app)
@@ -207,6 +217,10 @@ def create_app(config_overrides=None):
     app.register_blueprint(push_bp, url_prefix="/push")
     app.register_blueprint(webfinger_bp)
     app.register_blueprint(main_bp)
+    if app.config.get("ENV") != "production":
+        from app.docs import docs_bp
+
+        app.register_blueprint(docs_bp)
 
     csrf.exempt(ap_bp)
     login_manager.login_view = "auth.login"

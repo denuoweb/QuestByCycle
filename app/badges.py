@@ -25,6 +25,8 @@ from app.utils import get_int_param
 from .forms import BadgeForm
 from .models import db, Quest, Badge, UserQuest, Game
 from .utils import save_badge_image
+from app import limiter
+from app.utils.rate_limit import user_or_ip
 
 badges_bp = Blueprint('badges', __name__, template_folder='templates')
 logger = logging.getLogger(__name__)
@@ -284,6 +286,8 @@ def get_quest_categories():
 @badges_bp.route('/upload_images', methods=['POST'])
 @login_required
 @require_admin
+@limiter.limit("10/minute", key_func=user_or_ip)
+@limiter.limit("50/minute")
 def upload_images():
     game_id = get_int_param('game_id')
     if not current_user.is_super_admin and not current_user.is_admin_for_game(game_id):
@@ -316,6 +320,8 @@ def upload_images():
 @badges_bp.route('/bulk_upload', methods=['POST'])
 @login_required
 @require_admin
+@limiter.limit("10/minute", key_func=user_or_ip)
+@limiter.limit("50/minute")
 def bulk_upload():
     game_id = get_int_param('game_id')
     if not current_user.is_super_admin and not current_user.is_admin_for_game(game_id):
