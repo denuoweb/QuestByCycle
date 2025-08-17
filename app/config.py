@@ -79,6 +79,7 @@ class EncryptionConfig:
     DEFAULT_SUPER_ADMIN_EMAIL: str
     SECRET_KEY: str
     SESSION_COOKIE_SECURE: bool
+    SESSION_COOKIE_HTTPONLY: bool
     SESSION_COOKIE_NAME: str
     SESSION_COOKIE_SAMESITE: str
     SESSION_COOKIE_DOMAIN: str | None
@@ -188,6 +189,7 @@ def load_config() -> AppConfig:
             DEFAULT_SUPER_ADMIN_EMAIL=_get_env("DEFAULT_SUPER_ADMIN_EMAIL", "test@test.com"),
             SECRET_KEY=_get_env("SECRET_KEY", "replace this key"),
             SESSION_COOKIE_SECURE=_get_env_boolean("SESSION_COOKIE_SECURE", False),
+            SESSION_COOKIE_HTTPONLY=_get_env_boolean("SESSION_COOKIE_HTTPONLY", True),
             SESSION_COOKIE_NAME=_get_env("SESSION_COOKIE_NAME", "QuestsByCycles_Session"),
             SESSION_COOKIE_SAMESITE=_get_env("SESSION_COOKIE_SAMESITE", "Lax"),
             SESSION_COOKIE_DOMAIN=_get_env_nullable("SESSION_COOKIE_DOMAIN", False),

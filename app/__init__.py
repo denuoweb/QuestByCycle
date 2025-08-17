@@ -113,6 +113,7 @@ def create_app(config_overrides=None):
         "DEBUG": inscopeconfig.flask.DEBUG,
         "SQLALCHEMY_ECHO": inscopeconfig.main.SQLALCHEMY_ECHO,
         "SESSION_COOKIE_SECURE": inscopeconfig.encryption.SESSION_COOKIE_SECURE,
+        "SESSION_COOKIE_HTTPONLY": inscopeconfig.encryption.SESSION_COOKIE_HTTPONLY,
         "SESSION_COOKIE_NAME": inscopeconfig.encryption.SESSION_COOKIE_NAME,
         "SESSION_COOKIE_SAMESITE": inscopeconfig.encryption.SESSION_COOKIE_SAMESITE,
         "SESSION_COOKIE_DOMAIN": inscopeconfig.encryption.SESSION_COOKIE_DOMAIN,

@@ -989,11 +989,11 @@ def refresh_csrf():
     new_csrf_token = generate_csrf()
     response = jsonify({'csrf_token': new_csrf_token})
     response.set_cookie(
-        'csrf_token',
+        "csrf_token",
         new_csrf_token,
-        secure=True,
+        secure=current_app.config.get("SESSION_COOKIE_SECURE", False),
         httponly=True,
-        samesite='Strict'
+        samesite="Strict",
     )
     return response
 
