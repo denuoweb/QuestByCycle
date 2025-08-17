@@ -345,8 +345,8 @@ def inbox(username):
                         quest_id=quest_id
                     ))
                     db.session.commit()
-            except ValueError:
-                pass
+            except ValueError as exc:
+                current_app.logger.warning("Invalid quest id in Like activity: %s", exc)
         return ('', 202)
 
                                             
@@ -367,8 +367,8 @@ def inbox(username):
                         }
                     ))
                     db.session.commit()
-            except ValueError:
-                pass
+            except ValueError as exc:
+                current_app.logger.warning("Invalid submission id in Announce activity: %s", exc)
         return ('', 202)
 
                                                    
@@ -386,8 +386,8 @@ def inbox(username):
                     if like:
                         db.session.delete(like)
                         db.session.commit()
-                except ValueError:
-                    pass
+                except ValueError as exc:
+                    current_app.logger.warning("Invalid quest id in Undo activity: %s", exc)
             return ('', 202)
         if obj.get('type') == 'Follow' and obj.get('object') == user.activitypub_id:
             if sender in user.followers:

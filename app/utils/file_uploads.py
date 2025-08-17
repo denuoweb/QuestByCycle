@@ -170,8 +170,8 @@ def save_image_file(
             corrected = correct_image_orientation(img)
             if corrected is not img:
                 corrected.save(file_path)
-    except UnidentifiedImageError:
-        pass
+    except UnidentifiedImageError as exc:
+        current_app.logger.warning("Invalid image file uploaded: %s", exc)
 
     gcs_url = _upload_to_gcs(file_path, os.path.join(subpath, filename), content_type=image_file.mimetype)
     if old_filename:
@@ -403,8 +403,8 @@ def delete_media_file(path: str | None) -> None:
     if os.path.exists(full_path):
         try:
             os.remove(full_path)
-        except OSError:
-            pass
+        except OSError as exc:
+            current_app.logger.warning("Failed to delete media file %s: %s", full_path, exc)
 
 
 def save_sponsor_logo(image_file, old_filename=None):

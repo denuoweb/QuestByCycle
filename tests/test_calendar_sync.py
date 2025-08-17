@@ -50,7 +50,7 @@ def test_calendar_sync_creates_photo_quest(app, monkeypatch, tmp_path):
             def patch(self, **_):
                 class X:
                     def execute(self):
-                        pass
+                        return None
                 return X()
             def execute(self):
                 return {
@@ -107,8 +107,7 @@ def test_calendar_sync_strips_link_from_description(app, monkeypatch, tmp_path):
             def patch(self, **_):
                 class X:
                     def execute(self):
-                        pass
-
+                        return None
                 return X()
 
             def execute(self):
@@ -163,8 +162,7 @@ def test_calendar_sync_relative_service_path(app, monkeypatch, tmp_path):
             def patch(self, **_):
                 class X:
                     def execute(self):
-                        pass
-
+                        return None
                 return X()
 
             def execute(self):
