@@ -485,9 +485,7 @@ def update_quest(quest_id):
             quest.calendar_event_start
             and quest.calendar_event_start.tzinfo is None
         ):
-            quest.calendar_event_start = quest.calendar_event_start.replace(
-                tzinfo=UTC
-            )
+            quest.calendar_event_start = quest.calendar_event_start.replace(tzinfo=UTC)
         return jsonify({"success": True, "message": "Quest updated successfully"})
     except Exception as error:
         db.session.rollback()
