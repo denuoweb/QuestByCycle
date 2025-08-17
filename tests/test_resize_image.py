@@ -35,3 +35,12 @@ def test_resize_image_jpeg(client):
     assert resp.status_code == 200
     assert resp.mimetype == "image/jpeg"
 
+
+def test_resize_image_avif(client):
+    resp = client.get(
+        "/resize_image?path=images/default_badge.png&width=50",
+        headers={"Accept": "image/avif"},
+    )
+    assert resp.status_code == 200
+    assert resp.mimetype == "image/avif"
+

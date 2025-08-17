@@ -87,19 +87,64 @@
   <div class="container-fluid">
       <!-- Brand -->
       <a class="navbar-brand" href="{{ url_for('main.index') }}">
-          <img src="{{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=175) }}"
-                alt="Quest by Cycle" class="align-middle">
+          <picture>
+              <source
+                  srcset="{{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=175) }} 175w,
+                          {{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=350) }} 350w"
+                  sizes="175px"
+                  type="image/avif">
+              <source
+                  srcset="{{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=175) }} 175w,
+                          {{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=350) }} 350w"
+                  sizes="175px"
+                  type="image/webp">
+              <img src="{{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=175) }}"
+                   srcset="{{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=175) }} 175w,
+                           {{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=350) }} 350w"
+                   sizes="175px"
+                   alt="Quest by Cycle" class="align-middle">
+          </picture>
       </a>
       {% if selected_game and selected_game.logo %}
           <span class="mx-2 fs-3 fw-bold align-middle">&times;</span>
           {% if selected_game.logo_url %}
               <a href="{{ selected_game.logo_url }}" target="_blank" rel="noopener">
-                  <img src="{{ url_for('main.resize_image', path=selected_game.logo, width=120) }}"
-                       alt="{{ selected_game.title }} logo" class="align-middle">
+                  <picture>
+                      <source
+                          srcset="{{ url_for('main.resize_image', path=selected_game.logo, width=120) }} 120w,
+                                  {{ url_for('main.resize_image', path=selected_game.logo, width=240) }} 240w"
+                          sizes="120px"
+                          type="image/avif">
+                      <source
+                          srcset="{{ url_for('main.resize_image', path=selected_game.logo, width=120) }} 120w,
+                                  {{ url_for('main.resize_image', path=selected_game.logo, width=240) }} 240w"
+                          sizes="120px"
+                          type="image/webp">
+                      <img src="{{ url_for('main.resize_image', path=selected_game.logo, width=120) }}"
+                           srcset="{{ url_for('main.resize_image', path=selected_game.logo, width=120) }} 120w,
+                                   {{ url_for('main.resize_image', path=selected_game.logo, width=240) }} 240w"
+                           sizes="120px"
+                           alt="{{ selected_game.title }} logo" class="align-middle">
+                  </picture>
               </a>
           {% else %}
-              <img src="{{ url_for('main.resize_image', path=selected_game.logo, width=80) }}"
-                   alt="{{ selected_game.title }} logo" class="align-middle">
+              <picture>
+                  <source
+                      srcset="{{ url_for('main.resize_image', path=selected_game.logo, width=80) }} 80w,
+                              {{ url_for('main.resize_image', path=selected_game.logo, width=160) }} 160w"
+                      sizes="80px"
+                      type="image/avif">
+                  <source
+                      srcset="{{ url_for('main.resize_image', path=selected_game.logo, width=80) }} 80w,
+                              {{ url_for('main.resize_image', path=selected_game.logo, width=160) }} 160w"
+                      sizes="80px"
+                      type="image/webp">
+                  <img src="{{ url_for('main.resize_image', path=selected_game.logo, width=80) }}"
+                       srcset="{{ url_for('main.resize_image', path=selected_game.logo, width=80) }} 80w,
+                               {{ url_for('main.resize_image', path=selected_game.logo, width=160) }} 160w"
+                       sizes="80px"
+                       alt="{{ selected_game.title }} logo" class="align-middle">
+              </picture>
           {% endif %}
       {% endif %}
       <!-- Hamburger for mobile -->
