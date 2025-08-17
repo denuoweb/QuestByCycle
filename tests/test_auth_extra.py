@@ -18,19 +18,13 @@ def app():
     ctx.push()
 
                         
-    try:
-        db.drop_all()
-    except Exception:
-        pass
+    db.drop_all()
     db.create_all()
 
     yield app
 
     db.session.remove()
-    try:
-        db.drop_all()
-    except Exception:
-        pass
+    db.drop_all()
     ctx.pop()
 
 @pytest.fixture
