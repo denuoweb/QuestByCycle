@@ -3,7 +3,7 @@ from app import create_app, db
 from app.models.user import User
 from tests.helpers import url_for_path
 from requests_oauthlib import OAuth2Session
-
+from urllib.parse import urlparse
 
 @pytest.fixture
 def app():
@@ -32,7 +32,8 @@ def client(app):
 def test_google_login_redirect(client):
     resp = client.get("/auth/login/google", follow_redirects=False)
     assert resp.status_code == 302
-    assert "accounts.google.com" in resp.headers["Location"]
+    location_host = urlparse(resp.headers["Location"]).hostname
+    assert location_host == "accounts.google.com"
     with client.session_transaction() as sess:
         assert "google_oauth_state" in sess
 
