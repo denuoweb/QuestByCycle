@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import csv
 import os
-from html_sanitizer import Sanitizer
-from flask import current_app, request, url_for
-from urllib.parse import urlparse, urlunparse
 from datetime import datetime, timedelta
+from urllib.parse import urlparse, urlunparse
+
+from flask import current_app, request, url_for
+from html_sanitizer import Sanitizer
+from sqlalchemy.exc import SQLAlchemyError
 
 from ..models import (
     db,
@@ -224,7 +226,7 @@ def generate_demo_game() -> Game | None:
         )
         db.session.add(pinned_message)
         db.session.commit()
-    except Exception as exc:  # pragma: no cover - log and rollback
+    except SQLAlchemyError as exc:  # pragma: no cover - log and rollback
         db.session.rollback()
         current_app.logger.error("Failed to pin demo message: %s", exc)
 
@@ -276,7 +278,7 @@ def import_quests_and_badges_from_csv(game_id: int, csv_path: str) -> None:
                 )
                 db.session.add(quest)
             db.session.commit()
-    except Exception as exc:  # pragma: no cover - log and rollback
+    except (OSError, SQLAlchemyError) as exc:  # pragma: no cover - log and rollback
         db.session.rollback()
         current_app.logger.error(
             "Failed to import quests and badges from %s: %s", csv_path, exc
