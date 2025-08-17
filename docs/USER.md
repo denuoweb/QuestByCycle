@@ -81,11 +81,10 @@ The dashboard is your central hub for accessing games, quests, and community fea
 ### Quest Verification
 
 - **Photo Verification**: Upload a photo as evidence of quest completion.
-- **Supported Image Formats**: PNG, JPG/JPEG, GIF, and WebP.
-- **Image Size Limit**: Images must be 8 MB or smaller.
+- **Supported Image Formats**: PNG, JPG/JPEG, GIF and WebP; up to 8&nbsp;MB and 4096×4096 pixels.
 - **Comment Verification**: Provide a comment describing how you completed the quest.
 - **Photo and Comment Verification**: Both upload a photo and provide a comment.
-- **Video Verification**: Upload a short video as evidence, optionally with a comment. Videos are automatically compressed to stay under 10&nbsp;MB.
+- **Video Verification**: MP4, WebM or MOV up to 10&nbsp;MB and 1920×1080 pixels. Videos are automatically compressed to stay under the size limit.
 
 ### Quest Submissions
 
