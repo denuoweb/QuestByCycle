@@ -64,7 +64,7 @@ def send_email(
             smtp_conn.sendmail(msg_root["From"], [to], msg_root.as_string())
         current_app.logger.info("Email sent successfully to %s.", to)
         return True
-    except Exception as exc:
+    except (smtplib.SMTPException, OSError) as exc:
         current_app.logger.error("Failed to send email: %s", exc)
         return False
 
@@ -77,7 +77,7 @@ def send_social_media_liaison_email(
     """Send a digest of recent quest submissions to a game's liaison."""
     try:
         game = db.session.get(Game, game_id)
-    except Exception as e:
+    except SQLAlchemyError as e:
         current_app.logger.error(
             "Database error while fetching Game id=%s: %s",
             game_id,
@@ -109,7 +109,7 @@ def send_social_media_liaison_email(
             .order_by(QuestSubmission.timestamp.asc())
             .all()
         )
-    except Exception as e:
+    except SQLAlchemyError as e:
         current_app.logger.error(
             "Database error fetching submissions for game_id=%s: %s",
             game_id,
@@ -215,7 +215,7 @@ def send_social_media_liaison_email(
                         html_parts.append(
                             f'<img src="{public_url}" alt="submission image"><br>'
                         )
-                    except Exception as ue:
+                    except RuntimeError as ue:
                         current_app.logger.error(
                             "Failed to generate public URL for image '%s': %s",
                             rel_path,
@@ -254,7 +254,7 @@ def send_social_media_liaison_email(
             current_app.logger.info(
                 "Sent social media email for game_id=%s to %s.", game_id, liaison_email
             )
-        except Exception as db_err:
+        except SQLAlchemyError as db_err:
             current_app.logger.error(
                 "Email sent, but failed to update last_social_media_email_sent for game_id=%s: %s",
                 game_id,
