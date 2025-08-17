@@ -8,10 +8,11 @@ submission handling, and related operations in the application.
 import base64
 import csv
 import os
-import qrcode
-import requests
 from datetime import datetime
 from io import BytesIO
+
+import qrcode
+import requests
 from flask import (
     Blueprint,
     current_app,
@@ -38,6 +39,8 @@ from app.utils.quest_scoring import (
     get_last_relevant_completion_time,
     update_user_score,
 )
+from app import limiter
+from app.utils.rate_limit import user_or_ip
 from app.utils.file_uploads import (
     save_badge_image,
     save_submission_image,
@@ -575,6 +578,8 @@ def get_quests_for_game(game_id):
 
 @quests_bp.route("/game/<int:game_id>/import_quests", methods=["POST"])
 @login_required
+@limiter.limit("10/minute", key_func=user_or_ip)
+@limiter.limit("50/minute")
 def import_quests(game_id):
     """
     Import quests from a CSV file for a specified game.
@@ -1458,6 +1463,8 @@ def submission_replies(submission_id):
 
 @quests_bp.route('/submission/<int:submission_id>/photo', methods=['PUT'])
 @login_required
+@limiter.limit("10/minute", key_func=user_or_ip)
+@limiter.limit("50/minute")
 def update_submission_photo(submission_id):
     sub = QuestSubmission.query.get_or_404(submission_id)
                             

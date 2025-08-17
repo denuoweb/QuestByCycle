@@ -38,6 +38,8 @@ from app.models.game import Game
 from app.forms import (LoginForm, RegistrationForm, ForgotPasswordForm,
                        ResetPasswordForm, UpdatePasswordForm, MastodonLoginForm)
 from app.utils.email_utils import send_email
+from app import limiter
+from app.utils.rate_limit import email_or_ip
 from app.tasks import enqueue_email
 from app.activitypub_utils import create_activitypub_actor
 
@@ -380,6 +382,8 @@ def _next_params(next_page: str | None) -> dict[str, str]:
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10/minute", key_func=email_or_ip)
+@limiter.limit("50/minute")
 def login():
     """
     Handle user login.  Carries forward game_id, custom_game_code,
@@ -528,6 +532,8 @@ def logout():
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
+@limiter.limit("10/minute", key_func=email_or_ip)
+@limiter.limit("50/minute")
 def register():
     """Register a new user."""
     from app import humanify as humanify_ext
