@@ -9,6 +9,16 @@ function sendSkipWaiting(reg) {
   }
 }
 
+function isSafeRelativeUrl(url) {
+  try {
+    const parsed = new URL(url, window.location.origin);
+    return parsed.origin === window.location.origin && parsed.protocol !== 'javascript:';
+  } catch (err) {
+    logger.error(`Invalid URL: ${url}`);
+    return false;
+  }
+}
+
 export function initLayout() {
   if ('serviceWorker' in navigator) {
     let refreshing = false;
@@ -161,7 +171,11 @@ export function handleGameSelection(opt) {
   if (val === 'join_custom_game') {
     openModal('joinCustomGameModal');
   } else {
-    window.location.href = val;
+    if (isSafeRelativeUrl(val)) {
+      window.location.href = val;
+    } else {
+      logger.error(`Blocked unsafe URL: ${val}`);
+    }
   }
 }
 

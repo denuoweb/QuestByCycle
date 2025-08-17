@@ -17,7 +17,7 @@ export function openDeleteGameModal(gameId) {
   }
 
   modal.dataset.gameId = gameId;
-  form.action = `/games/delete_game/${gameId}`;
+    form.action = `/games/delete_game/${encodeURIComponent(gameId)}`;
   input.value = '';
   confirmBtn.disabled = true;
   countdown.hidden = true;
