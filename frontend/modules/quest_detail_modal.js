@@ -25,7 +25,7 @@ const PLACEHOLDER_IMAGE = document
 export function openQuestDetailModal(questId) {
   resetModalContent();
 
-  fetchJson(`/quests/detail/${questId}/user_completion`)
+  fetchJson(`/quests/detail/${encodeURIComponent(questId)}/user_completion`)
     .then(({ json: data }) => {
       const { quest, userCompletion, canVerify, nextEligibleTime } = data;
       if (
@@ -59,7 +59,7 @@ export function openQuestDetailModal(questId) {
 }
 
 export function refreshQuestDetailModal(questId) {
-  fetchJson(`/quests/detail/${questId}/user_completion`)
+  fetchJson(`/quests/detail/${encodeURIComponent(questId)}/user_completion`)
     .then(({ json: data }) => {
       const { quest, userCompletion, canVerify, nextEligibleTime } = data;
       if (
@@ -288,7 +288,7 @@ function getVerificationFormElement(verificationType, questId) {
     form.enctype = 'multipart/form-data';
     form.className = 'epic-form';
     form.method = 'post';
-    form.action = `/quests/quest/${questId}/submit`;
+    form.action = `/quests/quest/${encodeURIComponent(questId)}/submit`;
 
     const csrf = document.createElement('input');
     csrf.type = 'hidden';
@@ -493,7 +493,7 @@ async function submitQuestDetails(event, questId) {
     const formData = new FormData(event.target);
     formData.append('user_id', CURRENT_USER_ID);
 
-    const { status, json: data } = await csrfFetchJson(`/quests/quest/${questId}/submit`, {
+    const { status, json: data } = await csrfFetchJson(`/quests/quest/${encodeURIComponent(questId)}/submit`, {
       method: 'POST',
       body: formData
     });
@@ -527,8 +527,9 @@ async function submitQuestDetails(event, questId) {
  *  2. fetchQuestSubmissions                                          *
  **********************************************************************/
 async function fetchQuestSubmissions(questId) {
+  const safeQuestId = encodeURIComponent(questId);
   try {
-    const { json: submissions } = await fetchJson(`/quests/quest/${questId}/submissions`);
+    const { json: submissions } = await fetchJson(`/quests/quest/${safeQuestId}/submissions`);
 
     const twitterLink   = document.getElementById('twitterLink');
     const facebookLink  = document.getElementById('facebookLink');
@@ -556,7 +557,7 @@ async function fetchQuestSubmissions(questId) {
       }
       commentEl.textContent = s.comment || 'No comment provided.';
 
-      profileLink.href   = `/profile/${s.user_id}`;
+      profileLink.href   = `/profile/${encodeURIComponent(s.user_id)}`;
       profileImg.src     = s.user_profile_picture || PLACEHOLDER_IMAGE;
       profileCaption.textContent =
         s.user_display_name || s.user_username || `User ${s.user_id}`;
@@ -665,7 +666,7 @@ function distributeImages(images) {
                 if (isLocal(rawFallback)) {
                     thumb.src = `/resize_image?path=${encodeURIComponent(localPath(rawFallback))}&width=${reqWidth}`;
                 } else {
-                    thumb.src = rawFallback;
+                    thumb.src = encodeURI(rawFallback);
                 }
             };
         }

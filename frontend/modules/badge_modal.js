@@ -1,6 +1,5 @@
 'use strict';
 import { openModal } from './modal_common.js';
-import { escapeHTML } from '../utils.js';
 import logger from '../logger.js';
 
 // Cache loaded badges within this module
@@ -63,10 +62,15 @@ async function ensureBadgeCache() {
   }
 }
 
-function buildTaskListHTML(taskNames) {
-  if (!taskNames) return '';
-  const tasks = taskNames.split(',');
-  return `<ul>${tasks.map(task => `<li>${escapeHTML(task.trim())}</li>`).join('')}</ul>`;
+function buildTaskList(taskNames) {
+  if (!taskNames) return null;
+  const ul = document.createElement('ul');
+  taskNames.split(',').forEach((task) => {
+    const li = document.createElement('li');
+    li.textContent = task.trim();
+    ul.appendChild(li);
+  });
+  return ul;
 }
 
 function findBadgeById(badgeId) {
@@ -83,7 +87,7 @@ function getBadgeFromElement(element) {
 }
 
 async function fetchUserCompletions(taskId) {
-  const response = await fetch(`/quests/detail/${taskId}/user_completion`);
+  const response = await fetch(`/quests/detail/${encodeURIComponent(taskId)}/user_completion`);
   if (!response.ok) {
     throw new Error('Failed to fetch user completions');
   }
@@ -91,10 +95,10 @@ async function fetchUserCompletions(taskId) {
   return data.userCompletion ? data.userCompletion.completions : 0;
 }
 
-function populateBadgeModal(badge, requiredCount, currentUserCompletions, taskListHTML, earned, taskId, taskNames) {
+function populateBadgeModal(badge, requiredCount, currentUserCompletions, taskListEl, earned, taskId, taskNames) {
   const modalTitle = document.getElementById('badgeModalTitle');
   const modalImage = document.getElementById('badgeModalImage');
-  const modalText  = document.getElementById('badgeModalText');
+  const modalText = document.getElementById('badgeModalText');
 
   if (!modalTitle || !modalImage || !modalText) {
     logger.error('Badge modal elements missing');
@@ -104,32 +108,70 @@ function populateBadgeModal(badge, requiredCount, currentUserCompletions, taskLi
   modalTitle.textContent = badge.name;
   modalImage.src = validateImageUrl(badge.image) || PLACEHOLDER_IMAGE;
 
-  let badgeSpecificText = '';
+  modalText.textContent = '';
+
+  const statusP = document.createElement('p');
+  const statusStrong = document.createElement('strong');
+  statusStrong.textContent = earned ? 'Awarded!' : 'Not Awarded Yet';
+  statusP.appendChild(statusStrong);
+  modalText.appendChild(statusP);
+
   if (taskId) {
-    const taskLink = `<a href="#" data-quest-detail="${taskId}">${escapeHTML(taskNames)}</a>`;
-    badgeSpecificText = `<p>Completion Requirement: ${requiredCount > 1 ? requiredCount + ' times' : requiredCount + ' time'}</p>` +
-                        `<p>Your Total Completions: ${currentUserCompletions}</p>` +
-                        `<p>${earned ? 'You have earned this badge.' : 'Complete ' + taskLink + ' to earn this badge.'}</p>`;
+    const reqP = document.createElement('p');
+    reqP.textContent = `Completion Requirement: ${requiredCount > 1 ? requiredCount + ' times' : requiredCount + ' time'}`;
+    modalText.appendChild(reqP);
+
+    const totalP = document.createElement('p');
+    totalP.textContent = `Your Total Completions: ${currentUserCompletions}`;
+    modalText.appendChild(totalP);
+
+    const infoP = document.createElement('p');
+    if (earned) {
+      infoP.textContent = 'You have earned this badge.';
+    } else {
+      infoP.append('Complete ');
+      const link = document.createElement('a');
+      link.href = '#';
+      link.dataset.questDetail = taskId;
+      link.textContent = taskNames;
+      infoP.appendChild(link);
+      infoP.append(' to earn this badge.');
+    }
+    modalText.appendChild(infoP);
   } else {
-    badgeSpecificText = `<p>Completion Requirements: ${requiredCount} (per task)</p>` +
-                        `<p>Your Total Completions: ${currentUserCompletions}</p>` +
-                        `${taskListHTML}` +
-                        `<p>${earned ? 'You have earned this badge.' : 'Complete one of the above tasks to earn this badge.'}</p>`;
+    const reqP = document.createElement('p');
+    reqP.textContent = `Completion Requirements: ${requiredCount} (per task)`;
+    modalText.appendChild(reqP);
+
+    const totalP = document.createElement('p');
+    totalP.textContent = `Your Total Completions: ${currentUserCompletions}`;
+    modalText.appendChild(totalP);
+
+    if (taskListEl) {
+      modalText.appendChild(taskListEl);
+    }
+
+    const infoP = document.createElement('p');
+    infoP.textContent = earned
+      ? 'You have earned this badge.'
+      : 'Complete one of the above tasks to earn this badge.';
+    modalText.appendChild(infoP);
   }
 
   const descriptionText = badge.description || 'No description available.';
+  const descP = document.createElement('p');
+  descP.textContent = descriptionText;
   if (earned) {
     modalImage.style.filter = 'none';
     modalImage.oncontextmenu = null;
-    modalText.innerHTML = `<p><strong>Awarded!</strong></p>${badgeSpecificText}<p>${escapeHTML(descriptionText)}</p>`;
   } else {
     modalImage.style.filter = 'grayscale(100%) opacity(0.5)';
-    modalImage.oncontextmenu = e => {
+    modalImage.oncontextmenu = (e) => {
       e.preventDefault();
       return false;
     };
-    modalText.innerHTML = `<p><strong>Not Awarded Yet</strong></p>${badgeSpecificText}<p>${escapeHTML(descriptionText)}</p>`;
   }
+  modalText.appendChild(descP);
 }
 
 /**
@@ -146,7 +188,7 @@ export async function openBadgeModal(element) {
   const requiredCount = parseInt(badgeAwardedCount, 10);
   const userCompletions = parseInt(userCompletionsAttr, 10) || 0;
 
-  const taskListHTML = buildTaskListHTML(taskNames);
+  const taskListEl = buildTaskList(taskNames);
   const taskIds = taskIdsAttr ? taskIdsAttr.split(',').map(id => id.trim()).filter(Boolean) : [];
   const taskId = taskIds.length === 1 ? taskIds[0] : null;
 
@@ -165,7 +207,7 @@ export async function openBadgeModal(element) {
 
   const earned = currentUserCompletions >= requiredCount;
 
-  populateBadgeModal(badge, requiredCount, currentUserCompletions, taskListHTML, earned, taskId, taskNames);
+  populateBadgeModal(badge, requiredCount, currentUserCompletions, taskListEl, earned, taskId, taskNames);
   openModal('badgeModal');
 }
 
