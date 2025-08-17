@@ -162,6 +162,40 @@ def test_update_quest_rejects_badge_from_other_game(app, admin_user):
     assert quest.badge_id is None
 
 
+def test_update_quest_updates_calendar_fields(app, admin_user):
+    quest = setup_quest(admin_user)
+    start_str = "2024-01-02T03:04:05+00:00"
+
+    with app.test_request_context(
+        f"/quests/quest/{quest.id}/update",
+        method="POST",
+        json={
+            "title": "",
+            "description": "",
+            "tips": "",
+            "points": "",
+            "completion_limit": "",
+            "badge_awarded": "",
+            "category": "",
+            "verification_type": "",
+            "frequency": "",
+            "badge_option": "none",
+            "from_calendar": True,
+            "calendar_event_id": "evt123",
+            "calendar_event_start": start_str,
+        },
+    ):
+        login_user(admin_user)
+        response = update_quest(quest.id)
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["success"] is True
+    assert quest.from_calendar is True
+    assert quest.calendar_event_id == "evt123"
+    assert quest.calendar_event_start == datetime.fromisoformat(start_str)
+
+
 def test_update_quest_requires_game_admin(app, admin_user):
     quest = setup_quest(admin_user)
     other_admin = User(

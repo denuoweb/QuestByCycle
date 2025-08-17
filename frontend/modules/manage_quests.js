@@ -185,6 +185,9 @@ import logger from '../logger.js';
             { name: 'category', type: 'text' },
             { name: 'enabled', type: 'select', options: ['Yes', 'No'] },
             { name: 'is_sponsored', type: 'select', options: ['Yes', 'No'] },
+            { name: 'from_calendar', type: 'select', options: ['Yes', 'No'] },
+            { name: 'calendar_event_id', type: 'text' },
+            { name: 'calendar_event_start', type: 'text' },
         ];
 
         editableFields.forEach(field => {
@@ -267,7 +270,13 @@ import logger from '../logger.js';
                 value = input.value === 'Yes';
             } else if (input.name === 'is_sponsored') {
                 value = input.value === 'Yes';
+            } else if (input.name === 'from_calendar') {
+                value = input.value === 'Yes';
             } else if (input.name === 'badge_id' && value === '') {
+                value = null;
+            } else if (input.name === 'calendar_event_start' && value === '') {
+                value = null;
+            } else if (input.name === 'badge_awarded' && value === '') {
                 value = null;
             }
 
@@ -306,12 +315,15 @@ import logger from '../logger.js';
                 card.className = 'card';
                 card.id = `quest-${quest.id}`;
 
-                const verificationTypeText = quest.verification_type.toLowerCase();
+                const verificationTypeText = (quest.verification_type || '').toLowerCase();
                 const badgeName = quest.badge_name || 'None';
                 const frequencyDisplayText = quest.frequency || 'Not Set';
                 const categoryText = quest.category || 'Not Set';
-                const badgeAwarded = quest.badge_awarded || 'Not Set';
+                const badgeAwarded = quest.badge_awarded ?? 0;
                 const badgeOptionText = BadgeOptions[quest.badge_option] || quest.badge_option;
+                const fromCalendarText = quest.from_calendar ? 'Yes' : 'No';
+                const calendarEventId = quest.calendar_event_id ?? 'Not Set';
+                const calendarEventStart = quest.calendar_event_start ?? 'Not Set';
 
                 card.innerHTML = `
                     <div class="card-body">
@@ -325,10 +337,20 @@ import logger from '../logger.js';
                         <p class="card-text"><strong>Verification:</strong> <span class="editable" data-name="verification_type" data-value="${quest.verification_type}">${verificationTypeText}</span></p>
                         <p class="card-text"><strong>Badge:</strong> <span class="editable" data-name="badge_name">${badgeName}</span></p>
                         <p class="card-text"><strong>Badge Awarded:</strong> <span class="editable" data-name="badge_awarded">${badgeAwarded}</span></p>
-                        <p class="card-text"><strong>Badge Option:</strong> <span class="editable"
-                            data-name="badge_option" data-value="${quest.badge_option}">${badgeOptionText}</span></p>
+                        <p class="card-text"><strong>Badge Option:</strong> <span class="editable" data-name="badge_option" data-value="${quest.badge_option}">${badgeOptionText}</span></p>
                         <p class="card-text"><strong>Frequency:</strong> <span class="editable" data-name="frequency" data-value="${quest.frequency}">${frequencyDisplayText}</span></p>
                         <p class="card-text"><strong>Category:</strong> <span class="editable" data-name="category">${categoryText}</span></p>
+                        <p class="card-text"><strong>From Calendar:</strong> <span class="editable" data-name="from_calendar">${fromCalendarText}</span></p>
+                        <p class="card-text"><strong>Calendar Event ID:</strong>
+                            <span class="editable" data-name="calendar_event_id">${calendarEventId}</span>
+                        </p>
+                        <p class="card-text"><strong>Event Start:</strong>
+                            <span
+                                class="editable"
+                                data-name="calendar_event_start"
+                                data-value="${quest.calendar_event_start ?? ''}"
+                            >${calendarEventStart}</span>
+                        </p>
                         <p class="card-text"><strong>Quest ID:</strong> ${quest.id}</p>
                         <p class="card-text"><strong>Game ID:</strong> ${quest.game_id}</p>
                         <p class="card-text"><strong>Badge ID:</strong> ${quest.badge_id ?? 'N/A'}</p>
