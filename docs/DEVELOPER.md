@@ -422,6 +422,11 @@ After modifying JavaScript or SCSS, run `npm install` (once) and then `npm run b
 
 Images and videos are located in `app/static/images`, `app/static/qr_codes`, and `app/static/videos`.
 
+Uploads are validated server-side:
+
+- **Images**: PNG, JPG/JPEG, GIF or WebP, maximum 8&nbsp;MB and 4096×4096 pixels.
+- **Videos**: MP4, WebM or MOV, maximum 10&nbsp;MB and 1920×1080 pixels.
+
 ## Testing and Debugging
 
 ### Running Tests

@@ -1,10 +1,9 @@
-"""
-Badge related routes.
-"""
-from markupsafe import escape
-import os
+"""Badge related routes."""
+
 import csv
 import logging
+import os
+
 from flask import (
     Blueprint,
     current_app,
@@ -17,13 +16,17 @@ from flask import (
     abort,
 )
 from flask_login import login_required, current_user
-from app.decorators import require_admin
-from .forms import BadgeForm
-                                                          
-from .utils import save_badge_image
-from app.utils import get_int_param
-from .models import db, Quest, Badge, UserQuest, Game
+from markupsafe import escape
+from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.utils import secure_filename
+
+from app.decorators import require_admin
+from app.utils import get_int_param
+from .forms import BadgeForm
+from .models import db, Quest, Badge, UserQuest, Game
+from .utils import save_badge_image
+from app import limiter
+from app.utils.rate_limit import user_or_ip
 
 badges_bp = Blueprint('badges', __name__, template_folder='templates')
 logger = logging.getLogger(__name__)
@@ -254,15 +257,17 @@ def update_badge(badge_id):
 @badges_bp.route('/delete/<int:badge_id>', methods=['DELETE'])
 @login_required
 @require_admin
-def delete_badge(badge_id):
+def delete_badge(badge_id: int):
+    """Remove a badge by ID."""
     badge = db.session.get(Badge, badge_id)
     if not badge:
-        return jsonify({'success': False, 'message': 'Badge not found'}), 404
+        return jsonify({"success": False, "message": "Badge not found"}), 404
     try:
         db.session.delete(badge)
         db.session.commit()
         return jsonify({"success": True, "message": "Badge deleted successfully"})
-    except Exception:
+    except SQLAlchemyError:
+        logger.exception("Failed to delete badge %s", badge_id)
         db.session.rollback()
         return jsonify({"success": False, "message": "Failed to delete badge"}), 500
 
@@ -281,6 +286,8 @@ def get_quest_categories():
 @badges_bp.route('/upload_images', methods=['POST'])
 @login_required
 @require_admin
+@limiter.limit("10/minute", key_func=user_or_ip)
+@limiter.limit("50/minute")
 def upload_images():
     game_id = get_int_param('game_id')
     if not current_user.is_super_admin and not current_user.is_admin_for_game(game_id):
@@ -313,6 +320,8 @@ def upload_images():
 @badges_bp.route('/bulk_upload', methods=['POST'])
 @login_required
 @require_admin
+@limiter.limit("10/minute", key_func=user_or_ip)
+@limiter.limit("50/minute")
 def bulk_upload():
     game_id = get_int_param('game_id')
     if not current_user.is_super_admin and not current_user.is_admin_for_game(game_id):

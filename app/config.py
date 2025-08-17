@@ -95,6 +95,7 @@ class OpenAIConfig:
 class FlaskConfig:
     SQLALCHEMY_DATABASE_URI: str
     DEBUG: bool
+    RATE_LIMIT_ENABLED: bool
 
 
 @dataclass
@@ -200,6 +201,7 @@ def load_config() -> AppConfig:
         flask=FlaskConfig(
             SQLALCHEMY_DATABASE_URI=_get_env("SQLALCHEMY_DATABASE_URI", ""),
             DEBUG=_get_env_boolean("DEBUG", True),
+            RATE_LIMIT_ENABLED=_get_env_boolean("RATE_LIMIT_ENABLED", True),
         ),
         mail=MailConfig(
             MAIL_SERVER=_get_env("MAIL_SERVER", ""),

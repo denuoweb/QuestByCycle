@@ -3,10 +3,12 @@ from __future__ import annotations
 
 import csv
 import os
-from html_sanitizer import Sanitizer
-from flask import current_app, request, url_for
-from urllib.parse import urlparse, urlunparse
 from datetime import datetime, timedelta
+from urllib.parse import urlparse, urlunparse
+
+from flask import current_app, request, url_for
+from html_sanitizer import Sanitizer
+from sqlalchemy.exc import SQLAlchemyError
 
 from ..models import (
     db,
@@ -67,7 +69,13 @@ def safe_url_for(*args, **kwargs):
 
 
 def sanitize_html(html_content: str | None) -> str | None:
-    """Sanitize HTML content or return ``None`` for blank values."""
+    """Return sanitized HTML or ``None`` for empty input.
+
+    Parameters
+    ----------
+    html_content:
+        Raw HTML content which may be ``None``.
+    """
     if html_content is None:
         return None
     return SANITIZER.sanitize(html_content)
@@ -227,7 +235,7 @@ def generate_demo_game() -> Game | None:
         )
         db.session.add(pinned_message)
         db.session.commit()
-    except Exception as exc:  # pragma: no cover - log and rollback
+    except SQLAlchemyError as exc:  # pragma: no cover - log and rollback
         db.session.rollback()
         current_app.logger.error("Failed to pin demo message: %s", exc)
 
@@ -279,7 +287,7 @@ def import_quests_and_badges_from_csv(game_id: int, csv_path: str) -> None:
                 )
                 db.session.add(quest)
             db.session.commit()
-    except Exception as exc:  # pragma: no cover - log and rollback
+    except (OSError, SQLAlchemyError) as exc:  # pragma: no cover - log and rollback
         db.session.rollback()
         current_app.logger.error(
             "Failed to import quests and badges from %s: %s", csv_path, exc
@@ -312,9 +320,14 @@ def get_game_badges(game_id: int) -> list[Badge]:
 from .file_uploads import (
     ALLOWED_IMAGE_EXTENSIONS,
     ALLOWED_VIDEO_EXTENSIONS,
+    ALLOWED_IMAGE_MIMETYPES,
+    ALLOWED_VIDEO_MIMETYPES,
     MAX_IMAGE_BYTES,
     MAX_VIDEO_BYTES,
     MAX_JSON_BYTES,
+    MAX_IMAGE_DIMENSION,
+    MAX_VIDEO_WIDTH,
+    MAX_VIDEO_HEIGHT,
     allowed_file,
     allowed_image_file,
     allowed_video_file,
@@ -354,9 +367,14 @@ from .quest_scoring import (
 __all__ = [
     "ALLOWED_IMAGE_EXTENSIONS",
     "ALLOWED_VIDEO_EXTENSIONS",
+    "ALLOWED_IMAGE_MIMETYPES",
+    "ALLOWED_VIDEO_MIMETYPES",
     "MAX_IMAGE_BYTES",
     "MAX_VIDEO_BYTES",
     "MAX_JSON_BYTES",
+    "MAX_IMAGE_DIMENSION",
+    "MAX_VIDEO_WIDTH",
+    "MAX_VIDEO_HEIGHT",
     "MAX_POINTS_INT",
     "REQUEST_TIMEOUT",
     "allowed_file",

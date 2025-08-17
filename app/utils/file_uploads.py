@@ -20,9 +20,20 @@ ALLOWED_IMAGE_EXTENSIONS = {
 }
 ALLOWED_VIDEO_EXTENSIONS = {"mp4", "webm", "mov"}
 
+ALLOWED_IMAGE_MIMETYPES = {
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/webp",
+}
+ALLOWED_VIDEO_MIMETYPES = {"video/mp4", "video/webm", "video/quicktime"}
+
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
 MAX_VIDEO_BYTES = 10 * 1024 * 1024
 MAX_JSON_BYTES = 1 * 1024 * 1024
+MAX_IMAGE_DIMENSION = 4096
+MAX_VIDEO_WIDTH = 1920
+MAX_VIDEO_HEIGHT = 1080
 ALLOWED_JSON_EXTENSIONS = {"json"}
 
 
@@ -31,10 +42,13 @@ def _validate_upload_file(
     allowed_extensions: set[str],
     max_bytes: int,
     size_error: str,
+    *,
+    allowed_mimetypes: set[str] | None = None,
 ) -> str:
     """Validate an uploaded file and return its extension.
 
-    The file is checked for presence, size limits and allowed extensions.
+    The file is checked for presence, size limits, allowed extensions and
+    optionally MIME types.
     """
 
     if not file_obj or not getattr(file_obj, "filename", None):
@@ -49,6 +63,11 @@ def _validate_upload_file(
     ext = file_obj.filename.rsplit(".", 1)[-1].lower()
     if ext not in allowed_extensions:
         raise ValueError("File extension not allowed.")
+
+    if allowed_mimetypes is not None:
+        mimetype = getattr(file_obj, "mimetype", None)
+        if mimetype not in allowed_mimetypes:
+            raise ValueError("MIME type not allowed.")
 
     return ext
 
@@ -146,6 +165,7 @@ def save_image_file(
     subpath,
     *,
     allowed_extensions=ALLOWED_IMAGE_EXTENSIONS,
+    allowed_mimetypes=ALLOWED_IMAGE_MIMETYPES,
     old_filename=None,
     output_ext=None,
 ):
@@ -155,6 +175,7 @@ def save_image_file(
         allowed_extensions,
         MAX_IMAGE_BYTES,
         "Image exceeds 8 MB limit",
+        allowed_mimetypes=allowed_mimetypes,
     )
     if output_ext:
         ext = output_ext.lstrip(".").lower()
@@ -168,10 +189,15 @@ def save_image_file(
     try:
         with Image.open(file_path) as img:
             corrected = correct_image_orientation(img)
+            width, height = corrected.size
+            if width > MAX_IMAGE_DIMENSION or height > MAX_IMAGE_DIMENSION:
+                os.remove(file_path)
+                raise ValueError("Image dimensions exceed 4096x4096 limit")
             if corrected is not img:
                 corrected.save(file_path)
     except UnidentifiedImageError:
-        pass
+        os.remove(file_path)
+        raise ValueError("Invalid image file")
 
     gcs_url = _upload_to_gcs(file_path, os.path.join(subpath, filename), content_type=image_file.mimetype)
     if old_filename:
@@ -282,20 +308,13 @@ def save_submission_image(submission_image_file):
 def save_submission_video(submission_video_file):
     """Save an uploaded video for quest verification."""
     try:
-        submission_video_file.seek(0, os.SEEK_END)
-        size = submission_video_file.tell()
-        submission_video_file.seek(0)
-        current_app.logger.debug(
-            "Uploaded video size: %s bytes for file '%s'",
-            size,
-            submission_video_file.filename,
+        ext = _validate_upload_file(
+            submission_video_file,
+            ALLOWED_VIDEO_EXTENSIONS,
+            MAX_VIDEO_BYTES,
+            "Video exceeds 10 MB limit",
+            allowed_mimetypes=ALLOWED_VIDEO_MIMETYPES,
         )
-        if size > MAX_VIDEO_BYTES:
-            raise ValueError("Video exceeds 10 MB limit")
-
-        ext = submission_video_file.filename.rsplit(".", 1)[-1].lower()
-        if ext not in ALLOWED_VIDEO_EXTENSIONS:
-            raise ValueError("File extension not allowed.")
 
         header = submission_video_file.read(512)
         submission_video_file.seek(0)
@@ -309,6 +328,36 @@ def save_submission_video(submission_video_file):
         orig_path = os.path.join(tmp_dir, orig_name)
         current_app.logger.debug("Saving original upload to %s", orig_path)
         submission_video_file.save(orig_path)
+
+        ffprobe_bin = shutil.which("ffprobe")
+        if ffprobe_bin:
+            probe_cmd = [
+                ffprobe_bin,
+                "-v",
+                "error",
+                "-select_streams",
+                "v:0",
+                "-show_entries",
+                "stream=width,height",
+                "-of",
+                "csv=p=0",
+                orig_path,
+            ]
+            try:
+                probe = subprocess.run(
+                    probe_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                )
+                dims = probe.stdout.decode().strip().split(",")
+                if len(dims) == 2:
+                    width, height = map(int, dims)
+                    if width > MAX_VIDEO_WIDTH or height > MAX_VIDEO_HEIGHT:
+                        os.remove(orig_path)
+                        raise ValueError("Video dimensions exceed 1920x1080 limit")
+            except subprocess.CalledProcessError as e:
+                stderr_output = e.stderr.decode(errors="ignore") if e.stderr else ""
+                current_app.logger.error("ffprobe failed: %s", stderr_output)
+                os.remove(orig_path)
+                raise ValueError("Invalid or corrupted video file") from e
 
         uploads_dir = os.path.join(current_app.static_folder, "videos", "verifications")
         os.makedirs(uploads_dir, exist_ok=True)
@@ -403,8 +452,8 @@ def delete_media_file(path: str | None) -> None:
     if os.path.exists(full_path):
         try:
             os.remove(full_path)
-        except OSError:
-            pass
+        except OSError as exc:
+            current_app.logger.warning("Failed to delete media file %s: %s", full_path, exc)
 
 
 def save_sponsor_logo(image_file, old_filename=None):
