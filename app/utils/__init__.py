@@ -66,7 +66,10 @@ def safe_url_for(*args, **kwargs):
     return url
 
 
-def sanitize_html(html_content: str) -> str:
+def sanitize_html(html_content: str | None) -> str | None:
+    """Sanitize HTML content or return ``None`` for blank values."""
+    if html_content is None:
+        return None
     return SANITIZER.sanitize(html_content)
 
 
