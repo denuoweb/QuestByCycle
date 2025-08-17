@@ -121,6 +121,8 @@ class SocialConfig:
     facebook_page_id: str
     instagram_access_token: str
     instagram_user_id: str
+    google_client_id: str
+    google_client_secret: str
 
 
 @dataclass
@@ -222,6 +224,8 @@ def load_config() -> AppConfig:
             facebook_page_id=_get_env("FACEBOOK_PAGE_ID", ""),
             instagram_access_token=_get_env("INSTAGRAM_ACCESS_TOKEN", ""),
             instagram_user_id=_get_env("INSTAGRAM_USER_ID", ""),
+            google_client_id=_get_env("GOOGLE_CLIENT_ID", ""),
+            google_client_secret=_get_env("GOOGLE_CLIENT_SECRET", ""),
         ),
         push=PushConfig(
             VAPID_PUBLIC_KEY=_get_env("VAPID_PUBLIC_KEY", ""),

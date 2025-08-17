@@ -92,6 +92,7 @@ class User(UserMixin, db.Model):
     mastodon_username = db.Column(db.String(64), nullable=True)
     mastodon_instance = db.Column(db.String(128), nullable=True)
     mastodon_access_token = db.Column(db.String(512), nullable=True)
+    google_id = db.Column(db.String(64), nullable=True)
 
     activitypub_id = db.Column(db.String(256), nullable=True)
     public_key = db.Column(db.Text, nullable=True)

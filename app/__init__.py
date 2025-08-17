@@ -148,6 +148,8 @@ def create_app(config_overrides=None):
         "FACEBOOK_PAGE_ID": inscopeconfig.social.facebook_page_id,
         "INSTAGRAM_ACCESS_TOKEN": inscopeconfig.social.instagram_access_token,
         "INSTAGRAM_USER_ID": inscopeconfig.social.instagram_user_id,
+        "GOOGLE_CLIENT_ID": inscopeconfig.social.google_client_id,
+        "GOOGLE_CLIENT_SECRET": inscopeconfig.social.google_client_secret,
         "TWA_SHA256_FINGERPRINT": inscopeconfig.twa.SHA256_CERT_FINGERPRINT,
         "WTF_CSRF_ENABLED": not inscopeconfig.flask.DEBUG,
         "VAPID_PUBLIC_KEY":  inscopeconfig.push.VAPID_PUBLIC_KEY,
