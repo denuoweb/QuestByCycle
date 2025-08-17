@@ -457,6 +457,25 @@ def update_quest(quest_id):
     elif quest.badge_option in ("none", "category"):
         quest.badge_id = None
 
+    quest.from_calendar = data.get("from_calendar", quest.from_calendar)
+    quest.calendar_event_id = sanitize_html(
+        data.get("calendar_event_id", quest.calendar_event_id)
+    )
+    start_str = data.get("calendar_event_start")
+    if start_str is not None:
+        if start_str == "":
+            quest.calendar_event_start = None
+        else:
+            try:
+                start_dt = datetime.fromisoformat(start_str)
+            except ValueError:
+                return jsonify(
+                    {"success": False, "message": "Invalid calendar event start"}
+                ), 400
+            if not start_dt.tzinfo:
+                start_dt = start_dt.replace(tzinfo=UTC)
+            quest.calendar_event_start = start_dt
+
     try:
         db.session.commit()
         return jsonify({"success": True, "message": "Quest updated successfully"})
