@@ -1,4 +1,5 @@
 import pytest
+import shutil
 from flask import url_for
 
 from app import create_app
@@ -8,7 +9,7 @@ from app.utils.file_uploads import (
     delete_media_file,
     save_game_logo,
 )
-from app.utils import get_int_param
+from app.utils import get_int_param, MAX_IMAGE_DIMENSION
 
 @pytest.fixture
 def app():
@@ -70,6 +71,49 @@ def test_save_submission_video_no_ffmpeg(app, monkeypatch):
     assert path.endswith(".mp4")
 
 
+def test_save_submission_video_disallowed_mimetype(app):
+    """Reject videos with disallowed MIME types."""
+    from io import BytesIO
+    from werkzeug.datastructures import FileStorage
+    from app.utils.file_uploads import save_submission_video
+
+    data = BytesIO(b"0" * 100)
+    file = FileStorage(stream=data, filename="clip.mp4", content_type="application/octet-stream")
+
+    with pytest.raises(ValueError):
+        save_submission_video(file)
+
+
+@pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg not available")
+def test_save_submission_video_dimension_limit(app, tmp_path):
+    """Videos exceeding resolution limits should be rejected."""
+    import subprocess
+    from io import BytesIO
+    from werkzeug.datastructures import FileStorage
+    from app.utils.file_uploads import save_submission_video
+
+    ffmpeg = shutil.which("ffmpeg")
+    big_video = tmp_path / "big.mp4"
+    cmd = [
+        ffmpeg,
+        "-f",
+        "lavfi",
+        "-i",
+        "color=size=2000x1200:duration=1:rate=1",
+        "-c:v",
+        "libx264",
+        "-crf",
+        "35",
+        "-y",
+        str(big_video),
+    ]
+    subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    with big_video.open("rb") as fh:
+        file = FileStorage(stream=BytesIO(fh.read()), filename="big.mp4", content_type="video/mp4")
+    with pytest.raises(ValueError):
+        save_submission_video(file)
+
+
 def test_save_submission_image_invalid_extension(app, tmp_path):
     """Uploading a non-image file should raise a ValueError."""
     from io import BytesIO
@@ -82,6 +126,19 @@ def test_save_submission_image_invalid_extension(app, tmp_path):
         filename="bad.json",
         content_type="application/json",
     )
+
+    with pytest.raises(ValueError):
+        save_submission_image(file)
+
+
+def test_save_submission_image_disallowed_mimetype(app):
+    """Reject images with disallowed MIME types."""
+    from io import BytesIO
+    from werkzeug.datastructures import FileStorage
+    from app.utils.file_uploads import save_submission_image
+
+    img_data = BytesIO(b"0" * 10)
+    file = FileStorage(stream=img_data, filename="ok.png", content_type="application/octet-stream")
 
     with pytest.raises(ValueError):
         save_submission_image(file)
@@ -101,6 +158,23 @@ def test_save_submission_image_too_large(app):
 
     big_data = BytesIO(b"0" * (MAX_IMAGE_BYTES + 1))
     file = FileStorage(stream=big_data, filename="big.jpg", content_type="image/jpeg")
+
+    with pytest.raises(ValueError):
+        save_submission_image(file)
+
+
+def test_save_submission_image_too_many_pixels(app):
+    """Images exceeding pixel dimensions should be rejected."""
+    from io import BytesIO
+    from werkzeug.datastructures import FileStorage
+    from PIL import Image
+    from app.utils.file_uploads import save_submission_image
+
+    img = Image.new("RGB", (MAX_IMAGE_DIMENSION + 1, MAX_IMAGE_DIMENSION + 1))
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    file = FileStorage(stream=buf, filename="big.png", content_type="image/png")
 
     with pytest.raises(ValueError):
         save_submission_image(file)
