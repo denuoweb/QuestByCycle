@@ -3,13 +3,27 @@
 <div class="container mt-1">
     {% if not current_user.is_authenticated %}
         <div class="text-center mb-4">
-            <img src="{{ url_for('static', filename='images/welcomeQuestByCycle.webp') }}"
-                 srcset="{{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=480) }} 480w,
-                         {{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=768) }} 768w,
-                         {{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=1200) }} 1200w"
-                 sizes="(max-width: 600px) 480px, (max-width: 960px) 768px, 1200px"
-                 alt="Welcome to Quest by Cycle"
-                 class="img-fluid w-100 hero-image">
+            <picture>
+                <source
+                    srcset="{{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=480) }} 480w,
+                            {{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=768) }} 768w,
+                            {{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=1200) }} 1200w"
+                    sizes="(max-width: 600px) 480px, (max-width: 960px) 768px, 1200px"
+                    type="image/avif">
+                <source
+                    srcset="{{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=480) }} 480w,
+                            {{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=768) }} 768w,
+                            {{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=1200) }} 1200w"
+                    sizes="(max-width: 600px) 480px, (max-width: 960px) 768px, 1200px"
+                    type="image/webp">
+                <img src="{{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=1200) }}"
+                     srcset="{{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=480) }} 480w,
+                             {{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=768) }} 768w,
+                             {{ url_for('main.resize_image', path='images/welcomeQuestByCycle.webp', width=1200) }} 1200w"
+                     sizes="(max-width: 600px) 480px, (max-width: 960px) 768px, 1200px"
+                     alt="Welcome to Quest by Cycle"
+                     class="img-fluid w-100 hero-image">
+            </picture>
         </div>
         <div class="row mb-5 align-items-center">
             <div class="col-md-6">

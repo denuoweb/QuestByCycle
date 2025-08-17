@@ -29,7 +29,7 @@ from sqlalchemy import func, and_
 from sqlalchemy.orm import joinedload
 from typing import Any, List
 from datetime import datetime, timedelta
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, UnidentifiedImageError, features
 from app.constants import (
     UTC,
     FREQUENCY_DELTA,
@@ -1037,14 +1037,23 @@ def resize_image():
             img_resized = img.resize((width, height), Image.Resampling.LANCZOS)
 
             accept = request.headers.get('Accept', '').lower()
+            supports_avif = 'image/avif' in accept and features.check('avif')
             supports_webp = 'image/webp' in accept
-            fmt = 'WEBP' if supports_webp else 'JPEG'
-            mime = 'image/webp' if supports_webp else 'image/jpeg'
+
+            if supports_avif:
+                fmt = 'AVIF'
+                mime = 'image/avif'
+            elif supports_webp:
+                fmt = 'WEBP'
+                mime = 'image/webp'
+            else:
+                fmt = 'JPEG'
+                mime = 'image/jpeg'
 
             has_alpha = img_resized.mode in ('RGBA', 'LA') or (
                 img_resized.mode == 'P' and 'transparency' in img_resized.info
             )
-            if supports_webp:
+            if supports_avif or supports_webp:
                 img_resized = img_resized.convert('RGBA' if has_alpha else 'RGB')
             else:
                 img_resized = img_resized.convert('RGB')
