@@ -216,6 +216,10 @@ def create_app(config_overrides=None):
     app.register_blueprint(push_bp, url_prefix="/push")
     app.register_blueprint(webfinger_bp)
     app.register_blueprint(main_bp)
+    if app.config.get("ENV") != "production":
+        from app.docs import docs_bp
+
+        app.register_blueprint(docs_bp)
 
     csrf.exempt(ap_bp)
     login_manager.login_view = "auth.login"

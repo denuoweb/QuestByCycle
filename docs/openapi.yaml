@@ -1,0 +1,129 @@
+openapi: 3.0.3
+info:
+  title: QuestByCycle API
+  version: "1.0.0"
+paths:
+  /games/get_game/{game_id}:
+    get:
+      summary: Get a game
+      parameters:
+        - name: game_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Serialized game
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Game'
+        "404":
+          description: Game not found
+  /games/get_game_points/{game_id}:
+    get:
+      summary: Get total points for a game
+      parameters:
+        - name: game_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Points and goal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_game_points:
+                    type: integer
+                  game_goal:
+                    type: integer
+        "401":
+          description: Unauthorized
+        "404":
+          description: Game not found
+  /manifest.json:
+    get:
+      summary: Retrieve the PWA manifest
+      responses:
+        "200":
+          description: Manifest data
+          content:
+            application/json:
+              schema:
+                type: object
+  /.well-known/assetlinks.json:
+    get:
+      summary: Retrieve Android asset links
+      responses:
+        "200":
+          description: Asset link definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    relation:
+                      type: array
+                      items:
+                        type: string
+                    target:
+                      type: object
+                      properties:
+                        namespace:
+                          type: string
+                        package_name:
+                          type: string
+                        sha256_cert_fingerprints:
+                          type: array
+                          items:
+                            type: string
+components:
+  schemas:
+    Game:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        start_date:
+          type: string
+          format: date-time
+          nullable: true
+        end_date:
+          type: string
+          format: date-time
+          nullable: true
+        game_goal:
+          type: integer
+          nullable: true
+        is_public:
+          type: boolean
+        allow_joins:
+          type: boolean
+        calendar_url:
+          type: string
+          nullable: true
+        calendar_service_json_path:
+          type: string
+          nullable: true
+        logo:
+          type: string
+          nullable: true
+        logo_url:
+          type: string
+          nullable: true
+        timezone:
+          type: string
+          nullable: true
