@@ -136,6 +136,12 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
    npm run build
    ```
 
+   Start the development environment with one command:
+   ```bash
+   make dev
+   ```
+   This simultaneously launches the Flask server, Vite dev server, and the RQ worker.
+
 
 #### RAM Allocation
   Allocate Swap on low ram systems:
