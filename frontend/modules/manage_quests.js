@@ -164,10 +164,13 @@ import logger from '../logger.js';
 
     function processBadge(card) {
         const badgeCell = card.querySelector('.editable[data-name="badge_name"]');
-        let currentBadgeName = badgeCell.innerText.trim();
+        if (!badgeCell) {
+            return;
+        }
+        const currentBadgeName = (badgeCell.textContent || '').trim();
         let badgeSelectHTML = '<select name="badge_id" class="editable-select"><option value="">None</option>';
         badges.forEach(badge => {
-            const isSelected = (currentBadgeName === badge.name) ? 'selected' : '';
+            const isSelected = currentBadgeName === badge.name ? 'selected' : '';
             badgeSelectHTML += `<option value="${badge.id}" ${isSelected}>${badge.name}</option>`;
         });
         badgeSelectHTML += '</select>';
@@ -312,6 +315,10 @@ import logger from '../logger.js';
         fetchJson(`/quests/game/${game_Id}/quests`)
         .then(({ json: data }) => {
             const questsBody = document.getElementById('questsBody');
+            if (!Array.isArray(data.quests)) {
+                logger.error('Invalid quests response:', data);
+                return;
+            }
             questsBody.innerHTML = '';
 
             data.quests.forEach(quest => {
