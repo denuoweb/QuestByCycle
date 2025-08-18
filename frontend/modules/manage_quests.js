@@ -276,7 +276,11 @@ import logger from '../logger.js';
                 value = null;
             } else if (input.name === 'calendar_event_start' && value === '') {
                 value = null;
+            } else if (input.name === 'calendar_event_id' && value === '') {
+                value = null;
             } else if (input.name === 'badge_awarded' && value === '') {
+                value = null;
+            } else if (input.name === 'category' && value === '') {
                 value = null;
             }
 
@@ -339,10 +343,10 @@ import logger from '../logger.js';
                         <p class="card-text"><strong>Badge Awarded:</strong> <span class="editable" data-name="badge_awarded">${badgeAwarded}</span></p>
                         <p class="card-text"><strong>Badge Option:</strong> <span class="editable" data-name="badge_option" data-value="${quest.badge_option}">${badgeOptionText}</span></p>
                         <p class="card-text"><strong>Frequency:</strong> <span class="editable" data-name="frequency" data-value="${quest.frequency}">${frequencyDisplayText}</span></p>
-                        <p class="card-text"><strong>Category:</strong> <span class="editable" data-name="category">${categoryText}</span></p>
+                        <p class="card-text"><strong>Category:</strong> <span class="editable" data-name="category" data-value="${quest.category ?? ''}">${categoryText}</span></p>
                         <p class="card-text"><strong>From Calendar:</strong> <span class="editable" data-name="from_calendar">${fromCalendarText}</span></p>
                         <p class="card-text"><strong>Calendar Event ID:</strong>
-                            <span class="editable" data-name="calendar_event_id">${calendarEventId}</span>
+                            <span class="editable" data-name="calendar_event_id" data-value="${quest.calendar_event_id ?? ''}">${calendarEventId}</span>
                         </p>
                         <p class="card-text"><strong>Event Start:</strong>
                             <span
