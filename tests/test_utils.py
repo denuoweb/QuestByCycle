@@ -41,6 +41,11 @@ def test_public_media_url_variants(app):
     assert public_media_url("images/foo.jpg") == expect
 
 
+def test_public_media_url_invalid(app):
+    """Invalid absolute media URLs return ``None``."""
+    assert public_media_url("https:///nohost.jpg") is None
+    assert public_media_url("https://") is None
+
 def test_save_submission_video_invalid(app, tmp_path):
     """Uploading an invalid video should raise a ValueError."""
     from io import BytesIO
@@ -187,6 +192,14 @@ def test_get_int_param_parsing(app):
         assert get_int_param('b') is None
         assert get_int_param('c') is None
         assert get_int_param('missing', default=7) == 7
+
+
+def test_get_int_param_non_negative(app):
+    """Values below ``min_value`` should fall back to the default."""
+    with app.test_request_context('/?a=-5&b=10'):
+        assert get_int_param('a', default=0, min_value=0) == 0
+        assert get_int_param('a', min_value=0) is None
+        assert get_int_param('b', min_value=0) == 10
 
 
 def test_delete_media_file_local(app, tmp_path):

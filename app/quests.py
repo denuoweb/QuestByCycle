@@ -1106,9 +1106,9 @@ def get_all_submissions():
         limit   (int): Number of submissions to return (default 10).
     """
 
-    game_id = get_int_param("game_id")
-    offset = get_int_param("offset", default=0)
-    limit = get_int_param("limit", default=10)
+    game_id = get_int_param("game_id", min_value=1)
+    offset = get_int_param("offset", default=0, min_value=0)
+    limit = get_int_param("limit", default=10, min_value=1)
 
     if game_id is None:
         return
