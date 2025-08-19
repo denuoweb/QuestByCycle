@@ -134,7 +134,7 @@ def user_details(user_id):
     if not user:
         return
 
-    return render_template('user_details.html', user=user)
+    return render_template('user_details.html', user=user, in_admin_dashboard=True)
 
 
 @admin_bp.route('/update_user/<int:user_id>', methods=['POST'])
@@ -271,6 +271,7 @@ def edit_user(user_id):
         user_ips=user_ips,
         games=games,
         timezone_choices=TIMEZONE_CHOICES,
+        in_admin_dashboard=True,
     )
 
 @admin_bp.route('/delete_user/<int:user_id>', methods=['POST'])
@@ -312,7 +313,7 @@ def edit_sponsor(sponsor_id):
                 sponsor.logo = save_sponsor_logo(image_file, old_filename=sponsor.logo)
             except ValueError as e:
                 flash(f"Error saving sponsor logo: {e}", 'error')
-                return render_template('edit_sponsors.html', form=form, sponsor=sponsor, game_id=game_id)
+                return render_template('edit_sponsors.html', form=form, sponsor=sponsor, game_id=game_id, in_admin_dashboard=True)
         
                                       
         sponsor.name = sanitize_html(form.name.data)
@@ -324,7 +325,7 @@ def edit_sponsor(sponsor_id):
         flash('Sponsor updated successfully!', 'success')
         return redirect(url_for('admin.manage_sponsors', game_id=game_id))
 
-    return render_template('edit_sponsors.html', form=form, sponsor=sponsor, game_id=game_id)
+    return render_template('edit_sponsors.html', form=form, sponsor=sponsor, game_id=game_id, in_admin_dashboard=True)
 
 
 
@@ -387,7 +388,7 @@ def manage_sponsors():
                 sponsor.logo = save_sponsor_logo(image_file)
             except ValueError as e:
                 flash(f"Error saving sponsor logo: {e}", 'error')
-                return render_template('manage_sponsors.html', form=form, sponsors=[], game_id=game_id)
+                return render_template('manage_sponsors.html', form=form, sponsors=[], game_id=game_id, in_admin_dashboard=True)
 
         db.session.add(sponsor)
         try:
@@ -402,7 +403,7 @@ def manage_sponsors():
         return redirect(url_for('admin.manage_sponsors', game_id=game_id))
 
     sponsors = Sponsor.query.filter_by(game_id=game_id).all() if game_id else Sponsor.query.all()
-    return render_template('manage_sponsors.html', form=form, sponsors=sponsors, game_id=game_id)
+    return render_template('manage_sponsors.html', form=form, sponsors=sponsors, game_id=game_id, in_admin_dashboard=True)
 
 
 @admin_bp.route('/user_emails', methods=['GET'])
@@ -417,4 +418,4 @@ def user_emails():
         users = User.query.join(user_games).filter(user_games.c.game_id == game.id).all()
         game_email_map[game.title] = [user.email for user in users]
 
-    return render_template('user_emails.html', game_email_map=game_email_map, games=games)
+    return render_template('user_emails.html', game_email_map=game_email_map, games=games, in_admin_dashboard=True)

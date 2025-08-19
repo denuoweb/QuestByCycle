@@ -193,7 +193,7 @@ def create_game():
             process_logo_upload(game)
         except ValueError as error:
             flash(f'Error saving uploaded file: {error}', 'error')
-            return render_template('create_game.html', title='Create Game', form=form)
+            return render_template('create_game.html', title='Create Game', form=form, in_admin_dashboard=True)
 
         db.session.add(game)
         try:
@@ -258,6 +258,7 @@ def update_game(game_id):
                 leaderboard_image=game.leaderboard_image,
                 calendar_service_json_path=game.calendar_service_json_path,
                 logo=game.logo,
+                in_admin_dashboard=True,
             )
 
         try:

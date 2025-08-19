@@ -73,15 +73,46 @@ class Game(db.Model):
     storage_quota_gb = db.Column(db.Integer, nullable=True)
     badges = db.relationship('Badge', back_populates='game', cascade='all, delete-orphan', lazy=True)
 
-    @staticmethod
-    def generate_unique_code():
-        """Generate a unique game code."""
-        while True:
+    CODE_LENGTH = 5
+    MAX_CODE_ATTEMPTS = 5
+
+    @classmethod
+    def generate_unique_code(cls, max_attempts: int | None = None) -> str:
+        """Generate a unique game code with bounded retries.
+
+        Args:
+            max_attempts: Maximum number of attempts to find an unused code.
+
+        Raises:
+            RuntimeError: If a unique code could not be generated.
+        """
+        attempts = max_attempts or cls.MAX_CODE_ATTEMPTS
+        for _ in range(attempts):
             code = "".join(
-                random.choices(string.ascii_letters + string.digits, k=5)
+                random.choices(string.ascii_letters + string.digits, k=cls.CODE_LENGTH)
             )
-            if not Game.query.filter_by(custom_game_code=code).first():
+            if not cls.query.filter_by(custom_game_code=code).first():
+
                 return code
+        raise RuntimeError("Failed to generate a unique game code.")
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.custom_game_code:
+            self.custom_game_code = self.generate_unique_code()
+        else:
+            for _ in range(self.MAX_CODE_ATTEMPTS):
+                try:
+                    db.session.add(self)
+                    db.session.commit()
+                    break
+                except IntegrityError:
+                    db.session.rollback()
+                    self.custom_game_code = self.generate_unique_code()
+            else:
+                raise RuntimeError(
+                    "Failed to assign a unique custom_game_code after retries."
+                )
 
     @property
     def twitter_url(self):
