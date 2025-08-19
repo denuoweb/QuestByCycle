@@ -28,6 +28,7 @@ from flask import (
 )
 from werkzeug.utils import secure_filename
 from flask_login import current_user, login_required
+from pydantic import ValidationError
 from flask_wtf.csrf import generate_csrf
 from sqlalchemy import func, and_
 from sqlalchemy.orm import joinedload
@@ -68,6 +69,7 @@ from app.utils.file_uploads import (
 )
 from app.utils import sanitize_html, get_int_param
 from app.utils.calendar_utils import _parse_calendar_tz
+from app.schemas import TimezoneSchema
 from .config import load_config, AppConfig
 from app.tasks import enqueue_email
 
@@ -882,8 +884,12 @@ def set_timezone(user_id):
         logger.warning('Unauthorized timezone update attempt by user %s', current_user.id)
         return jsonify({'error': 'Unauthorized access'}), 403
 
-    tz = (request.get_json() or {}).get('timezone')
-    if not tz or tz not in TIMEZONE_CHOICES:
+    try:
+        payload = TimezoneSchema.model_validate(request.get_json() or {})
+    except ValidationError as exc:
+        return jsonify({'error': 'Invalid timezone', 'details': exc.errors()}), 400
+    tz = payload.timezone
+    if tz not in TIMEZONE_CHOICES:
         return jsonify({'error': 'Invalid timezone'}), 400
 
     user = User.query.get_or_404(user_id)

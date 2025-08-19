@@ -1,8 +1,11 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_login import login_required, current_user
 from pywebpush import webpush, WebPushException
+from pydantic import ValidationError
+
 from app.models import db
 from app.models.user import PushSubscription
+from app.schemas import PushSubscribeSchema, PushSendSchema
 import json
 
 push_bp = Blueprint('push', __name__)
@@ -15,29 +18,38 @@ def public_key():
 @push_bp.route('/subscribe', methods=['POST'])
 @login_required
 def subscribe():
-    data = request.get_json() or {}
-    sub = data.get('subscription')
-    if not sub:
-        return jsonify(error='Invalid subscription'), 400
-    endpoint = sub.get('endpoint')
-    keys = sub.get('keys', {})
-    p256dh = keys.get('p256dh')
-    auth = keys.get('auth')
-    if not endpoint or not p256dh or not auth:
-        return jsonify(error='Incomplete subscription'), 400
-    existing = PushSubscription.query.filter_by(user_id=current_user.id, endpoint=endpoint).first()
+    try:
+        payload = PushSubscribeSchema.model_validate(request.get_json() or {})
+    except ValidationError as exc:
+        return jsonify(error="Invalid subscription", details=exc.errors()), 400
+
+    sub = payload.subscription
+    existing = PushSubscription.query.filter_by(
+        user_id=current_user.id, endpoint=sub.endpoint
+    ).first()
     if not existing:
-        db.session.add(PushSubscription(user_id=current_user.id, endpoint=endpoint, p256dh=p256dh, auth=auth))
+        db.session.add(
+            PushSubscription(
+                user_id=current_user.id,
+                endpoint=sub.endpoint,
+                p256dh=sub.keys.p256dh,
+                auth=sub.keys.auth,
+            )
+        )
         db.session.commit()
     return jsonify(success=True)
 
 @push_bp.route('/send', methods=['POST'])
 @login_required
 def send_push():
-    data = request.get_json() or {}
-    user_id = data.get('user_id', current_user.id)
-    title = data.get('title', 'QuestByCycle')
-    body = data.get('body', '')
+    try:
+        payload = PushSendSchema.model_validate(request.get_json() or {})
+    except ValidationError as exc:
+        return jsonify(error="Invalid payload", details=exc.errors()), 400
+
+    user_id = payload.user_id or current_user.id
+    title = payload.title
+    body = payload.body
 
     if current_user.id != user_id and not current_user.is_admin:
         return jsonify(error='Forbidden'), 403

@@ -18,10 +18,12 @@ from datetime import datetime, timezone
 from email.utils import formatdate
 from urllib.parse import urlparse
 from flask import Blueprint, current_app, request, abort, jsonify, url_for
+from pydantic import ValidationError
 from app.tasks import enqueue_deliver_activity
 from app.models import db
 from app.models.user import User, ActivityStore, Notification
 from app.models.quest import QuestLike, QuestSubmission
+from app.schemas import InboxActivitySchema
 
                                      
 ap_bp = Blueprint('activitypub', __name__)
@@ -218,10 +220,15 @@ def inbox(username):
     cache the remote actor’s declared inbox URL, preventing any SSRF.
     """
                             
-    user       = User.query.filter_by(username=username).first_or_404()
-    activity   = request.get_json(force=True, silent=True) or {}
-    typ        = activity.get('type')
-    actor_uri  = activity.get('actor', '')
+    user = User.query.filter_by(username=username).first_or_404()
+    raw_activity = request.get_json(force=True, silent=True) or {}
+    try:
+        validated = InboxActivitySchema.model_validate(raw_activity)
+    except ValidationError as exc:
+        return jsonify(error="Invalid activity", details=exc.errors()), 400
+    activity = raw_activity
+    typ = validated.type
+    actor_uri = validated.actor
     actor_host = urlparse(actor_uri).netloc
     our_host   = request.host
 

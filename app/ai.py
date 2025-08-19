@@ -4,6 +4,7 @@ import string
 import re
 from flask import Blueprint, jsonify, render_template, request, current_app
 from flask_login import login_required
+from pydantic import ValidationError
 from app.forms import QuestForm
 from app.utils.file_uploads import save_badge_image
 from app.utils import REQUEST_TIMEOUT, sanitize_html
@@ -12,15 +13,19 @@ from werkzeug.datastructures import MultiDict
 from openai import OpenAI
 from io import BytesIO
 from PIL import Image
+from app.schemas import GenerateQuestSchema, GenerateBadgeImageSchema
 
 ai_bp = Blueprint('ai', __name__, template_folder='templates')
 
 @ai_bp.route('/generate_quest', methods=['POST'])
 @login_required
 def generate_quest():
-    data = request.get_json()
-    description = data.get('description', '')
-    game_id = data.get('game_id', '')
+    try:
+        payload = GenerateQuestSchema.model_validate(request.get_json() or {})
+    except ValidationError as exc:
+        return jsonify({"error": "Invalid input", "details": exc.errors()}), 400
+    description = payload.description
+    game_id = payload.game_id
 
     quest_details, error_message = generate_quest_details(description)
 
@@ -108,8 +113,11 @@ def create_quest():
 @login_required
 def generate_badge_image():
     client = OpenAI(api_key=current_app.config['OPENAI_API_KEY'])
-    data = request.get_json()
-    badge_description = data.get('badge_description', '')
+    try:
+        payload = GenerateBadgeImageSchema.model_validate(request.get_json() or {})
+    except ValidationError as exc:
+        return jsonify({"error": "Invalid input", "details": exc.errors()}), 400
+    badge_description = payload.badge_description
     if not badge_description:
         return
 

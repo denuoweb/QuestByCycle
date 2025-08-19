@@ -18,6 +18,7 @@ from flask import (
     abort,
 )
 from flask_login import login_required, current_user
+from pydantic import ValidationError
 from app.decorators import require_admin
 from sqlalchemy.exc import SQLAlchemyError
 from app.models import db, user_games
@@ -25,6 +26,7 @@ from app.models.game import Game
 from app.models.quest import Quest
 from app.models.user import User, UserQuest
 from app.forms import GameForm
+from app.schemas import QuestListQuerySchema
 from app.utils.file_uploads import (
     save_leaderboard_image,
     generate_smoggy_images,
@@ -57,6 +59,33 @@ def serialize_game(game):
         "logo_url": game.logo_url,
         "timezone": game.timezone,
     }
+
+
+def serialize_quest(quest):
+    """Return a dictionary representation of a ``Quest``."""
+    return {
+        "id": quest.id,
+        "title": quest.title,
+        "description": quest.description,
+        "points": quest.points,
+        "enabled": quest.enabled,
+    }
+
+
+@games_bp.route('/<int:game_id>/quests', methods=['GET'])
+def list_game_quests(game_id):
+    """Return quests for a given game."""
+    try:
+        params = QuestListQuerySchema.model_validate(request.args.to_dict())
+    except ValidationError as exc:
+        return jsonify({"error": "Invalid parameters", "details": exc.errors()}), 400
+
+    Game.query.get_or_404(game_id)
+    query = Quest.query.filter_by(game_id=game_id)
+    if not params.include_disabled:
+        query = query.filter_by(enabled=True)
+    quests = [serialize_quest(q) for q in query.all()]
+    return jsonify({"quests": quests})
 
 
 def populate_game_from_form(game, form):

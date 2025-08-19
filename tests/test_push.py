@@ -61,3 +61,13 @@ def test_subscribe_and_send(client):
         resp = client.post("/push/send", json={"title": "t", "body": "b"})
         assert resp.status_code == 200
         assert wp.called
+
+
+def test_subscribe_rejects_bad_payload(client):
+    login(client)
+    resp = client.post(
+        "/push/subscribe",
+        json={"subscription": {"endpoint": "", "keys": {"p256dh": "", "auth": ""}}},
+    )
+    assert resp.status_code == 400
+    assert PushSubscription.query.count() == 0
