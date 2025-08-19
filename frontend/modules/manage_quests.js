@@ -379,7 +379,7 @@ import logger from '../logger.js';
                 const delBtn = card.querySelector('.delete-button');
                 const qrBtn = card.querySelector('.qr-button');
 
-                if (editBtn) editBtn.addEventListener('click', () => editQuest(quest.id));
+                if (editBtn) editBtn.onclick = () => editQuest(quest.id);
                 if (delBtn) delBtn.addEventListener('click', () => deleteQuest(quest.id));
                 if (qrBtn) qrBtn.addEventListener('click', () => generateQRCode(quest.id));
             });
