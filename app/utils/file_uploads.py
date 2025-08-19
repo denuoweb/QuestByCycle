@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import uuid
+from urllib.parse import urlparse
 
 from flask import current_app, url_for
 from google.api_core.exceptions import GoogleAPIError
@@ -421,10 +422,23 @@ def save_submission_video(submission_video_file):
 
 
 def public_media_url(path: str | None) -> str | None:
+    """Return a validated public URL for media assets.
+
+    Absolute URLs must include a scheme and host.  Relative paths are
+    converted to a ``static`` endpoint URL.
+    """
     if not path:
         return None
-    if path.startswith(("http://", "https://", "/static/")):
+
+    if path.startswith("/static/"):
         return path
+
+    if path.startswith(("http://", "https://")):
+        parsed = urlparse(path)
+        if parsed.netloc:
+            return path
+        return None
+
     filename = path.lstrip("/")
     filename = filename.removeprefix("static/")
     return url_for("static", filename=filename)

@@ -81,8 +81,14 @@ def sanitize_html(html_content: str | None) -> str | None:
     return SANITIZER.sanitize(html_content)
 
 
-def get_int_param(name: str, *, source=None, default: int | None = None) -> int | None:
-    """Safely retrieve an integer parameter from the request.
+def get_int_param(
+    name: str,
+    *,
+    source=None,
+    default: int | None = None,
+    min_value: int | None = None,
+) -> int | None:
+    """Safely retrieve an integer parameter from the request with optional bounds.
 
     Parameters
     ----------
@@ -92,6 +98,9 @@ def get_int_param(name: str, *, source=None, default: int | None = None) -> int 
         The data source, defaults to ``request.args``.
     default:
         Value returned if the parameter is missing or invalid.
+    min_value:
+        Minimum allowed value.  If the parsed integer is below this value,
+        ``default`` is returned instead.
 
     Returns
     -------
@@ -104,9 +113,14 @@ def get_int_param(name: str, *, source=None, default: int | None = None) -> int 
     if raw is None or raw == "":
         return default
     try:
-        return int(raw)
+        value = int(raw)
     except (TypeError, ValueError):
         return default
+
+    if min_value is not None and value < min_value:
+        return default
+
+    return value
 
 
 def format_db_error(error: Exception) -> str:
