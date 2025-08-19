@@ -9,7 +9,7 @@
   <meta name="description" content="QuestByCycle is a photo sharing web platform designed to motivate and engage the cycling community in environmental sustainability. Complete quests, earn badges, and contribute to a greener planet while competing on the leaderboard and connecting with other cyclists.">
   <meta name="keywords" content="cycling, environmental sustainability, gamification, challenges, badges, community, leaderboard">
   <meta name="author" content="QuestByCycle Team">
-  <meta name="robots" content="index, follow">
+  <meta name="robots" content="{{ 'noindex, nofollow' if in_admin_dashboard|default(False) else 'index, follow' }}">
 
   <!-- Required for Safari to recognize the PWA -->
   <meta name="apple-mobile-web-app-capable" content="yes">

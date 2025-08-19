@@ -78,7 +78,7 @@ def create_badge():
         db.session.commit()
         flash('Badge created successfully!', 'success')
         return redirect(url_for('badges.list_badges'))
-    return render_template('create_badge.html', form=form)
+    return render_template('create_badge.html', form=form, in_admin_dashboard=True)
 
 
 @badges_bp.route('', methods=['GET'])
