@@ -1,8 +1,7 @@
 import random
 import string
 from datetime import datetime
-from sqlalchemy import DateTime
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import DateTime, event
 
 from app.constants import UTC
 from . import db, game_admins
@@ -93,6 +92,7 @@ class Game(db.Model):
                 random.choices(string.ascii_letters + string.digits, k=cls.CODE_LENGTH)
             )
             if not cls.query.filter_by(custom_game_code=code).first():
+
                 return code
         raise RuntimeError("Failed to generate a unique game code.")
 
@@ -134,6 +134,16 @@ class Game(db.Model):
         if self.instagram_user_id:
             return f"https://instagram.com/{self.instagram_user_id}"
         return "https://instagram.com/QuestByCycle"
+
+
+@event.listens_for(Game, "before_insert")
+def set_custom_game_code(mapper, connection, target):
+    """Ensure each game has a unique ``custom_game_code`` before insert."""
+    if target.custom_game_code:
+        while Game.query.filter_by(custom_game_code=target.custom_game_code).first():
+            target.custom_game_code = Game.generate_unique_code()
+    else:
+        target.custom_game_code = Game.generate_unique_code()
 
 
 class ShoutBoardMessage(db.Model):
