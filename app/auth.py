@@ -7,6 +7,7 @@ import uuid
 import requests
 from datetime import datetime
 from urllib.parse import urlparse, urlencode
+from requests_oauthlib import OAuth2Session
 
 from flask import (
     Blueprint,
@@ -360,6 +361,112 @@ def mastodon_callback():
             flash("Account created and logged in via Mastodon. You will federate using your Mastodon identity.", "success")
     
     return redirect(url_for('main.index'))
+
+
+@auth_bp.route("/login/google")
+def google_login():
+    """Start the Google OAuth2 login flow."""
+    client_id = current_app.config.get("GOOGLE_CLIENT_ID")
+    client_secret = current_app.config.get("GOOGLE_CLIENT_SECRET")
+    if not client_id or not client_secret:
+        flash("Google OAuth is not configured.", "danger")
+        return redirect(url_for("auth.login"))
+
+    redirect_uri = safe_url_for("auth.google_callback", _external=True)
+    oauth = OAuth2Session(
+        client_id,
+        redirect_uri=redirect_uri,
+        scope=["openid", "email", "profile"],
+    )
+    authorization_url, state = oauth.authorization_url(
+        "https://accounts.google.com/o/oauth2/v2/auth",
+        prompt="select_account",
+    )
+    session["google_oauth_state"] = state
+    return redirect(authorization_url)
+
+
+@auth_bp.route("/google/callback")
+def google_callback():
+    """Handle the OAuth callback from Google."""
+    client_id = current_app.config.get("GOOGLE_CLIENT_ID")
+    client_secret = current_app.config.get("GOOGLE_CLIENT_SECRET")
+    if not client_id or not client_secret:
+        flash("Google OAuth is not configured.", "danger")
+        return redirect(url_for("auth.login"))
+
+    state = request.args.get("state")
+    if not state or state != session.get("google_oauth_state"):
+        flash("State mismatch. Authentication failed.", "danger")
+        return redirect(url_for("auth.login"))
+
+    redirect_uri = safe_url_for("auth.google_callback", _external=True)
+    oauth = OAuth2Session(client_id, state=state, redirect_uri=redirect_uri)
+    try:
+        oauth.fetch_token(
+            "https://oauth2.googleapis.com/token",
+            client_secret=client_secret,
+            authorization_response=request.url,
+            timeout=REQUEST_TIMEOUT,
+        )
+    except Exception as exc:
+        flash(f"Error obtaining access token: {exc}", "danger")
+        return redirect(url_for("auth.login"))
+
+    try:
+        userinfo = oauth.get(
+            "https://www.googleapis.com/oauth2/v3/userinfo",
+            timeout=REQUEST_TIMEOUT,
+        ).json()
+    except Exception as exc:
+        flash(f"Error fetching user info: {exc}", "danger")
+        return redirect(url_for("auth.login"))
+
+    google_id = userinfo.get("sub")
+    email = (userinfo.get("email") or "").lower()
+    name = userinfo.get("name")
+    picture = userinfo.get("picture")
+
+    user = None
+    if google_id:
+        user = User.query.filter_by(google_id=google_id).first()
+    if not user and email:
+        user = User.query.filter_by(email=email).first()
+
+    if user:
+        if not user.google_id:
+            user.google_id = google_id
+            db.session.commit()
+    else:
+        username = _generate_username(email)
+        user = User(
+            username=username,
+            email=email,
+            license_agreed=True,
+            email_verified=True,
+            is_admin=False,
+            created_at=datetime.now(UTC),
+            score=0,
+            google_id=google_id,
+            display_name=name,
+            profile_picture=picture,
+        )
+        user.set_password(uuid.uuid4().hex)
+        db.session.add(user)
+        try:
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            current_app.logger.error(
+                "Failed to create user via Google: %s", format_db_error(exc)
+            )
+            flash("Error creating user account.", "danger")
+            return redirect(url_for("auth.login"))
+        create_activitypub_actor(user)
+
+    login_user(user)
+    flash("Logged in via Google.", "success")
+    return redirect(url_for("main.index"))
 
 
 def _is_safe_url(target: str | None) -> bool:
