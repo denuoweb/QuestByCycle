@@ -18,7 +18,8 @@ from flask import (
 )
 from flask_login import LoginManager, current_user
 from werkzeug.exceptions import HTTPException
-from flask_wtf.csrf import CSRFProtect, CSRFError
+from flask_wtf.csrf import CSRFProtect, CSRFError, validate_csrf
+from wtforms.validators import ValidationError
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_humanify import Humanify
@@ -225,6 +226,19 @@ def create_app(config_overrides=None):
         app.register_blueprint(docs_bp)
 
     csrf.exempt(ap_bp)
+
+    @app.before_request
+    def enforce_csrf_header() -> None:
+        """Validate CSRF token from headers for JSON requests."""
+        if not app.config.get("WTF_CSRF_ENABLED", True):
+            return
+        if request.method in {"POST", "PUT", "PATCH", "DELETE"} and request.is_json:
+            token = request.headers.get("X-CSRF-Token") or request.headers.get("X-CSRFToken")
+            try:
+                validate_csrf(token)
+            except ValidationError as exc:
+                raise CSRFError(exc.args[0])
+
     login_manager.login_view = "auth.login"
 
     @login_manager.unauthorized_handler
