@@ -25,7 +25,11 @@ def redoc():
         <html>
         <head>
             <title>API Docs</title>
-            <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+            <script
+                src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"
+                integrity="sha384-4vOjrBu7SuDWXcAw1qFznVLA/sKL+0l4nn+J1HY8w7cpa6twQEYuh4b0Cwuo7CyX"
+                crossorigin="anonymous"
+            ></script>
         </head>
         <body>
             <redoc spec-url="/docs/openapi.yaml"></redoc>

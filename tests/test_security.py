@@ -82,3 +82,11 @@ def test_refresh_csrf_cookie_flags(client):
     assert "Secure" in csrf_cookie
     assert "HttpOnly" in csrf_cookie
     assert "SameSite=Strict" in csrf_cookie
+
+
+def test_security_headers_present(client):
+    resp = client.get("/")
+    assert resp.headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains"
+    assert resp.headers["X-Content-Type-Options"] == "nosniff"
+    assert resp.headers["X-Frame-Options"] == "DENY"
+    assert resp.headers["Referrer-Policy"] == "no-referrer"

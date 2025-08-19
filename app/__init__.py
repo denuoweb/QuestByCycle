@@ -314,4 +314,18 @@ def create_app(config_overrides=None):
         """Expose the static asset version for cache busting."""
         return dict(asset_version=current_app.config["ASSET_VERSION"])
 
+    @app.after_request
+    def set_security_headers(response):
+        """Apply standard security headers to all responses."""
+        headers = {
+            "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "Referrer-Policy": "no-referrer",
+            "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+        }
+        for key, value in headers.items():
+            response.headers.setdefault(key, value)
+        return response
+
     return app
