@@ -454,6 +454,9 @@ sent. Ensure `SECRET_KEY` is defined and access the site using the host specifie
 JavaScript helpers always include CSRF tokens. To disable CSRF checks in a local environment,
 set `WTF_CSRF_ENABLED=false` in your `.env` file.
 
+JSON endpoints must send the token in the `X-CSRF-Token` header. The server rejects
+state-changing JSON requests that omit or provide an incorrect header value.
+
 When `DEBUG=true`, JavaScript helpers skip sending CSRF tokens to simplify local testing.
 CSRF protection on the server is also disabled in this mode so requests succeed without the token.
 
