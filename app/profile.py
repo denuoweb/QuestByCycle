@@ -4,11 +4,13 @@ from requests.exceptions import RequestException
 from .utils import REQUEST_TIMEOUT, sanitize_html
 from flask import Blueprint, jsonify, request, current_app
 from flask_login import current_user, login_required
+from pydantic import ValidationError
 from .models import db, ProfileWallMessage, User, Notification
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app.activitypub_utils import sign_activitypub_request
 from urllib.parse import urlparse
 from threading import Thread
+from app.schemas import ProfileMessageSchema, UserProfileUpdateSchema
 
 profile_bp = Blueprint('profile', __name__)
 
@@ -40,11 +42,11 @@ def _deliver_follow_activity(app, actor_url, activity, sender_id):
 def post_profile_message(user_id):
     """Post a new message on a user's profile wall."""
     User.query.get_or_404(user_id)
-    data = request.get_json()
-    content = sanitize_html(data.get("content"))
-
-    if not content:
-        return jsonify({"error": "Content is required."}), 400
+    try:
+        payload = ProfileMessageSchema.model_validate(request.get_json() or {})
+    except ValidationError as exc:
+        return jsonify({"error": "Invalid content", "details": exc.errors()}), 400
+    content = sanitize_html(payload.content)
 
     message = ProfileWallMessage(
         content=content,
@@ -127,10 +129,11 @@ def post_reply(user_id, message_id):
     ):
         return jsonify({"error": "You are not authorized to reply to messages on this profile."}), 403
 
-    data = request.get_json()
-    content = sanitize_html(data.get("content"))
-    if not content:
-        return jsonify({"error": "Content is required."}), 400
+    try:
+        payload = ProfileMessageSchema.model_validate(request.get_json() or {})
+    except ValidationError as exc:
+        return jsonify({"error": "Invalid content", "details": exc.errors()}), 400
+    content = sanitize_html(payload.content)
 
     reply = ProfileWallMessage(
         content=content,
@@ -181,11 +184,11 @@ def edit_message(user_id, message_id):
     if message.author_id != current_user.id:
         return jsonify({"error": "Unauthorized access"}), 403
 
-    data = request.get_json()
-    new_content = sanitize_html(data.get("content"))
-
-    if not new_content:
-        return jsonify({"error": "Content is required."}), 400
+    try:
+        payload = ProfileMessageSchema.model_validate(request.get_json() or {})
+    except ValidationError as exc:
+        return jsonify({"error": "Invalid content", "details": exc.errors()}), 400
+    new_content = sanitize_html(payload.content)
 
     message.content = new_content
 
@@ -198,6 +201,38 @@ def edit_message(user_id, message_id):
             "Failed to update profile message %s: %s", message_id, exc
         )
         return jsonify({"error": "Database error occurred"}), 500
+
+
+@profile_bp.route('/<int:user_id>/update', methods=['POST'])
+@login_required
+def update_profile(user_id):
+    """Update basic profile information for the current user."""
+    if current_user.id != user_id:
+        return jsonify({"error": "Unauthorized access"}), 403
+    try:
+        payload = UserProfileUpdateSchema.model_validate(request.get_json() or {})
+    except ValidationError as exc:
+        return jsonify({"error": "Invalid data", "details": exc.errors()}), 400
+
+    if payload.display_name is not None:
+        current_user.display_name = sanitize_html(payload.display_name)
+    if payload.interests is not None:
+        current_user.interests = sanitize_html(payload.interests)
+    if payload.age_group is not None:
+        current_user.age_group = payload.age_group
+    if payload.profile_picture is not None:
+        current_user.profile_picture = sanitize_html(payload.profile_picture)
+
+    try:
+        db.session.commit()
+    except SQLAlchemyError as exc:
+        db.session.rollback()
+        current_app.logger.error(
+            "Failed to update profile %s: %s", user_id, exc
+        )
+        return jsonify({"error": "Database error occurred"}), 500
+
+    return jsonify({"success": True}), 200
 
 
 def is_local_actor(actor_url):

@@ -23,9 +23,10 @@ from flask import (
     render_template,
     request,
     url_for,
-    abort
+    abort,
 )
 from flask_login import current_user, login_required
+from pydantic import ValidationError
 from app.decorators import require_admin
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
@@ -38,6 +39,11 @@ from app.utils.quest_scoring import (
     check_and_revoke_badges,
     get_last_relevant_completion_time,
     update_user_score,
+)
+from app.schemas import (
+    SubmissionCommentSchema,
+    SubmissionReplySchema,
+    UpdateQuestSchema,
 )
 from app import limiter
 from app.utils.rate_limit import user_or_ip
@@ -410,61 +416,54 @@ def update_quest(quest_id):
     if not current_user.is_super_admin and not current_user.is_admin_for_game(quest.game_id):
         return jsonify({"success": False, "message": "Permission denied"}), 403
 
-    data = request.get_json()
-
-    quest.title = sanitize_html(data.get("title", quest.title))
-    quest.description = sanitize_html(data.get("description", quest.description))
-    quest.tips = sanitize_html(data.get("tips", quest.tips))
-
-    def parse_int(field_name: str, current_value: int) -> int:
-        value = data.get(field_name)
-        if value in (None, ""):
-            return current_value
-        try:
-            return int(value)
-        except ValueError as err:  # pragma: no cover - defensive programming
-            raise ValueError(f"Invalid {field_name}") from err
-
+    raw = request.get_json() or {}
+    cleaned = {k: (v if v != "" else None) for k, v in raw.items()}
     try:
-        quest.points = parse_int("points", quest.points)
-        quest.completion_limit = parse_int(
-            "completion_limit", quest.completion_limit
-        )
-        quest.badge_awarded = parse_int("badge_awarded", quest.badge_awarded)
-    except ValueError as error:
-        return jsonify({"success": False, "message": "Invalid input for quest field(s)."}), 400
+        payload = UpdateQuestSchema.model_validate(cleaned)
+    except ValidationError as exc:
+        return jsonify({"success": False, "message": "Invalid input", "details": exc.errors()}), 400
 
-    quest.enabled = data.get("enabled", quest.enabled)
-    quest.is_sponsored = data.get("is_sponsored", quest.is_sponsored)
-    category_data = data.get("category")
-    if category_data is not None:
-        category = sanitize_html(category_data)
+    quest.title = sanitize_html(payload.title or quest.title)
+    quest.description = sanitize_html(payload.description or quest.description)
+    quest.tips = sanitize_html(payload.tips or quest.tips)
+
+    if payload.points is not None:
+        quest.points = payload.points
+    if payload.completion_limit is not None:
+        quest.completion_limit = payload.completion_limit
+    if payload.badge_awarded is not None:
+        quest.badge_awarded = payload.badge_awarded
+
+    if payload.enabled is not None:
+        quest.enabled = payload.enabled
+    if payload.is_sponsored is not None:
+        quest.is_sponsored = payload.is_sponsored
+    if payload.category is not None:
+        category = sanitize_html(payload.category)
         quest.category = category or None
-    quest.verification_type = sanitize_html(
-        data.get("verification_type", quest.verification_type)
-    )
-    quest.frequency = sanitize_html(data.get("frequency", quest.frequency))
+    if payload.verification_type is not None:
+        quest.verification_type = sanitize_html(payload.verification_type)
+    if payload.frequency is not None:
+        quest.frequency = sanitize_html(payload.frequency)
 
-    quest.badge_option = data.get("badge_option", quest.badge_option)
+    if payload.badge_option is not None:
+        quest.badge_option = payload.badge_option
 
-    badge_id = data.get("badge_id")
-    if badge_id is not None and quest.badge_option in ("individual", "both"):
-        try:
-            badge_id_int = int(badge_id)
-        except ValueError:
-            return jsonify({"success": False, "message": "Invalid badge ID"}), 400
-        badge = db.session.get(Badge, badge_id_int)
+    if payload.badge_id is not None and quest.badge_option in ("individual", "both"):
+        badge = db.session.get(Badge, payload.badge_id)
         if not badge or badge.game_id != quest.game_id:
             return jsonify({"success": False, "message": "Invalid badge for this quest"}), 400
-        quest.badge_id = badge_id_int
+        quest.badge_id = payload.badge_id
     elif quest.badge_option in ("none", "category"):
         quest.badge_id = None
 
-    quest.from_calendar = data.get("from_calendar", quest.from_calendar)
-    quest.calendar_event_id = sanitize_html(
-        data.get("calendar_event_id", quest.calendar_event_id)
+    quest.from_calendar = (
+        payload.from_calendar if payload.from_calendar is not None else quest.from_calendar
     )
-    start_str = data.get("calendar_event_start")
+    quest.calendar_event_id = sanitize_html(
+        payload.calendar_event_id or quest.calendar_event_id
+    )
+    start_str = payload.calendar_event_start
     if start_str is not None:
         if start_str == "":
             quest.calendar_event_start = None
@@ -1323,9 +1322,11 @@ def update_submission_comment(submission_id):
     if sub.user_id != current_user.id:
         abort(403, description="Permission denied: cannot edit another user's comment.")
 
-    data = request.get_json() or {}
-    new_comment = sanitize_html(data.get('comment', ''))
-    sub.comment = new_comment
+    try:
+        payload = SubmissionCommentSchema.model_validate(request.get_json() or {})
+    except ValidationError as exc:
+        return jsonify(success=False, message="Invalid comment", details=exc.errors()), 400
+    sub.comment = sanitize_html(payload.comment)
 
     MAX_LEN = 1000
     if len(sub.comment) > MAX_LEN:
@@ -1409,10 +1410,11 @@ def submission_replies(submission_id):
                 message="You cannot comment on your own submission"
             ), 403
 
-        payload = request.get_json() or {}
-        content = payload.get('content','').strip()
-        if not content:
-            return jsonify(success=False, message="Empty reply"), 400
+        try:
+            payload = SubmissionReplySchema.model_validate(request.get_json() or {})
+        except ValidationError as exc:
+            return jsonify(success=False, message="Invalid reply", details=exc.errors()), 400
+        content = sanitize_html(payload.content)
 
                                 
         existing_count = SubmissionReply.query.filter_by(
