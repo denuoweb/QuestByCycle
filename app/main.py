@@ -1013,16 +1013,13 @@ def refresh_csrf():
 def resize_image():
     """Resize an image while honoring the client's accepted formats."""
     image_path = request.args.get('path')
-    width_arg  = request.args.get('width')
+    width = get_int_param("width", min_value=1)
 
-                                                      
-    try:
-        width = int(width_arg)
-    except (TypeError, ValueError):
+    if not image_path:
+        return jsonify({'error': "Invalid request: Missing 'path'"}), 400
+
+    if width is None:
         return jsonify({'error': "Invalid request: 'width' must be a positive integer"}), 400
-
-    if not image_path or width <= 0:
-        return jsonify({'error': "Invalid request: Missing 'path' or 'width'"}), 400
 
     try:
                                                                            
@@ -1038,7 +1035,7 @@ def resize_image():
             return jsonify({'error': 'Invalid file path'}), 400
 
         if not os.path.exists(full_image_path):
-            current_app.logger.error("File not found: %s", full_image_path)
+            current_app.logger.warning("File not found: %s", full_image_path)
             return jsonify({'error': 'File not found'}), 404
 
         with Image.open(full_image_path) as img:

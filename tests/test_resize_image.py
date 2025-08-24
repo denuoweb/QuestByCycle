@@ -44,3 +44,17 @@ def test_resize_image_avif(client):
     assert resp.status_code == 200
     assert resp.mimetype == "image/avif"
 
+
+def test_resize_image_invalid_width(client):
+    resp = client.get("/resize_image?path=images/default_badge.png&width=")
+    assert resp.status_code == 400
+    assert resp.get_json()["error"]
+
+
+def test_resize_image_missing_file(client):
+    resp = client.get(
+        "/resize_image?path=images/missing.png&width=50",
+        headers={"Accept": "image/png"},
+    )
+    assert resp.status_code == 404
+
