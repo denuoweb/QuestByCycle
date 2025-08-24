@@ -23,11 +23,13 @@ def list_notifications():
     db.session.commit()
 
                                    
-    try:
-        page     = int(request.args.get('page', 1))
-        per_page = int(request.args.get('per_page', 10))
-    except ValueError:
-        page, per_page = 1, 10
+    page = request.args.get("page", default=1, type=int)
+    per_page = request.args.get("per_page", default=10, type=int)
+
+    if not page or page < 1:
+        page = 1
+    if not per_page or per_page < 1:
+        per_page = 10
 
                  
     pagination = Notification.query\
