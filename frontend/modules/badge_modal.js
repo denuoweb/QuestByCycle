@@ -43,6 +43,10 @@ async function fetchAllBadges() {
   if (!response.ok) {
     throw new Error('Error fetching badges');
   }
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    throw new Error('Invalid badge response');
+  }
 
   let data;
   try {

@@ -26,10 +26,20 @@ function loadBadges() {
     const gameId = getGameId();
     const query = gameId ? `?game_id=${gameId}` : '';
     fetch(`/badges${query}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch badges');
+            }
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                throw new Error('Invalid badge response');
+            }
+            return response.json();
+        })
         .then(data => {
+            const badgeList = Array.isArray(data.badges) ? data.badges : [];
             badgesBody.innerHTML = '';
-            data.badges.forEach(badge => {
+            badgeList.forEach(badge => {
                 const row = document.createElement('tr');
                 row.dataset.badgeId = badge.id;
 
@@ -94,9 +104,18 @@ function setCategoryOptions(currentCategory) {
     const gameId = getGameId();
     const query = gameId ? `?game_id=${gameId}` : '';
     return fetch(`/badges/categories${query}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch categories');
+            }
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                throw new Error('Invalid category response');
+            }
+            return response.json();
+        })
         .then(data => {
-            const categories = data.categories || [];
+            const categories = Array.isArray(data.categories) ? data.categories : [];
             const select = document.createElement('select');
             select.className = 'form-control badge-category-select';
 
