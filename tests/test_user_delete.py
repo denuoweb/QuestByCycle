@@ -4,7 +4,7 @@ import pytest
 
 from app import create_app, db
 from app.models import followers
-from app.models.user import User, ProfileWallMessage
+from app.models.user import User, ProfileWallMessage, UserIP
 
 
 @pytest.fixture
@@ -96,3 +96,17 @@ def test_delete_user_removes_followers(app, users):
         )
     ).fetchall()
     assert not remaining
+
+
+def test_delete_user_removes_user_ips(app, users):
+    """Deleting a user should remove associated IP address records."""
+    u1, _ = users
+    ip = UserIP(user_id=u1.id, ip_address="127.0.0.1")
+    db.session.add(ip)
+    db.session.commit()
+
+    assert UserIP.query.filter_by(user_id=u1.id).count() == 1
+
+    u1.delete_user()
+
+    assert UserIP.query.filter_by(user_id=u1.id).count() == 0

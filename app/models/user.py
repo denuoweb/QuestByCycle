@@ -275,11 +275,18 @@ class Notification(db.Model):
 class UserIP(db.Model):
     """Model representing a user's IP address log."""
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False
+    )
     ip_address = db.Column(db.String(45), nullable=False)
-    timestamp = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    timestamp = db.Column(
+        db.DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
 
-    user = db.relationship('User', backref='ip_addresses')
+    user = db.relationship(
+        "User",
+        backref=db.backref("ip_addresses", cascade="all, delete-orphan"),
+    )
 
 
 class ActivityStore(db.Model):
