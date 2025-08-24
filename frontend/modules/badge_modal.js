@@ -4,9 +4,10 @@ import logger from '../logger.js';
 
 // Cache loaded badges within this module
 let allBadges = [];
-const PLACEHOLDER_IMAGE = document
-  .querySelector('meta[name="placeholder-image"]')
-  .getAttribute('content');
+const placeholderMeta = document.querySelector('meta[name="placeholder-image"]');
+const PLACEHOLDER_IMAGE = placeholderMeta
+  ? placeholderMeta.getAttribute('content')
+  : '';
 
 /**
  * Validate that a given URL is a safe image source.
@@ -43,8 +44,13 @@ async function fetchAllBadges() {
     throw new Error('Error fetching badges');
   }
 
-  const data = await response.json();
-  allBadges = data.badges;
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error('Error parsing badge data');
+  }
+  allBadges = Array.isArray(data.badges) ? data.badges : [];
   return allBadges;
 }
 
