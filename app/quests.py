@@ -32,7 +32,13 @@ from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 from app.forms import PhotoForm, QuestForm
 from app.social import post_to_social_media
-from app.utils import REQUEST_TIMEOUT, sanitize_html, get_int_param, format_db_error
+from app.utils import (
+    REQUEST_TIMEOUT,
+    sanitize_html,
+    get_int_param,
+    format_db_error,
+    delete_media_file,
+)
 from app.utils.quest_scoring import (
     can_complete_quest,
     check_and_award_badges,
@@ -1086,7 +1092,9 @@ def delete_submission(submission_id):
         check_and_revoke_badges(submission.user_id, game_id=quest.game_id)
         db.session.commit()
 
-                                                               
+    delete_media_file(submission.image_url)
+    delete_media_file(submission.video_url)
+
     SubmissionLike.query.filter_by(submission_id=submission.id).delete()
     SubmissionReply.query.filter_by(submission_id=submission.id).delete()
 

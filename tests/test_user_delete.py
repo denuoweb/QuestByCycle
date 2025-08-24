@@ -1,7 +1,9 @@
-import pytest
 from datetime import datetime, timezone
 
+import pytest
+
 from app import create_app, db
+from app.models import followers
 from app.models.user import User, ProfileWallMessage
 
 
@@ -68,3 +70,29 @@ def test_delete_user_removes_profile_messages(app, users):
     assert ProfileWallMessage.query.filter_by(author_id=u1.id).count() == 0
     assert ProfileWallMessage.query.filter_by(user_id=u1.id).count() == 0
     assert User.query.get(u2.id) is not None
+
+
+def test_delete_user_removes_followers(app, users):
+    """Deleting a user should clear all follower relationships."""
+    u1, u2 = users
+    u1.following.append(u2)
+    u2.following.append(u1)
+    db.session.commit()
+
+    assert db.session.execute(
+        followers.select().where(
+            (followers.c.follower_id == u1.id)
+            | (followers.c.followee_id == u1.id)
+        )
+    ).fetchall()
+
+    u1.delete_user()
+
+    assert User.query.get(u1.id) is None
+    remaining = db.session.execute(
+        followers.select().where(
+            (followers.c.follower_id == u1.id)
+            | (followers.c.followee_id == u1.id)
+        )
+    ).fetchall()
+    assert not remaining
