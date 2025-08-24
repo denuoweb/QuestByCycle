@@ -503,11 +503,15 @@ def update_quest(quest_id):
         }), 500
 
 
-@quests_bp.route("/quest/<int:quest_id>/delete", methods=["DELETE"])
+@quests_bp.route("/quest/<int:quest_id>/delete", methods=["DELETE", "POST"])
 @login_required
 def delete_quest(quest_id):
     """
     Delete a quest. Only administrators are allowed to perform this action.
+
+    Both ``DELETE`` and ``POST`` requests are supported to accommodate
+    environments that restrict HTTP verbs. ``POST`` requests should include a
+    CSRF token.
 
     Args:
         quest_id (int): The ID of the quest to delete.
@@ -1193,11 +1197,15 @@ def quest_details(quest_id):
     return jsonify({"quest": quest_data})
 
 
-@quests_bp.route("/game/<int:game_id>/delete_all", methods=["DELETE"])
+@quests_bp.route("/game/<int:game_id>/delete_all", methods=["DELETE", "POST"])
 @login_required
 def delete_all_quests(game_id):
     """
-    Delete all quests associated with a game. Only the game administrator is allowed.
+    Delete all quests associated with a game.
+
+    Both ``DELETE`` and ``POST`` requests are supported to accommodate
+    environments that restrict HTTP verbs. Only the game administrator may
+    perform this action.
 
     Args:
         game_id (int): The ID of the game.
@@ -1219,9 +1227,12 @@ def delete_all_quests(game_id):
         Quest.query.filter_by(game_id=game_id).delete(synchronize_session=False)
         db.session.commit()
         return jsonify({"success": True, "message": "All quests deleted successfully."}), 200
-    except Exception:
+    except Exception as error:
         db.session.rollback()
-        return
+        current_app.logger.error(
+            "Failed to delete all quests for game %s: %s", game_id, format_db_error(error)
+        )
+        return jsonify({"success": False, "message": "Failed to delete quests."}), 500
 
 
 @quests_bp.route("/game/<int:game_id>/clear_calendar", methods=["DELETE"])

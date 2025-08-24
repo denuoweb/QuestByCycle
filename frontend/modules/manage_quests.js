@@ -88,19 +88,23 @@ import logger from '../logger.js';
                 // Second confirmation pop-up with game title
                 if (confirm(`This will delete all quests for the game: "${gameTitle}". Are you absolutely sure? This action cannot be undone.`)) {
                     // Proceed with deletion if the user confirms
-                    csrfFetchJson(`/quests/game/${game_Id}/delete_all`, { method: 'DELETE' })
-                    .then(({ json: data }) => {
-                        if (data.success) {
-                            alert('All quests deleted successfully');
-                            loadQuests(game_Id);
-                        } else {
-                            alert(`Failed to delete quests: ${data.message}`);
-                        }
+                    csrfFetchJson(`/quests/game/${game_Id}/delete_all`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({}),
                     })
-                    .catch(error => {
-                        logger.error('Error:', error);
-                        alert('Failed to delete all quests. Please check the console for more details.');
-                    });
+                        .then(({ json: data }) => {
+                            if (data.success) {
+                                alert('All quests deleted successfully');
+                                loadQuests(game_Id);
+                            } else {
+                                alert(`Failed to delete quests: ${data.message}`);
+                            }
+                        })
+                        .catch(error => {
+                            logger.error('Error:', error);
+                            alert('Failed to delete all quests. Please check the console for more details.');
+                        });
                 }
             })
             .catch(error => {
@@ -396,19 +400,23 @@ import logger from '../logger.js';
     }
 
     function deleteQuest(questId) {
-        csrfFetchJson(`/quests/quest/${questId}/delete`, { method: 'DELETE' })
-        .then(({ json }) => {
-            if (json.success) {
-                alert('Quest deleted successfully');
-                loadQuests(game_Id);
-            } else {
-                alert(`Failed to delete quest: ${json.message}`);
-            }
+        csrfFetchJson(`/quests/quest/${questId}/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
         })
-        .catch(error => {
-            logger.error('Error:', error);
-            alert('Failed to delete quest. Please check the console for more details.');
-        });
+            .then(({ json }) => {
+                if (json.success) {
+                    alert('Quest deleted successfully');
+                    loadQuests(game_Id);
+                } else {
+                    alert(`Failed to delete quest: ${json.message}`);
+                }
+            })
+            .catch(error => {
+                logger.error('Error:', error);
+                alert('Failed to delete quest. Please check the console for more details.');
+            });
     }
 
     function importQuests() {
