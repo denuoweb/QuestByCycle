@@ -1,13 +1,14 @@
-import jwt
 from datetime import datetime
 from time import time
 from urllib.parse import urlparse
 
+import jwt
 from flask import current_app
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.dialects.postgresql import ARRAY, TEXT
 
+from app.utils.file_uploads import delete_media_file
 from app.constants import UTC
 from . import db, user_badges, user_games, followers
 
@@ -204,8 +205,12 @@ class User(UserMixin, db.Model):
         for message in self.shoutboard_messages:
             db.session.delete(message)
         for submission in self.quest_submissions:
+            delete_media_file(submission.image_url)
+            delete_media_file(submission.video_url)
             db.session.delete(submission)
 
+        self.followers.clear()
+        self.following.clear()
         self.participated_games.clear()
 
         ProfileWallMessage.query.filter_by(author_id=self.id).delete(synchronize_session=False)
