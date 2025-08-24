@@ -389,7 +389,7 @@ import logger from '../logger.js';
     }
 
     function deleteQuest(questId) {
-        csrfFetchJson(`/quests/quest/${questId}/delete`, { method: 'DELETE' })
+        csrfFetchJson(`/quests/${questId}/delete`, { method: 'DELETE' })
         .then(({ json }) => {
             if (json.success) {
                 alert('Quest deleted successfully');
