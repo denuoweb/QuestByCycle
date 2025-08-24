@@ -44,11 +44,18 @@ import logger from '../logger.js';
     async function loadBadges() {
         try {
             const response = await fetch('/badges');
-            if (!response.ok) throw new Error('Failed to fetch badges');
+            if (!response.ok) {
+                throw new Error('Failed to fetch badges');
+            }
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                throw new Error('Invalid badge response');
+            }
             const data = await response.json();
-            badges = data.badges || [];
+            badges = Array.isArray(data.badges) ? data.badges : [];
         } catch (error) {
             logger.error('Error fetching badges:', error);
+            badges = [];
         }
     }
 
