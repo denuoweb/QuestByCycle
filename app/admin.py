@@ -89,40 +89,58 @@ def admin_dashboard():
 @admin_bp.route('/user_management', methods=['GET'])
 @admin_bp.route('/user_management/game/<int:game_id>', methods=['GET'])
 @login_required
-@require_super_admin
+@require_admin
 def user_management(game_id=None):
-    games = Game.query.all()                                           
-
-                                                          
-    selected_game = None
-    if game_id:
-        selected_game = db.session.get(Game, game_id)
-
-                                                   
-    if selected_game:
-                                                                   
-        users = User.query.join(User.participated_games).filter(Game.id == game_id).all()
+    if current_user.is_super_admin:
+        games = Game.query.order_by(Game.title).all()
     else:
-                                                        
+        games = (
+            Game.query.filter(
+                or_(
+                    Game.admin_id == current_user.id,
+                    Game.admins.any(id=current_user.id)
+                )
+            )
+            .order_by(Game.title)
+            .all()
+        )
+        if game_id is None:
+            if not games:
+                return render_template(
+                    'user_management.html',
+                    users=[],
+                    games=[],
+                    selected_game=None,
+                    user_game_scores={},
+                    in_admin_dashboard=True,
+                )
+            return redirect(url_for('admin.user_management', game_id=games[0].id))
+
+    selected_game = db.session.get(Game, game_id) if game_id else None
+
+    if selected_game:
+        users = (
+            User.query.join(User.participated_games)
+            .filter(Game.id == selected_game.id)
+            .all()
+        )
+    else:
         users = User.query.outerjoin(User.participated_games).all()
 
-                                                                                   
     user_game_scores = {}
     for user in users:
-                                                
         user_games = user.participated_games
         user_game_scores[user.id] = {
             game.id: user.get_score_for_game(game.id) for game in user_games
         }
 
-                                                
     return render_template(
         'user_management.html',
         users=users,
         games=games,
         selected_game=selected_game,
         user_game_scores=user_game_scores,
-        in_admin_dashboard=True
+        in_admin_dashboard=True,
     )
 
 

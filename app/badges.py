@@ -46,9 +46,6 @@ def allowed_file(filename):
 def create_badge():
     game_id = get_int_param('game_id')
 
-    if not current_user.is_super_admin and not current_user.is_admin_for_game(game_id):
-        abort(403)
-
     quest_categories = (
         db.session.query(Quest.category)
         .filter(Quest.game_id == game_id)
@@ -159,8 +156,6 @@ def manage_badges():
     game_id = get_int_param("game_id")
     if game_id is None:
         game_id = get_int_param("game_id", source=request.form)
-    if not current_user.is_super_admin and not current_user.is_admin_for_game(game_id):
-        abort(403)
 
     category_query = db.session.query(Quest.category).filter(Quest.category.isnot(None))
     if game_id:
@@ -262,6 +257,8 @@ def delete_badge(badge_id: int):
     badge = db.session.get(Badge, badge_id)
     if not badge:
         return jsonify({"success": False, "message": "Badge not found"}), 404
+    if not current_user.is_super_admin and not current_user.is_admin_for_game(badge.game_id):
+        return jsonify({"success": False, "message": "Permission denied"}), 403
     try:
         db.session.delete(badge)
         db.session.commit()
@@ -290,8 +287,6 @@ def get_quest_categories():
 @limiter.limit("50/minute")
 def upload_images():
     game_id = get_int_param('game_id')
-    if not current_user.is_super_admin and not current_user.is_admin_for_game(game_id):
-        abort(403)
 
     uploaded_files = request.files.getlist('file')
     images_folder = os.path.join(current_app.root_path, 'static', 'images', 'badge_images')
@@ -324,8 +319,6 @@ def upload_images():
 @limiter.limit("50/minute")
 def bulk_upload():
     game_id = get_int_param('game_id')
-    if not current_user.is_super_admin and not current_user.is_admin_for_game(game_id):
-        abort(403)
 
     csv_file = request.files.get('csv_file')
     image_files = request.files.getlist('image_files')
