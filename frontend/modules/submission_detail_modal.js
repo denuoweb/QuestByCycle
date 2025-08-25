@@ -38,20 +38,20 @@ document.addEventListener('DOMContentLoaded', () => {
     photoEditControls.hidden = true;
 
     // wire the click to reveal the file picker
-    editPhotoBtn.addEventListener('click', () => {
+    editPhotoBtn.onclick = () => {
       photoEditControls.hidden = false;
       editPhotoBtn.hidden      = true;
-    });
+    };
 
     // cancel → hide picker, restore button
-    cancelPhotoBtn.addEventListener('click', () => {
+    cancelPhotoBtn.onclick = () => {
       photoInput.value         = '';
       photoEditControls.hidden = true;
       editPhotoBtn.hidden      = false;
-    });
+    };
 
     // delete the submission with confirmation
-    deleteBtn.addEventListener('click', () => {
+    deleteBtn.onclick = () => {
       if (!confirm('Are you sure you want to delete this submission?')) return;
       const id = modal.dataset.submissionId;
       csrfFetchJson(`/quests/quest/delete_submission/${id}`, {
@@ -67,10 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
           alert('Submission deleted successfully.');
         })
         .catch(e => alert('Error deleting submission: ' + e.message));
-    });
+    };
 
     // save → upload to server
-    savePhotoBtn.addEventListener('click', () => {
+    savePhotoBtn.onclick = () => {
       const id   = modal.dataset.submissionId;
       const file = photoInput.files[0];
       if (!file) return alert('Please select an image first.');
@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cancelPhotoBtn.click();
       })
       .catch(e => alert(e.message));
-    });
+    };
 
     $('#submissionReplyEdit').hidden = isOwner;
     $('#postReplyBtn').hidden        = isOwner;
