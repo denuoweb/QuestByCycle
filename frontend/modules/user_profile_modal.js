@@ -3,7 +3,12 @@ import { csrfFetchJson } from '../utils.js';
 import logger from '../logger.js';
 
 export function showUserProfileModal(userId) {
-  fetch(`/profile/${userId}`)
+  const gameHolder = document.getElementById('game_IdHolder');
+  const gameId = gameHolder ? gameHolder.getAttribute('data-game-id') : null;
+  const query = (gameId && !isNaN(parseInt(gameId, 10)) && gameId !== '0')
+    ? `?game_id=${gameId}`
+    : '';
+  fetch(`/profile/${userId}${query}`)
     .then(r => r.json())
     .then(data => {
       if (!data.riding_preferences_choices) {
@@ -27,7 +32,7 @@ export function showUserProfileModal(userId) {
             <select id="profileTabSelect" class="form-select">
               <option value="profile" selected>Profile</option>
               <option value="bike">Bike</option>
-              <option value="badges-earned">Badges Earned</option>
+              ${data.has_badges ? '<option value="badges-earned">Badges Earned</option>' : ''}
               <option value="games-participated">Games Participated</option>
               <option value="quest-submissions">Quest Submissions</option>
             </select>
@@ -47,12 +52,13 @@ export function showUserProfileModal(userId) {
                 <i class="bi bi-bicycle me-2"></i>Bike
               </a>
             </li>
+            ${data.has_badges ? `
             <li class="nav-item" role="presentation">
               <a class="nav-link" id="badges-earned-tab" data-bs-toggle="tab"
                  href="#badges-earned" role="tab" aria-controls="badges-earned" aria-selected="false">
                 <i class="bi bi-trophy me-2"></i>Badges Earned
               </a>
-            </li>
+            </li>` : ''}
             <li class="nav-item" role="presentation">
               <a class="nav-link" id="games-participated-tab" data-bs-toggle="tab"
                  href="#games-participated" role="tab" aria-controls="games-participated" aria-selected="false">
@@ -242,6 +248,7 @@ export function showUserProfileModal(userId) {
               </section>
             </div>
 
+            ${data.has_badges ? `
             <!-- 3) BADGES EARNED pane -->
             <div class="tab-pane fade" id="badges-earned" role="tabpanel" aria-labelledby="badges-earned-tab">
               <section class="badges-earned mb-4">
@@ -257,11 +264,12 @@ export function showUserProfileModal(userId) {
                           <p><strong>Category:</strong> ${badge.category}</p>
                         </div>
                       </div>
-                    `).join('') 
+                    `).join('')
                     : '<p class="text-muted">No badges earned yet.</p>'}
                 </div>
               </section>
             </div>
+            ` : ''}
 
             <!-- 4) GAMES PARTICIPATED pane -->
             <div class="tab-pane fade" id="games-participated" role="tabpanel" aria-labelledby="games-participated-tab">

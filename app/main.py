@@ -599,6 +599,8 @@ def leaderboard_partial():
     if not game:
         return jsonify({'error': 'Game not found'}), 404
 
+    has_badges = Badge.query.filter_by(game_id=selected_game_id).count() > 0
+
     badge_counts = (
         db.session.query(
             user_badges.c.user_id.label("uid"),
@@ -678,7 +680,8 @@ def leaderboard_partial():
         'top_users': top_users,
         'total_game_points': total_game_points,
         'game_goal': game.game_goal if game.game_goal else None,
-        'secondary_stats': secondary_stats
+        'secondary_stats': secondary_stats,
+        'has_badges': has_badges
     })
 
 
@@ -691,7 +694,13 @@ def user_profile(user_id):
     """
     user = User.query.get_or_404(user_id)
     user_quests = UserQuest.query.filter(UserQuest.user_id == user.id, UserQuest.completions > 0).all()
-    badges = user.badges
+    game_id = get_int_param('game_id')
+    if game_id:
+        badges = [b for b in user.badges if b.game_id == game_id]
+        has_badges = Badge.query.filter_by(game_id=game_id).count() > 0
+    else:
+        badges = user.badges
+        has_badges = bool(badges)
     participated_games = user.participated_games
     quest_submissions = (
         user.quest_submissions.order_by(QuestSubmission.timestamp.desc()).all()
@@ -785,6 +794,7 @@ def user_profile(user_id):
         ],
         'riding_preferences_choices': riding_preferences_choices,
         'timezone_choices': TIMEZONE_CHOICES,
+        'has_badges': has_badges,
     }
 
                                                                   
