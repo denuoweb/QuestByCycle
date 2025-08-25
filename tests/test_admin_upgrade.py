@@ -4,10 +4,6 @@ from flask_login import login_user
 
 from app import create_app, db
 from app.models.user import User
-from app.models.game import Game
-from app.constants import ADMIN_STORAGE_GB, ADMIN_RETENTION_DAYS
-
-
 @pytest.fixture
 def app():
     app = create_app({
@@ -38,7 +34,7 @@ def login_as(client, user):
         login_user(user)
 
 
-def test_user_upgrade_creates_isolated_admin(client):
+def test_edit_profile_does_not_upgrade_admin(client):
     user = User(
         username="player",
         email="player@example.com",
@@ -46,24 +42,7 @@ def test_user_upgrade_creates_isolated_admin(client):
         email_verified=True,
     )
     user.set_password("pw")
-    other_admin = User(
-        username="admin2",
-        email="admin2@example.com",
-        is_admin=True,
-        license_agreed=True,
-        email_verified=True,
-    )
-    other_admin.set_password("pw")
-    db.session.add_all([user, other_admin])
-    db.session.commit()
-
-    game2 = Game(
-        title="Game 2",
-        admin_id=other_admin.id,
-        start_date=datetime.now(timezone.utc) - timedelta(days=1),
-        end_date=datetime.now(timezone.utc) + timedelta(days=1),
-    )
-    db.session.add(game2)
+    db.session.add(user)
     db.session.commit()
 
     login_as(client, user)
@@ -82,21 +61,25 @@ def test_user_upgrade_creates_isolated_admin(client):
     assert resp.json["success"]
 
     db.session.refresh(user)
-    assert user.is_admin
-    assert user.storage_limit_gb == ADMIN_STORAGE_GB
-    assert user.data_retention_days == ADMIN_RETENTION_DAYS
+    assert not user.is_admin
 
-    game1 = Game(
-        title="Game 1",
-        admin_id=user.id,
-        start_date=datetime.now(timezone.utc) - timedelta(days=1),
-        end_date=datetime.now(timezone.utc) + timedelta(days=1),
+
+def test_expired_admin_downgraded_on_request(client):
+    user = User(
+        username="admin1",
+        email="admin1@example.com",
+        license_agreed=True,
+        email_verified=True,
+        is_admin=True,
+        admin_until=datetime.now(timezone.utc) - timedelta(days=1),
     )
-    db.session.add(game1)
+    user.set_password("pw")
+    db.session.add(user)
     db.session.commit()
 
-    resp = client.get("/admin/admin_dashboard")
-    html = resp.get_data(as_text=True)
-    assert "Game 1" in html
-    assert "Game 2" not in html
+    login_as(client, user)
+    client.get(f"/profile/{user.id}")
+
+    db.session.refresh(user)
+    assert not user.is_admin
 

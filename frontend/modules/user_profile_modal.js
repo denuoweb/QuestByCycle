@@ -151,11 +151,29 @@ export function showUserProfileModal(userId) {
                         <label class="form-check-label" for="uploadToMastodon">Cross post to your federation server?</label>
                       </div>
                       ${!data.user.is_admin ? `
-                      <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="upgradeToAdmin" name="upgrade_to_admin">
-                        <label class="form-check-label" for="upgradeToAdmin">
-                          Upgrade to Admin ($10/month, 5 GB storage, 60-day retention)
-                        </label>
+                      <div class="mb-3">
+                        <button type="button" class="btn btn-warning" id="upgradeToAdminBtn"
+                                data-bs-toggle="modal" data-bs-target="#upgradeAdminModal">
+                          Upgrade to Admin
+                        </button>
+                      </div>
+                      <div class="modal fade" id="upgradeAdminModal" tabindex="-1"
+                           aria-labelledby="upgradeAdminModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h5 class="modal-title" id="upgradeAdminModalLabel">Upgrade to Admin</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                      aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                              <p>PayPal subscription integration coming soon.</p>
+                            </div>
+                            <div class="modal-footer">
+                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                          </div>
+                        </div>
                       </div>` : ''}
                       <div class="d-flex justify-content-between">
                         <button type="button" class="btn btn-success" id="saveProfileBtn">
