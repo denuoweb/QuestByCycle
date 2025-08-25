@@ -24,7 +24,9 @@
             <div class="filter-section">
                 <label for="gameFilter">Filter by Game:</label>
                 <select id="gameFilter" class="form-control">
+                    {% if current_user.is_super_admin %}
                     <option value="">All Games</option>
+                    {% endif %}
                     {% for game in games %}
                     <option value="{{ game.id }}" {% if selected_game and selected_game.id == game.id %} selected {% endif %}>
                         {{ game.title }}
@@ -43,7 +45,9 @@
                             <th>Email</th>
                             <th>Score Per Game</th>
                             <th>Games Joined</th>
+                            {% if current_user.is_super_admin %}
                             <th>Actions</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -66,9 +70,11 @@
                                     {% endfor %}
                                 </ul>
                             </td>
+                            {% if current_user.is_super_admin %}
                             <td>
                                 <a href="{{ url_for('admin.edit_user', user_id=user.id) }}" class="btn btn-info btn-sm">View Details</a>
                             </td>
+                            {% endif %}
                         </tr>
                         {% endfor %}
                     </tbody>

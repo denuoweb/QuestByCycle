@@ -6,9 +6,9 @@ from flask_login import current_user
 def require_admin(func):
     """Allow access only to admins or super admins.
 
-    When a ``game_id`` argument is present, non-super admins must be an
-    administrator for that specific game. This helps ensure admins cannot
-    manage games they do not control.
+    When a ``game_id`` is supplied through route parameters, query strings, or
+    form data, non‑super admins must be administrators for that specific
+    game. This helps ensure admins cannot manage games they do not control.
     """
 
     @wraps(func)
@@ -18,8 +18,13 @@ def require_admin(func):
             return redirect(url_for('main.index'))
 
         if not current_user.is_super_admin:
-            game_id = kwargs.get('game_id') or request.view_args.get('game_id')
-            if game_id and not current_user.is_admin_for_game(game_id):
+            game_id = (
+                kwargs.get('game_id')
+                or request.view_args.get('game_id')
+                or request.args.get('game_id')
+                or request.form.get('game_id')
+            )
+            if game_id and not current_user.is_admin_for_game(int(game_id)):
                 flash('Access denied: You do not have permission for this game.', 'error')
                 return redirect(url_for('main.index'))
 
