@@ -12,7 +12,10 @@ function sendSkipWaiting(reg) {
 function isSafeRelativeUrl(url) {
   try {
     const parsed = new URL(url, window.location.origin);
-    return parsed.origin === window.location.origin && parsed.protocol !== 'javascript:';
+    return (
+      parsed.origin === window.location.origin &&
+      !['javascript:', 'data:', 'vbscript:'].includes(parsed.protocol)
+    );
   } catch (err) {
     logger.error(`Invalid URL: ${url}`);
     return false;
