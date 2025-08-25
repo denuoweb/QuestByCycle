@@ -43,8 +43,9 @@ Welcome to QuestByCycle, a gamified bicycling platform! This guide will help you
 1. **Navigate to Your Profile**: Click on your username at the top right corner and select "Profile."
 2. **Edit Profile Information**: Click on "Edit Profile" to update your display name, timezone, interests, and age group. Your timezone is detected automatically and can be adjusted.
 3. **Upload a Profile Picture**: Click on the profile picture area to upload a new picture.
-4. **Upgrade to Admin**: Check "Upgrade to Admin" to enable administrative tools. The upgrade costs $10 per month and includes
-   5&nbsp;GB of storage with 60&nbsp;days of data retention.
+4. **Upgrade to Admin**: Click "Upgrade to Admin" to open a subscription modal. PayPal integration is coming soon and the upgrade
+   will cost $10 per month for 5&nbsp;GB of storage with 60&nbsp;days of data retention. Admin privileges will apply only for the
+   duration of your subscription.
 5. **Save Changes**: Ensure you click "Save" to update your profile information.
 
 ## Navigating the Platform

@@ -39,6 +39,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(512))
     is_admin = db.Column(db.Boolean, default=False)
     is_super_admin = db.Column(db.Boolean, default=False)
+    admin_until = db.Column(db.DateTime(timezone=True), nullable=True)
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
     license_agreed = db.Column(db.Boolean, nullable=False)
     user_quests = db.relationship(
@@ -106,6 +107,19 @@ class User(UserMixin, db.Model):
         backref='followers'
     )
     notifications = db.relationship('Notification', back_populates='user')
+
+    def revoke_admin_if_expired(self) -> None:
+        """Remove admin rights if the subscription has expired."""
+        if self.is_admin and self.admin_until:
+            now = datetime.now(UTC)
+            expires = self.admin_until
+            if expires.tzinfo is None:
+                expires = expires.replace(tzinfo=UTC)
+            if expires < now:
+                self.is_admin = False
+                self.storage_limit_gb = None
+                self.data_retention_days = 0
+                self.admin_until = None
 
     def ensure_activitypub_actor(self):
         """Ensure this user has a valid local ActivityPub actor."""

@@ -357,10 +357,6 @@ class ProfileForm(FlaskForm):
         "Upload Activities to Social Media", default=False
     )
     show_carbon_game = BooleanField("Show Carbon Reduction Game", default=True)
-    upgrade_to_admin = BooleanField(
-        "Upgrade to Admin ($10/month, 5 GB, 60 day retention)",
-        default=False,
-    )
     riding_preferences = SelectMultipleField(
         "Riding Preferences",
         choices=[

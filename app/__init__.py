@@ -239,6 +239,15 @@ def create_app(config_overrides=None):
             except ValidationError as exc:
                 raise CSRFError(exc.args[0])
 
+    @app.before_request
+    def expire_admin_if_needed() -> None:
+        """Downgrade admin users when their subscription has expired."""
+        if current_user.is_authenticated:
+            was_admin = current_user.is_admin
+            current_user.revoke_admin_if_expired()
+            if was_admin and not current_user.is_admin:
+                db.session.commit()
+
     login_manager.login_view = "auth.login"
 
     @login_manager.unauthorized_handler

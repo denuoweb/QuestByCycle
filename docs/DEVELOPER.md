@@ -261,8 +261,8 @@ The database models live in `app/models/` and include:
 
 Forms are defined using WTForms in `app/forms.py` and include:
 
-- **`ProfileForm`**: Form for updating user profiles with a timezone selector and an
-  `upgrade_to_admin` option.
+- **`ProfileForm`**: Form for updating user profiles with a timezone selector.
+  Admin upgrades are handled through a PayPal subscription modal.
 - **`ShoutBoardForm`**: Form for posting messages on the Shout Board.
 - **`QuestForm`**: Form for creating and updating quests.
  - **`PhotoForm`**: Form for submitting photos or videos for quest verification.
