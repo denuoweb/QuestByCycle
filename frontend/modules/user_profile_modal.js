@@ -179,7 +179,7 @@ export function showUserProfileModal(userId) {
                         <button type="button" class="btn btn-success" id="saveProfileBtn">
                           <i class="bi bi-save me-2"></i>Save Profile
                         </button>
-                        <button class="btn btn-secondary" id="cancelProfileBtn">Cancel</button>
+                        <button type="button" class="btn btn-secondary" id="cancelProfileBtn">Cancel</button>
                       </div>
                     </form>
                     <hr>
@@ -383,7 +383,12 @@ export function showUserProfileModal(userId) {
       if (saveBtn) saveBtn.addEventListener('click', () => saveProfile(userId));
 
       const cancelBtn = document.getElementById('cancelProfileBtn');
-      if (cancelBtn) cancelBtn.addEventListener('click', () => cancelProfileEdit(userId));
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', evt => {
+          evt.preventDefault();
+          cancelProfileEdit(userId);
+        });
+      }
 
       const updatePasswordBtn = document.getElementById('updatePasswordBtn');
       if (updatePasswordBtn) updatePasswordBtn.addEventListener('click', () => {
