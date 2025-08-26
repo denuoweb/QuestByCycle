@@ -410,7 +410,7 @@ def google_login():
     state = secrets.token_urlsafe(32)
     session["google_oauth_state"] = state
 
-    # NEW: also persist the state server-side so we can validate without session
+    # Persist state in Redis so callback can validate even if the session is lost
     try:
         r = _redis_client()
         r.setex(f"oidc:state:{state}", 600, "1")
@@ -433,7 +433,6 @@ def google_login():
         nonce=nonce,
         state=state,
     )
-    session["google_oauth_state"] = state
     # Store PKCE verifier server-side keyed by state; TTL 10 minutes
     if use_pkce:
         try:
@@ -464,20 +463,17 @@ def google_callback():
     state = request.args.get("state")
     expected_state = session.pop("google_oauth_state", None)
 
-    # NEW: accept state if present in Redis (one-time)
     state_ok = False
     try:
         r = _redis_client()
-        if r.get(f"oidc:state:{state}"):
+        if state and r.get(f"oidc:state:{state}"):
             state_ok = True
-            r.delete(f"oidc:state:{state}")  # one-time use
+        if state:
+            r.delete(f"oidc:state:{state}")  # one-time use regardless
     except Exception as e:
         current_app.logger.warning("Could not read OAuth state from Redis: %s", e)
 
     if not state or not (state == expected_state or state_ok):
-        flash("State mismatch. Authentication failed.", "danger")
-        return redirect(url_for("auth.login"))
-    if not state or state != expected_state:
         flash("State mismatch. Authentication failed.", "danger")
         return redirect(url_for("auth.login"))
 
