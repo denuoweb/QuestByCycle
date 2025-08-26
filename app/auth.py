@@ -477,9 +477,6 @@ def google_callback():
     if not state or not (state == expected_state or state_ok):
         flash("State mismatch. Authentication failed.", "danger")
         return redirect(url_for("auth.login"))
-    if not state or state != expected_state:
-        flash("State mismatch. Authentication failed.", "danger")
-        return redirect(url_for("auth.login"))
 
     redirect_uri = safe_url_for("auth.google_callback", _external=True)
     oauth = OAuth2Session(client_id, state=state, redirect_uri=redirect_uri)
