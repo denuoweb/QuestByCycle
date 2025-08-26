@@ -9,6 +9,7 @@ access configuration values without deep dictionary lookups.
 from pathlib import Path
 from dataclasses import dataclass
 import os
+import secrets
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -50,6 +51,34 @@ def _get_env_nullable(key: str, default=None):
     if val in (False, "", "false", "False", None):
         return None
     return val
+
+
+def _get_secret_key() -> str:
+    """Return a stable secret key for Flask sessions.
+
+    Prefers the ``SECRET_KEY`` environment variable. If unset, a key is
+    loaded from ``SECRET_KEY_FILE`` (defaulting to ``PROJECT_ROOT/secret.key``).
+    The file will be created with a new random key when missing, ensuring all
+    workers share the same value across restarts and deployments.
+    """
+
+    env_key = _get_env("SECRET_KEY")
+    if env_key and env_key != "replace this key":
+        return env_key
+
+    file_path = _get_env("SECRET_KEY_FILE")
+    key_path = Path(file_path) if file_path else PROJECT_ROOT / "secret.key"
+
+    if key_path.exists():
+        return key_path.read_text().strip()
+
+    key = secrets.token_hex(32)
+    try:
+        key_path.write_text(key)
+    except OSError:
+        # If the file cannot be written, fall back to the in-memory key.
+        pass
+    return key
 
 
 @dataclass
@@ -190,7 +219,7 @@ def load_config() -> AppConfig:
             DEFAULT_SUPER_ADMIN_USERNAME=_get_env("DEFAULT_SUPER_ADMIN_USERNAME", "test"),
             DEFAULT_SUPER_ADMIN_PASSWORD=_get_env("DEFAULT_SUPER_ADMIN_PASSWORD", "test"),
             DEFAULT_SUPER_ADMIN_EMAIL=_get_env("DEFAULT_SUPER_ADMIN_EMAIL", "test@test.com"),
-            SECRET_KEY=_get_env("SECRET_KEY", "replace this key"),
+            SECRET_KEY=_get_secret_key(),
             SESSION_COOKIE_SECURE=_get_env_boolean("SESSION_COOKIE_SECURE", False),
             SESSION_COOKIE_HTTPONLY=_get_env_boolean("SESSION_COOKIE_HTTPONLY", True),
             SESSION_COOKIE_NAME=_get_env("SESSION_COOKIE_NAME", "QuestsByCycles_Session"),
