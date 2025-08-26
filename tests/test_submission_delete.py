@@ -100,3 +100,30 @@ def test_delete_submission_removes_related_records_and_media(app, users, monkeyp
     assert SubmissionLike.query.count() == 0
     assert SubmissionReply.query.count() == 0
     assert called == ["img", "vid"]
+
+
+def test_delete_submission_endpoint_accepts_post(app, users):
+    owner, _ = users
+    game = Game(
+        title="G",
+        start_date=datetime.now(timezone.utc) - timedelta(days=1),
+        end_date=datetime.now(timezone.utc) + timedelta(days=1),
+        admin_id=owner.id,
+        timezone="UTC",
+    )
+    quest = Quest(title="Q", game=game)
+    db.session.add_all([game, quest])
+    db.session.commit()
+
+    submission = QuestSubmission(quest_id=quest.id, user_id=owner.id)
+    db.session.add(submission)
+    db.session.commit()
+
+    with app.test_client() as client:
+        with client.session_transaction() as sess:
+            sess["_user_id"] = str(owner.id)
+        resp = client.post(f"/quests/quest/delete_submission/{submission.id}")
+
+    assert resp.status_code == 200
+    assert resp.get_json()["success"] is True
+    assert QuestSubmission.query.get(submission.id) is None

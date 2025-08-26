@@ -145,7 +145,7 @@ function displayAllSubmissions(submissions, isAdmin, append = false) {
 
 function deleteSubmission(submissionId) {
     csrfFetchJson(`/quests/quest/delete_submission/${submissionId}`, {
-        method: 'DELETE'
+        method: 'POST'
     })
         .then(({ json }) => {
             if (json.success) {

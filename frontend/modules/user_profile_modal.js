@@ -553,7 +553,7 @@ function saveBike(userId) {
 
 function deleteSubmission(submissionId, context, userId) {
   csrfFetchJson(`/quests/quest/delete_submission/${submissionId}`, {
-    method: 'DELETE'
+    method: 'POST'
   })
     .then(({ json }) => {
       if (json.success) {
