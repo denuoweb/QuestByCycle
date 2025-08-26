@@ -459,7 +459,7 @@ def google_callback():
         flash("State mismatch. Authentication failed.", "danger")
         return redirect(url_for("auth.login"))
 
-    redirect_uri = safe_url_for("auth.google_caredirect_urillback", _external=True)
+    redirect_uri = safe_url_for("auth.google_callback", _external=True)
     oauth = OAuth2Session(client_id, state=state, redirect_uri=redirect_uri)
 
     # --- Exchange authorization code for tokens ---
