@@ -393,7 +393,6 @@ def google_login():
     # --- PKCE ---
     code_verifier = _b64url(os.urandom(64))                # 43–128 chars URL-safe
     code_challenge = _b64url(hashlib.sha256(code_verifier.encode()).digest())
-    session["google_pkce_verifier"] = code_verifier
 
     # --- OIDC nonce ---
     nonce = secrets.token_urlsafe(32)
@@ -427,6 +426,11 @@ def google_login():
         current_app.logger.exception("Failed to cache PKCE verifier: %s", e)
         flash("Sign-in temporarily unavailable. Please try again shortly.", "danger")
         return redirect(url_for("auth.login"))
+    # Helpful breadcrumb in logs during rollout
+    current_app.logger.info(
+        "Google OAuth start: redirect_uri=%s state=%s pkce_len=%d",
+        redirect_uri, state, len(code_verifier)
+    )
     return redirect(authorization_url)
 
 
@@ -465,13 +469,18 @@ def google_callback():
             current_app.logger.warning("Missing PKCE code_verifier for state=%s; restarting login.", state)
             flash("Your sign-in session expired. Please try again.", "warning")
             return redirect(url_for("auth.google_login"))
+        # Be explicit with Google: include redirect_uri and client_id in the token request.
         token = oauth.fetch_token(
             "https://oauth2.googleapis.com/token",
             client_secret=client_secret,
             authorization_response=request.url,
             code_verifier=code_verifier.decode() if isinstance(code_verifier, (bytes, bytearray)) else str(code_verifier),
+            redirect_uri=redirect_uri,            # must be byte-for-byte identical to the auth request
+            client_id=client_id,                  # some providers require this explicitly
+            include_client_id=True,               # ensure client_id is sent in the body
             timeout=REQUEST_TIMEOUT,
         )
+        current_app.logger.info("Google OAuth token exchange OK for state=%s", state)
     except Exception as exc:
         current_app.logger.exception("OAuth token exchange failed: %s", exc)
         flash("Error obtaining access token from Google.", "danger")
