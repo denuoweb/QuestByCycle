@@ -411,72 +411,83 @@ def google_login():
 
 @auth_bp.route("/google/callback")
 def google_callback():
+    """Handle the OAuth callback from Google."""
     client_id = current_app.config.get("GOOGLE_CLIENT_ID")
     client_secret = current_app.config.get("GOOGLE_CLIENT_SECRET")
     if not client_id or not client_secret:
         flash("Google OAuth is not configured.", "danger")
         return redirect(url_for("auth.login"))
 
-    # CSRF check
+    # --- CSRF (state) check ---
     state = request.args.get("state")
-    if not state or state != session.get("google_oauth_state"):
+    expected_state = session.pop("google_oauth_state", None)
+    if not state or state != expected_state:
         flash("State mismatch. Authentication failed.", "danger")
         return redirect(url_for("auth.login"))
 
     redirect_uri = safe_url_for("auth.google_callback", _external=True)
     oauth = OAuth2Session(client_id, state=state, redirect_uri=redirect_uri)
 
+    # --- Exchange authorization code for tokens ---
     try:
         token = oauth.fetch_token(
             "https://oauth2.googleapis.com/token",
             client_secret=client_secret,
             authorization_response=request.url,
-            code_verifier=session.pop("google_pkce_verifier", None),  # PKCE
             timeout=REQUEST_TIMEOUT,
         )
     except Exception as exc:
-        flash(f"Error obtaining access token: {exc}", "danger")
+        current_app.logger.exception("OAuth token exchange failed: %s", exc)
+        flash("Error obtaining access token from Google.", "danger")
         return redirect(url_for("auth.login"))
 
-    # --- Verify ID token (recommended) ---
-    id_tok = token.get("id_token")
-    try:
-        idinfo = google_id_token.verify_oauth2_token(
-            id_tok, google_requests.Request(), client_id
-        )
-        # Optional nonce check (some libs include 'nonce' in ID token):
-        expected_nonce = session.pop("google_oidc_nonce", None)
-        if expected_nonce and idinfo.get("nonce") and idinfo["nonce"] != expected_nonce:
-            raise ValueError("Nonce mismatch")
+    # --- Extract identity: prefer ID token; fall back to UserInfo ---
+    google_id = email = name = picture = None
 
-        # You can optionally restrict to a Google Workspace domain:
-        # if required_domain and idinfo.get("hd") != required_domain:
-        #     raise ValueError("Wrong hosted domain")
-
-        google_id = idinfo.get("sub")
-        email = (idinfo.get("email") or "").lower()
-        name = idinfo.get("name")
-        picture = idinfo.get("picture")
-    except Exception:
-        # Fallback to UserInfo if you prefer; ID token verification is better when available.
+    # 1) Try verifying the ID token (if present and google-auth installed)
+    id_token_jwt = token.get("id_token")
+    if id_token_jwt:
         try:
-            userinfo = oauth.get(
+            from google.oauth2 import id_token as google_id_token
+            from google.auth.transport import requests as google_requests
+
+            idinfo = google_id_token.verify_oauth2_token(
+                id_token_jwt, google_requests.Request(), client_id
+            )
+            google_id = idinfo.get("sub")
+            email = (idinfo.get("email") or "").lower()
+            name = idinfo.get("name")
+            picture = idinfo.get("picture")
+        except Exception as exc:
+            current_app.logger.warning(
+                "ID token verification failed; will fall back to UserInfo: %s", exc
+            )
+
+    # 2) Fall back to the UserInfo endpoint if needed
+    if not google_id or not email:
+        try:
+            resp = oauth.get(
                 "https://www.googleapis.com/oauth2/v3/userinfo",
                 timeout=REQUEST_TIMEOUT,
-            ).json()
-            google_id = userinfo.get("sub")
-            email = (userinfo.get("email") or "").lower()
-            name = userinfo.get("name")
-            picture = userinfo.get("picture")
+            )
+            resp.raise_for_status()  # raise for non-2xx
+            uinfo = resp.json()      # safe local name; don't rely on uinfo elsewhere
+            google_id = google_id or uinfo.get("sub")
+            email = (email or uinfo.get("email") or "").lower()
+            name = name or uinfo.get("name")
+            picture = picture or uinfo.get("picture")
         except Exception as exc:
-            flash(f"Error fetching user info: {exc}", "danger")
+            current_app.logger.exception("Fetching UserInfo failed: %s", exc)
+            flash("Error fetching your Google profile.", "danger")
             return redirect(url_for("auth.login"))
 
-    google_id = userinfo.get("sub")
-    email = (userinfo.get("email") or "").lower()
-    name = userinfo.get("name")
-    picture = userinfo.get("picture")
+    # --- Minimal sanity: require a subject (Google account id) ---
+    if not google_id:
+        current_app.logger.error("No 'sub' found in ID token or UserInfo.")
+        flash("Could not determine your Google account ID.", "danger")
+        return redirect(url_for("auth.login"))
 
+    # --- Upsert user ---
     user = None
     if google_id:
         user = User.query.filter_by(google_id=google_id).first()
@@ -488,12 +499,12 @@ def google_callback():
             user.google_id = google_id
             db.session.commit()
     else:
-        username = _generate_username(email)
+        username = _generate_username(email or google_id)
         user = User(
             username=username,
             email=email,
             license_agreed=True,
-            email_verified=True,
+            email_verified=bool(email),
             is_admin=False,
             created_at=datetime.now(UTC),
             score=0,
