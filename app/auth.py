@@ -5,10 +5,13 @@ Authentication module for handling login, registration, and related routes.
 
 import uuid
 import requests
+import base64, hashlib, os, secrets
+
 from datetime import datetime
 from urllib.parse import urlparse, urlencode
 from requests_oauthlib import OAuth2Session
-
+from google.oauth2 import id_token as google_id_token
+from google.auth.transport import requests as google_requests
 from flask import (
     Blueprint,
     render_template,
@@ -363,9 +366,12 @@ def mastodon_callback():
     return redirect(url_for('main.index'))
 
 
+# Utility helpers
+def _b64url(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
+
 @auth_bp.route("/login/google")
 def google_login():
-    """Start the Google OAuth2 login flow."""
     client_id = current_app.config.get("GOOGLE_CLIENT_ID")
     client_secret = current_app.config.get("GOOGLE_CLIENT_SECRET")
     if not client_id or not client_secret:
@@ -373,6 +379,16 @@ def google_login():
         return redirect(url_for("auth.login"))
 
     redirect_uri = safe_url_for("auth.google_callback", _external=True)
+
+    # --- PKCE ---
+    code_verifier = _b64url(os.urandom(64))                # 43–128 chars URL-safe
+    code_challenge = _b64url(hashlib.sha256(code_verifier.encode()).digest())
+    session["google_pkce_verifier"] = code_verifier
+
+    # --- OIDC nonce ---
+    nonce = secrets.token_urlsafe(32)
+    session["google_oidc_nonce"] = nonce
+
     oauth = OAuth2Session(
         client_id,
         redirect_uri=redirect_uri,
@@ -380,7 +396,14 @@ def google_login():
     )
     authorization_url, state = oauth.authorization_url(
         "https://accounts.google.com/o/oauth2/v2/auth",
-        prompt="select_account",
+        # UX and tokens:
+        prompt="select_account",            # plus optionally 'consent' once if you want refresh tokens
+        access_type="offline",              # optional: only if you need refresh tokens
+        include_granted_scopes="true",
+        # Security:
+        code_challenge=code_challenge,
+        code_challenge_method="S256",
+        nonce=nonce,
     )
     session["google_oauth_state"] = state
     return redirect(authorization_url)
@@ -388,13 +411,13 @@ def google_login():
 
 @auth_bp.route("/google/callback")
 def google_callback():
-    """Handle the OAuth callback from Google."""
     client_id = current_app.config.get("GOOGLE_CLIENT_ID")
     client_secret = current_app.config.get("GOOGLE_CLIENT_SECRET")
     if not client_id or not client_secret:
         flash("Google OAuth is not configured.", "danger")
         return redirect(url_for("auth.login"))
 
+    # CSRF check
     state = request.args.get("state")
     if not state or state != session.get("google_oauth_state"):
         flash("State mismatch. Authentication failed.", "danger")
@@ -402,25 +425,52 @@ def google_callback():
 
     redirect_uri = safe_url_for("auth.google_callback", _external=True)
     oauth = OAuth2Session(client_id, state=state, redirect_uri=redirect_uri)
+
     try:
-        oauth.fetch_token(
+        token = oauth.fetch_token(
             "https://oauth2.googleapis.com/token",
             client_secret=client_secret,
             authorization_response=request.url,
+            code_verifier=session.pop("google_pkce_verifier", None),  # PKCE
             timeout=REQUEST_TIMEOUT,
         )
     except Exception as exc:
         flash(f"Error obtaining access token: {exc}", "danger")
         return redirect(url_for("auth.login"))
 
+    # --- Verify ID token (recommended) ---
+    id_tok = token.get("id_token")
     try:
-        userinfo = oauth.get(
-            "https://www.googleapis.com/oauth2/v3/userinfo",
-            timeout=REQUEST_TIMEOUT,
-        ).json()
-    except Exception as exc:
-        flash(f"Error fetching user info: {exc}", "danger")
-        return redirect(url_for("auth.login"))
+        idinfo = google_id_token.verify_oauth2_token(
+            id_tok, google_requests.Request(), client_id
+        )
+        # Optional nonce check (some libs include 'nonce' in ID token):
+        expected_nonce = session.pop("google_oidc_nonce", None)
+        if expected_nonce and idinfo.get("nonce") and idinfo["nonce"] != expected_nonce:
+            raise ValueError("Nonce mismatch")
+
+        # You can optionally restrict to a Google Workspace domain:
+        # if required_domain and idinfo.get("hd") != required_domain:
+        #     raise ValueError("Wrong hosted domain")
+
+        google_id = idinfo.get("sub")
+        email = (idinfo.get("email") or "").lower()
+        name = idinfo.get("name")
+        picture = idinfo.get("picture")
+    except Exception:
+        # Fallback to UserInfo if you prefer; ID token verification is better when available.
+        try:
+            userinfo = oauth.get(
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                timeout=REQUEST_TIMEOUT,
+            ).json()
+            google_id = userinfo.get("sub")
+            email = (userinfo.get("email") or "").lower()
+            name = userinfo.get("name")
+            picture = userinfo.get("picture")
+        except Exception as exc:
+            flash(f"Error fetching user info: {exc}", "danger")
+            return redirect(url_for("auth.login"))
 
     google_id = userinfo.get("sub")
     email = (userinfo.get("email") or "").lower()
