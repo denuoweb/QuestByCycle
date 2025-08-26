@@ -13,6 +13,7 @@ def app():
         "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
         "GOOGLE_CLIENT_ID": "cid",
         "GOOGLE_CLIENT_SECRET": "secret",
+        "OAUTH_USE_PKCE": "false",
     })
     ctx = app.app_context()
     ctx.push()
@@ -39,10 +40,13 @@ def test_google_login_redirect(client):
 
 
 def test_google_callback_creates_user(client, monkeypatch):
-    def fake_fetch_token(self, token_url, client_secret, authorization_response, timeout):
+    def fake_fetch_token(self, token_url, *args, **kwargs):
         return {"access_token": "tok"}
 
     class FakeResp:
+        def raise_for_status(self):
+            pass
+
         def json(self):
             return {
                 "sub": "123",
