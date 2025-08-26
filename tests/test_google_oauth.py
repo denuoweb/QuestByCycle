@@ -41,6 +41,15 @@ def test_google_login_redirect(client):
 
 def test_google_callback_creates_user(client, monkeypatch):
     def fake_fetch_token(self, token_url, *args, **kwargs):
+        # The OAuth session already knows the client ID; the callback should
+        # not redundantly supply it or the `include_client_id` flag. Doing so
+        # can trigger an `invalid_client` error from Google.
+        assert "client_id" not in kwargs
+        assert "include_client_id" not in kwargs
+        # The client secret is still required for the server-side exchange.
+        assert kwargs.get("client_secret") == "secret"
+        # Ensure the redirect URI is explicitly passed through.
+        assert "redirect_uri" in kwargs
         return {"access_token": "tok"}
 
     class FakeResp:

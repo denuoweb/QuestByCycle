@@ -484,14 +484,16 @@ def google_callback():
                 flash("Your sign-in session expired. Please try again.", "warning")
                 return redirect(url_for("auth.google_login"))
 
-        # Be explicit with Google: pass the authorization code and include redirect_uri & client_id.
+        # Explicitly pass the authorization code and redirect URI. `client_id` is
+        # already bound to the session and does not need to be supplied again.
+        # Including it in the body can cause Google to reject the request with
+        # an `invalid_client` error.  Rely on HTTP basic auth instead and only
+        # send the PKCE verifier when applicable.
         token = oauth.fetch_token(
             "https://oauth2.googleapis.com/token",
             code=request.args.get("code"),
             client_secret=client_secret,
             redirect_uri=redirect_uri,   # must match the auth request exactly
-            client_id=client_id,         # send explicitly
-            include_client_id=True,      # ensure client_id is in the body
             timeout=REQUEST_TIMEOUT,
             **(
                 {
