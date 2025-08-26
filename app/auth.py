@@ -484,20 +484,25 @@ def google_callback():
                 flash("Your sign-in session expired. Please try again.", "warning")
                 return redirect(url_for("auth.google_login"))
 
-        # Be explicit with Google: pass the token URL positionally, and include redirect_uri & client_id.
+        # Be explicit with Google: pass the authorization code and include redirect_uri & client_id.
         token = oauth.fetch_token(
             "https://oauth2.googleapis.com/token",
+            code=request.args.get("code"),
             client_secret=client_secret,
-            authorization_response=request.url,
             redirect_uri=redirect_uri,   # must match the auth request exactly
             client_id=client_id,         # send explicitly
             include_client_id=True,      # ensure client_id is in the body
             timeout=REQUEST_TIMEOUT,
             **(
-                {"code_verifier": (code_verifier_value.decode()
-                                   if isinstance(code_verifier_value, (bytes, bytearray))
-                                   else str(code_verifier_value))}
-                if use_pkce else {}
+                {
+                    "code_verifier": (
+                        code_verifier_value.decode()
+                        if isinstance(code_verifier_value, (bytes, bytearray))
+                        else str(code_verifier_value)
+                    )
+                }
+                if use_pkce
+                else {}
             ),
         )
         current_app.logger.info("Google OAuth token exchange OK for state=%s", state)
