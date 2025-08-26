@@ -6,6 +6,7 @@ Authentication module for handling login, registration, and related routes.
 import uuid
 import requests
 import base64, hashlib, os, secrets
+import redis
 
 from datetime import datetime
 from urllib.parse import urlparse, urlencode
@@ -48,6 +49,15 @@ from app.tasks import enqueue_email
 from app.activitypub_utils import create_activitypub_actor
 
 auth_bp = Blueprint('auth', __name__)
+
+
+def _redis_client():
+    """
+    Lightweight Redis client factory using REDIS_URL. Uses a pool internally,
+    so calling per request is fine.
+    """
+    url = current_app.config.get("REDIS_URL") or "redis://localhost:6379/0"
+    return redis.Redis.from_url(url)
 
 
 def _generate_username(email):
@@ -389,12 +399,15 @@ def google_login():
     nonce = secrets.token_urlsafe(32)
     session["google_oidc_nonce"] = nonce
 
+    # We generate our own state so we can key Redis storage on it reliably
+    state = secrets.token_urlsafe(32)
+
     oauth = OAuth2Session(
         client_id,
         redirect_uri=redirect_uri,
         scope=["openid", "email", "profile"],
     )
-    authorization_url, state = oauth.authorization_url(
+    authorization_url, _ = oauth.authorization_url(
         "https://accounts.google.com/o/oauth2/v2/auth",
         # UX and tokens:
         prompt="select_account",            # plus optionally 'consent' once if you want refresh tokens
@@ -404,8 +417,16 @@ def google_login():
         code_challenge=code_challenge,
         code_challenge_method="S256",
         nonce=nonce,
+        state=state,
     )
     session["google_oauth_state"] = state
+    # Store PKCE verifier server-side keyed by state; TTL 10 minutes
+    try:
+        _redis_client().setex(f"oidc:pkce:{state}", 600, code_verifier)
+    except Exception as e:
+        current_app.logger.exception("Failed to cache PKCE verifier: %s", e)
+        flash("Sign-in temporarily unavailable. Please try again shortly.", "danger")
+        return redirect(url_for("auth.login"))
     return redirect(authorization_url)
 
 
@@ -430,10 +451,25 @@ def google_callback():
 
     # --- Exchange authorization code for tokens ---
     try:
+        # Retrieve and consume the PKCE verifier from Redis using the state
+        code_verifier = None
+        try:
+            r = _redis_client()
+            code_verifier = r.get(f"oidc:pkce:{state}")
+            # one-time use: delete regardless
+            r.delete(f"oidc:pkce:{state}")
+        except Exception as e:
+            current_app.logger.warning("Could not read PKCE verifier from Redis: %s", e)
+
+        if not code_verifier:
+            current_app.logger.warning("Missing PKCE code_verifier for state=%s; restarting login.", state)
+            flash("Your sign-in session expired. Please try again.", "warning")
+            return redirect(url_for("auth.google_login"))
         token = oauth.fetch_token(
             "https://oauth2.googleapis.com/token",
             client_secret=client_secret,
             authorization_response=request.url,
+            code_verifier=code_verifier.decode() if isinstance(code_verifier, (bytes, bytearray)) else str(code_verifier),
             timeout=REQUEST_TIMEOUT,
         )
     except Exception as exc:
