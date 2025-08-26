@@ -83,3 +83,55 @@ def test_google_callback_creates_user(client, monkeypatch):
     assert user.google_id == "123"
     with client.session_transaction() as sess:
         assert sess.get("_user_id") == str(user.id)
+
+
+def test_google_callback_allows_redis_state(client, monkeypatch):
+    class FakeRedis:
+        def __init__(self):
+            self.store = {}
+
+        def setex(self, key, ttl, value):
+            self.store[key] = value
+
+        def get(self, key):
+            return self.store.get(key)
+
+        def delete(self, key):
+            self.store.pop(key, None)
+
+    fake_redis = FakeRedis()
+    monkeypatch.setattr("app.auth._redis_client", lambda: fake_redis)
+
+    # Initiate login to populate Redis and then drop session state
+    resp = client.get("/auth/login/google", follow_redirects=False)
+    assert resp.status_code == 302
+    with client.session_transaction() as sess:
+        state = sess.get("google_oauth_state")
+        sess.pop("google_oauth_state", None)
+
+    def fake_fetch_token(self, token_url, *args, **kwargs):
+        return {"access_token": "tok"}
+
+    class FakeResp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "sub": "123",
+                "email": "foo@example.com",
+                "name": "Foo",
+                "picture": "http://example.com/pic.jpg",
+            }
+
+    def fake_get(self, url, timeout):
+        return FakeResp()
+
+    monkeypatch.setattr(OAuth2Session, "fetch_token", fake_fetch_token)
+    monkeypatch.setattr(OAuth2Session, "get", fake_get)
+
+    resp = client.get(f"/auth/google/callback?state={state}&code=xyz", follow_redirects=False)
+    assert resp.status_code == 302
+    user = User.query.filter_by(email="foo@example.com").first()
+    assert user is not None
+    assert not fake_redis.store
