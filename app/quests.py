@@ -1067,11 +1067,13 @@ def get_user_submissions():
     return jsonify(submissions_data)
 
 
-@quests_bp.route("/quest/delete_submission/<int:submission_id>", methods=["DELETE"])
+@quests_bp.route("/quest/delete_submission/<int:submission_id>", methods=["DELETE", "POST"])
 @login_required
 def delete_submission(submission_id):
     """
     Delete a submission by ID. Only the submission owner or an administrator can delete.
+
+    Supports both DELETE and POST requests to simplify client implementations.
 
     Args:
         submission_id (int): The ID of the submission.

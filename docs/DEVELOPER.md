@@ -365,14 +365,14 @@ Users can complete quests and submit verification using the following routes:
 
 - **Submit Quest**: `/quests/quest/<int:quest_id>/submit`
 - **View Quest Submissions**: `/quests/quest/<int:quest_id>/submissions`
-- **Delete Submission**: `/quests/quest/delete_submission/<int:submission_id>`
+- **Delete Submission**: `/quests/quest/delete_submission/<int:submission_id>` (POST or DELETE)
 
 ### View User Submissions
 
 Users can view their submissions using the following routes:
 
 - **View My Submissions**: `/quests/quest/my_submissions`
-- **Delete My Submission**: `/quests/quest/delete_submission/<int:submission_id>`
+- **Delete My Submission**: `/quests/quest/delete_submission/<int:submission_id>` (POST or DELETE)
 
 ### Profile Management
 

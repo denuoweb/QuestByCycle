@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!confirm('Are you sure you want to delete this submission?')) return;
       const id = modal.dataset.submissionId;
       csrfFetchJson(`/quests/quest/delete_submission/${id}`, {
-        method: 'DELETE'
+        method: 'POST'
       })
         .then(({ json }) => {
           if (!json.success) throw new Error(json.message || 'Delete failed');
