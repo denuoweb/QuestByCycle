@@ -18,6 +18,7 @@ from flask import (
 )
 from flask_login import LoginManager, current_user
 from werkzeug.exceptions import HTTPException
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_wtf.csrf import CSRFProtect, CSRFError, validate_csrf
 from wtforms.validators import ValidationError
 from flask_limiter import Limiter
@@ -111,6 +112,7 @@ def create_app(config_overrides=None):
 
     inscopeconfig = load_config()
 
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
                                                     
     app.config.update({
         "SECRET_KEY": inscopeconfig.encryption.SECRET_KEY,
