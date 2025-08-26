@@ -484,22 +484,22 @@ def google_callback():
                 flash("Your sign-in session expired. Please try again.", "warning")
                 return redirect(url_for("auth.google_login"))
 
-        # Be explicit with Google: include redirect_uri and client_id in the token request.
-        token_kwargs = dict(
+        # Be explicit with Google: pass the token URL positionally, and include redirect_uri & client_id.
+        token = oauth.fetch_token(
             "https://oauth2.googleapis.com/token",
             client_secret=client_secret,
             authorization_response=request.url,
-            redirect_uri=redirect_uri,            # must be byte-for-byte identical to the auth request
-            client_id=client_id,                  # some providers require this explicitly
-            include_client_id=True,               # ensure client_id is sent in the body
+            redirect_uri=redirect_uri,   # must match the auth request exactly
+            client_id=client_id,         # send explicitly
+            include_client_id=True,      # ensure client_id is in the body
             timeout=REQUEST_TIMEOUT,
+            **(
+                {"code_verifier": (code_verifier_value.decode()
+                                   if isinstance(code_verifier_value, (bytes, bytearray))
+                                   else str(code_verifier_value))}
+                if use_pkce else {}
+            ),
         )
-        if use_pkce:
-            token_kwargs["code_verifier"] = (
-                code_verifier_value.decode() if isinstance(code_verifier_value, (bytes, bytearray))
-                else str(code_verifier_value)
-            )
-        token = oauth.fetch_token(*token_kwargs.popitem(last=False), **token_kwargs)  # keep order for URL arg
         current_app.logger.info("Google OAuth token exchange OK for state=%s", state)
     except Exception as exc:
         current_app.logger.exception("OAuth token exchange failed: %s", exc)
