@@ -390,9 +390,17 @@ def google_login():
 
     redirect_uri = safe_url_for("auth.google_callback", _external=True)
 
-    # --- PKCE ---
-    code_verifier = _b64url(os.urandom(64))                # 43–128 chars URL-safe
-    code_challenge = _b64url(hashlib.sha256(code_verifier.encode()).digest())
+    # Decide if PKCE is enabled
+    use_pkce = str(current_app.config.get("OAUTH_USE_PKCE", "true")).lower() == "true"
+
+    # --- PKCE (optional; recommended) ---
+    code_verifier = None
+    code_challenge = None
+    if use_pkce:
+        code_verifier  = _b64url(os.urandom(64))  # 43–128 chars URL-safe
+        code_challenge = _b64url(hashlib.sha256(code_verifier.encode()).digest())
+        # Also stash in the session as a secondary fallback
+        session["google_pkce_verifier"] = code_verifier
 
     # --- OIDC nonce ---
     nonce = secrets.token_urlsafe(32)
@@ -413,26 +421,27 @@ def google_login():
         access_type="offline",              # optional: only if you need refresh tokens
         include_granted_scopes="true",
         # Security:
-        code_challenge=code_challenge,
-        code_challenge_method="S256",
+        **({"code_challenge": code_challenge, "code_challenge_method": "S256"} if use_pkce else {}),
         nonce=nonce,
         state=state,
     )
     session["google_oauth_state"] = state
     # Store PKCE verifier server-side keyed by state; TTL 10 minutes
-    try:
-        _redis_client().setex(f"oidc:pkce:{state}", 600, code_verifier)
-    except Exception as e:
-        current_app.logger.exception("Failed to cache PKCE verifier: %s", e)
-        flash("Sign-in temporarily unavailable. Please try again shortly.", "danger")
-        return redirect(url_for("auth.login"))
-    # Helpful breadcrumb in logs during rollout
+    if use_pkce:
+        try:
+            _redis_client().setex(f"oidc:pkce:{state}", 600, code_verifier)
+        except Exception as e:
+            current_app.logger.exception("Failed to cache PKCE verifier: %s", e)
+            flash("Sign-in temporarily unavailable. Please try again shortly.", "danger")
+            return redirect(url_for("auth.login"))
+     # Helpful breadcrumb in logs during rollout
     current_app.logger.info(
-        "Google OAuth start: redirect_uri=%s state=%s pkce_len=%d",
-        redirect_uri, state, len(code_verifier)
+        "Google OAuth start: redirect_uri=%s state=%s pkce=%s%s",
+        redirect_uri, state,
+        "on" if use_pkce else "off",
+        (f" pkce_len={len(code_verifier)}" if use_pkce else "")
     )
     return redirect(authorization_url)
-
 
 @auth_bp.route("/google/callback")
 def google_callback():
@@ -450,36 +459,47 @@ def google_callback():
         flash("State mismatch. Authentication failed.", "danger")
         return redirect(url_for("auth.login"))
 
-    redirect_uri = safe_url_for("auth.google_callback", _external=True)
+    redirect_uri = safe_url_for("auth.google_caredirect_urillback", _external=True)
     oauth = OAuth2Session(client_id, state=state, redirect_uri=redirect_uri)
 
     # --- Exchange authorization code for tokens ---
     try:
-        # Retrieve and consume the PKCE verifier from Redis using the state
-        code_verifier = None
-        try:
-            r = _redis_client()
-            code_verifier = r.get(f"oidc:pkce:{state}")
-            # one-time use: delete regardless
-            r.delete(f"oidc:pkce:{state}")
-        except Exception as e:
-            current_app.logger.warning("Could not read PKCE verifier from Redis: %s", e)
+        use_pkce = str(current_app.config.get("OAUTH_USE_PKCE", "true")).lower() == "true"
+        code_verifier_value = None
 
-        if not code_verifier:
-            current_app.logger.warning("Missing PKCE code_verifier for state=%s; restarting login.", state)
-            flash("Your sign-in session expired. Please try again.", "warning")
-            return redirect(url_for("auth.google_login"))
+        if use_pkce:
+            # Retrieve and consume the PKCE verifier from Redis using the state
+            try:
+                r = _redis_client()
+                code_verifier_value = r.get(f"oidc:pkce:{state}")
+                # one-time use: delete regardless
+                r.delete(f"oidc:pkce:{state}")
+            except Exception as e:
+                current_app.logger.warning("Could not read PKCE verifier from Redis: %s", e)
+            # Fallback to the session copy if Redis missed
+            if not code_verifier_value:
+                code_verifier_value = session.pop("google_pkce_verifier", None)
+            if not code_verifier_value:
+                current_app.logger.warning("Missing PKCE code_verifier for state=%s; restarting login.", state)
+                flash("Your sign-in session expired. Please try again.", "warning")
+                return redirect(url_for("auth.google_login"))
+
         # Be explicit with Google: include redirect_uri and client_id in the token request.
-        token = oauth.fetch_token(
+        token_kwargs = dict(
             "https://oauth2.googleapis.com/token",
             client_secret=client_secret,
             authorization_response=request.url,
-            code_verifier=code_verifier.decode() if isinstance(code_verifier, (bytes, bytearray)) else str(code_verifier),
             redirect_uri=redirect_uri,            # must be byte-for-byte identical to the auth request
             client_id=client_id,                  # some providers require this explicitly
             include_client_id=True,               # ensure client_id is sent in the body
             timeout=REQUEST_TIMEOUT,
         )
+        if use_pkce:
+            token_kwargs["code_verifier"] = (
+                code_verifier_value.decode() if isinstance(code_verifier_value, (bytes, bytearray))
+                else str(code_verifier_value)
+            )
+        token = oauth.fetch_token(*token_kwargs.popitem(last=False), **token_kwargs)  # keep order for URL arg
         current_app.logger.info("Google OAuth token exchange OK for state=%s", state)
     except Exception as exc:
         current_app.logger.exception("OAuth token exchange failed: %s", exc)
