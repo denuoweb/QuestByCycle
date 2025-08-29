@@ -225,7 +225,8 @@ def create_app(config_overrides=None):
             app.logger.warning("Humanify unavailable: %s", exc)
 
                                                 
-    # Avoid heavyweight side effects in tests; unit tests create/drop as needed
+    # Initialize database schema. In tests, ensure tables exist so modules
+    # that don't manage schema per-test (e.g., manifest) still work.
     if not app.config.get("TESTING"):
         with app.app_context():
             db.create_all()
@@ -233,8 +234,13 @@ def create_app(config_overrides=None):
             init_queue(app)
             generate_demo_game()
     else:
-        # Some tests assert that demo generation is invoked at startup.
         with app.app_context():
+            # Ensure tables exist for tests that don't call create_all() themselves
+            try:
+                db.create_all()
+            except Exception:
+                pass
+            # Some tests assert that demo generation is invoked at startup.
             try:
                 generate_demo_game()
             except Exception:
