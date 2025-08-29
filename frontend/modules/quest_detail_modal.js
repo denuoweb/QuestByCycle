@@ -486,8 +486,8 @@ async function submitQuestDetails(event, questId) {
   try {
     const fileInput = event.target.querySelector('input[type="file"]');
     const file      = fileInput ? fileInput.files[0] : null;
-    if (file && file.type.startsWith('video/') && file.size > 10 * 1024 * 1024) {
-      alert('Video must be 10 MB or smaller.');
+    if (file && file.type.startsWith('video/') && file.size > 25 * 1024 * 1024) {
+      alert('Video must be 25 MB or smaller.');
       return;
     }
     if (file && file.type.startsWith('image/') && file.size > 8 * 1024 * 1024) {

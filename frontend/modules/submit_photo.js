@@ -21,8 +21,8 @@ function initSubmitPhotoForm() {
 
         const fileInput = submitPhotoForm.querySelector('input[name="photo"]');
         const file = fileInput ? fileInput.files[0] : null;
-        if (file && file.type.startsWith('video/') && file.size > 10 * 1024 * 1024) {
-            displayFlashMessage('Video must be 10 MB or smaller.', 'error');
+        if (file && file.type.startsWith('video/') && file.size > 25 * 1024 * 1024) {
+            displayFlashMessage('Video must be 25 MB or smaller.', 'error');
             isSubmitting = false;
             return;
         }
@@ -79,4 +79,3 @@ if (document.readyState === 'loading') {
 } else {
     initSubmitPhotoForm();
 }
-

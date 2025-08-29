@@ -74,8 +74,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const id   = modal.dataset.submissionId;
       const file = photoInput.files[0];
       if (!file) return alert('Please select an image first.');
-      if (file.type.startsWith('video/') && file.size > 10 * 1024 * 1024) {
-        alert('Video must be 10 MB or smaller.');
+      if (file.type.startsWith('video/') && file.size > 25 * 1024 * 1024) {
+        alert('Video must be 25 MB or smaller.');
         return;
       }
       if (file.type.startsWith('image/') && file.size > 8 * 1024 * 1024) {
@@ -355,4 +355,3 @@ document.addEventListener('DOMContentLoaded', () => {
     if (replyLimitMessage) replyLimitMessage.style.display = 'block';
   }
 });
-
