@@ -8,6 +8,7 @@ import requests
 import base64, hashlib, os, secrets
 import redis
 
+from oauthlib.oauth2.rfc6749.errors import OAuth2Error
 from datetime import datetime
 from urllib.parse import urlparse, urlencode
 from requests_oauthlib import OAuth2Session
@@ -419,8 +420,8 @@ def google_login():
 
     oauth = OAuth2Session(
         client_id,
-        redirect_uri=redirect_uri,
         scope=["openid", "email", "profile"],
+        redirect_uri=redirect_uri,
     )
     authorization_url, _ = oauth.authorization_url(
         "https://accounts.google.com/o/oauth2/v2/auth",
@@ -486,15 +487,13 @@ def google_callback():
         code_verifier_value = None
 
         if use_pkce:
-            # Retrieve and consume the PKCE verifier from Redis using the state
+            # (unchanged) fetch from Redis/session and normalize to str
             try:
                 r = _redis_client()
                 code_verifier_value = r.get(f"oidc:pkce:{state}")
-                # one-time use: delete regardless
                 r.delete(f"oidc:pkce:{state}")
             except Exception as e:
                 current_app.logger.warning("Could not read PKCE verifier from Redis: %s", e)
-            # Fallback to the session copy if Redis missed
             if not code_verifier_value:
                 code_verifier_value = session.pop("google_pkce_verifier", None)
             if not code_verifier_value:
@@ -502,29 +501,35 @@ def google_callback():
                 flash("Your sign-in session expired. Please try again.", "warning")
                 return redirect(url_for("auth.google_login"))
 
-        # Explicitly pass the authorization code. The redirect URI was bound
-        # when creating the session and will be included automatically. Rely on
-        # HTTP basic auth for the client credentials and only send the PKCE
-        # verifier when applicable to avoid `invalid_client` errors.
+        # Make code mandatory and fail early if missing
+        code = request.args.get("code")
+        if not code:
+            flash("Missing authorization code.", "danger")
+            return redirect(url_for("auth.login"))
+
+        # IMPORTANT for Google: include_client_id=True
         token = oauth.fetch_token(
             "https://oauth2.googleapis.com/token",
-            code=request.args.get("code"),
-            client_secret=client_secret,
-            redirect_uri=redirect_uri,
+            code=code,
+            client_secret=client_secret,      # web app client => keep
+            redirect_uri=redirect_uri,        # MUST match exactly
+            include_client_id=True,           # <-- critical with Google
             timeout=REQUEST_TIMEOUT,
             **(
-                {
-                    "code_verifier": (
-                        code_verifier_value.decode()
-                        if isinstance(code_verifier_value, (bytes, bytearray))
-                        else str(code_verifier_value)
-                    )
-                }
-                if use_pkce
-                else {}
+                {"code_verifier": (
+                    code_verifier_value.decode() if isinstance(code_verifier_value, (bytes, bytearray))
+                    else str(code_verifier_value)
+                )} if use_pkce else {}
             ),
         )
         current_app.logger.info("Google OAuth token exchange OK for state=%s", state)
+
+    except OAuth2Error as exc:
+        # Log structured details if oauthlib surfaced the HTTP response
+        resp_text = getattr(getattr(exc, "response", None), "text", None)
+        current_app.logger.exception("OAuth2Error during token exchange: %s; response=%s", exc, resp_text)
+        flash("Error obtaining access token from Google.", "danger")
+        return redirect(url_for("auth.login"))
     except Exception as exc:
         current_app.logger.exception("OAuth token exchange failed: %s", exc)
         flash("Error obtaining access token from Google.", "danger")
