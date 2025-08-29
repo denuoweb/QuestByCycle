@@ -510,6 +510,7 @@ def google_callback():
             "https://oauth2.googleapis.com/token",
             code=request.args.get("code"),
             client_secret=client_secret,
+            redirect_uri=redirect_uri,
             timeout=REQUEST_TIMEOUT,
             **(
                 {
@@ -743,6 +744,33 @@ def login():
     log_user_ip(user)
     if game_id:
         _join_game_if_provided(user)
+    else:
+        # Ensure a demo game context exists for logged-in users without a selection
+        try:
+            from app.models.game import Game
+            from app.constants import UTC
+            from datetime import datetime
+            from app.utils import generate_demo_game
+
+            demo = (
+                Game.query
+                .filter_by(is_demo=True, archived=False)
+                .order_by(Game.start_date.desc())
+                .first()
+            )
+            if demo is None:
+                generate_demo_game()
+                demo = (
+                    Game.query
+                    .filter_by(is_demo=True, archived=False)
+                    .order_by(Game.start_date.desc())
+                    .first()
+                )
+            if demo is not None:
+                game_id = str(demo.id)
+        except Exception:
+            # Non-fatal in tests; proceed without a demo
+            pass
 
                             
     if next_page and _is_safe_url(next_page):
@@ -750,7 +778,14 @@ def login():
             return jsonify({'success': True, 'redirect': next_page}), 200
         return redirect(next_page)
 
-    target = url_for('main.index', game_id=game_id, show_join_custom=0)
+    # Default landing after login:
+    # - If a concrete game_id is known, land in that game and suppress custom join.
+    # - If not, surface the custom join modal so the user can pick.
+    if game_id:
+        target = url_for('main.index', game_id=game_id, show_join_custom=0)
+    else:
+        target = url_for('main.index', show_join_custom=1)
+
     if is_ajax:
         return jsonify({'success': True, 'redirect': target}), 200
     return redirect(target)
