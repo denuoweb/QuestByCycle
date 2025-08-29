@@ -30,7 +30,7 @@ ALLOWED_IMAGE_MIMETYPES = {
 ALLOWED_VIDEO_MIMETYPES = {"video/mp4", "video/webm", "video/quicktime"}
 
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
-MAX_VIDEO_BYTES = 10 * 1024 * 1024
+MAX_VIDEO_BYTES = 25 * 1024 * 1024
 MAX_JSON_BYTES = 1 * 1024 * 1024
 MAX_IMAGE_DIMENSION = 4096
 MAX_VIDEO_WIDTH = 1920
@@ -313,7 +313,7 @@ def save_submission_video(submission_video_file):
             submission_video_file,
             ALLOWED_VIDEO_EXTENSIONS,
             MAX_VIDEO_BYTES,
-            "Video exceeds 10 MB limit",
+            "Video exceeds 25 MB limit",
             allowed_mimetypes=ALLOWED_VIDEO_MIMETYPES,
         )
 
@@ -408,7 +408,7 @@ def save_submission_video(submission_video_file):
             if final_size > MAX_VIDEO_BYTES:
                 os.remove(final_path)
                 current_app.logger.debug("Compressed video exceeded max size and was deleted")
-                raise ValueError("Video exceeds 10 MB limit after compression")
+                raise ValueError("Video exceeds 25 MB limit after compression")
 
         gcs_url = _upload_to_gcs(final_path, os.path.join("videos", "verifications", final_name), content_type="video/mp4")
         if gcs_url:
