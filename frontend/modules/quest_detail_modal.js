@@ -280,6 +280,11 @@ function manageVerificationSection(questId, canVerify, verificationType) {
         userQuestData.appendChild(verifyForm);
 
         setupSubmissionForm(questId);
+    } else {
+        const message = document.createElement('p');
+        message.className = 'epic-message text-success';
+        message.textContent = 'Thanks for completing the quest.';
+        userQuestData.appendChild(message);
     }
 }
 
@@ -701,4 +706,3 @@ document.addEventListener('click', (e) => {
         toggleContent(toggleEl);
     }
 });
-
