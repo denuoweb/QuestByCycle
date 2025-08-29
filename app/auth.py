@@ -511,9 +511,7 @@ def google_callback():
         token = oauth.fetch_token(
             "https://oauth2.googleapis.com/token",
             code=code,
-            client_secret=client_secret,      # web app client => keep
-            redirect_uri=redirect_uri,        # MUST match exactly
-            include_client_id=True,           # <-- critical with Google
+            client_secret=client_secret,
             timeout=REQUEST_TIMEOUT,
             **(
                 {"code_verifier": (
