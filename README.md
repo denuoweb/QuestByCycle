@@ -103,7 +103,7 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
 - Postfix (for email)
 - GeoIP2 module and database
 - Sass CLI for building CSS
- - Node.js 22 and npm
+- Node.js 22 and npm
 
 ### Quick Developer Setup
 
@@ -113,10 +113,11 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
    cd QuestByCycle
    ```
 
-   Install Poetry and project dependencies:
+   Install Poetry and project dependencies (Python 3.11 recommended):
    ```bash
    curl -sSL https://install.python-poetry.org | python3
-   poetry install
+   poetry env use 3.11   # ensure a 3.11 virtualenv
+   poetry install --sync
    ```
 
    Install Node dependencies and build the frontend assets:
@@ -128,7 +129,7 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
    Copy `.env.example` to `.env` and adjust the values. See
    [docs/DEVELOPER.md](docs/DEVELOPER.md#configuration) for a description of each option.
 
-   Copy `gunicorn.conf.py.example` to `gunicorn.conf.py`.
+   A sample `gunicorn.conf.py` is already provided at the repo root. Adjust values as needed for your environment.
 
    Install frontend dependencies and build assets:
    ```bash
@@ -141,6 +142,22 @@ For automated provisioning details see [docs/INFRASTRUCTURE.md](docs/INFRASTRUCT
    make dev
    ```
    This simultaneously launches the Flask server, Vite dev server, and the RQ worker.
+
+### Running Tests
+
+Use Poetry to run the test suite against Python 3.11.
+
+```bash
+poetry env use 3.11
+poetry install --sync
+poetry run pytest -q
+```
+
+If you use external pytest plugins globally, you can isolate the run:
+
+```bash
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 poetry run pytest -q
+```
 
 
 #### RAM Allocation
@@ -254,4 +271,3 @@ We welcome contributions from the community! Whether you're interested in adding
 
 - The bicycling community for their endless passion and dedication to making the world a greener place.
 - All contributors who spend their time and effort to improve QuestByCycle.
-

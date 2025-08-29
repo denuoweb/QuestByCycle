@@ -111,7 +111,7 @@ Ensure you have the following installed:
 - Redis
 - Node.js 22 and npm
 - ffmpeg (optional for video compression)
-- Poetry
+- Poetry (with a Python 3.11 virtualenv)
 
 ### Installation
 
@@ -121,9 +121,10 @@ Ensure you have the following installed:
    cd your-project
    \`\`\`
 
-2. **Install Python dependencies**:
+2. **Install Python dependencies** (use Python 3.11):
    \`\`\`bash
-   poetry install
+   poetry env use 3.11
+   poetry install --sync
    \`\`\`
 
 3. **Install frontend dependencies and build assets**:
@@ -135,10 +136,9 @@ Ensure you have the following installed:
 4. **Set up the database**:
    Create a PostgreSQL database and update the `.env` file with your database credentials.
 
-5. **Run database migrations**:
-   \`\`\`bash
-   flask db upgrade
-   \`\`\`
+5. **Database (development)**:
+   This project initializes tables automatically on first run; if you use migrations,
+   run them with your preferred tool. Otherwise proceed to running the app.
 
 ### Configuration
 
@@ -440,7 +440,13 @@ Tests are crucial for maintaining the integrity of the codebase. To run tests:
 
 2. **Run tests**:
    \`\`\`bash
-   pytest
+   poetry run pytest
+
+If you have global pytest plugins that interfere, you can isolate the run:
+
+\`\`\`
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 poetry run pytest
+\`\`\`
    \`\`\`
 
 ### Debugging
