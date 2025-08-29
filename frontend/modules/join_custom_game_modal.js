@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
-    const hasJoined = modalEl.dataset.hasJoined === '1';
+    const hasAnyGames = modalEl.dataset.hasAnyGames === '1';
     const joinDemoUrl = modalEl.dataset.joinDemoUrl;
 
     let joinedCustomGame = false;
@@ -19,9 +19,9 @@ document.addEventListener('DOMContentLoaded', function () {
         .addEventListener('submit', () => { joinedCustomGame = true; });
 
     modalEl.addEventListener('hidden.bs.modal', function () {
-        if (!joinedCustomGame && !hasJoined) {
+        // Only auto-join the demo if the user has no games at all.
+        if (!joinedCustomGame && !hasAnyGames) {
             window.location.href = joinDemoUrl;
         }
     });
 });
-

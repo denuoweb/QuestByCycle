@@ -1,5 +1,5 @@
 <!-- Modal for Joining Custom Games -->
-<div class="modal" id="joinCustomGameModal" data-has-joined="{{ 1 if has_joined else 0 }}" data-join-demo-url="{{ url_for('games.join_demo') }}">
+<div class="modal" id="joinCustomGameModal" data-has-any-games="{{ 1 if has_any_games else 0 }}" data-join-demo-url="{{ url_for('games.join_demo') }}">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Join a Game</h5>
@@ -105,5 +105,4 @@
 </div>
 
 <!-- styles moved to SCSS -->
-
 
