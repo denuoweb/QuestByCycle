@@ -913,7 +913,20 @@ def submit_photo(quest_id):
         flash("This quest is not enabled.", "error")
         return redirect(url_for("main.index"))
 
-    if start_date > now or now > end_date:
+    try:
+        if start_date > now or now > end_date:
+            flash("This quest cannot be completed outside of the game dates.", "error")
+            return redirect(url_for("main.index"))
+    except TypeError:
+        current_app.logger.exception(
+            "Datetime compare error in submit_photo: start=%r tz=%r, end=%r tz=%r, now=%r tz=%r",
+            start_date,
+            getattr(start_date, "tzinfo", None),
+            end_date,
+            getattr(end_date, "tzinfo", None),
+            now,
+            getattr(now, "tzinfo", None),
+        )
         flash("This quest cannot be completed outside of the game dates.", "error")
         return redirect(url_for("main.index"))
 
