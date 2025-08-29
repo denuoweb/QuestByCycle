@@ -1,7 +1,17 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_login import login_required, current_user
-from pywebpush import webpush, WebPushException
 from pydantic import ValidationError
+
+# Optional import: allow running without pywebpush installed (e.g., in tests).
+try:
+    from pywebpush import webpush, WebPushException  # type: ignore
+except Exception:  # pragma: no cover - fallback for environments without pywebpush
+    class WebPushException(Exception):
+        """Fallback exception when pywebpush is unavailable."""
+
+    def webpush(*args, **kwargs):  # noqa: ANN001, D401
+        """Fallback stub when pywebpush is unavailable; patched in tests."""
+        raise RuntimeError("pywebpush is not installed")
 
 from app.models import db
 from app.models.user import PushSubscription

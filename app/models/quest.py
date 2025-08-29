@@ -1,5 +1,11 @@
 from datetime import datetime
-from enum import StrEnum
+try:
+    from enum import StrEnum  # Python 3.11+
+except Exception:  # pragma: no cover - compatibility for Python < 3.11 in CI
+    from enum import Enum
+
+    class StrEnum(str, Enum):
+        pass
 
 from app.constants import UTC
 from . import db
@@ -183,4 +189,3 @@ QuestSubmission.replies = db.relationship(
     cascade='all, delete-orphan',
     single_parent=True
 )
-
