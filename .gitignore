@@ -205,3 +205,7 @@ keystore/
 public_key.pem
 private_key.pem
 my-map-key.json
+
+.venv311/
+app/static/videos/
+app/static/images/game_logos/
