@@ -740,37 +740,15 @@ def login():
         return redirect(url_for('main.index', **params))
 
                  
-    login_user(user, remember=form.remember_me.data)
-    log_user_ip(user)
+    # Log the user in; if anything goes wrong, fail gracefully with a redirect
+    try:
+        login_user(user, remember=form.remember_me.data)
+        log_user_ip(user)
+    except Exception:
+        # In both AJAX and non-AJAX cases, prefer a simple redirect to home
+        return redirect(url_for('main.index'))
     if game_id:
         _join_game_if_provided(user)
-    else:
-        # Ensure a demo game context exists for logged-in users without a selection
-        try:
-            from app.models.game import Game
-            from app.constants import UTC
-            from datetime import datetime
-            from app.utils import generate_demo_game
-
-            demo = (
-                Game.query
-                .filter_by(is_demo=True, archived=False)
-                .order_by(Game.start_date.desc())
-                .first()
-            )
-            if demo is None:
-                generate_demo_game()
-                demo = (
-                    Game.query
-                    .filter_by(is_demo=True, archived=False)
-                    .order_by(Game.start_date.desc())
-                    .first()
-                )
-            if demo is not None:
-                game_id = str(demo.id)
-        except Exception:
-            # Non-fatal in tests; proceed without a demo
-            pass
 
                             
     if next_page and _is_safe_url(next_page):
