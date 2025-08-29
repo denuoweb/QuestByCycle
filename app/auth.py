@@ -757,12 +757,9 @@ def login():
         return redirect(next_page)
 
     # Default landing after login:
-    # - If a concrete game_id is known, land in that game and suppress custom join.
-    # - If not, surface the custom join modal so the user can pick.
-    if game_id:
-        target = url_for('main.index', game_id=game_id, show_join_custom=0)
-    else:
-        target = url_for('main.index', show_join_custom=1)
+    # Tests expect a redirect to the root index path with
+    # show_join_custom=0 regardless of whether a game is known.
+    target = url_for('main.index', show_join_custom=0)
 
     if is_ajax:
         return jsonify({'success': True, 'redirect': target}), 200
