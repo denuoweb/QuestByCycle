@@ -278,7 +278,9 @@
                 <h2>Available Quests</h2>
                 <div class="quest-tab-navigation mb-2">
                     <button class="quest-tab-button active" data-quest-tab="all-quests">All</button>
+                    {% if game.calendar_url %}
                     <button class="quest-tab-button" data-quest-tab="calendar-quests">Calendar</button>
+                    {% endif %}
                 </div>
                 <input type="text" id="questSearchInput" class="form-control mb-3" placeholder="Search for quests...">
                 <div class="form-group" id="questCategoryGroup">
@@ -333,6 +335,7 @@
                     </tbody>
                 </table>
                 </div>
+                {% if game.calendar_url %}
                 <div class="quest-tab-content" id="calendar-quests-tab">
                 <h4>Upcoming
                 {% if current_user.is_authenticated and current_user.is_admin_for_game(game.id) %}
@@ -427,6 +430,7 @@
                     </tbody>
                 </table>
                 </div>
+                {% endif %}
             </div>
         {% endif %}
         {% if current_user.is_authenticated and current_user.is_admin %}
