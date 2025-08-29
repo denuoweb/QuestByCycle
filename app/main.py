@@ -37,6 +37,7 @@ from datetime import datetime, timedelta
 from PIL import Image, UnidentifiedImageError, features
 
 from app.decorators import require_admin
+from app.utils import generate_demo_game
 from app.constants import (
     UTC,
     FREQUENCY_DELTA,
@@ -187,11 +188,14 @@ def _prepare_quests(game, user_id, user_quests, now):
                     quest.next_eligible_time = last_submission.timestamp + FREQUENCY_DELTA.get(quest.frequency, timedelta(days=1))
 
                                                                   
-    pinned_messages = ShoutBoardMessage.query.filter_by(is_pinned=True, game_id=game.id).order_by(
-        ShoutBoardMessage.timestamp.desc()).all()
-    unpinned_messages = ShoutBoardMessage.query.filter_by(is_pinned=False, game_id=game.id).order_by(
-        ShoutBoardMessage.timestamp.desc()).all()
-    activities = pinned_messages + (unpinned_messages + [ut for ut in completed_quests if ut.quest.game_id == game.id])
+    if game is not None:
+        pinned_messages = ShoutBoardMessage.query.filter_by(is_pinned=True, game_id=game.id).order_by(
+            ShoutBoardMessage.timestamp.desc()).all()
+        unpinned_messages = ShoutBoardMessage.query.filter_by(is_pinned=False, game_id=game.id).order_by(
+            ShoutBoardMessage.timestamp.desc()).all()
+        activities = pinned_messages + (unpinned_messages + [ut for ut in completed_quests if ut.quest.game_id == game.id])
+    else:
+        activities = []
     activities.sort(key=get_datetime, reverse=True)
 
                                                                      
@@ -350,6 +354,23 @@ def index(game_id, quest_id, user_id):
             .order_by(Game.start_date.desc())
             .first()
         )
+        if demo is None:
+            # Seed a demo game on-the-fly if missing (common in tests)
+            generate_demo_game()
+            demo = (
+                Game.query
+                .filter_by(is_demo=True, archived=False)
+                .order_by(Game.start_date.desc())
+                .first()
+            )
+            if demo is None:
+                # Still no demo; fall back to custom join. Only trigger login modal for unauthenticated users.
+                if current_user.is_authenticated:
+                    return redirect(url_for('main.index', show_join_custom=1))
+                return redirect(url_for('main.index', show_join_custom=1, show_login=1))
+        # Redirect to the demo game; only force login modal when not authenticated
+        if current_user.is_authenticated:
+            return redirect(url_for('main.index', game_id=demo.id))
         return redirect(url_for('main.index', game_id=demo.id, show_login=1))
 
     if game is None or game_id is None:
@@ -359,7 +380,19 @@ def index(game_id, quest_id, user_id):
             .order_by(Game.start_date.desc())
             .first()
         )
-        game, game_id = demo, demo.id
+        if demo is None:
+            generate_demo_game()
+            demo = (
+                Game.query
+                .filter_by(is_demo=True, archived=False)
+                .order_by(Game.start_date.desc())
+                .first()
+            )
+        if demo is not None:
+            game, game_id = demo, demo.id
+        else:
+            # Keep page operational even without a seeded demo game
+            game, game_id = None, None
 
                              
     profile = None
@@ -434,6 +467,7 @@ def index(game_id, quest_id, user_id):
 
                          
     has_joined = (current_user.is_authenticated and game in current_user.participated_games)
+    has_any_games = (current_user.is_authenticated and bool(current_user.participated_games))
     explicit_game = bool(request.args.get('game_id'))
     suppress_custom = request.args.get('show_join_custom') == '0'
     show_join_modal = (
@@ -449,7 +483,6 @@ def index(game_id, quest_id, user_id):
     else:
         earned_badges, unearned_badges = [], []
 
-            
     return render_template(
         'index.html',
         form=ShoutBoardForm(),
@@ -466,9 +499,13 @@ def index(game_id, quest_id, user_id):
         categories=categories,
         show_join_modal=show_join_modal,
         show_join_custom=show_join_custom,
-        game_participation={game.id: (game in current_user.participated_games if current_user.is_authenticated else [])},
+        game_participation=(
+            {game.id: (game in current_user.participated_games if current_user.is_authenticated else [])}
+            if game is not None else {}
+        ),
         selected_quest=Quest.query.get(quest_id) if quest_id else None,
         has_joined=has_joined,
+        has_any_games=has_any_games,
         profile=profile,
         user_quests=user_quests,
         total_points=total_points,
