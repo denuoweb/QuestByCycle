@@ -241,6 +241,7 @@ class QuestForm(FlaskForm):
     verification_type_choices = [
         ("qr_code", "QR Code"),
         ("photo", "Photo Upload"),
+        ("video", "Video Upload"),
         ("comment", "Comment"),
         ("photo_comment", "Photo Upload and Comment"),
         ("pause", "Pause"),
