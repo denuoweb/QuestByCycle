@@ -75,20 +75,19 @@ def test_register_post_missing_data(client):
 
                                                         
 
-def test_register_post_without_license(client):
+def test_register_post_without_license_implies_agreement(client):
     data = {
         "email": "newuser@example.com",
         "password": "password",
         "confirm_password": "password",
-                                
     }
     resp = client.post("/auth/register", data=data, follow_redirects=False)
     assert resp.status_code == 302
 
     loc = resp.headers["Location"]
-    assert loc.startswith(url_for_path(client.application, "main.index"))
-    qs = parse_qs(urlparse(loc).query)
-    assert qs.get("show_register") == ["1"]
+    # Successful registration redirects to index with join modal shown
+    assert url_for_path(client.application, "main.index") in loc
+    assert "show_join_custom=1" in loc
 
                                                                    
 

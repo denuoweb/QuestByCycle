@@ -869,7 +869,7 @@ def register():
         )
 
     if request.method == 'POST' and not current_app.config.get('TESTING') and not humanify_ext.has_valid_clearance_token:
-        if form.validate_on_submit() and form.accept_license.data:
+        if form.validate_on_submit():
             email = sanitize_html(form.email.data or '').lower()
             if not User.query.filter_by(email=email).first():
                 session['pending_registration'] = {
@@ -914,17 +914,7 @@ def register():
         params.update(_next_params(next_page))
         return redirect(safe_url_for('main.index', **params))
 
-    if not form.accept_license.data:
-        flash('You must agree to the terms of service, license agreement, and privacy policy.', 'warning')
-        params = {
-            'show_register': 1,
-            'game_id': game_id,
-            'custom_game_code': custom_game_code,
-            'quest_id': quest_id,
-            '_external': True,
-        }
-        params.update(_next_params(next_page))
-        return redirect(safe_url_for('main.index', **params))
+    # Agreement is implied by continuing; do not require a checkbox.
 
                  
     email = sanitize_html(form.email.data or "").lower()

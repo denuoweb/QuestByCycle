@@ -67,15 +67,7 @@ class RegistrationForm(FlaskForm):
         ],
         render_kw={"autocomplete": "new-password"},
     )
-    accept_license = BooleanField("I agree to the ", validators=[DataRequired()])
     submit = SubmitField("Register")
-
-    def validate_accept_license(self, field):                               
-        """Ensure the user agrees to the terms."""
-        if not field.data:
-            raise ValidationError(
-                "You must agree to the terms of service, license agreement, and privacy policy to register."
-            )
 
 class MastodonLoginForm(FlaskForm):
     """Form for logging in via Mastodon OAuth."""

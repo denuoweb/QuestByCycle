@@ -28,7 +28,7 @@ Welcome to QuestByCycle, a gamified bicycling platform! This guide will help you
 **Sign Up**:
 1. **Navigate to the Sign-Up Page**: Click on the "Sign Up" button on the homepage.
 2. **Fill in Your Details**: Enter your username, email, and password.
-3. **Agree to Terms and Conditions**: Check the box to agree to the terms and conditions.
+3. **Agreement**: By continuing, you agree to the Terms of Service, Privacy Policy, and License Agreement.
 4. **Submit**: Click on "Create Account" to complete the sign-up process.
 5. **Email Verification**: If the site is configured with email support, check your inbox for a verification link and click it before you can log in. On instances without email configured you will be logged in automatically.
 
@@ -161,4 +161,3 @@ We hope this guide helps you navigate and enjoy our platform. If you have any qu
 ---
 
 Thank you for joining our community. Your participation and enthusiasm make this platform a vibrant and exciting place for everyone.
-
