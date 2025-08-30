@@ -1,4 +1,5 @@
 import { openModal } from './modal_common.js';
+import { showLoadingModal, hideLoadingModal } from './loading_modal.js';
 import { resetModalContent } from './modal_common.js';
 import { getCSRFToken, csrfFetchJson, fetchJson } from '../utils.js';
 import { showSubmissionDetail } from './submission_detail_modal.js';
@@ -484,6 +485,7 @@ async function submitQuestDetails(event, questId) {
   if (submitBtn) submitBtn.disabled = true;
 
   try {
+    showLoadingModal('Uploading...');
     const fileInput = event.target.querySelector('input[type="file"]');
     const file      = fileInput ? fileInput.files[0] : null;
     if (file && file.type.startsWith('video/') && file.size > 25 * 1024 * 1024) {
@@ -525,6 +527,7 @@ async function submitQuestDetails(event, questId) {
   } finally {
     isSubmitting = false;
     if (submitBtn) submitBtn.disabled = false;
+    hideLoadingModal();
   }
 }
 
