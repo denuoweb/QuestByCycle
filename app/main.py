@@ -65,6 +65,7 @@ from app.utils.file_uploads import (
     save_profile_picture,
     save_bicycle_picture,
     correct_image_orientation,
+    public_media_url,
 )
 from app.utils import sanitize_html, get_int_param
 from app.utils.calendar_utils import _parse_calendar_tz
@@ -819,14 +820,17 @@ def user_profile(user_id):
             for game in participated_games
         ],
         'quest_submissions': [
-            {'id': submission.id,
-             'quest': {'title': submission.quest.title},
-             'comment': submission.comment,
-             'timestamp': submission.timestamp.strftime('%B %d, %Y %H:%M'),
-             'image_url': submission.image_url,
-             'twitter_url': submission.twitter_url,
-             'fb_url': submission.fb_url,
-             'instagram_url': submission.instagram_url}
+            {
+                'id': submission.id,
+                'quest': {'title': submission.quest.title},
+                'comment': submission.comment,
+                'timestamp': submission.timestamp.strftime('%B %d, %Y %H:%M'),
+                # Ensure media paths resolve via Flask static URL
+                'image_url': public_media_url(submission.image_url),
+                'twitter_url': submission.twitter_url,
+                'fb_url': submission.fb_url,
+                'instagram_url': submission.instagram_url,
+            }
             for submission in quest_submissions
         ],
         'riding_preferences_choices': riding_preferences_choices,
