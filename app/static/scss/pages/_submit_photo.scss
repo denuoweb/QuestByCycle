@@ -115,18 +115,7 @@
     transition: opacity 0.3s ease;
   }
 
-  #floating-modal {
-    display: none;
-    padding: 1.25rem;
-    background-color: rgba(255, 255, 255, 0.15);
-    color: #2ebf91;
-    border-radius: 12px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-    font-size: 1.1rem;
-    font-weight: bold;
-    backdrop-filter: blur(10px);
-    z-index: 2;
-  }
+  // Removed obsolete #floating-modal overlay (unused)
 
   @media (min-width: 576px) {
     h1 {
