@@ -32,15 +32,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelPhotoBtn    = $('#cancelPhotoBtn');
     const deleteBtn         = $('#deleteSubmissionBtn');
 
-    // show/hide the “Change Photo” button and delete button
+    // show/hide the “Change” button and delete button
     editPhotoBtn.hidden      = !isOwner;
     deleteBtn.hidden         = !(isOwner || isAdmin);
     photoEditControls.hidden = true;
 
-    // wire the click to reveal the file picker
+    // wire the click to reveal the file picker and open it immediately
     editPhotoBtn.onclick = () => {
       photoEditControls.hidden = false;
       editPhotoBtn.hidden      = true;
+      // Open the native picker to reduce clicks
+      if (photoInput) photoInput.click();
     };
 
     // cancel → hide picker, restore button
@@ -70,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // save → upload to server
-    savePhotoBtn.onclick = () => {
+    savePhotoBtn.onclick = async () => {
       const id   = modal.dataset.submissionId;
       const file = photoInput.files[0];
       if (!file) return alert('Please select an image first.');
@@ -85,6 +87,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const form = new FormData();
       if (file.type.startsWith('video/')) {
+        // Frontend metadata check: enforce 10s max duration
+        try {
+          const duration = await getVideoDuration(file);
+          if (isFinite(duration) && duration > 10.0) {
+            alert('Video must be 10 seconds or shorter.');
+            return;
+          }
+        } catch (e) {
+          alert('Unable to read video metadata. Please try another file.');
+          return;
+        }
         form.append('video', file);
       } else {
         form.append('photo', file);
@@ -110,6 +123,28 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(e => alert(e.message));
     };
+
+    // helper: read duration from a local File via a temporary <video>
+    function getVideoDuration(file) {
+      return new Promise((resolve, reject) => {
+        try {
+          const url = URL.createObjectURL(file);
+          const v = document.createElement('video');
+          v.preload = 'metadata';
+          v.onloadedmetadata = () => {
+            URL.revokeObjectURL(url);
+            resolve(v.duration || 0);
+          };
+          v.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error('metadata error'));
+          };
+          v.src = url;
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }
 
     $('#submissionReplyEdit').hidden = isOwner;
     $('#postReplyBtn').hidden        = isOwner;

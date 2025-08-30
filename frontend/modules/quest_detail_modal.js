@@ -496,6 +496,19 @@ async function submitQuestDetails(event, questId) {
       alert('Image must be 8 MB or smaller.');
       return;
     }
+    // Enforce 10s max duration for videos on the client side
+    if (file && file.type.startsWith('video/')) {
+      try {
+        const duration = await getVideoDuration(file);
+        if (isFinite(duration) && duration > 10.0) {
+          alert('Video must be 10 seconds or shorter.');
+          return;
+        }
+      } catch (e) {
+        alert('Unable to read video metadata. Please try another file.');
+        return;
+      }
+    }
 
     const formData = new FormData(event.target);
     formData.append('user_id', CURRENT_USER_ID);
@@ -529,6 +542,28 @@ async function submitQuestDetails(event, questId) {
     if (submitBtn) submitBtn.disabled = false;
     hideLoadingModal();
   }
+}
+
+// helper: read duration from a local File via a temporary <video>
+function getVideoDuration(file) {
+  return new Promise((resolve, reject) => {
+    try {
+      const url = URL.createObjectURL(file);
+      const v = document.createElement('video');
+      v.preload = 'metadata';
+      v.onloadedmetadata = () => {
+        URL.revokeObjectURL(url);
+        resolve(v.duration || 0);
+      };
+      v.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('metadata error'));
+      };
+      v.src = url;
+    } catch (err) {
+      reject(err);
+    }
+  });
 }
 
 /**********************************************************************
