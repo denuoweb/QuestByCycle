@@ -106,7 +106,16 @@ class User(UserMixin, db.Model):
         secondaryjoin=(followers.c.followee_id == id),
         backref='followers'
     )
-    notifications = db.relationship('Notification', back_populates='user')
+    notifications = db.relationship(
+        'Notification',
+        back_populates='user',
+        cascade='all, delete-orphan'
+    )
+    # Store of local ActivityPub outbox activities; cascade on user deletion
+    activitypub_activities = db.relationship(
+        'ActivityStore', backref='user', lazy='dynamic',
+        cascade='all, delete-orphan'
+    )
 
     def revoke_admin_if_expired(self) -> None:
         """Remove admin rights if the subscription has expired."""
@@ -211,13 +220,58 @@ class User(UserMixin, db.Model):
                 for game in self.participated_games]
 
     def delete_user(self):
-        """Delete the user and all associated records."""
+        """Delete the user and all associated records.
+
+        If the user is a game admin, keep the games and detach this user:
+        - Remove the user from any game's admin list.
+        - For games where the user is the primary admin (``admin_id``),
+          reassign the primary admin to another suitable user, preferring an
+          existing game admin, otherwise any super admin, then any admin,
+          and finally any remaining user.
+        """
+        from .game import Game  # Local import to avoid circular dependency
+
+        # Detach the user from game admin relationships (many-to-many)
+        # Use the dynamic backref to fetch affected games.
+        for game in self.admin_games.all():
+            if self in game.admins:
+                game.admins.remove(self)
+
+        # Reassign primary admin for games owned by this user
+        owned_games = Game.query.filter_by(admin_id=self.id).all()
+        if owned_games:
+            for game in owned_games:
+                replacement = next((a for a in game.admins if a.id != self.id), None)
+                if not replacement:
+                    replacement = User.query.filter(
+                        User.is_super_admin.is_(True), User.id != self.id
+                    ).first()
+                if not replacement:
+                    replacement = User.query.filter(
+                        User.is_admin.is_(True), User.id != self.id
+                    ).first()
+                if not replacement:
+                    replacement = User.query.filter(User.id != self.id).first()
+
+                if not replacement:
+                    # No valid replacement exists; prevent FK violation and guide caller
+                    raise RuntimeError(
+                        "Cannot delete user: no replacement admin available for game"
+                    )
+
+                game.admin_id = replacement.id
         for user_quest in self.user_quests:
             db.session.delete(user_quest)
         for quest_like in self.quest_likes:
             db.session.delete(quest_like)
         for message in self.shoutboard_messages:
             db.session.delete(message)
+        # Remove notifications for this user (explicit cleanup for SQLite/test envs)
+        from .user import Notification as _Notification  # local import to avoid hints cycle
+        _Notification.query.filter_by(user_id=self.id).delete(synchronize_session=False)
+        # Remove ActivityPub activities stored for this user (outbox)
+        for ap_activity in self.activitypub_activities:
+            db.session.delete(ap_activity)
         for submission in self.quest_submissions:
             delete_media_file(submission.image_url)
             delete_media_file(submission.video_url)
@@ -276,7 +330,9 @@ class User(UserMixin, db.Model):
 
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False
+    )
     type = db.Column(db.String, nullable=False)
     payload = db.Column(db.JSON, nullable=False)
 
@@ -305,7 +361,9 @@ class UserIP(db.Model):
 
 class ActivityStore(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), index=True
+    )
     json = db.Column(db.JSON, nullable=False)
     published = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
 
@@ -359,4 +417,3 @@ class PushSubscription(db.Model):
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     user = db.relationship('User', backref=db.backref('push_subscriptions', cascade='all, delete-orphan'))
-
