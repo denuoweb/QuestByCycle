@@ -21,16 +21,16 @@ def _deliver_follow_activity(app, actor_url, activity, sender_id):
         try:
             sender = db.session.get(User, sender_id)
             sender.ensure_activitypub_actor()
-            doc = requests.get(actor_url, timeout=REQUEST_TIMEOUT).json()
+            doc = requests.get(
+                actor_url,
+                headers={"Accept": 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'},
+                timeout=REQUEST_TIMEOUT,
+            ).json()
             inbox = doc.get("inbox")
             if inbox:
-                hdrs = sign_activitypub_request(sender, "POST", inbox, json.dumps(activity))
-                requests.post(
-                    inbox,
-                    json=activity,
-                    headers=hdrs,
-                    timeout=REQUEST_TIMEOUT,
-                )
+                body = json.dumps(activity, separators=(",", ":"), ensure_ascii=False)
+                hdrs = sign_activitypub_request(sender, "POST", inbox, body)
+                requests.post(inbox, data=body, headers=hdrs, timeout=REQUEST_TIMEOUT)
         except (SQLAlchemyError, RequestException, ValueError) as exc:
             app.logger.error(
                 "Failed to deliver ActivityPub activity to %s: %s", actor_url, exc

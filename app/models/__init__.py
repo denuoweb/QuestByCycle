@@ -35,6 +35,7 @@ followers = db.Table(
     db.Column('followee_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
 )
 
+from .federation import ForeignActor, RemoteFollower
 from .badge import Badge
 from .user import (
     User,
@@ -66,10 +67,11 @@ __all__ = [
     'Game',
     'ShoutBoardMessage',
     'Sponsor',
+    'ForeignActor',
+    'RemoteFollower',
     'user_badges',
     'user_games',
     'game_participants',
     'game_admins',
     'followers',
 ]
-

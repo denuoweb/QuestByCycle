@@ -9,6 +9,7 @@ from flask_login import login_required, current_user
 
 from app.models import db, user_games
 from app.models.user import User, UserIP
+from app.models import ForeignActor, RemoteFollower
 from app.models.game import Game, Sponsor
 from app.models.quest import QuestSubmission
 from app.forms import SponsorForm, TIMEZONE_CHOICES
@@ -437,3 +438,40 @@ def user_emails():
         game_email_map[game.title] = [user.email for user in users]
 
     return render_template('user_emails.html', game_email_map=game_email_map, games=games, in_admin_dashboard=True)
+
+
+@admin_bp.route('/federation/remote_followers/<int:user_id>', methods=['GET'])
+@login_required
+@require_super_admin
+def list_remote_followers(user_id):
+    """Return a JSON list of cached remote followers for a given local user.
+
+    This is a lightweight admin/debug endpoint to inspect federation state.
+    """
+    user = db.session.get(User, user_id)
+    if not user:
+        return {"error": "User not found"}, 404
+
+    q = (
+        db.session.query(ForeignActor)
+        .join(RemoteFollower, RemoteFollower.foreign_actor_id == ForeignActor.id)
+        .filter(RemoteFollower.user_id == user_id)
+        .order_by(ForeignActor.actor_uri.asc())
+    )
+    actors = q.all()
+    data = [
+        {
+            "actor_uri": a.actor_uri,
+            "canonical_uri": a.canonical_uri,
+            "inbox_url": a.inbox_url,
+            "has_public_key": bool(a.public_key_pem),
+            "updated_at": a.updated_at.isoformat() if a.updated_at else None,
+        }
+        for a in actors
+    ]
+    return {
+        "user_id": user.id,
+        "username": user.username,
+        "count": len(data),
+        "remote_followers": data,
+    }, 200

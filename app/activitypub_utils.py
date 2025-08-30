@@ -21,6 +21,7 @@ from flask import Blueprint, current_app, request, abort, jsonify, url_for
 from pydantic import ValidationError
 from app.tasks import enqueue_deliver_activity
 from app.models import db
+from app.models import ForeignActor, RemoteFollower
 from app.models.user import User, ActivityStore, Notification
 from app.models.quest import QuestLike, QuestSubmission
 from app.schemas import InboxActivitySchema
@@ -35,27 +36,30 @@ AS_CONTEXT = [
         "manuallyApprovesFollowers": "as:manuallyApprovesFollowers",
         "toot": "http://joinmastodon.org/ns#",
         "featured": {"@id": "toot:featured", "@type": "@id"}
-    }
+    },
+    # Commonly included to define the publicKey/publicKeyPem terms used by many servers
+    "https://w3id.org/security/v1",
 ]
 
+def _canonical_json(obj: dict) -> str:
+    """Return a stable, compact JSON string for signing and sending."""
+    return json.dumps(obj, separators=(",", ":"), ensure_ascii=False)
 
+
+from functools import lru_cache
+
+
+@lru_cache(maxsize=1024)
 def discover_remote_inbox(actor_uri):
     """
     Given an actor URI (e.g. https://example.org/users/alice),
     perform WebFinger + actor fetch and return the declared inbox URL.
     Cache it on your Actor/ForeignActor model so you never repeat discovery.
     """
-    from app.models import ForeignActor, db                                
-
-                                             
-    fa = ForeignActor.query.filter_by(actor_uri=actor_uri).first()
-    if fa and fa.inbox_url:
-        return fa.inbox_url
-
-                  
     parsed = urlparse(actor_uri)
     webfinger_url = f"{parsed.scheme}://{parsed.netloc}/.well-known/webfinger"
-    params = {'resource': f"acct:{parsed.path.strip('/')}"}
+    # Per spec and widespread practice, pass the actor URI directly as resource
+    params = {"resource": actor_uri}
     wf = requests.get(webfinger_url, params=params, timeout=REQUEST_TIMEOUT)
     wf.raise_for_status()
     data = wf.json()
@@ -68,7 +72,11 @@ def discover_remote_inbox(actor_uri):
     canonical_actor = self_link['href']
 
                            
-    resp = requests.get(canonical_actor, timeout=REQUEST_TIMEOUT)
+    resp = requests.get(
+        canonical_actor,
+        headers={"Accept": 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'},
+        timeout=REQUEST_TIMEOUT,
+    )
     resp.raise_for_status()
     actor_doc = resp.json()
 
@@ -78,12 +86,25 @@ def discover_remote_inbox(actor_uri):
     if not inbox:
         raise ValueError("Remote actor did not declare an inbox endpoint")
 
-                
+    # Upsert ForeignActor cache
+    fa = (
+        ForeignActor.query.filter_by(actor_uri=actor_uri).first()
+        or ForeignActor.query.filter_by(actor_uri=canonical_actor).first()
+        or ForeignActor.query.filter_by(canonical_uri=actor_uri).first()
+        or ForeignActor.query.filter_by(canonical_uri=canonical_actor).first()
+    )
     if not fa:
-        fa = ForeignActor(actor_uri=actor_uri, canonical_uri=canonical_actor)
+        fa = ForeignActor(actor_uri=actor_uri)
+    fa.canonical_uri = canonical_actor
     fa.inbox_url = inbox
+    key = (actor_doc.get("publicKey", {}) or {}).get("publicKeyPem")
+    if key:
+        fa.public_key_pem = key
     db.session.add(fa)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
     return inbox
 
 
@@ -95,96 +116,148 @@ def sign_activitypub_request(actor, method, url, body):
     parsed = urlparse(url)
     path = parsed.path + (f"?{parsed.query}" if parsed.query else "")
     date_header = formatdate(usegmt=True)
+
+    # Compute Digest of body (SHA-256, base64) as most servers now require it
+    if isinstance(body, str):
+        body_bytes = body.encode("utf-8")
+    else:
+        body_bytes = json.dumps(body).encode("utf-8")
+    import hashlib, base64
+    digest_b64 = base64.b64encode(hashlib.sha256(body_bytes).digest()).decode("ascii")
+    digest_header = f"SHA-256={digest_b64}"
+
+    # Build signing string including digest
     signing_components = [
         f"(request-target): {method.lower()} {path}",
         f"host: {parsed.netloc}",
-        f"date: {date_header}"
+        f"date: {date_header}",
+        f"digest: {digest_header}",
     ]
-    signing_string = "\n".join(signing_components).encode('utf-8')
-    priv = rsa.PrivateKey.load_pkcs1(actor.private_key.encode('utf-8'))
-    signature = rsa.sign(signing_string, priv, 'SHA-256')
-    sig_hex = signature.hex()
+    signing_string = "\n".join(signing_components).encode("utf-8")
+    priv = rsa.PrivateKey.load_pkcs1(actor.private_key.encode("utf-8"))
+    signature = rsa.sign(signing_string, priv, "SHA-256")
+    sig_b64 = base64.b64encode(signature).decode("ascii")
     key_id = f"{actor.activitypub_id}#main-key"
     signature_header = ", ".join([
         f'keyId="{key_id}"',
         'algorithm="rsa-sha256"',
-        'headers="(request-target) host date"',
-        f'signature="{sig_hex}"'
+        'headers="(request-target) host date digest"',
+        f'signature="{sig_b64}"',
     ])
     return {
-        'Date': date_header,
-        'Host': parsed.netloc,
-        'Signature': signature_header,
-        'Content-Type': 'application/activity+json'
+        "Date": date_header,
+        "Host": parsed.netloc,
+        "Digest": digest_header,
+        "Signature": signature_header,
+        # content-type with AS profile for best compatibility
+        "Content-Type": 'application/activity+json',
+        "Accept": 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"',
     }
 
 
-def verify_http_signature(actor, headers, body):
+def _fetch_actor_public_key(actor_uri: str) -> str:
+    """Fetch a remote actor document and return the PEM public key string."""
+    # Try cache first
+    fa = (
+        ForeignActor.query.filter_by(actor_uri=actor_uri).first()
+        or ForeignActor.query.filter_by(canonical_uri=actor_uri).first()
+    )
+    if fa and fa.public_key_pem:
+        return fa.public_key_pem
+
+    # Fetch and update cache
+    resp = requests.get(
+        actor_uri,
+        headers={"Accept": 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'},
+        timeout=REQUEST_TIMEOUT,
+    )
+    resp.raise_for_status()
+    doc = resp.json()
+    key = (doc.get("publicKey", {}) or {}).get("publicKeyPem")
+    if not key:
+        raise ValueError("Remote actor missing publicKeyPem")
+
+    fa = fa or ForeignActor(actor_uri=actor_uri)
+    fa.canonical_uri = doc.get("id") or fa.canonical_uri
+    fa.public_key_pem = key
+    inbox = doc.get("inbox") or (doc.get("endpoints", {}) or {}).get("inbox")
+    if inbox:
+        fa.inbox_url = inbox
+    db.session.add(fa)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+    return key
+
+
+def verify_http_signature(actor_uri: str, headers, body: bytes) -> None:
+    """Verify an incoming HTTP Signature using the sender's public key.
+
+    - Parses the `Signature` header and respects its declared header list
+    - Reconstructs the signing string from the incoming request
+    - Verifies using the remote actor's `publicKeyPem`
+    Aborts with 401 on failure.
     """
-    Verify an incoming HTTP Signature as per the draft spec.
-    Aborts 401 if invalid.
-    """
-    sig_header = headers.get('Signature')
+    sig_header = headers.get("Signature")
     if not sig_header:
-        abort(401, 'Missing Signature header')
+        abort(401, "Missing Signature header")
 
-                                         
-    parts = dict(item.strip().split('=', 1) for item in sig_header.split(','))
-    signature = bytes.fromhex(parts.get('signature', '').strip('"'))
+    # Parse k=v pairs, trimming quotes
+    parts = {}
+    for item in sig_header.split(","):
+        if "=" not in item:
+            continue
+        k, v = item.strip().split("=", 1)
+        parts[k] = v.strip().strip("\"")
 
-                     
-    pub = rsa.PublicKey.load_pkcs1(actor.public_key.encode('utf-8'))
+    import base64
 
-                                    
+    signature_b64 = parts.get("signature", "")
+    if not signature_b64:
+        abort(401, "Missing signature value")
+    try:
+        signature = base64.b64decode(signature_b64)
+    except Exception:
+        abort(401, "Invalid signature encoding")
+
+    headers_list = parts.get("headers") or "date"
+    header_tokens = [h.lower() for h in headers_list.split()]  # space-separated
+
     parsed = urlparse(request.url)
     path = parsed.path + (f"?{parsed.query}" if parsed.query else "")
-    request_target = f"{request.method.lower()} {path}"
-    host = request.host                                 
-    date = headers.get('Date')
-    if not date:
-        abort(401, 'Missing Date header')
+    values = []
+    for token in header_tokens:
+        if token == "(request-target)":
+            values.append(f"(request-target): {request.method.lower()} {path}")
+        else:
+            # Headers are case-insensitive; Flask exposes them case-preserving
+            val = headers.get(token.title()) or headers.get(token)
+            if val is None:
+                abort(401, f"Missing signed header: {token}")
+            values.append(f"{token}: {val}")
+    signing_string = "\n".join(values).encode("utf-8")
 
-    signing_components = [
-        f"(request-target): {request_target}",
-        f"host: {host}",
-        f"date: {date}"
-    ]
-    signing_string = "\n".join(signing_components).encode('utf-8')
+    # Optional: validate digest when present
+    digest_val = headers.get("Digest")
+    if digest_val and body:
+        try:
+            import hashlib
+            algo, b64 = digest_val.split("=", 1)
+            if algo.upper() == "SHA-256":
+                calc = base64.b64encode(hashlib.sha256(body).digest()).decode("ascii")
+                if calc != b64:
+                    abort(401, "Digest mismatch")
+        except Exception:
+            abort(401, "Invalid Digest header")
 
-            
     try:
+        pem = _fetch_actor_public_key(actor_uri)
+        pub = rsa.PublicKey.load_pkcs1(pem.encode("utf-8"))
         rsa.verify(signing_string, signature, pub)
-    except rsa.VerificationError:
-        abort(401, 'Invalid HTTP Signature')
+    except Exception:
+        abort(401, "Invalid HTTP Signature")
 
-
-
-@ap_bp.route('/.well-known/webfinger', methods=['GET'])
-def webfinger():
-    """
-    WebFinger discovery endpoint: responds to ?resource=acct:username@domain
-    """
-    resource = request.args.get('resource', '')
-    if not resource.startswith('acct:'):
-        return jsonify({'error': 'Invalid resource'}), 400
-    acct = resource.split(':', 1)[1]
-    try:
-        username, domain = acct.split('@', 1)
-    except ValueError:
-        return jsonify({'error': 'Invalid acct format'}), 400
-    if domain != current_app.config.get('LOCAL_DOMAIN'):
-        return jsonify({'error': 'User not found'}), 404
-    User.query.filter_by(username=username).first_or_404()
-    actor_url = f"https://{domain}/users/{username}"
-    resp = {
-        'subject': resource,
-        'links': [{
-            'rel': 'self',
-            'type': 'application/activity+json',
-            'href': actor_url
-        }]
-    }
-    return jsonify(resp), 200
 
 
 @ap_bp.route('/<username>', methods=['GET'])
@@ -234,7 +307,7 @@ def inbox(username):
 
                                                  
     if actor_host and actor_host != our_host:
-        verify_http_signature(user, request.headers, request.get_data())
+        verify_http_signature(actor_uri, request.headers, request.get_data())
     else:
         current_app.logger.debug(
             "Skipping signature check for local actor %s", actor_uri
@@ -253,21 +326,17 @@ def inbox(username):
         }
 
         try:
-                                                               
             remote_inbox = discover_remote_inbox(actor_uri)
-
-                                                   
+            body = _canonical_json(accept)
             hdrs = sign_activitypub_request(
                 user,
-                'POST',
+                "POST",
                 remote_inbox,
-                json.dumps(accept)
+                body,
             )
-
-                                                                       
             requests.post(
                 remote_inbox,
-                json=accept,
+                data=body,
                 headers=hdrs,
                 timeout=REQUEST_TIMEOUT,
                 verify=True,
@@ -279,20 +348,38 @@ def inbox(username):
 
                                            
         if sender and sender not in user.followers:
+            # Local follower
             user.followers.append(sender)
+        else:
+            # Remote follower persistence
+            fa = (
+                ForeignActor.query.filter_by(actor_uri=actor_uri).first()
+                or ForeignActor.query.filter_by(canonical_uri=actor_uri).first()
+            )
+            if not fa:
+                try:
+                    # Populate cache (also sets ForeignActor)
+                    discover_remote_inbox(actor_uri)
+                    fa = (
+                        ForeignActor.query.filter_by(actor_uri=actor_uri).first()
+                        or ForeignActor.query.filter_by(canonical_uri=actor_uri).first()
+                    )
+                except Exception:
+                    fa = None
+            if fa:
+                exists = RemoteFollower.query.filter_by(user_id=user.id, foreign_actor_id=fa.id).first()
+                if not exists:
+                    db.session.add(RemoteFollower(user_id=user.id, foreign_actor_id=fa.id))
 
                                                     
+        # Notify local user about the follow
         if sender:
             name = sender.display_name or sender.username
-            db.session.add(Notification(
-                user_id = user.id,
-                type    = 'follow',
-                payload = {
-                    'from_user_id':   sender.id,
-                    'from_user_name': name
-                }
-            ))
-            db.session.commit()
+            payload = {'from_user_id': sender.id, 'from_user_name': name}
+        else:
+            payload = {'from_actor_uri': actor_uri}
+        db.session.add(Notification(user_id=user.id, type='follow', payload=payload))
+        db.session.commit()
 
         return ('', 202)
 
@@ -379,9 +466,9 @@ def inbox(username):
         return ('', 202)
 
                                                    
-    if typ == 'Undo' and sender:
+    if typ == 'Undo':
         obj = activity.get('object', {}) or {}
-        if obj.get('type') == 'Like':
+        if obj.get('type') == 'Like' and sender:
             target = obj.get('object', {}).get('id', '')
             if '/submissions/' in target:
                 try:
@@ -397,9 +484,21 @@ def inbox(username):
                     current_app.logger.warning("Invalid quest id in Undo activity: %s", exc)
             return ('', 202)
         if obj.get('type') == 'Follow' and obj.get('object') == user.activitypub_id:
-            if sender in user.followers:
-                user.followers.remove(sender)
-                db.session.commit()
+            if sender:
+                if sender in user.followers:
+                    user.followers.remove(sender)
+                    db.session.commit()
+            else:
+                # Remote actor unfollow
+                fa = (
+                    ForeignActor.query.filter_by(actor_uri=actor_uri).first()
+                    or ForeignActor.query.filter_by(canonical_uri=actor_uri).first()
+                )
+                if fa:
+                    rf = RemoteFollower.query.filter_by(user_id=user.id, foreign_actor_id=fa.id).first()
+                    if rf:
+                        db.session.delete(rf)
+                        db.session.commit()
             return ('', 202)
 
     return ('', 202)
@@ -473,17 +572,38 @@ def deliver_activity(activity, sender):
             )
             continue
 
+        # Handle followers collection fan-out
+        if recipient.endswith('/followers'):
+            # Fan-out to cached remote followers for the sender
+            try:
+                followers_q = (
+                    db.session.query(ForeignActor)
+                    .join(RemoteFollower, RemoteFollower.foreign_actor_id == ForeignActor.id)
+                    .filter(RemoteFollower.user_id == sender.id)
+                )
+                remote_fas = followers_q.all()
+                for fa in remote_fas:
+                    inbox_url = fa.inbox_url or discover_remote_inbox(fa.actor_uri)
+                    try:
+                        body = _canonical_json(activity)
+                        headers = sign_activitypub_request(sender, 'POST', inbox_url, body)
+                        resp = requests.post(inbox_url, data=body, headers=headers, timeout=REQUEST_TIMEOUT)
+                        resp.raise_for_status()
+                    except Exception as e:
+                        current_app.logger.error("Failed to deliver to %s: %s", inbox_url, e)
+            except Exception as e:
+                current_app.logger.error("Failed fan-out to remote followers: %s", e)
+            continue
+
+        # Skip non-actor recipients like Public
+        if recipient.endswith('#Public'):
+            continue
+
         inbox_url = recipient.rstrip('/') + '/inbox'
         try:
-            headers = sign_activitypub_request(
-                sender, 'POST', inbox_url, json.dumps(activity)
-            )
-            resp = requests.post(
-                inbox_url,
-                json=activity,
-                headers=headers,
-                timeout=REQUEST_TIMEOUT,
-            )
+            body = _canonical_json(activity)
+            headers = sign_activitypub_request(sender, 'POST', inbox_url, body)
+            resp = requests.post(inbox_url, data=body, headers=headers, timeout=REQUEST_TIMEOUT)
             resp.raise_for_status()
         except Exception as e:
             current_app.logger.error(
