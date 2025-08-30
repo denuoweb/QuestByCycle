@@ -48,8 +48,8 @@ def test_google_callback_creates_user(client, monkeypatch):
         assert "include_client_id" not in kwargs
         # The client secret is still required for the server-side exchange.
         assert kwargs.get("client_secret") == "secret"
-        # Ensure the redirect URI is explicitly passed through.
-        assert "redirect_uri" in kwargs
+        # Avoid explicitly passing redirect_uri; oauthlib uses the session value.
+        assert "redirect_uri" not in kwargs
         return {"access_token": "tok"}
 
     class FakeResp:

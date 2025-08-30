@@ -507,7 +507,9 @@ def google_callback():
             flash("Missing authorization code.", "danger")
             return redirect(url_for("auth.login"))
 
-        # IMPORTANT for Google: include_client_id=True
+        # Note: do not pass redirect_uri explicitly here. requests-oauthlib will
+        # use the redirect_uri bound to the OAuth2Session. Passing it again can
+        # cause provider-side mismatches in some deployments behind proxies.
         token = oauth.fetch_token(
             "https://oauth2.googleapis.com/token",
             code=code,
