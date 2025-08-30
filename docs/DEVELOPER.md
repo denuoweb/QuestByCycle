@@ -594,6 +594,14 @@ Before deploying to production, ensure the following settings in your `.env` fil
    flask db upgrade
    \`\`\`
 
+   Note: As of 2025-08-30, a new column `foreign_actor.created_at` was added to
+   track when a remote actor cache entry was first created. If your deployment
+   uses Alembic/Flask-Migrate, generate and apply a migration:
+   \`\`\`bash
+   flask db migrate -m "Add created_at to foreign_actor"
+   flask db upgrade
+   \`\`\`
+
 7. **Set up Gunicorn**:
    \`\`\`bash
    gunicorn --bind 0.0.0.0:8000 wsgi:app
