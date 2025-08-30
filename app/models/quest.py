@@ -139,7 +139,13 @@ class SubmissionLike(db.Model):
         'QuestSubmission',
         back_populates='likes'
     )
-    user = db.relationship('User', backref='submission_likes')
+    # When a User is deleted, let the database cascade delete dependent likes
+    # without SQLAlchemy attempting to NULL the FK (which is NOT NULL).
+    user = db.relationship(
+        'User',
+        backref=db.backref('submission_likes', passive_deletes=True),
+        passive_deletes=True,
+    )
 
 
 class SubmissionReply(db.Model):
@@ -171,7 +177,12 @@ class SubmissionReply(db.Model):
         'QuestSubmission',
         back_populates='replies'
     )
-    user = db.relationship('User', backref='submission_replies')
+    # Same rationale as above for likes: rely on DB cascade on user delete.
+    user = db.relationship(
+        'User',
+        backref=db.backref('submission_replies', passive_deletes=True),
+        passive_deletes=True,
+    )
 
 
 QuestSubmission.likes = db.relationship(
