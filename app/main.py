@@ -306,6 +306,10 @@ def index(game_id, quest_id, user_id):
 
     now = datetime.now(UTC)
 
+    # If the user hasn't accepted the terms yet, require acceptance first.
+    if current_user.is_authenticated and not getattr(current_user, 'license_agreed', False):
+        return redirect(url_for('auth.accept_terms'))
+
     if user_id is None and current_user.is_authenticated:
         user_id = current_user.id
 

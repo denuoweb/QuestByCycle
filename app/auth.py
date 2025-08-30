@@ -41,8 +41,15 @@ from urllib.parse import urljoin
 from app.models import db
 from app.models.user import User
 from app.models.game import Game
-from app.forms import (LoginForm, RegistrationForm, ForgotPasswordForm,
-                       ResetPasswordForm, UpdatePasswordForm, MastodonLoginForm)
+from app.forms import (
+    LoginForm,
+    RegistrationForm,
+    ForgotPasswordForm,
+    ResetPasswordForm,
+    UpdatePasswordForm,
+    MastodonLoginForm,
+    AcceptTermsForm,
+)
 from app.utils.email_utils import send_email
 from app import limiter
 from app.utils.rate_limit import email_or_ip
@@ -238,6 +245,8 @@ def mastodon_login():
         state = uuid.uuid4().hex
         session['mastodon_state'] = state
         session['mastodon_instance'] = instance
+        # Persist acceptance so we can mark the new account as agreed on callback
+        session['accepted_license'] = bool(form.accept_license.data)
                                                 
         app_registration_url = f"https://{instance}/api/v1/apps"
         data = {
@@ -354,7 +363,8 @@ def mastodon_callback():
             new_user = User(
                 username=username,
                 email=f"{username}@{instance}",                     
-                license_agreed=True,
+                # New accounts must explicitly accept before proceeding
+                license_agreed=bool(session.pop('accepted_license', False)),
                 email_verified=True,
                 display_name=display_name,
                 mastodon_id=mastodon_id,
@@ -373,7 +383,7 @@ def mastodon_callback():
                 return redirect(url_for('auth.login'))
             login_user(new_user)
             flash("Account created and logged in via Mastodon. You will federate using your Mastodon identity.", "success")
-    
+
     return redirect(url_for('main.index'))
 
 
@@ -597,7 +607,8 @@ def google_callback():
         user = User(
             username=username,
             email=email,
-            license_agreed=True,
+            # Do not auto-agree; require explicit acceptance after login
+            license_agreed=False,
             email_verified=bool(email),
             is_admin=False,
             created_at=datetime.now(UTC),
@@ -752,6 +763,7 @@ def login():
     except Exception:
         # In both AJAX and non-AJAX cases, prefer a simple redirect to home
         return redirect(url_for('main.index'))
+
     if game_id:
         _join_game_if_provided(user)
 
@@ -1114,6 +1126,40 @@ def verify_email(token):
         params['show_join_custom'] = 1
 
     return redirect(url_for('main.index', **params))
+
+
+@auth_bp.route('/accept_terms', methods=['GET', 'POST'])
+@login_required
+def accept_terms():
+    """Require users to accept terms/privacy before proceeding for the first time.
+
+    - GET: render the acceptance page. If already accepted, redirect to index
+           with the custom game modal shown so users can pick a game.
+    - POST: persist acceptance and redirect to index with show_join_custom=1.
+    """
+    form = AcceptTermsForm()
+    next_page = request.args.get('next')
+
+    # If already accepted, head to index with the join modal (no auto-join)
+    if current_user.license_agreed:
+        return redirect(url_for('main.index', show_join_custom=1))
+
+    if request.method == 'POST' and form.validate_on_submit():
+        current_user.license_agreed = True
+        try:
+            db.session.commit()
+        except SQLAlchemyError as exc:
+            db.session.rollback()
+            current_app.logger.error("Failed to set license_agreed: %s", format_db_error(exc))
+            flash('Could not save your acceptance. Please try again.', 'danger')
+            return render_template('accept_terms.html', form=form, next=next_page)
+
+        flash('Thank you! You can now continue.', 'success')
+
+        # After acceptance, show the custom game modal (avoid auto-join)
+        return redirect(url_for('main.index', show_join_custom=1))
+
+    return render_template('accept_terms.html', form=form, next=next_page)
 
 
 @auth_bp.route('/privacy_policy')

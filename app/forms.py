@@ -90,6 +90,18 @@ class MastodonLoginForm(FlaskForm):
                 "You must agree to the terms of service, license agreement, and privacy policy to log in."
             )
 
+class AcceptTermsForm(FlaskForm):
+    """Simple form to capture acceptance of terms/privacy before proceeding."""
+    accept_license = BooleanField("I agree to the ", validators=[DataRequired()])
+    submit = SubmitField("Continue")
+
+    def validate_accept_license(self, field):
+        """Ensure the user agrees to the terms when continuing."""
+        if not field.data:
+            raise ValidationError(
+                "You must agree to the terms of service, license agreement, and privacy policy to continue."
+            )
+
 class LoginForm(FlaskForm):
     """User login form."""
     email = StringField("Email", validators=[DataRequired(), Email()])

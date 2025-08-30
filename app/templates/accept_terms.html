@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Review and Accept Terms</h5>
+        </div>
+        <div class="card-body">
+          <p>
+            To continue, please confirm that you’ve read and agree to our
+            <a href="#" role="button" data-open-modal="termsModal">Terms of Service</a>,
+            <a href="#" role="button" data-open-modal="privacyModal">Privacy Policy</a>,
+            and <a href="#" role="button" data-open-modal="licenseModal">License Agreement</a>.
+          </p>
+
+          <form method="post" action="{{ url_for('auth.accept_terms', next=next) }}">
+            {{ form.hidden_tag() }}
+            <div class="form-check mb-3">
+              {{ form.accept_license(class="form-check-input", id="acceptLicenseInput") }}
+              <label class="form-check-label" for="acceptLicenseInput">
+                I agree to the Terms of Service, Privacy Policy, and License Agreement.
+              </label>
+              {% for err in form.accept_license.errors %}
+                <div class="text-danger mt-1">{{ err }}</div>
+              {% endfor %}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Continue</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% include "modals/terms_modal.html" %}
+{% include "modals/privacy_modal.html" %}
+{% include "modals/license_modal.html" %}
+
+{% endblock %}
