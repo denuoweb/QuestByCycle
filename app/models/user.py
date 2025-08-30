@@ -99,6 +99,8 @@ class User(UserMixin, db.Model):
     activitypub_id = db.Column(db.String(256), nullable=True)
     public_key = db.Column(db.Text, nullable=True)
     private_key = db.Column(db.Text, nullable=True)
+    # Simple bearer token for ActivityPub client-to-server authentication
+    c2s_token = db.Column(db.String(128), nullable=True)
 
     following = db.relationship(
         'User', secondary=followers,
@@ -153,6 +155,9 @@ class User(UserMixin, db.Model):
         if needs_id or needs_keys:
             db.session.commit()
 
+        # Also ensure a bearer token for C2S auth is present
+        self.ensure_c2s_token()
+
     def generate_verification_token(self, expiration=320000):
         """Generate a JWT token for email verification."""
         token = jwt.encode(
@@ -161,6 +166,18 @@ class User(UserMixin, db.Model):
             algorithm='HS256'
         )
         return token
+
+    def ensure_c2s_token(self) -> str:
+        """Ensure the user has a bearer token for C2S auth and return it.
+
+        Uses a URL-safe random token suitable for Authorization: Bearer usage.
+        """
+        if not self.c2s_token:
+            import secrets
+            # 32 bytes ~ 43 chars; sufficient entropy
+            self.c2s_token = secrets.token_urlsafe(32)
+            db.session.commit()
+        return self.c2s_token
 
     @staticmethod
     def verify_verification_token(token):
