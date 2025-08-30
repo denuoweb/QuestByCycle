@@ -11,6 +11,8 @@ This module provides:
 - Helper to construct, store, and deliver Create activities for quest submissions
 """
 import json
+import uuid
+from typing import Iterable, List, Set
 import rsa
 import requests
 from .utils import REQUEST_TIMEOUT
@@ -522,6 +524,171 @@ def outbox(username):
     return jsonify(resp), 200, {'Content-Type': 'application/activity+json'}
 
 
+@ap_bp.route('/<username>/outbox', methods=['POST'])
+def outbox_post(username):
+    """Client-to-server POST to an actor's outbox.
+
+    - Accept a single Activity, or a non-Activity Object to be wrapped in Create
+    - Generate a new Activity id (ignore any client-supplied id)
+    - For wrapped objects, generate an object id if missing and copy audience fields
+    - Add to the user's outbox collection store
+    - Return 201 Created and Location header to the Activity id
+    - Trigger delivery to recipients
+    """
+    user = User.query.filter_by(username=username).first_or_404()
+    # Enforce simple Bearer token authentication tied to this user
+    authz = request.headers.get('Authorization', '')
+    if not authz.startswith('Bearer '):
+        return jsonify(error="Missing Bearer token"), 401
+    token = authz.split(' ', 1)[1].strip()
+    if not token or token != (user.c2s_token or ""):
+        return jsonify(error="Invalid Bearer token"), 401
+    body = request.get_json(silent=True) or {}
+    if not isinstance(body, dict) or not body:
+        return jsonify(error="Request body must be a single JSON object"), 400
+
+    now = datetime.now(timezone.utc)
+    actor_id = user.activitypub_id
+
+    # Known Activity types (subset sufficient for our use)
+    ACTIVITY_TYPES: Set[str] = {
+        'Create', 'Update', 'Delete', 'Follow', 'Add', 'Remove', 'Like', 'Block', 'Undo',
+        'Accept', 'Reject', 'Announce', 'Offer', 'Invite', 'Join', 'Leave'
+    }
+
+    def _ensure_obj_id(obj: dict) -> dict:
+        if isinstance(obj, dict) and not obj.get('id'):
+            obj_id = f"{actor_id}/objects/{uuid.uuid4()}"
+            obj = dict(obj)
+            obj['id'] = obj_id
+        return obj
+
+    def _copy_audience(src: dict, dst: dict) -> None:
+        for k in ('to', 'bto', 'cc', 'bcc', 'audience'):
+            if k in src:
+                dst[k] = src[k]
+
+    incoming_type = body.get('type')
+    is_activity = isinstance(incoming_type, str) and incoming_type in ACTIVITY_TYPES
+
+    if is_activity:
+        # Validate required properties for certain activities
+        requires_object = {'Create', 'Update', 'Delete', 'Follow', 'Add', 'Remove', 'Like', 'Block', 'Undo'}
+        if incoming_type in requires_object and 'object' not in body:
+            return jsonify(error=f"Activity '{incoming_type}' MUST include 'object'"), 400
+        if incoming_type in {'Add', 'Remove'} and 'target' not in body:
+            return jsonify(error=f"Activity '{incoming_type}' MUST include 'target'"), 400
+
+        activity = dict(body)
+        # Ensure actor is ours; ignore client-supplied id
+        activity['actor'] = actor_id
+        activity['id'] = f"{actor_id}/activities/{uuid.uuid4()}"
+        activity['published'] = now.isoformat()
+        # If object is embedded and lacks id, assign one
+        if isinstance(activity.get('object'), dict):
+            activity['object'] = _ensure_obj_id(activity['object'])
+    else:
+        # Treat as a bare object; must have a type
+        if not incoming_type:
+            return jsonify(error="Object MUST include 'type'"), 400
+        obj = _ensure_obj_id(body)
+        create_id = f"{actor_id}/activities/{uuid.uuid4()}"
+        activity = {
+            '@context': AS_CONTEXT,
+            'id': create_id,
+            'type': 'Create',
+            'actor': actor_id,
+            'object': obj,
+            'published': now.isoformat(),
+        }
+        _copy_audience(obj, activity)
+
+    # Store in outbox
+    stored = ActivityStore(user_id=user.id, json=activity, published=now)
+    db.session.add(stored)
+    db.session.commit()
+
+    # 201 Created + Location header pointing to the Activity id
+    headers = {
+        'Content-Type': 'application/activity+json',
+        'Location': activity.get('id', '')
+    }
+
+    # Kick off delivery
+    enqueue_deliver_activity(activity, user.id)
+
+    return jsonify(activity), 201, headers
+
+
+@ap_bp.route('/<username>/inbox', methods=['GET'])
+def inbox_get(username):
+    """Expose an OrderedCollection inbox (empty/public view).
+
+    This minimal representation satisfies the requirement that the inbox is an
+    OrderedCollection. Implementations may apply access control; we present an
+    empty collection to unauthenticated/public requests.
+    """
+    user = User.query.filter_by(username=username).first_or_404()
+    doc = {
+        '@context': AS_CONTEXT,
+        'id': f"{user.activitypub_id}/inbox",
+        'type': 'OrderedCollection',
+        'totalItems': 0,
+        'orderedItems': [],
+    }
+    return jsonify(doc), 200, {'Content-Type': 'application/activity+json'}
+
+
+@ap_bp.route('/<username>/activities/<path:rest>', methods=['GET'])
+def get_activity(username, rest):
+    """Serve a stored Activity by id via HTTP GET with AS2 representation."""
+    user = User.query.filter_by(username=username).first_or_404()
+    actor_id = user.activitypub_id
+    # Reconstruct full id for lookup
+    full_id = f"{actor_id}/activities/{rest}"
+    # Simple lookup by scanning recent activities
+    rec = (
+        ActivityStore.query
+        .filter_by(user_id=user.id)
+        .order_by(ActivityStore.published.desc())
+        .all()
+    )
+    for a in rec:
+        if isinstance(a.json, dict) and a.json.get('id') == full_id:
+            return jsonify(a.json), 200, {'Content-Type': 'application/activity+json'}
+    abort(404)
+
+
+@ap_bp.route('/<username>/submissions/<int:sid>', methods=['GET'])
+def get_submission_object(username, sid: int):
+    """Serve a minimal AS2 object for a quest submission.
+
+    Matches the identifiers we generate in post_activitypub_create_activity.
+    """
+    user = User.query.filter_by(username=username).first_or_404()
+    sub = db.session.get(QuestSubmission, sid)
+    if not sub:
+        abort(404)
+    if sub.video_url:
+        media_type = 'video/mp4'
+        media_url = sub.video_url
+        obj_type = 'Video'
+    else:
+        media_type = 'image/jpeg'
+        media_url = sub.image_url
+        obj_type = 'Image'
+    obj = {
+        '@context': AS_CONTEXT,
+        'id': f"{user.activitypub_id}/submissions/{sid}",
+        'type': obj_type,
+        'attributedTo': user.activitypub_id,
+        'mediaType': media_type,
+        'url': media_url,
+        'published': sub.timestamp.isoformat(),
+    }
+    return jsonify(obj), 200, {'Content-Type': 'application/activity+json'}
+
+
 def generate_activitypub_keys():
     """
     Generate a new RSA key pair for ActivityPub signing.
@@ -550,14 +717,52 @@ def create_activitypub_actor(user):
         user.public_key = public_pem
         user.private_key = private_pem
         db.session.commit()
+    # Ensure a C2S bearer token exists for client posting
+    try:
+        user.ensure_c2s_token()
+    except Exception:
+        db.session.rollback()
 
 
 def deliver_activity(activity, sender):
     """
     Send an ActivityPub activity to all recipients' inboxes.
     """
-    recipients = activity.get('to', []) + activity.get('cc', [])
+    # Build recipient set from to/cc plus bto/bcc (which must be used for delivery
+    # but removed from the payload per spec).
+    to_list  = activity.get('to', []) or []
+    cc_list  = activity.get('cc', []) or []
+    bto_list = activity.get('bto', []) or []
+    bcc_list = activity.get('bcc', []) or []
+
+    combined: List[str] = []
+    for lst in (to_list, cc_list, bto_list, bcc_list):
+        if isinstance(lst, list):
+            combined.extend([x for x in lst if isinstance(x, str)])
+        elif isinstance(lst, str):
+            combined.append(lst)
+
+    # De-duplicate recipients and exclude the actor themselves.
+    recipients: List[str] = []
+    seen: Set[str] = set()
+    actor_id = sender.activitypub_id
+    for r in combined:
+        if r == actor_id:
+            continue
+        if r in seen:
+            continue
+        seen.add(r)
+        recipients.append(r)
     local_domain = current_app.config.get('LOCAL_DOMAIN')
+    # Prepare a copy with bto/bcc removed for delivery
+    deliver_payload = dict(activity)
+    for hidden in ('bto', 'bcc'):
+        if hidden in deliver_payload:
+            try:
+                del deliver_payload[hidden]
+            except Exception:
+                pass
+
     for recipient in recipients:
         parsed = urlparse(recipient)
         if not parsed.scheme or not parsed.netloc:
@@ -585,7 +790,7 @@ def deliver_activity(activity, sender):
                 for fa in remote_fas:
                     inbox_url = fa.inbox_url or discover_remote_inbox(fa.actor_uri)
                     try:
-                        body = _canonical_json(activity)
+                        body = _canonical_json(deliver_payload)
                         headers = sign_activitypub_request(sender, 'POST', inbox_url, body)
                         resp = requests.post(inbox_url, data=body, headers=headers, timeout=REQUEST_TIMEOUT)
                         resp.raise_for_status()
@@ -601,7 +806,7 @@ def deliver_activity(activity, sender):
 
         inbox_url = recipient.rstrip('/') + '/inbox'
         try:
-            body = _canonical_json(activity)
+            body = _canonical_json(deliver_payload)
             headers = sign_activitypub_request(sender, 'POST', inbox_url, body)
             resp = requests.post(inbox_url, data=body, headers=headers, timeout=REQUEST_TIMEOUT)
             resp.raise_for_status()
