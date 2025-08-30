@@ -31,6 +31,7 @@ ALLOWED_VIDEO_MIMETYPES = {"video/mp4", "video/webm", "video/quicktime"}
 
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
 MAX_VIDEO_BYTES = 25 * 1024 * 1024
+MAX_VIDEO_DURATION_SECONDS = 10.0
 MAX_JSON_BYTES = 1 * 1024 * 1024
 MAX_IMAGE_DIMENSION = 4096
 MAX_VIDEO_WIDTH = 1920
@@ -332,7 +333,8 @@ def save_submission_video(submission_video_file):
 
         ffprobe_bin = shutil.which("ffprobe")
         if ffprobe_bin:
-            probe_cmd = [
+            # Check dimensions
+            probe_cmd_dims = [
                 ffprobe_bin,
                 "-v",
                 "error",
@@ -346,7 +348,7 @@ def save_submission_video(submission_video_file):
             ]
             try:
                 probe = subprocess.run(
-                    probe_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                    probe_cmd_dims, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
                 )
                 dims = probe.stdout.decode().strip().split(",")
                 if len(dims) == 2:
@@ -356,7 +358,36 @@ def save_submission_video(submission_video_file):
                         raise ValueError("Video dimensions exceed 1920x1080 limit")
             except subprocess.CalledProcessError as e:
                 stderr_output = e.stderr.decode(errors="ignore") if e.stderr else ""
-                current_app.logger.error("ffprobe failed: %s", stderr_output)
+                current_app.logger.error("ffprobe (dims) failed: %s", stderr_output)
+                os.remove(orig_path)
+                raise ValueError("Invalid or corrupted video file") from e
+
+            # Check duration (in seconds)
+            probe_cmd_dur = [
+                ffprobe_bin,
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                orig_path,
+            ]
+            try:
+                probe = subprocess.run(
+                    probe_cmd_dur, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                )
+                out = probe.stdout.decode().strip()
+                try:
+                    duration = float(out)
+                except (TypeError, ValueError):
+                    duration = None
+                if duration is not None and duration > MAX_VIDEO_DURATION_SECONDS:
+                    os.remove(orig_path)
+                    raise ValueError("Video duration exceeds 10 seconds limit")
+            except subprocess.CalledProcessError as e:
+                stderr_output = e.stderr.decode(errors="ignore") if e.stderr else ""
+                current_app.logger.error("ffprobe (duration) failed: %s", stderr_output)
                 os.remove(orig_path)
                 raise ValueError("Invalid or corrupted video file") from e
 

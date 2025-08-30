@@ -296,8 +296,8 @@ def submit_quest(quest_id):
                 video_url = save_submission_video(video_file)
                 current_app.logger.debug("Video saved to %s", video_url)
             except ValueError as ve:
-                current_app.logger.error(f"Error processing video file: {str(ve)}")
-                return jsonify({"success": False, "message": "An error occurred while processing the video file. Please try again later."}), 400
+                current_app.logger.error("Error processing video file: %s", str(ve))
+                return jsonify({"success": False, "message": str(ve)}), 400
             image_path = os.path.join(current_app.static_folder, video_url)
         else:
             image_path = None
@@ -1509,14 +1509,32 @@ def update_submission_photo(submission_id):
     photo = request.files.get('photo')
     video = request.files.get('video')
     if photo and photo.filename:
+        # Replace with an image: clear any existing video and its file; replace old image file
+        old_video = sub.video_url
+        old_image = sub.image_url
         new_path = save_submission_image(photo)
+        # Remove previous media files if present
+        if old_image and old_image != new_path:
+            delete_media_file(old_image)
+        if old_video:
+            delete_media_file(old_video)
+        sub.video_url = None
         sub.image_url = new_path
     elif video and video.filename:
         try:
+            # Replace with a video: clear any existing image and its file; replace old video file
+            old_video = sub.video_url
+            old_image = sub.image_url
             new_path = save_submission_video(video)
         except ValueError as ve:
             current_app.logger.error("Error saving submission video: %s", str(ve))
-            return jsonify(success=False, message="An error occurred while processing the video."), 400
+            return jsonify(success=False, message=str(ve)), 400
+        # Remove previous media files if present
+        if old_video and old_video != new_path:
+            delete_media_file(old_video)
+        if old_image:
+            delete_media_file(old_image)
+        sub.image_url = None
         sub.video_url = new_path
     else:
         return jsonify(success=False, message='No file uploaded'), 400
