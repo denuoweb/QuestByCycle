@@ -1,5 +1,5 @@
 // The version of the cache
-const VERSION = '1.2.1-5c80c9f'; // Update this version number when changes are made
+const VERSION = '1.2.1-1e9414d'; // Update this version number when changes are made
 const CACHE_NAME = `questbycycle-${VERSION}`;
 
 // List of static resources to cache
@@ -158,10 +158,21 @@ function shouldCacheRequest(request) {
 // Fetch event with offline fallback
 self.addEventListener('fetch', (event) => {
   const requestUrl = new URL(event.request.url);
+
   // Skip cross-origin requests entirely so the browser handles them.
   if (requestUrl.origin !== self.location.origin) {
     return;
   }
+
+  // Important: Bypass video/audio range requests which can throw in SWs
+  // and should stream directly from the network for correct playback.
+  const isMedia = ['video', 'audio'].includes(event.request.destination);
+  const isRangeRequest = event.request.headers.has('range');
+  if (isMedia || isRangeRequest) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   // Queue non-GET requests when offline. Skip navigations to let the browser
   // handle full page form submissions correctly.
   if (
@@ -192,9 +203,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (event.request.mode === "navigate") {
+  if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match("/offline.html"))
+      fetch(event.request).catch(() => caches.match('/offline.html'))
     );
     return;
   }
