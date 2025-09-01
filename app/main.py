@@ -488,6 +488,14 @@ def index(game_id, quest_id, user_id):
     else:
         earned_badges, unearned_badges = [], []
 
+    # Determine if the currently selected game is over (safe tz-aware comparison)
+    game_over = False
+    if game and getattr(game, 'end_date', None):
+        end_dt = game.end_date
+        if end_dt and not getattr(end_dt, 'tzinfo', None):
+            end_dt = end_dt.replace(tzinfo=UTC)
+        game_over = bool(end_dt and now > end_dt)
+
     return render_template(
         'index.html',
         form=ShoutBoardForm(),
@@ -529,7 +537,8 @@ def index(game_id, quest_id, user_id):
         forgot_form=forgot_form,
         reset_form=reset_form,
         mastodon_form=mastodon_form,
-        calendar_tz=calendar_tz
+        calendar_tz=calendar_tz,
+        game_over=game_over
     )
 
 
