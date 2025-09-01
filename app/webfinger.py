@@ -1,7 +1,7 @@
 from flask import Blueprint, current_app, request, abort, Response, json
 from app.models import db
 from app.models.user import User
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse
 import string
 
 webfinger_bp = Blueprint('webfinger', __name__)
@@ -20,25 +20,46 @@ def valid_username(name: str) -> bool:
 
 @webfinger_bp.route('/.well-known/webfinger', methods=['GET'])
 def webfinger():
-    raw = request.args.get('resource','')
-    if not raw.startswith('acct:'):
-        abort(400, "Invalid resource; must start with acct:")
+    """Return a JRD document for ActivityPub WebFinger discovery.
+
+    Supports both ``acct:user@host`` resources and the common practice of
+    passing an HTTPS actor URL as the ``resource`` parameter.
+    """
+    raw = request.args.get('resource', '')
     resource = unquote(raw)
 
-    try:
-        userpart, hostpart = resource[len('acct:'):].split('@', 1)
-    except ValueError:
-        abort(400, "Invalid acct format; expected acct:user@host")
+    host_cfg = (current_app.config['LOCAL_DOMAIN'] or '').lower()
+    if resource.startswith('acct:'):
+        # Standard acct:user@host form
+        try:
+            userpart, hostpart = resource[len('acct:'):].split('@', 1)
+        except ValueError:
+            abort(400, "Invalid acct format; expected acct:user@host")
 
-    host = hostpart.lower().encode('idna').decode('ascii')
-    if host != current_app.config['LOCAL_DOMAIN'].lower():
-        abort(404)
+        host = hostpart.lower().encode('idna').decode('ascii')
+        if host != host_cfg:
+            abort(404)
 
-    if not valid_username(userpart):
-        abort(400, "Invalid username syntax")
+        if not valid_username(userpart):
+            abort(400, "Invalid username syntax")
+        username = userpart
+    else:
+        # Support resource being the actor URL (https://host/users/username)
+        parsed = urlparse(resource)
+        if parsed.scheme not in {'http', 'https'}:
+            abort(400, "Invalid resource; expected acct: or https:// actor URL")
+        host = parsed.netloc.lower()
+        if host != host_cfg:
+            abort(404)
+        parts = [p for p in parsed.path.split('/') if p]
+        if len(parts) < 2 or parts[0] != 'users':
+            abort(400, "Unsupported actor URL; expected /users/<username>")
+        username = parts[1]
+        if not valid_username(username):
+            abort(400, "Invalid username syntax")
 
     user = User.query.filter(
-        db.func.lower(User.username) == userpart.lower()
+        db.func.lower(User.username) == username.lower()
     ).first_or_404()
 
                                                            
@@ -52,7 +73,8 @@ def webfinger():
         avatar_url = f"https://{host}/static/{current_app.config['PLACEHOLDER_IMAGE']}"
 
     jrd = {
-        "subject": f"acct:{userpart}@{host}",
+        # Subject SHOULD be acct: form even when resource was an HTTPS URL
+        "subject": f"acct:{user.username}@{host}",
         "aliases": [
             actor_url
         ],

@@ -12,7 +12,7 @@ This module provides:
 """
 import json
 import uuid
-from typing import Iterable, List, Set
+from typing import Iterable, List, Set, Optional
 import rsa
 import requests
 from .utils import REQUEST_TIMEOUT
@@ -119,37 +119,46 @@ def sign_activitypub_request(actor, method, url, body):
     path = parsed.path + (f"?{parsed.query}" if parsed.query else "")
     date_header = formatdate(usegmt=True)
 
-    # Compute Digest of body (SHA-256, base64) as most servers now require it
-    if isinstance(body, str):
-        body_bytes = body.encode("utf-8")
+    # Compute Digest of body (SHA-256, base64) for methods with a body
+    if method.upper() == "GET":
+        body_bytes = b""
+        digest_header = None
     else:
-        body_bytes = json.dumps(body).encode("utf-8")
-    import hashlib, base64
-    digest_b64 = base64.b64encode(hashlib.sha256(body_bytes).digest()).decode("ascii")
-    digest_header = f"SHA-256={digest_b64}"
+        if isinstance(body, str):
+            body_bytes = body.encode("utf-8")
+        else:
+            body_bytes = json.dumps(body).encode("utf-8")
+        import hashlib, base64
+        digest_b64 = base64.b64encode(hashlib.sha256(body_bytes).digest()).decode("ascii")
+        digest_header = f"SHA-256={digest_b64}"
 
     # Build signing string including digest
     signing_components = [
         f"(request-target): {method.lower()} {path}",
         f"host: {parsed.netloc}",
         f"date: {date_header}",
-        f"digest: {digest_header}",
     ]
+    if digest_header:
+        signing_components.append(f"digest: {digest_header}")
     signing_string = "\n".join(signing_components).encode("utf-8")
     priv = rsa.PrivateKey.load_pkcs1(actor.private_key.encode("utf-8"))
     signature = rsa.sign(signing_string, priv, "SHA-256")
     sig_b64 = base64.b64encode(signature).decode("ascii")
     key_id = f"{actor.activitypub_id}#main-key"
+    signed_headers = ["(request-target)", "host", "date"]
+    if digest_header:
+        signed_headers.append("digest")
+    signed_headers_str = " ".join(signed_headers)
     signature_header = ", ".join([
         f'keyId="{key_id}"',
         'algorithm="rsa-sha256"',
-        'headers="(request-target) host date digest"',
+        f'headers="{signed_headers_str}"',
         f'signature="{sig_b64}"',
     ])
     return {
         "Date": date_header,
         "Host": parsed.netloc,
-        "Digest": digest_header,
+        **({"Digest": digest_header} if digest_header else {}),
         "Signature": signature_header,
         # content-type with AS profile for best compatibility
         "Content-Type": 'application/activity+json',
@@ -157,8 +166,52 @@ def sign_activitypub_request(actor, method, url, body):
     }
 
 
-def _fetch_actor_public_key(actor_uri: str) -> str:
-    """Fetch a remote actor document and return the PEM public key string."""
+def _signed_get(url: str, as_user: "User"):
+    """Perform a signed GET request for servers that require signed fetch.
+
+    Signs (request-target) host date accept using the user's private key.
+    Returns a ``requests.Response``.
+    """
+    parsed = urlparse(url)
+    path = parsed.path + (f"?{parsed.query}" if parsed.query else "")
+    date_header = formatdate(usegmt=True)
+    accept_header = "application/activity+json"
+    signing_components = [
+        f"(request-target): get {path}",
+        f"host: {parsed.netloc}",
+        f"date: {date_header}",
+        f"accept: {accept_header}",
+    ]
+    import base64
+    signing_string = "\n".join(signing_components).encode("utf-8")
+    priv = rsa.PrivateKey.load_pkcs1(as_user.private_key.encode("utf-8"))
+    signature = rsa.sign(signing_string, priv, "SHA-256")
+    sig_b64 = base64.b64encode(signature).decode("ascii")
+    key_id = f"{as_user.activitypub_id}#main-key"
+    signature_header = ", ".join([
+        f'keyId="{key_id}"',
+        'algorithm="rsa-sha256"',
+        'headers="(request-target) host date accept"',
+        f'signature="{sig_b64}"',
+    ])
+    headers = {
+        "Date": date_header,
+        "Host": parsed.netloc,
+        "Accept": accept_header,
+        "Signature": signature_header,
+    }
+    return requests.get(
+        url,
+        headers=headers,
+        timeout=REQUEST_TIMEOUT,
+    )
+
+
+def _fetch_actor_public_key(actor_uri: str, signed_as: Optional["User"] = None) -> str:
+    """Fetch a remote actor document and return the PEM public key string.
+
+    If the remote requires signed fetch, ``signed_as`` is used to sign the GET.
+    """
     # Try cache first
     fa = (
         ForeignActor.query.filter_by(actor_uri=actor_uri).first()
@@ -173,6 +226,11 @@ def _fetch_actor_public_key(actor_uri: str) -> str:
         headers={"Accept": 'application/ld+json; profile="https://www.w3.org/ns/activitystreams"'},
         timeout=REQUEST_TIMEOUT,
     )
+    # Retry with signed fetch when unauthorized/forbidden
+    if resp.status_code in {401, 403}:
+        if signed_as is None:
+            resp.raise_for_status()
+        resp = _signed_get(actor_uri, signed_as)
     resp.raise_for_status()
     doc = resp.json()
     key = (doc.get("publicKey", {}) or {}).get("publicKeyPem")
@@ -193,7 +251,7 @@ def _fetch_actor_public_key(actor_uri: str) -> str:
     return key
 
 
-def verify_http_signature(actor_uri: str, headers, body: bytes) -> None:
+def verify_http_signature(actor_uri: str, headers, body: bytes, signed_as: Optional["User"] = None) -> None:
     """Verify an incoming HTTP Signature using the sender's public key.
 
     - Parses the `Signature` header and respects its declared header list
@@ -254,7 +312,7 @@ def verify_http_signature(actor_uri: str, headers, body: bytes) -> None:
             abort(401, "Invalid Digest header")
 
     try:
-        pem = _fetch_actor_public_key(actor_uri)
+        pem = _fetch_actor_public_key(actor_uri, signed_as=signed_as)
         pub = rsa.PublicKey.load_pkcs1(pem.encode("utf-8"))
         rsa.verify(signing_string, signature, pub)
     except Exception:
@@ -309,7 +367,7 @@ def inbox(username):
 
                                                  
     if actor_host and actor_host != our_host:
-        verify_http_signature(actor_uri, request.headers, request.get_data())
+        verify_http_signature(actor_uri, request.headers, request.get_data(), signed_as=user)
     else:
         current_app.logger.debug(
             "Skipping signature check for local actor %s", actor_uri
