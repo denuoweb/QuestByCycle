@@ -90,6 +90,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Open the album (all submissions) when clicking the pinned link
+  document.querySelectorAll('[data-open-all-submissions]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const gameId = el.getAttribute('data-game-id');
+      if (!gameId) return;
+      showAllSubmissionsModal(gameId);
+    });
+  });
+
   const contactForm = document.getElementById('contactForm');
   if (contactForm) {
     contactForm.addEventListener('submit', async e => {
@@ -216,4 +226,3 @@ function filterQuests() {
 
 /* attach listeners once */
 // additional event listeners are installed in the main DOMContentLoaded handler
-

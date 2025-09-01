@@ -114,6 +114,25 @@
                                     {% endif %}
                                     <div class="shout-messages-container">
                                         <div class="shout-messages">
+                                            {# Pinned: View Album link when game is over #}
+                                            {% if game_over %}
+                                            <div class="activity pinned message-divider">
+                                                <strong>
+                                                    {{ game.end_date.strftime('%m-%d') }} -
+                                                    <span>{{ game.title }}</span>
+                                                </strong>
+                                                <span class="activity-message">
+                                                    <a href="#" role="button"
+                                                        class="text-decoration-underline"
+                                                        id="viewAlbumLink"
+                                                        data-open-all-submissions
+                                                        data-game-id="{{ game.id }}"
+                                                        onclick="return window.__openAlbumFromLink ? __openAlbumFromLink(this, event) : false;">
+                                                         View Album
+                                                     </a>
+                                                </span>
+                                            </div>
+                                            {% endif %}
                                             {% set pinned_activities = activities | selectattr('is_pinned') | list %}
                                             {% if pinned_activities %}
                                                 <div class="pinned-messages-header">
@@ -473,4 +492,252 @@
     >
 {% endblock %}
 
-{% block extra_scripts %}{% endblock %}
+{% block extra_scripts %}
+<script>
+  (function(){
+    const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
+    let __albumLoaded = [];
+    let __page = 0;
+    let __gameId = null;
+    let __hasMore = false;
+    let __loading = false;
+    let __gameQuests = null;
+
+    function openModalFallback(modalId){
+      const modal = document.getElementById(modalId);
+      if(!modal) return;
+      document.body.appendChild(modal);
+      const container = document.querySelector('.container');
+      if (container) container.classList.add('modal-open');
+      const sy = window.scrollY || window.pageYOffset;
+      document.body.style.top = `-${sy}px`;
+      document.body.style.position = 'fixed';
+      modal.classList.add('active');
+      modal.style.display = 'flex';
+      document.body.classList.add('body-no-scroll');
+    }
+
+    function closeModalFallback(modalId){
+      const modal = document.getElementById(modalId);
+      if(!modal) return;
+      modal.style.display='none';
+      document.body.classList.remove('body-no-scroll');
+      const container = document.querySelector('.container');
+      if (container) container.classList.remove('modal-open');
+      document.body.style.position = '';
+      const top = document.body.style.top;
+      document.body.style.top = '';
+      if (top) {
+        const y = parseInt(top, 10) || 0;
+        window.scrollTo(0, -y);
+      }
+    }
+
+    function fetchPage(){
+      if (__loading) return Promise.resolve(0);
+      __loading = true;
+      const offset = __page * 10;
+      const url = `/quests/quest/all_submissions?game_id=${encodeURIComponent(__gameId)}&offset=${offset}&limit=10`;
+      return fetch(url, { credentials: 'same-origin', cache: 'no-store', headers:{'Accept':'application/json'} })
+        .then(r => r.json())
+        .then(json => {
+          if(!json || !Array.isArray(json.submissions)) throw new Error('Bad response');
+          __hasMore = !!json.has_more;
+          const before = __albumLoaded.length;
+          json.submissions.forEach(s => { __albumLoaded.push(s); });
+          __page += 1;
+          return __albumLoaded.length - before;
+        })
+        .catch(err => { console.error('Album fetch failed:', err); alert('Failed to load submissions.'); return 0; })
+        .finally(() => { __loading = false; });
+    }
+
+    // Populate the quest dropdown under the title
+    function ensureQuestSelector(currentQuestId){
+      const sel = document.getElementById('submissionQuestSelect');
+      if (!sel || !__gameId) return;
+      const render = () => {
+        sel.innerHTML = '';
+        (__gameQuests || []).forEach(q => {
+          const opt = document.createElement('option');
+          opt.value = String(q.id);
+          opt.textContent = q.title || `Quest #${q.id}`;
+          sel.appendChild(opt);
+        });
+        if (currentQuestId) {
+          try { sel.value = String(currentQuestId); } catch {}
+        }
+        if (!sel.__bound) {
+          sel.__bound = true;
+          sel.addEventListener('change', () => {
+            const qid = sel.value;
+            if (!qid) return;
+            loadQuestAlbum(qid);
+          });
+        }
+      };
+      if (__gameQuests) { render(); return; }
+      fetch(`/quests/game/${encodeURIComponent(__gameId)}/quests`, {
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' }
+      })
+      .then(r => r.json())
+      .then(d => { __gameQuests = d.quests || []; render(); })
+      .catch(err => console.error('Failed to fetch quests for game:', err));
+    }
+
+    // Load submissions for a specific quest (non-paginated view)
+    function loadQuestAlbum(questId){
+      fetch(`/quests/quest/${encodeURIComponent(questId)}/submissions`, {
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' }
+      })
+      .then(r => r.json())
+      .then(subs => {
+        if (!Array.isArray(subs) || subs.length === 0) {
+          alert('No submissions for that quest yet.');
+          return;
+        }
+        __albumLoaded = subs;
+        __page = 0;
+        __hasMore = false;
+        openSubmissionDetail(0);
+      })
+      .catch(err => console.error('Failed to load quest submissions:', err));
+    }
+
+    function resolveGameId(explicit){
+      if (explicit && explicit !== '0' && explicit !== 'None') return explicit;
+      const holder = document.getElementById('game_IdHolder');
+      const val = holder && holder.getAttribute('data-game-id');
+      if (val && val !== '0' && val !== 'None') return val;
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const q = params.get('game_id');
+        if (q && q !== '0') return q;
+      } catch {}
+      return null;
+    }
+
+    function openAlbum(gameId){
+      const gid = resolveGameId(gameId);
+      if (!gid) {
+        console.warn('Album: missing game_id (got:', gameId, ')');
+        alert('Cannot determine game to load submissions for.');
+        return;
+      }
+      __albumLoaded = [];
+      __page = 0;
+      __gameId = gid;
+      fetchPage().then(loaded => {
+        if ((__albumLoaded.length||0) > 0) {
+          openSubmissionDetail(0);
+        } else {
+          alert('No submissions yet for this game.');
+        }
+      });
+    }
+
+    function openSubmissionDetail(idx){
+      const s = __albumLoaded[idx];
+      if(!s) return;
+      const modal = document.getElementById('submissionDetailModal');
+      modal.dataset.submissionId = s.id;
+      modal.dataset.questId = s.quest_id || '';
+
+      // Basic media
+      const img = document.getElementById('submissionImage');
+      const vid = document.getElementById('submissionVideo');
+      const vsrc= document.getElementById('submissionVideoSource');
+      if (s.video_url) {
+        img.hidden = true; vid.hidden = false; vsrc.src = s.video_url; vid.load();
+      } else {
+        vid.hidden = true; img.hidden = false; img.src = s.image_url || PLACEHOLDER_IMAGE;
+      }
+
+      // Submitter
+      const overlay = document.getElementById('submitterProfileImageOverlay');
+      const prof    = document.getElementById('submitterProfileImage');
+      const caption = document.getElementById('submitterProfileCaption');
+      if (overlay) overlay.src = s.user_profile_picture || PLACEHOLDER_IMAGE;
+      if (prof)    prof.src    = s.user_profile_picture || PLACEHOLDER_IMAGE;
+      if (caption) caption.textContent = s.user_display_name || s.user_username || '';
+
+      // Comment
+      const commentEl = document.getElementById('submissionComment');
+      if (commentEl) commentEl.textContent = s.comment || 'No comment provided.';
+
+      // Quest selector update
+      ensureQuestSelector(s.quest_id);
+      const qs = document.getElementById('submissionQuestSelect');
+      if (qs && s.quest_id) {
+        try { qs.value = String(s.quest_id); } catch {}
+      }
+
+      // Hide edit + replies for read-only album view
+      const hideIds = ['editPhotoBtn', 'photoEditControls', 'deleteSubmissionBtn', 'commentReadButtons', 'submissionCommentEdit', 'commentEditButtons'];
+      hideIds.forEach(id => { const el = document.getElementById(id); if (el) el.hidden = true; });
+      const replies = document.getElementById('submissionRepliesContainer');
+      if (replies) replies.style.display = 'none';
+
+      // Social links
+      function setLink(id, href){ const el = document.getElementById(id); if(!el) return; try{ new URL(href); el.href = href; el.style.display = 'inline-block'; } catch { el.style.display='none'; } }
+      setLink('twitterLink', s.twitter_url);
+      setLink('facebookLink', s.fb_url);
+      setLink('instagramLink', s.instagram_url);
+
+      // Prev/Next
+      const prev = document.getElementById('prevSubmissionBtn');
+      const next = document.getElementById('nextSubmissionBtn');
+      function goPrev(){ if (idx > 0) openSubmissionDetail(idx-1); }
+      function goNext(){
+        if (idx < __albumLoaded.length - 1) {
+          openSubmissionDetail(idx+1);
+          return;
+        }
+        if (__hasMore && !__loading) {
+          fetchPage().then(loaded => {
+            if (loaded > 0) openSubmissionDetail(idx+1);
+          });
+        }
+      }
+
+      if (prev && next) {
+        prev.style.display = 'inline-flex';
+        next.style.display = 'inline-flex';
+        prev.disabled = idx <= 0;
+        next.disabled = (idx >= (__albumLoaded.length - 1) && !__hasMore);
+        prev.onclick = goPrev;
+        next.onclick = goNext;
+      }
+
+      openModalFallback('submissionDetailModal');
+    }
+
+    function __initAlbumWiring(){
+      const a = document.getElementById('viewAlbumLink');
+      if (!a) return;
+      if (a.__albumBound) return; // avoid double-binding
+      a.__albumBound = true;
+      a.addEventListener('click', function(ev){
+        ev.preventDefault();
+        const gid = a.getAttribute('data-game-id');
+        openAlbum(gid);
+      });
+      // Expose a global fallback in case other JS interferes
+      window.__openAlbumFromLink = function(el, ev){
+        try { if (ev) ev.preventDefault(); } catch {}
+        const gid = (el && el.getAttribute) ? el.getAttribute('data-game-id') : null;
+        openAlbum(gid);
+        return false;
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', __initAlbumWiring);
+    } else {
+      __initAlbumWiring();
+    }
+  })();
+</script>
+{% endblock %}

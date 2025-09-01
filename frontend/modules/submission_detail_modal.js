@@ -5,12 +5,19 @@ import { refreshQuestDetailModal } from './quest_detail_modal.js';
 
 export let showSubmissionDetail;
 
+// Album navigation + mode state (read-only when launched from album)
+let albumItems = [];
+let albumIndex = -1;
+let readOnlyMode = false;
+
 document.addEventListener('DOMContentLoaded', () => {
 
   const $    = s => document.querySelector(s);
   const modal = $('#submissionDetailModal');
   if (!modal) return; // Modal not included
   const replyLimitMessage = document.getElementById('replyLimitMessage');
+  const prevBtn = document.getElementById('prevSubmissionBtn');
+  const nextBtn = document.getElementById('nextSubmissionBtn');
 
   const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
 
@@ -18,6 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = $('#submissionDetailModal');
     modal.dataset.submissionId = image.id;
     modal.dataset.questId = image.quest_id || '';
+
+    // Read-only and album context (when opened from the album/gallery)
+    readOnlyMode = !!(image.read_only || image.readOnly);
+    if (Array.isArray(image.album_items)) {
+      albumItems = image.album_items;
+      albumIndex = Number.isInteger(image.album_index) ? image.album_index : -1;
+    }
 
     const me      = Number(modal.dataset.currentUserId);
     const isOwner = Number(image.user_id) === me;
@@ -33,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteBtn         = $('#deleteSubmissionBtn');
 
     // show/hide the “Change” button and delete button
-    editPhotoBtn.hidden      = !isOwner;
+    editPhotoBtn.hidden      = !isOwner || readOnlyMode;
     deleteBtn.hidden         = !(isOwner || isAdmin);
     photoEditControls.hidden = true;
 
@@ -217,8 +231,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // edit controls
-    if (isOwner) {
+    // edit controls / replies disabled in read-only mode
+    if (readOnlyMode) {
+      el.editBtn.hidden      = true;
+      el.readBox.hidden      = true;
+      el.commentEdit.hidden  = true;
+      el.editBox.hidden      = true;
+      // Hide replies UI completely in read-only
+      const replies = $('#submissionRepliesContainer');
+      if (replies) replies.style.display = 'none';
+    } else if (isOwner) {
       el.editBtn.hidden = false;
       el.readBox.hidden = false;
     } else {
@@ -226,6 +248,20 @@ document.addEventListener('DOMContentLoaded', () => {
       el.readBox.hidden      =
       el.commentEdit.hidden  =
       el.editBox.hidden      = true;
+    }
+
+    // Configure album navigation buttons
+    const hasAlbum = Array.isArray(albumItems) && albumItems.length > 0 && albumIndex >= 0;
+    if (prevBtn && nextBtn) {
+      if (hasAlbum) {
+        prevBtn.style.display = 'inline-flex';
+        nextBtn.style.display = 'inline-flex';
+        prevBtn.disabled = albumIndex <= 0;
+        nextBtn.disabled = albumIndex >= albumItems.length - 1;
+      } else {
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+      }
     }
 
     loadSubmissionDetails();
@@ -272,48 +308,50 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#submissionLikeCount').textContent = json.like_count||0;
         $('#submissionLikeBtn').classList.toggle('active', json.liked_by_current_user);
       });
-
+    if (!readOnlyMode) {
       fetchJson(`/quests/submission/${id}/replies`)
         .then(({ json: d }) => {
           const list = $('#submissionRepliesList');
+          if (!list) return;
           list.innerHTML = '';
-        d.replies.forEach(rep => {
-          const div = document.createElement('div');
-          div.className = 'reply mb-1';
+          d.replies.forEach(rep => {
+            const div = document.createElement('div');
+            div.className = 'reply mb-1';
 
-          // Render the reply author as a clickable link without using innerHTML
-          const userLink = document.createElement('a');
-          userLink.href = '#';
-          userLink.className = 'reply-user-link';
-          userLink.dataset.userId = rep.user_id;
+            // Render the reply author as a clickable link without using innerHTML
+            const userLink = document.createElement('a');
+            userLink.href = '#';
+            userLink.className = 'reply-user-link';
+            userLink.dataset.userId = rep.user_id;
 
-          const strong = document.createElement('strong');
-          strong.textContent = rep.user_display;
-          userLink.appendChild(strong);
-          div.appendChild(userLink);
-          div.appendChild(document.createTextNode(`: ${rep.content}`));
+            const strong = document.createElement('strong');
+            strong.textContent = rep.user_display;
+            userLink.appendChild(strong);
+            div.appendChild(userLink);
+            div.appendChild(document.createTextNode(`: ${rep.content}`));
 
-          // Wire up profile-opening
-          userLink.addEventListener('click', e => {
-            e.preventDefault();
-            showUserProfileModal(rep.user_id);
+            // Wire up profile-opening
+            userLink.addEventListener('click', e => {
+              e.preventDefault();
+              showUserProfileModal(rep.user_id);
+            });
+
+            list.appendChild(div);
           });
 
-          list.appendChild(div);
+          const textarea = $('#submissionReplyEdit');
+          const btn = $('#postReplyBtn');
+          if (d.replies.length >= 10) {
+            textarea.disabled = true;
+            btn.disabled = true;
+            if (replyLimitMessage) replyLimitMessage.style.display = 'block';
+          } else {
+            textarea.disabled = false;
+            btn.disabled = false;
+            if (replyLimitMessage) replyLimitMessage.style.display = 'none';
+          }
         });
-
-        const textarea = $('#submissionReplyEdit');
-        const btn = $('#postReplyBtn');
-        if (d.replies.length >= 10) {
-          textarea.disabled = true;
-          btn.disabled = true;
-          if (replyLimitMessage) replyLimitMessage.style.display = 'block';
-        } else {
-          textarea.disabled = false;
-          btn.disabled = false;
-          if (replyLimitMessage) replyLimitMessage.style.display = 'none';
-        }
-      });
+    }
   }
 
 
@@ -337,6 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // post a reply
   $('#postReplyBtn').addEventListener('click', () => {
+    if (readOnlyMode) return;
     const id      = $('#submissionDetailModal').dataset.submissionId;
     const textarea = $('#submissionReplyEdit');
     const content = textarea.value.trim();
@@ -388,5 +427,25 @@ document.addEventListener('DOMContentLoaded', () => {
     textarea.disabled = true;
     btn.disabled      = true;
     if (replyLimitMessage) replyLimitMessage.style.display = 'block';
+  }
+
+  // Album navigation: previous/next
+  if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+      if (!Array.isArray(albumItems) || albumIndex <= 0) return;
+      const nextIdx = albumIndex - 1;
+      const item = albumItems[nextIdx];
+      if (!item) return;
+      showSubmissionDetail({ ...item, read_only: readOnlyMode, album_items: albumItems, album_index: nextIdx });
+    });
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+      if (!Array.isArray(albumItems) || albumIndex >= albumItems.length - 1) return;
+      const nextIdx = albumIndex + 1;
+      const item = albumItems[nextIdx];
+      if (!item) return;
+      showSubmissionDetail({ ...item, read_only: readOnlyMode, album_items: albumItems, album_index: nextIdx });
+    });
   }
 });

@@ -12,11 +12,13 @@ let submissionsPage = 0;
 let submissionsGameId = null;
 let submissionsIsAdmin = false;
 let submissionsHasMore = false;
+let loadedSubmissions = [];
 
 
 export function showAllSubmissionsModal(gameId) {
     submissionsPage = 0;
     submissionsGameId = gameId;
+    loadedSubmissions = [];
 
     const container = document.getElementById('allSubmissionsContainer');
     if (container) container.innerHTML = '';
@@ -118,21 +120,30 @@ function displayAllSubmissions(submissions, isAdmin, append = false) {
         card.appendChild(img);
         card.appendChild(info);
 
-        // Make the card clickable to show the submission detail modal
+        // Prepare mapped item for album navigation
+        const mapped = {
+            id: submission.id,
+            quest_id: submission.quest_id,
+            url: submission.image_url || submission.video_url,
+            video_url: submission.video_url,
+            comment: submission.comment,
+            user_id: submission.user_id,
+            user_display_name: submission.user_display_name || submission.user_username,
+            user_profile_picture: submission.user_profile_picture,
+            twitter_url: submission.twitter_url,
+            fb_url: submission.fb_url,
+            instagram_url: submission.instagram_url,
+            verification_type: 'image'
+        };
+        const idx = loadedSubmissions.push(mapped) - 1;
+
+        // Make the card clickable to show the submission detail modal in read-only album mode
         card.addEventListener('click', function() {
             showSubmissionDetail({
-                id: submission.id,
-                quest_id: submission.quest_id,
-                url: submission.image_url || submission.video_url,
-                video_url: submission.video_url,
-                comment: submission.comment,
-                user_id: submission.user_id,
-                user_display_name: submission.user_display_name || submission.user_username,
-                user_profile_picture: submission.user_profile_picture,
-                twitter_url: submission.twitter_url,
-                fb_url: submission.fb_url,
-                instagram_url: submission.instagram_url,
-                verification_type: 'image'
+                ...mapped,
+                read_only: true,
+                album_items: loadedSubmissions,
+                album_index: idx
             });
             openModal('submissionDetailModal');
         });
@@ -175,4 +186,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-

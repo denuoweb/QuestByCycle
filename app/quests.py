@@ -1137,7 +1137,7 @@ def get_all_submissions():
     limit = get_int_param("limit", default=10, min_value=1)
 
     if game_id is None:
-        return
+        return jsonify({"error": "Missing or invalid game_id"}), 400
 
     limit = max(1, min(limit, 100))
 
