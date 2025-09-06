@@ -663,6 +663,58 @@
       if (prof)    prof.src    = s.user_profile_picture || PLACEHOLDER_IMAGE;
       if (caption) caption.textContent = s.user_display_name || s.user_username || '';
 
+      // Profile modal trigger
+      const profileLink = document.getElementById("submitterProfileLink");
+      const profileFrame = overlay ? overlay.parentElement : null;
+      [profileLink, profileFrame].forEach(el => {
+        if (el) el.setAttribute("data-user-profile", s.user_id);
+      });
+
+      // Likes
+      const likeBtn = document.getElementById("submissionLikeBtn");
+      const likeCount = document.getElementById("submissionLikeCount");
+      if (likeBtn && likeCount) {
+        likeBtn.onclick = null;
+        likeBtn.classList.toggle("active", !!s.liked_by_current_user);
+        likeCount.textContent = s.like_count || 0;
+
+        fetch(`/quests/submissions/${s.id}`, {
+          credentials: "same-origin",
+          headers: { Accept: "application/json" }
+        })
+          .then(r => r.json())
+          .then(d => {
+            likeCount.textContent = d.like_count || 0;
+            likeBtn.classList.toggle("active", d.liked_by_current_user);
+            s.like_count = d.like_count || 0;
+            s.liked_by_current_user = d.liked_by_current_user;
+          })
+          .catch(() => {});
+
+        likeBtn.onclick = () => {
+          const liked = likeBtn.classList.contains("active");
+          const csrf = document
+            .querySelector("meta[name=\"csrf-token\"]").getAttribute("content");
+          fetch(`/quests/submission/${s.id}/like`, {
+            method: liked ? "DELETE" : "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrf
+            },
+            credentials: "same-origin"
+          })
+            .then(r => r.json())
+            .then(d => {
+              if (!d.success) throw new Error("Like failed");
+              likeCount.textContent = d.like_count;
+              likeBtn.classList.toggle("active", d.liked);
+              s.like_count = d.like_count;
+              s.liked_by_current_user = d.liked;
+            })
+            .catch(err => alert(err.message));
+        };
+      }
+
       // Comment
       const commentEl = document.getElementById('submissionComment');
       if (commentEl) commentEl.textContent = s.comment || 'No comment provided.';
