@@ -133,6 +133,8 @@ function displayAllSubmissions(submissions, isAdmin, append = false) {
             twitter_url: submission.twitter_url,
             fb_url: submission.fb_url,
             instagram_url: submission.instagram_url,
+            like_count: submission.like_count,
+            liked_by_current_user: submission.liked_by_current_user,
             verification_type: 'image'
         };
         const idx = loadedSubmissions.push(mapped) - 1;
@@ -145,7 +147,6 @@ function displayAllSubmissions(submissions, isAdmin, append = false) {
                 album_items: loadedSubmissions,
                 album_index: idx
             });
-            openModal('submissionDetailModal');
         });
 
         container.appendChild(card);

@@ -1177,6 +1177,13 @@ def get_all_submissions():
             "twitter_url": submission.twitter_url,
             "fb_url": submission.fb_url,
             "instagram_url": submission.instagram_url,
+            "like_count": submission.likes.count(),
+            "liked_by_current_user": bool(
+                SubmissionLike.query.filter_by(
+                    submission_id=submission.id,
+                    user_id=current_user.id,
+                ).first()
+            ),
         }
         for submission in submissions
     ]

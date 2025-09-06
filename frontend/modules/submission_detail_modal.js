@@ -222,16 +222,25 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
+    // preset like state so each image shows its own count while details load
+    const likeBtn = $('#submissionLikeBtn');
+    const likeCountEl = $('#submissionLikeCount');
+    likeCountEl.textContent = Number.isInteger(image.like_count) ? image.like_count : 0;
+    likeBtn.classList.toggle('active', !!image.liked_by_current_user);
+
     // set picture & caption
     el.profileImg.src        = image.user_profile_picture || PLACEHOLDER_IMAGE;
     el.profileImgOverlay.src = el.profileImg.src;
     el.profileCap.textContent = image.user_display_name || image.user_username || '—';
 
     // wire up click on both the inline and overlay image
-    el.profileLink.onclick   = e => {
+    el.profileLink.onclick = e => {
       e.preventDefault();
       showUserProfileModal(image.user_id);
     };
+    // make profile image, caption, and overlay all open the profile modal
+    el.profileImg.onclick = el.profileLink.onclick;
+    el.profileCap.onclick = el.profileLink.onclick;
     el.imgOverlay.parentElement.onclick = el.profileLink.onclick;
 
     // submission image & comment
@@ -337,8 +346,12 @@ document.addEventListener('DOMContentLoaded', () => {
     detailsAbortController = new AbortController();
     fetchJson(`/quests/submissions/${id}`, { signal: detailsAbortController.signal })
       .then(({ json }) => {
-        $('#submissionLikeCount').textContent = json.like_count||0;
+        $('#submissionLikeCount').textContent = json.like_count || 0;
         $('#submissionLikeBtn').classList.toggle('active', json.liked_by_current_user);
+        if (Array.isArray(albumItems) && albumIndex >= 0) {
+          albumItems[albumIndex].like_count = json.like_count;
+          albumItems[albumIndex].liked_by_current_user = json.liked_by_current_user;
+        }
       })
       .catch(err => {
         if (err.name !== 'AbortError') console.error(err);
@@ -407,6 +420,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if(!json.success) throw new Error('Like failed');
       $('#submissionLikeCount').textContent = json.like_count;
       btn.classList.toggle('active', json.liked);
+      if (Array.isArray(albumItems) && albumIndex >= 0) {
+        albumItems[albumIndex].like_count = json.like_count;
+        albumItems[albumIndex].liked_by_current_user = json.liked;
+      }
     })
     .catch(e=>alert(e.message));
   });
