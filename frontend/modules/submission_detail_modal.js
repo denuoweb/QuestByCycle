@@ -10,6 +10,10 @@ let albumItems = [];
 let albumIndex = -1;
 let readOnlyMode = false;
 
+let mediaPreloader = new Image();
+let detailsAbortController = null;
+let repliesAbortController = null;
+
 document.addEventListener('DOMContentLoaded', () => {
 
   const $    = s => document.querySelector(s);
@@ -20,6 +24,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const nextBtn = document.getElementById('nextSubmissionBtn');
 
   const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
+
+  const resetMedia = () => {
+    const img = $('#submissionImage');
+    const video = $('#submissionVideo');
+    const source = $('#submissionVideoSource');
+    if (img) img.src = '';
+    if (video && source) {
+      video.pause();
+      source.src = '';
+      video.load();
+    }
+    mediaPreloader.src = '';
+  };
+
+  const preloadNextMedia = () => {
+    mediaPreloader.src = '';
+    if (!Array.isArray(albumItems)) return;
+    const next = albumItems[albumIndex + 1];
+    if (!next || next.video_url) return;
+    mediaPreloader.src = next.url;
+  };
 
   showSubmissionDetail = function(image) {
     const modal = $('#submissionDetailModal');
@@ -32,6 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
       albumItems = image.album_items;
       albumIndex = Number.isInteger(image.album_index) ? image.album_index : -1;
     }
+
+    resetMedia();
+    if (detailsAbortController) detailsAbortController.abort();
+    if (repliesAbortController) repliesAbortController.abort();
 
     const me      = Number(modal.dataset.currentUserId);
     const isOwner = Number(image.user_id) === me;
@@ -265,6 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     loadSubmissionDetails();
+    preloadNextMedia();
     openModal('submissionDetailModal');
   };
 
@@ -303,13 +333,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const id = $('#submissionDetailModal').dataset.submissionId;
     if(!id) return;
 
-    fetchJson(`/quests/submissions/${id}`)
+    if (detailsAbortController) detailsAbortController.abort();
+    detailsAbortController = new AbortController();
+    fetchJson(`/quests/submissions/${id}`, { signal: detailsAbortController.signal })
       .then(({ json }) => {
         $('#submissionLikeCount').textContent = json.like_count||0;
         $('#submissionLikeBtn').classList.toggle('active', json.liked_by_current_user);
+      })
+      .catch(err => {
+        if (err.name !== 'AbortError') console.error(err);
       });
     if (!readOnlyMode) {
-      fetchJson(`/quests/submission/${id}/replies`)
+      if (repliesAbortController) repliesAbortController.abort();
+      repliesAbortController = new AbortController();
+      fetchJson(`/quests/submission/${id}/replies`, { signal: repliesAbortController.signal })
         .then(({ json: d }) => {
           const list = $('#submissionRepliesList');
           if (!list) return;
@@ -318,7 +355,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const div = document.createElement('div');
             div.className = 'reply mb-1';
 
-            // Render the reply author as a clickable link without using innerHTML
             const userLink = document.createElement('a');
             userLink.href = '#';
             userLink.className = 'reply-user-link';
@@ -330,7 +366,6 @@ document.addEventListener('DOMContentLoaded', () => {
             div.appendChild(userLink);
             div.appendChild(document.createTextNode(`: ${rep.content}`));
 
-            // Wire up profile-opening
             userLink.addEventListener('click', e => {
               e.preventDefault();
               showUserProfileModal(rep.user_id);
@@ -350,6 +385,9 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.disabled = false;
             if (replyLimitMessage) replyLimitMessage.style.display = 'none';
           }
+        })
+        .catch(err => {
+          if (err.name !== 'AbortError') console.error(err);
         });
     }
   }
