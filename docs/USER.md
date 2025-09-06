@@ -10,6 +10,7 @@ Welcome to QuestByCycle, a gamified bicycling platform! This guide will help you
 2. [Navigating the Platform](#navigating-the-platform)
     - [Dashboard Overview](#dashboard-overview)
     - [Game Participation](#game-participation)
+    - [Viewing Game Albums](#viewing-game-albums)
 3. [Completing Quests](#completing-quests)
     - [Finding Quests](#finding-quests)
     - [Quest Verification](#quest-verification)
@@ -69,6 +70,18 @@ The dashboard is your central hub for accessing games, quests, and community fea
 **Leaving a Game**:
 1. **Access Your Games**: Go to the "Games" section and find the game you want to leave.
 2. **Leave the Game**: Click on "Leave Game" and confirm your decision.
+
+### Viewing Game Albums
+
+Each game stores participants' quest submissions in an album.
+Open an album from the dashboard's "View Album" link or directly via:
+
+```
+/album/<game_id>
+```
+
+Replace `<game_id>` with the numeric ID of the game.  
+The album opens automatically when visiting this URL, making it easy to share.
 
 ## Completing Quests
 
