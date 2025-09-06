@@ -671,6 +671,7 @@ def get_quest_submissions(quest_id):
         user = db.session.get(User, sub.user_id)
         submissions_data.append({
             "id"                 : sub.id,
+            "quest_id"           : quest_id,
             "image_url"          : public_media_url(sub.image_url),
             "video_url"          : public_media_url(sub.video_url),
             "comment"            : sub.comment,
