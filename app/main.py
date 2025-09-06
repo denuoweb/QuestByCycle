@@ -1226,6 +1226,12 @@ def share_target_handler():
     return redirect(url_for('main.index'))
 
 
+@main_bp.route('/album/<int:game_id>')
+def album(game_id):
+    """Redirect to the index page and open the album for the given game."""
+    return redirect(url_for('main.index', game_id=game_id, album=1))
+
+
 @main_bp.route('/.well-known/assetlinks.json')
 def assetlinks():
     """Serve digital asset links for TWA validation."""

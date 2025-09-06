@@ -122,7 +122,7 @@
                                                     <span>{{ game.title }}</span>
                                                 </strong>
                                                 <span class="activity-message">
-                                                    <a href="#" role="button"
+                                                    <a href="{{ url_for('main.album', game_id=game.id) }}" role="button"
                                                         class="text-decoration-underline"
                                                         id="viewAlbumLink"
                                                         data-open-all-submissions
@@ -130,8 +130,8 @@
                                                         onclick="return window.__openAlbumFromLink ? __openAlbumFromLink(this, event) : false;">
                                                          View Album
                                                      </a>
-                                                </span>
-                                            </div>
+                                               </span>
+                                           </div>
                                             {% endif %}
                                             {% set pinned_activities = activities | selectattr('is_pinned') | list %}
                                             {% if pinned_activities %}
@@ -732,11 +732,24 @@
         return false;
       }
     }
+    function __openAlbumOnQuery(){
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('album') === '1') {
+          const gid = params.get('game_id');
+          openAlbum(gid);
+        }
+      } catch {}
+    }
 
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', __initAlbumWiring);
+      document.addEventListener('DOMContentLoaded', function(){
+        __initAlbumWiring();
+        __openAlbumOnQuery();
+      });
     } else {
       __initAlbumWiring();
+      __openAlbumOnQuery();
     }
   })();
 </script>
