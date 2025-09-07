@@ -15,6 +15,7 @@ import qrcode
 import requests
 from flask import (
     Blueprint,
+    abort,
     current_app,
     flash,
     jsonify,
@@ -23,21 +24,40 @@ from flask import (
     render_template,
     request,
     url_for,
-    abort,
 )
 from flask_login import current_user, login_required
 from pydantic import ValidationError
-from app.decorators import require_admin
+from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
+
+from app import limiter
+from app.activitypub_utils import (
+    post_activitypub_comment_activity,
+    post_activitypub_create_activity,
+    post_activitypub_like_activity,
+)
+from app.constants import UTC
+from app.decorators import require_admin
 from app.forms import PhotoForm, QuestForm
+from app.schemas import (
+    SubmissionCommentSchema,
+    SubmissionReplySchema,
+    UpdateQuestSchema,
+)
 from app.social import post_to_social_media
 from app.utils import (
     REQUEST_TIMEOUT,
-    sanitize_html,
-    get_int_param,
-    format_db_error,
     delete_media_file,
+    format_db_error,
+    get_int_param,
+    sanitize_html,
+)
+from app.utils.file_uploads import (
+    public_media_url,
+    save_badge_image,
+    save_submission_image,
+    save_submission_video,
 )
 from app.utils.quest_scoring import (
     can_complete_quest,
@@ -46,30 +66,20 @@ from app.utils.quest_scoring import (
     get_last_relevant_completion_time,
     update_user_score,
 )
-from app.schemas import (
-    SubmissionCommentSchema,
-    SubmissionReplySchema,
-    UpdateQuestSchema,
-)
-from app import limiter
 from app.utils.rate_limit import user_or_ip
-from app.utils.file_uploads import (
-    save_badge_image,
-    save_submission_image,
-    save_submission_video,
-    public_media_url,
-)
-from app.activitypub_utils import (
-    post_activitypub_create_activity,
-    post_activitypub_like_activity,
-    post_activitypub_comment_activity
-)
 from .models import (
-    db, Badge, Game, Quest, QuestSubmission,
-    User, UserQuest, SubmissionLike, SubmissionReply,
-    Notification, user_games
+    Badge,
+    Game,
+    Notification,
+    Quest,
+    QuestSubmission,
+    SubmissionLike,
+    SubmissionReply,
+    User,
+    UserQuest,
+    db,
+    user_games,
 )
-from app.constants import UTC
 
 quests_bp = Blueprint("quests", __name__, template_folder="templates")
 
@@ -1388,25 +1398,30 @@ def submission_like(submission_id):
     ).first()
 
     if request.method == 'POST':
+        added = False
         if not existing:
             like = SubmissionLike(
                 submission_id=submission_id,
                 user_id=current_user.id
             )
             db.session.add(like)
-            db.session.commit()
+            try:
+                db.session.commit()
+                added = True
+            except IntegrityError:
+                db.session.rollback()
 
+        if added:
             post_activitypub_like_activity(sub, current_user)
 
-                                                                   
             if sub.user_id != current_user.id:
                 db.session.add(Notification(
-                    user_id   = sub.user_id,
-                    type      = 'submission_like',
-                    payload   = {
+                    user_id=sub.user_id,
+                    type='submission_like',
+                    payload={
                         'submission_id': submission_id,
-                        'liker_id'     : current_user.id,
-                        'liker_name'   : current_user.display_name or current_user.username
+                        'liker_id': current_user.id,
+                        'liker_name': current_user.display_name or current_user.username
                     }
                 ))
                 db.session.commit()
