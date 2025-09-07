@@ -699,13 +699,19 @@
             method: liked ? "DELETE" : "POST",
             headers: {
               "Content-Type": "application/json",
+              Accept: "application/json",
               "X-CSRFToken": csrf
             },
             credentials: "same-origin"
           })
-            .then(r => r.json())
-            .then(d => {
-              if (!d.success) throw new Error("Like failed");
+            .then(async r => {
+              const data = await r.json().catch(() => ({}));
+              return { status: r.status, json: data };
+            })
+            .then(({ status, json: d }) => {
+              if (status !== 200 || !d.success) {
+                throw new Error(d.message || d.error || "Like failed");
+              }
               likeCount.textContent = d.like_count;
               likeBtn.classList.toggle("active", d.liked);
               s.like_count = d.like_count;
