@@ -700,15 +700,23 @@
             headers: {
               "Content-Type": "application/json",
               Accept: "application/json",
-              "X-CSRFToken": csrf
+              "X-CSRF-Token": csrf
             },
             credentials: "same-origin"
           })
             .then(async r => {
               const data = await r.json().catch(() => ({}));
-              return { status: r.status, json: data };
+              return {
+                status: r.status,
+                json: data,
+                redirected: r.redirected,
+                url: r.url
+              };
             })
-            .then(({ status, json: d }) => {
+            .then(({ status, json: d, redirected, url }) => {
+              if (redirected && url.includes("/auth/login")) {
+                throw new Error("Please log in to like submissions.");
+              }
               if (status !== 200 || !d.success) {
                 throw new Error(d.message || d.error || "Like failed");
               }
