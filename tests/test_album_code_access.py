@@ -63,3 +63,39 @@ def test_album_requires_code(client, app):
     assert resp.status_code == 200
     data = resp.get_json()
     assert len(data["submissions"]) == 1
+
+
+def test_quest_submissions_requires_code(client, app):
+    with app.app_context():
+        admin = User(username="admin", email="admin@example.com", license_agreed=True)
+        admin.set_password("pw")
+        db.session.add(admin)
+        db.session.commit()
+
+        game = Game(
+            title="Game",
+            start_date=datetime.now(timezone.utc) - timedelta(days=1),
+            end_date=datetime.now(timezone.utc) + timedelta(days=1),
+            admin_id=admin.id,
+        )
+        db.session.add(game)
+        db.session.commit()
+
+        quest = Quest(title="Quest", points=1, game=game)
+        db.session.add(quest)
+        db.session.commit()
+
+        submission = QuestSubmission(quest_id=quest.id, user_id=admin.id)
+        db.session.add(submission)
+        db.session.commit()
+
+        qid = quest.id
+        code = game.album_code
+
+    resp = client.get(f"/quests/quest/{qid}/submissions")
+    assert resp.status_code == 403
+
+    resp = client.get(f"/quests/quest/{qid}/submissions?album_code={code}")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert len(data) == 1
