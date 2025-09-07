@@ -1,6 +1,7 @@
 import pytest
 from datetime import datetime, timedelta, timezone
 
+from flask_login import login_user
 from app import create_app, db
 from app.models.game import Game
 from app.models.quest import Quest, QuestSubmission
@@ -27,6 +28,14 @@ def app():
 @pytest.fixture
 def client(app):
     return app.test_client()
+
+
+def login_as(client, user):
+    with client.session_transaction() as sess:
+        sess["_user_id"] = str(user.id)
+        sess["_fresh"] = True
+    with client.application.test_request_context():
+        login_user(user)
 
 
 def test_album_requires_code(client, app):
@@ -96,6 +105,86 @@ def test_quest_submissions_requires_code(client, app):
     assert resp.status_code == 403
 
     resp = client.get(f"/quests/quest/{qid}/submissions?album_code={code}")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert len(data) == 1
+
+
+def test_participant_can_view_all_submissions_without_code(client, app):
+    with app.app_context():
+        admin = User(username="admin", email="admin@example.com", license_agreed=True)
+        admin.set_password("pw")
+        db.session.add(admin)
+        db.session.commit()
+
+        game = Game(
+            title="Game",
+            start_date=datetime.now(timezone.utc) - timedelta(days=1),
+            end_date=datetime.now(timezone.utc) + timedelta(days=1),
+            admin_id=admin.id,
+        )
+        db.session.add(game)
+        db.session.commit()
+
+        quest = Quest(title="Quest", points=1, game=game)
+        db.session.add(quest)
+        db.session.commit()
+
+        submission = QuestSubmission(quest_id=quest.id, user_id=admin.id)
+        db.session.add(submission)
+        db.session.commit()
+
+        participant = User(username="p", email="p@example.com", license_agreed=True)
+        participant.set_password("pw")
+        db.session.add(participant)
+        db.session.commit()
+        participant.participated_games.append(game)
+        db.session.commit()
+
+        gid = game.id
+        login_as(client, participant)
+
+    resp = client.get(f"/quests/quest/all_submissions?game_id={gid}")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert len(data["submissions"]) == 1
+
+
+def test_participant_can_view_quest_submissions_without_code(client, app):
+    with app.app_context():
+        admin = User(username="admin", email="admin@example.com", license_agreed=True)
+        admin.set_password("pw")
+        db.session.add(admin)
+        db.session.commit()
+
+        game = Game(
+            title="Game",
+            start_date=datetime.now(timezone.utc) - timedelta(days=1),
+            end_date=datetime.now(timezone.utc) + timedelta(days=1),
+            admin_id=admin.id,
+        )
+        db.session.add(game)
+        db.session.commit()
+
+        quest = Quest(title="Quest", points=1, game=game)
+        db.session.add(quest)
+        db.session.commit()
+
+        submission = QuestSubmission(quest_id=quest.id, user_id=admin.id)
+        db.session.add(submission)
+        db.session.commit()
+
+        participant = User(username="p", email="p@example.com", license_agreed=True)
+        participant.set_password("pw")
+        db.session.add(participant)
+        db.session.commit()
+        participant.participated_games.append(game)
+        db.session.commit()
+
+        qid = quest.id
+        login_as(client, participant)
+
+    resp = client.get(f"/quests/quest/{qid}/submissions")
     assert resp.status_code == 200
     data = resp.get_json()
     assert len(data) == 1
