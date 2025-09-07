@@ -29,13 +29,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const img = $('#submissionImage');
     const video = $('#submissionVideo');
     const source = $('#submissionVideoSource');
-    if (img) img.src = '';
+    if (img) {
+      img.onload = null;
+      img.onerror = null;
+      img.src = '';
+    }
     if (video && source) {
+      video.onloadeddata = null;
       video.pause();
       source.src = '';
       video.load();
     }
     mediaPreloader.src = '';
+  };
+
+  const setNavDisabled = disabled => {
+    if (!prevBtn || !nextBtn) return;
+    if (disabled) {
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
+    } else {
+      prevBtn.disabled = albumIndex <= 0;
+      nextBtn.disabled = albumIndex >= albumItems.length - 1;
+    }
   };
 
   const preloadNextMedia = () => {
@@ -61,6 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
     resetMedia();
     if (detailsAbortController) detailsAbortController.abort();
     if (repliesAbortController) repliesAbortController.abort();
+
+    setNavDisabled(true);
 
     const me      = Number(modal.dataset.currentUserId);
     const isOwner = Number(image.user_id) === me;
@@ -250,10 +268,17 @@ document.addEventListener('DOMContentLoaded', () => {
       el.video.hidden = false;
       el.videoSource.src = image.video_url;
       el.video.load();
+      el.video.onloadeddata = () => setNavDisabled(false);
     } else {
       el.video.hidden = true;
       el.img.hidden   = false;
       el.img.src = image.url || placeholder;
+      if (el.img.complete) {
+        setNavDisabled(false);
+      } else {
+        el.img.onload = () => setNavDisabled(false);
+        el.img.onerror = () => setNavDisabled(false);
+      }
     }
     el.commentRead.textContent = image.comment || 'No comment provided.';
 
@@ -294,8 +319,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (hasAlbum) {
         prevBtn.style.display = 'inline-flex';
         nextBtn.style.display = 'inline-flex';
-        prevBtn.disabled = albumIndex <= 0;
-        nextBtn.disabled = albumIndex >= albumItems.length - 1;
       } else {
         prevBtn.style.display = 'none';
         nextBtn.style.display = 'none';
@@ -408,24 +431,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // like/unlike
   $('#submissionLikeBtn').addEventListener('click', () => {
-    const btn   = $('#submissionLikeBtn');
-    const id    = $('#submissionDetailModal').dataset.submissionId;
+    const btn = $('#submissionLikeBtn');
+    const itemId = albumItems[albumIndex]?.id || $('#submissionDetailModal').dataset.submissionId;
+    if (!itemId) {
+      alert('Like failed');
+      return;
+    }
     const liked = btn.classList.contains('active');
 
-    csrfFetchJson(`/quests/submission/${id}/like`, {
+    csrfFetchJson(`/quests/submission/${itemId}/like`, {
       method: liked ? 'DELETE' : 'POST',
-      headers: { 'Content-Type':'application/json' }
+      headers: { 'Content-Type': 'application/json' }
     })
-    .then(({ json }) => {
-      if(!json.success) throw new Error('Like failed');
-      $('#submissionLikeCount').textContent = json.like_count;
-      btn.classList.toggle('active', json.liked);
-      if (Array.isArray(albumItems) && albumIndex >= 0) {
-        albumItems[albumIndex].like_count = json.like_count;
-        albumItems[albumIndex].liked_by_current_user = json.liked;
-      }
-    })
-    .catch(e=>alert(e.message));
+      .then(({ json }) => {
+        if (!json.success) throw new Error(json.message || 'Like failed');
+        $('#submissionLikeCount').textContent = json.like_count;
+        btn.classList.toggle('active', json.liked);
+        if (Array.isArray(albumItems) && albumIndex >= 0) {
+          albumItems[albumIndex].like_count = json.like_count;
+          albumItems[albumIndex].liked_by_current_user = json.liked;
+        }
+      })
+      .catch(e => alert(e.message));
   });
 
   // post a reply
