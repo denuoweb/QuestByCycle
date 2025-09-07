@@ -130,6 +130,9 @@
                                                         onclick="return window.__openAlbumFromLink ? __openAlbumFromLink(this, event) : false;">
                                                          View Album
                                                      </a>
+                                                     {% if current_user.is_authenticated %}
+                                                     <span class="album-code">Code: {{ game.album_code }}</span>
+                                                     {% endif %}
                                                </span>
                                            </div>
                                             {% endif %}
@@ -496,12 +499,14 @@
 <script>
   (function(){
     const PLACEHOLDER_IMAGE = document.querySelector('meta[name="placeholder-image"]').getAttribute('content');
+    const IS_AUTHENTICATED = {{ 'true' if current_user.is_authenticated else 'false' }};
     let __albumLoaded = [];
     let __page = 0;
     let __gameId = null;
     let __hasMore = false;
     let __loading = false;
     let __gameQuests = null;
+    let __albumCode = null;
 
     function openModalFallback(modalId){
       const modal = document.getElementById(modalId);
@@ -537,9 +542,16 @@
       if (__loading) return Promise.resolve(0);
       __loading = true;
       const offset = __page * 10;
-      const url = `/quests/quest/all_submissions?game_id=${encodeURIComponent(__gameId)}&offset=${offset}&limit=10`;
+      let url = `/quests/quest/all_submissions?game_id=${encodeURIComponent(__gameId)}&offset=${offset}&limit=10`;
+      if (__albumCode) url += `&album_code=${encodeURIComponent(__albumCode)}`;
       return fetch(url, { credentials: 'same-origin', cache: 'no-store', headers:{'Accept':'application/json'} })
-        .then(r => r.json())
+        .then(async r => {
+          if (!r.ok) {
+            const err = await r.json().catch(() => ({}));
+            throw new Error(err.error || 'Failed to load submissions.');
+          }
+          return r.json();
+        })
         .then(json => {
           if(!json || !Array.isArray(json.submissions)) throw new Error('Bad response');
           __hasMore = !!json.has_more;
@@ -548,7 +560,7 @@
           __page += 1;
           return __albumLoaded.length - before;
         })
-        .catch(err => { console.error('Album fetch failed:', err); alert('Failed to load submissions.'); return 0; })
+        .catch(err => { console.error('Album fetch failed:', err); alert(err.message); return 0; })
         .finally(() => { __loading = false; });
     }
 
@@ -629,6 +641,14 @@
       __albumLoaded = [];
       __page = 0;
       __gameId = gid;
+      if (!IS_AUTHENTICATED) {
+        if (!__albumCode) {
+          __albumCode = window.prompt('Enter album code');
+        }
+        if (!__albumCode) {
+          return;
+        }
+      }
       fetchPage().then(loaded => {
         if ((__albumLoaded.length||0) > 0) {
           openSubmissionDetail(0);

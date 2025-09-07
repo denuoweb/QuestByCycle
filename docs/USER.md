@@ -80,8 +80,10 @@ Open an album from the dashboard's "View Album" link or directly via:
 /album/<game_id>
 ```
 
-Replace `<game_id>` with the numeric ID of the game.  
-The album opens automatically when visiting this URL, making it easy to share.
+Replace `<game_id>` with the numeric ID of the game.
+Authenticated players will see a four-character album code next to the "View Album" link.
+Share this code along with the URL. Visitors who are not logged in will be
+prompted to enter the code before the album loads.
 
 ## Completing Quests
 

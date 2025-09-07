@@ -1146,9 +1146,24 @@ def get_all_submissions():
     game_id = get_int_param("game_id", min_value=1)
     offset = get_int_param("offset", default=0, min_value=0)
     limit = get_int_param("limit", default=10, min_value=1)
+    album_code = request.args.get("album_code", "")
 
     if game_id is None:
         return jsonify({"error": "Missing or invalid game_id"}), 400
+
+    game = Game.query.get(game_id)
+    if not game:
+        return jsonify({"error": "Game not found"}), 404
+
+    authorized = False
+    if current_user.is_authenticated:
+        authorized = (
+            current_user.is_super_admin
+            or current_user.is_admin_for_game(game_id)
+            or current_user in game.participants
+        )
+    if not authorized and album_code != game.album_code:
+        return jsonify({"error": "Invalid album code"}), 403
 
     limit = max(1, min(limit, 100))
 
@@ -1166,7 +1181,7 @@ def get_all_submissions():
     submissions = submissions[:limit]
 
     if not submissions:
-        return jsonify({"submissions": [], "has_more": False, "is_admin": current_user.is_admin})
+        return jsonify({"submissions": [], "has_more": False, "is_admin": getattr(current_user, "is_admin", False)})
 
     submissions_data = [
         {
@@ -1189,7 +1204,8 @@ def get_all_submissions():
             "instagram_url": submission.instagram_url,
             "like_count": submission.likes.count(),
             "liked_by_current_user": bool(
-                SubmissionLike.query.filter_by(
+                current_user.is_authenticated
+                and SubmissionLike.query.filter_by(
                     submission_id=submission.id,
                     user_id=current_user.id,
                 ).first()
@@ -1201,7 +1217,7 @@ def get_all_submissions():
     return jsonify(
         {
             "submissions": submissions_data,
-            "is_admin": current_user.is_admin,
+            "is_admin": getattr(current_user, "is_admin", False),
             "has_more": has_more,
         }
     )

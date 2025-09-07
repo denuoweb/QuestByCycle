@@ -63,6 +63,7 @@ class Game(db.Model):
     calendar_service_json_path = db.Column(db.String(500), nullable=True)
     last_calendar_sync = db.Column(db.DateTime(timezone=True), nullable=True)
     custom_game_code = db.Column(db.String(20), unique=True, nullable=True)
+    album_code = db.Column(db.String(4), unique=True, nullable=False)
     is_public = db.Column(db.Boolean, default=True)
     allow_joins = db.Column(db.Boolean, default=True)
     is_demo = db.Column(db.Boolean, default=False)
@@ -74,6 +75,7 @@ class Game(db.Model):
     badges = db.relationship('Badge', back_populates='game', cascade='all, delete-orphan', lazy=True)
 
     CODE_LENGTH = 5
+    ALBUM_CODE_LENGTH = 4
     MAX_CODE_ATTEMPTS = 5
 
     @classmethod
@@ -96,11 +98,25 @@ class Game(db.Model):
                 return code
         raise RuntimeError("Failed to generate a unique game code.")
 
+    @classmethod
+    def generate_album_code(cls, max_attempts: int | None = None) -> str:
+        """Generate a unique album access code."""
+        attempts = max_attempts or cls.MAX_CODE_ATTEMPTS
+        for _ in range(attempts):
+            code = "".join(
+                random.choices(string.ascii_letters + string.digits, k=cls.ALBUM_CODE_LENGTH)
+            )
+            if not cls.query.filter_by(album_code=code).first():
+                return code
+        raise RuntimeError("Failed to generate a unique album code.")
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if not self.custom_game_code:
             self.custom_game_code = self.generate_unique_code()
-        else:
+        if not self.album_code:
+            self.album_code = self.generate_album_code()
+        if kwargs.get("custom_game_code"):
             for _ in range(self.MAX_CODE_ATTEMPTS):
                 try:
                     db.session.add(self)
@@ -109,6 +125,7 @@ class Game(db.Model):
                 except IntegrityError:
                     db.session.rollback()
                     self.custom_game_code = self.generate_unique_code()
+                    self.album_code = self.generate_album_code()
             else:
                 raise RuntimeError(
                     "Failed to assign a unique custom_game_code after retries."
@@ -137,13 +154,19 @@ class Game(db.Model):
 
 
 @event.listens_for(Game, "before_insert")
-def set_custom_game_code(mapper, connection, target):
-    """Ensure each game has a unique ``custom_game_code`` before insert."""
+def set_game_codes(mapper, connection, target):
+    """Ensure each game has unique codes before insert."""
     if target.custom_game_code:
         while Game.query.filter_by(custom_game_code=target.custom_game_code).first():
             target.custom_game_code = Game.generate_unique_code()
     else:
         target.custom_game_code = Game.generate_unique_code()
+
+    if target.album_code:
+        while Game.query.filter_by(album_code=target.album_code).first():
+            target.album_code = Game.generate_album_code()
+    else:
+        target.album_code = Game.generate_album_code()
 
 
 class ShoutBoardMessage(db.Model):
