@@ -264,15 +264,24 @@ document.addEventListener('DOMContentLoaded', () => {
     el.profileImgOverlay.src = el.profileImg.src;
     el.profileCap.textContent = image.user_display_name || image.user_username || '—';
 
-    // wire up click on both the inline and overlay image
-    el.profileLink.onclick = e => {
-      e.preventDefault();
-      showUserProfileModal(image.user_id);
-    };
-    // make profile image, caption, and overlay all open the profile modal
-    el.profileImg.onclick = el.profileLink.onclick;
-    el.profileCap.onclick = el.profileLink.onclick;
-    el.imgOverlay.parentElement.onclick = el.profileLink.onclick;
+    // wire up click on both the inline and overlay image when not read-only
+    if (!readOnlyMode) {
+      el.profileLink.onclick = e => {
+        e.preventDefault();
+        showUserProfileModal(image.user_id);
+      };
+      // make profile image, caption, and overlay all open the profile modal
+      el.profileImg.onclick = el.profileLink.onclick;
+      el.profileCap.onclick = el.profileLink.onclick;
+      el.imgOverlay.parentElement.onclick = el.profileLink.onclick;
+    } else {
+      el.profileLink.onclick = null;
+      el.profileImg.onclick = null;
+      el.profileCap.onclick = null;
+      if (el.imgOverlay && el.imgOverlay.parentElement) {
+        el.imgOverlay.parentElement.onclick = null;
+      }
+    }
 
     // submission image & comment
     const placeholder = PLACEHOLDER_IMAGE;

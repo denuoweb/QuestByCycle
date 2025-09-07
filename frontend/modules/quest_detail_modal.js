@@ -600,7 +600,11 @@ async function fetchQuestSubmissions(questId) {
       }
       commentEl.textContent = s.comment || 'No comment provided.';
 
-      profileLink.href   = `/profile/${encodeURIComponent(s.user_id)}`;
+      if (profileLink && profileLink.tagName === 'A' && CURRENT_USER_ID) {
+        profileLink.href = `/profile/${encodeURIComponent(s.user_id)}`;
+      } else if (profileLink) {
+        profileLink.removeAttribute('href');
+      }
       profileImg.src     = s.user_profile_picture || PLACEHOLDER_IMAGE;
       profileCaption.textContent =
         s.user_display_name || s.user_username || `User ${s.user_id}`;

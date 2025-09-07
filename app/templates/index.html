@@ -144,10 +144,13 @@
                                                         {% if activity.__tablename__ == 'shout_board_message' %}
                                                             <strong>
                                                                 {{ activity.timestamp.strftime('%m-%d') }} -
-                                                                  <a href="#" role="button"
-                                                                data-user-profile="{{ activity.user.id }}">
+                                                                {% if current_user.is_authenticated %}
+                                                                  <a href="#" role="button" data-user-profile="{{ activity.user.id }}">
                                                                     {{ activity.user.display_name or activity.user.username }}
-                                                                </a>
+                                                                  </a>
+                                                                {% else %}
+                                                                  <span>{{ activity.user.display_name or activity.user.username }}</span>
+                                                                {% endif %}
                                                             </strong>
                                                             <span class="activity-message">
                                                                 {{ activity.message|safe }}
@@ -167,10 +170,13 @@
                                                         {% elif activity.__tablename__ == 'user_quests' %}
                                                             <strong>
                                                                 {{ activity.completed_at.strftime('%m-%d') }} -
-                                                                  <a href="#" role="button"
-                                                                data-user-profile="{{ activity.user.id }}">
+                                                                {% if current_user.is_authenticated %}
+                                                                  <a href="#" role="button" data-user-profile="{{ activity.user.id }}">
                                                                     {{ activity.user.display_name or activity.user.username }}
-                                                                </a>
+                                                                  </a>
+                                                                {% else %}
+                                                                  <span>{{ activity.user.display_name or activity.user.username }}</span>
+                                                                {% endif %}
                                                             </strong>
                                                             <span class="activity-message">
                                                                 completed a quest
@@ -190,10 +196,13 @@
                                                     {% if activity.__tablename__ == 'shout_board_message' %}
                                                         <strong>
                                                             {{ activity.timestamp.strftime('%m-%d') }} -
-                                                             <a href="#" role="button"
-                                                            data-user-profile="{{ activity.user.id }}">
+                                                            {% if current_user.is_authenticated %}
+                                                             <a href="#" role="button" data-user-profile="{{ activity.user.id }}">
                                                                 {{ activity.user.display_name or activity.user.username }}
-                                                            </a>
+                                                             </a>
+                                                            {% else %}
+                                                             <span>{{ activity.user.display_name or activity.user.username }}</span>
+                                                            {% endif %}
                                                         </strong>
                                                         <span class="activity-message">
                                                             {{ activity.message|safe }}
@@ -212,10 +221,13 @@
                                                     {% elif activity.__tablename__ == 'user_quests' %}
                                                         <strong>
                                                             {{ activity.completed_at.strftime('%m-%d') }} -
-                                                             <a href="#" role="button"
-                                                            data-user-profile="{{ activity.user.id }}">
+                                                            {% if current_user.is_authenticated %}
+                                                             <a href="#" role="button" data-user-profile="{{ activity.user.id }}">
                                                                 {{ activity.user.display_name or activity.user.username }}
-                                                            </a>
+                                                             </a>
+                                                            {% else %}
+                                                             <span>{{ activity.user.display_name or activity.user.username }}</span>
+                                                            {% endif %}
                                                         </strong>
                                                         <span class="activity-message">
                                                             completed a quest
@@ -684,11 +696,13 @@
       if (caption) caption.textContent = s.user_display_name || s.user_username || '';
 
       // Profile modal trigger
+      {% if current_user.is_authenticated %}
       const profileLink = document.getElementById("submitterProfileLink");
       const profileFrame = overlay ? overlay.parentElement : null;
       [profileLink, profileFrame].forEach(el => {
         if (el) el.setAttribute("data-user-profile", s.user_id);
       });
+      {% endif %}
 
       // Likes
       const likeBtn = document.getElementById("submissionLikeBtn");

@@ -6,6 +6,7 @@
       <!-- left -->
       <div class="d-flex align-items-center">
         <span class="submitter-label me-2">Submitted by:</span>
+        {% if current_user.is_authenticated %}
         <a id="submitterProfileLink" href="#" class="d-flex align-items-center">
           <span class="submitter-profile-frame--inline">
             <img
@@ -16,6 +17,18 @@
           </span>
           <span id="submitterProfileCaption" class="submitter-profile-caption ms-2">—</span>
         </a>
+        {% else %}
+        <span id="submitterProfileLink" class="d-flex align-items-center">
+          <span class="submitter-profile-frame--inline">
+            <img
+              id="submitterProfileImage"
+              src="{{ placeholder_image }}"
+              alt="Submitter Profile"
+            >
+          </span>
+          <span id="submitterProfileCaption" class="submitter-profile-caption ms-2">—</span>
+        </span>
+        {% endif %}
       </div>
 
       <!-- right -->
