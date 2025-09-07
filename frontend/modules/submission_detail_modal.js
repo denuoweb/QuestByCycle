@@ -67,8 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
     modal.dataset.submissionId = image.id;
     modal.dataset.questId = image.quest_id || '';
 
+    const isLoggedIn = !!modal.dataset.currentUserId;
+
     // Read-only and album context (when opened from the album/gallery)
-    readOnlyMode = !!(image.read_only || image.readOnly);
+    readOnlyMode = !isLoggedIn || !!(image.read_only || image.readOnly);
     if (Array.isArray(image.album_items)) {
       albumItems = image.album_items;
       albumIndex = Number.isInteger(image.album_index) ? image.album_index : -1;
@@ -207,16 +209,20 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    $('#submissionReplyEdit').hidden = isOwner;
-    $('#postReplyBtn').hidden        = isOwner;
-    $('#ownerNotice').hidden = !isOwner;
+    const replyEdit = $('#submissionReplyEdit');
+    if (replyEdit) replyEdit.hidden = isOwner;
+    const postReply = $('#postReplyBtn');
+    if (postReply) postReply.hidden = isOwner;
+    const ownerNotice = $('#ownerNotice');
+    if (ownerNotice) ownerNotice.hidden = !isOwner;
 
     const repliesSection = $('#submissionRepliesContainer');
-
-    if (isOwner) {
-      repliesSection.hidden = true;
-    } else {
-      repliesSection.hidden = false;
+    if (repliesSection) {
+      if (isOwner) {
+        repliesSection.hidden = true;
+      } else {
+        repliesSection.hidden = false;
+      }
     }
 
   const el = {
@@ -243,8 +249,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // preset like state so each image shows its own count while details load
     const likeBtn = $('#submissionLikeBtn');
     const likeCountEl = $('#submissionLikeCount');
-    likeCountEl.textContent = Number.isInteger(image.like_count) ? image.like_count : 0;
-    likeBtn.classList.toggle('active', !!image.liked_by_current_user);
+    if (likeCountEl) {
+      likeCountEl.textContent = Number.isInteger(image.like_count) ? image.like_count : 0;
+    }
+    if (likeBtn) {
+      likeBtn.classList.toggle('active', !!image.liked_by_current_user);
+      if (readOnlyMode) {
+        likeBtn.style.display = 'none';
+      }
+    }
 
     // set picture & caption
     el.profileImg.src        = image.user_profile_picture || PLACEHOLDER_IMAGE;
@@ -369,8 +382,10 @@ document.addEventListener('DOMContentLoaded', () => {
     detailsAbortController = new AbortController();
     fetchJson(`/quests/submissions/${id}`, { signal: detailsAbortController.signal })
       .then(({ json }) => {
-        $('#submissionLikeCount').textContent = json.like_count || 0;
-        $('#submissionLikeBtn').classList.toggle('active', json.liked_by_current_user);
+        const countEl = $('#submissionLikeCount');
+        const btnEl = $('#submissionLikeBtn');
+        if (countEl) countEl.textContent = json.like_count || 0;
+        if (btnEl) btnEl.classList.toggle('active', json.liked_by_current_user);
         if (Array.isArray(albumItems) && albumIndex >= 0) {
           albumItems[albumIndex].like_count = json.like_count;
           albumItems[albumIndex].liked_by_current_user = json.liked_by_current_user;
@@ -412,14 +427,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
           const textarea = $('#submissionReplyEdit');
           const btn = $('#postReplyBtn');
-          if (d.replies.length >= 10) {
-            textarea.disabled = true;
-            btn.disabled = true;
-            if (replyLimitMessage) replyLimitMessage.style.display = 'block';
-          } else {
-            textarea.disabled = false;
-            btn.disabled = false;
-            if (replyLimitMessage) replyLimitMessage.style.display = 'none';
+          if (textarea && btn) {
+            if (d.replies.length >= 10) {
+              textarea.disabled = true;
+              btn.disabled = true;
+              if (replyLimitMessage) replyLimitMessage.style.display = 'block';
+            } else {
+              textarea.disabled = false;
+              btn.disabled = false;
+              if (replyLimitMessage) replyLimitMessage.style.display = 'none';
+            }
           }
         })
         .catch(err => {
@@ -430,84 +447,91 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // like/unlike
-  $('#submissionLikeBtn').addEventListener('click', () => {
-    const btn = $('#submissionLikeBtn');
-    const itemId = albumItems[albumIndex]?.id || $('#submissionDetailModal').dataset.submissionId;
-    if (!itemId) {
-      alert('Like failed');
-      return;
-    }
-    const liked = btn.classList.contains('active');
+  const likeBtnGlobal = $('#submissionLikeBtn');
+  if (likeBtnGlobal) {
+    likeBtnGlobal.addEventListener('click', () => {
+      const itemId = albumItems[albumIndex]?.id || $('#submissionDetailModal').dataset.submissionId;
+      if (!itemId) {
+        alert('Like failed');
+        return;
+      }
+      const liked = likeBtnGlobal.classList.contains('active');
 
-    csrfFetchJson(`/quests/submission/${itemId}/like`, {
-      method: liked ? 'DELETE' : 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    })
-      .then(({ json }) => {
-        if (!json.success) throw new Error(json.message || 'Like failed');
-        $('#submissionLikeCount').textContent = json.like_count;
-        btn.classList.toggle('active', json.liked);
-        if (Array.isArray(albumItems) && albumIndex >= 0) {
-          albumItems[albumIndex].like_count = json.like_count;
-          albumItems[albumIndex].liked_by_current_user = json.liked;
-        }
+      csrfFetchJson(`/quests/submission/${itemId}/like`, {
+        method: liked ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' }
       })
-      .catch(e => alert(e.message));
-  });
+        .then(({ json }) => {
+          if (!json.success) throw new Error(json.message || 'Like failed');
+          const countEl = $('#submissionLikeCount');
+          if (countEl) countEl.textContent = json.like_count;
+          likeBtnGlobal.classList.toggle('active', json.liked);
+          if (Array.isArray(albumItems) && albumIndex >= 0) {
+            albumItems[albumIndex].like_count = json.like_count;
+            albumItems[albumIndex].liked_by_current_user = json.liked;
+          }
+        })
+        .catch(e => alert(e.message));
+    });
+  }
 
   // post a reply
-  $('#postReplyBtn').addEventListener('click', () => {
-    if (readOnlyMode) return;
-    const id      = $('#submissionDetailModal').dataset.submissionId;
-    const textarea = $('#submissionReplyEdit');
-    const content = textarea.value.trim();
-    if(!id||!content) return;
+  const postReplyBtn = $('#postReplyBtn');
+  if (postReplyBtn) {
+    postReplyBtn.addEventListener('click', () => {
+      if (readOnlyMode) return;
+      const id = $('#submissionDetailModal').dataset.submissionId;
+      const textarea = $('#submissionReplyEdit');
+      if (!textarea) return;
+      const content = textarea.value.trim();
+      if (!id || !content) return;
 
-    csrfFetchJson(`/quests/submission/${id}/replies`, {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body: JSON.stringify({ content })
-    })
-    .then(({ status, json: body }) => {
-      if (!body.success) {
-        // if it’s the “limit reached” response, disable the form and show the message
-        if (body.message === 'Reply limit of 10 reached') {
-          disableReplyForm();
-          return;
-        }
-        // otherwise it might be a duplicate reply
-        if (status === 409 && body.message === 'Duplicate reply') {
-          return alert('You have already posted that exact reply.');
-        }
-        throw new Error(body.message || 'Error');
-      }
+      csrfFetchJson(`/quests/submission/${id}/replies`, {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({ content })
+      })
+        .then(({ status, json: body }) => {
+          if (!body.success) {
+            // if it’s the “limit reached” response, disable the form and show the message
+            if (body.message === 'Reply limit of 10 reached') {
+              disableReplyForm();
+              return;
+            }
+            // otherwise it might be a duplicate reply
+            if (status === 409 && body.message === 'Duplicate reply') {
+              return alert('You have already posted that exact reply.');
+            }
+            throw new Error(body.message || 'Error');
+          }
 
-      // success → inject the new reply
-      const list = $('#submissionRepliesList');
-      const div = document.createElement('div');
-      div.className = 'reply mb-1';
-      const strong = document.createElement('strong');
-      strong.textContent = body.reply.user_display;
-      div.appendChild(strong);
-      div.appendChild(document.createTextNode(`: ${body.reply.content}`));
-      list.insertBefore(div, list.firstChild);
+          // success → inject the new reply
+          const list = $('#submissionRepliesList');
+          const div = document.createElement('div');
+          div.className = 'reply mb-1';
+          const strong = document.createElement('strong');
+          strong.textContent = body.reply.user_display;
+          div.appendChild(strong);
+          div.appendChild(document.createTextNode(`: ${body.reply.content}`));
+          list.insertBefore(div, list.firstChild);
 
-      textarea.value = '';
+          textarea.value = '';
 
-      // if we’ve just hit 10, disable and show the limit message
-      if (list.children.length >= 10) {
-        disableReplyForm();
-      }
-    })
-    .catch(e => alert(e.message));
-  });
+          // if we’ve just hit 10, disable and show the limit message
+          if (list.children.length >= 10) {
+            disableReplyForm();
+          }
+        })
+        .catch(e => alert(e.message));
+    });
+  }
 
   // helper to hide the form & show a “max replies” notice
   function disableReplyForm() {
     const textarea = $('#submissionReplyEdit');
-    const btn      = $('#postReplyBtn');
-    textarea.disabled = true;
-    btn.disabled      = true;
+    const btn = $('#postReplyBtn');
+    if (textarea) textarea.disabled = true;
+    if (btn) btn.disabled = true;
     if (replyLimitMessage) replyLimitMessage.style.display = 'block';
   }
 
