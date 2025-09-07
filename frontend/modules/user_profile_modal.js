@@ -591,6 +591,8 @@ function deleteAccount() {
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-user-profile]');
   if (!el) return;
+  const currentUser = document.body.dataset.userId;
+  if (!currentUser || currentUser === 'none') return;
   e.preventDefault();
   const uid = el.getAttribute('data-user-profile');
   if (uid) showUserProfileModal(uid);
