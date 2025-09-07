@@ -675,7 +675,7 @@ def get_quest_submissions(quest_id):
         authorized = (
             current_user.is_super_admin
             or current_user.is_admin_for_game(quest.game_id)
-            or current_user in quest.game.participants
+            or current_user in quest.game.game_participants
         )
     if not authorized and album_code != quest.game.album_code:
         return jsonify({"error": "Invalid album code"}), 403
@@ -1165,7 +1165,7 @@ def get_all_submissions():
         authorized = (
             current_user.is_super_admin
             or current_user.is_admin_for_game(game_id)
-            or current_user in game.participants
+            or current_user in game.game_participants
         )
     if not authorized and album_code != game.album_code:
         return jsonify({"error": "Invalid album code"}), 403
