@@ -429,6 +429,31 @@ document.addEventListener('click', e => {
   openModal(btn.getAttribute('data-open-modal'));
 });
 
+// handle generic register triggers that show the register modal and
+// subsequently open the custom game modal after authentication
+document.addEventListener('click', e => {
+  const trigger = e.target.closest('[data-open-register]');
+  if (!trigger) return;
+  e.preventDefault();
+  openRegisterModalWithOptions({
+    showJoinCustom: 1,
+    next: '/?show_join_custom=1'
+  });
+});
+
+// allow keyboard activation for data-open-register elements
+document.addEventListener('keydown', e => {
+  const trigger = e.target.closest('[data-open-register]');
+  if (!trigger) return;
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    openRegisterModalWithOptions({
+      showJoinCustom: 1,
+      next: '/?show_join_custom=1'
+    });
+  }
+});
+
 // handle special login-game triggers that open the register modal
 document.addEventListener('click', e => {
   const card = e.target.closest('[data-login-game]');
@@ -464,11 +489,20 @@ document.addEventListener('click', e => {
   const btn = e.target.closest('[data-open-login-from-register]');
   if (!btn) return;
   e.preventDefault();
-  const gameId = document.getElementById('registerGameId')?.value || '';
-  const questId = document.getElementById('registerQuestId')?.value || '';
-  const next    = document.getElementById('registerNext')?.value || '';
+  const gameId   = document.getElementById('registerGameId')?.value || '';
+  const questId  = document.getElementById('registerQuestId')?.value || '';
+  const next     = document.getElementById('registerNext')?.value || '';
+  const showJoin = document.getElementById('registerShowJoinCustom')?.value || '';
   closeModal('registerModal');
-  openLoginModalWithGame({ gameId, questId, nextPath: next });
+  if (gameId) {
+    openLoginModalWithGame({ gameId, questId, nextPath: next });
+  } else {
+    openLoginModalWithOptions({ next });
+    const loginShowJoin = document.getElementById('loginShowJoinCustom');
+    if (loginShowJoin && showJoin) {
+      loginShowJoin.value = showJoin;
+    }
+  }
 });
 
 // wire up any [data-modal-url] triggers
