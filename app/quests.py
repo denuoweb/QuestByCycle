@@ -667,37 +667,42 @@ def import_quests(game_id):
 
 
 @quests_bp.route("/quest/<int:quest_id>/submissions")
-@login_required
 def get_quest_submissions(quest_id):
-    submissions = (
-        db.session.query(QuestSubmission, Quest)
-        .join(Quest, Quest.id == QuestSubmission.quest_id)
-        .filter(QuestSubmission.quest_id == quest_id)
-        .all()
-    )
+    quest = Quest.query.get_or_404(quest_id)
+    album_code = request.args.get("album_code", "")
+    authorized = False
+    if current_user.is_authenticated:
+        authorized = (
+            current_user.is_super_admin
+            or current_user.is_admin_for_game(quest.game_id)
+            or current_user in quest.game.participants
+        )
+    if not authorized and album_code != quest.game.album_code:
+        return jsonify({"error": "Invalid album code"}), 403
 
+    submissions = QuestSubmission.query.filter_by(quest_id=quest_id).all()
     submissions_data = []
-    for sub, quest in submissions:
+    for sub in submissions:
         user = db.session.get(User, sub.user_id)
         submissions_data.append({
-            "id"                 : sub.id,
-            "quest_id"           : quest_id,
-            "image_url"          : public_media_url(sub.image_url),
-            "video_url"          : public_media_url(sub.video_url),
-            "comment"            : sub.comment,
-            "timestamp"          : sub.timestamp.strftime("%Y-%m-%d %H:%M"),
-            "user_id"            : sub.user_id,
-            "user_display_name"  : user.display_name or user.username,
-            "user_username"      : user.username,
+            "id": sub.id,
+            "quest_id": quest_id,
+            "image_url": public_media_url(sub.image_url),
+            "video_url": public_media_url(sub.video_url),
+            "comment": sub.comment,
+            "timestamp": sub.timestamp.strftime("%Y-%m-%d %H:%M"),
+            "user_id": sub.user_id,
+            "user_display_name": user.display_name or user.username,
+            "user_username": user.username,
             "user_profile_picture": (
-                url_for('static', filename=user.profile_picture)
+                url_for("static", filename=user.profile_picture)
                 if user.profile_picture
-                else url_for('static', filename=current_app.config['PLACEHOLDER_IMAGE'])
+                else url_for("static", filename=current_app.config["PLACEHOLDER_IMAGE"])
             ),
-            "twitter_url"        : sub.twitter_url,
-            "fb_url"             : sub.fb_url,
-            "instagram_url"      : sub.instagram_url,
-            "verification_type"  : quest.verification_type                  
+            "twitter_url": sub.twitter_url,
+            "fb_url": sub.fb_url,
+            "instagram_url": sub.instagram_url,
+            "verification_type": quest.verification_type,
         })
     return jsonify(submissions_data)
 

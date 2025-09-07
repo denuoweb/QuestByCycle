@@ -612,14 +612,22 @@
 
     // Load submissions for a specific quest (non-paginated view)
     function loadQuestAlbum(questId){
-      fetch(`/quests/quest/${encodeURIComponent(questId)}/submissions`, {
-        credentials: 'same-origin',
-        headers: { 'Accept': 'application/json' }
+      let url = `/quests/quest/${encodeURIComponent(questId)}/submissions`;
+      if (__albumCode) url += `?album_code=${encodeURIComponent(__albumCode)}`;
+      fetch(url, {
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" }
       })
-      .then(r => r.json())
+      .then(async r => {
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({}));
+          throw new Error(err.error || "Failed to load quest submissions.");
+        }
+        return r.json();
+      })
       .then(subs => {
         if (!Array.isArray(subs) || subs.length === 0) {
-          alert('No submissions for that quest yet.');
+          alert("No submissions for that quest yet.");
           return;
         }
         __albumLoaded = subs;
@@ -627,7 +635,7 @@
         __hasMore = false;
         openSubmissionDetail(0);
       })
-      .catch(err => console.error('Failed to load quest submissions:', err));
+      .catch(err => { console.error("Failed to load quest submissions:", err); alert(err.message); });
     }
 
     function resolveGameId(explicit){
