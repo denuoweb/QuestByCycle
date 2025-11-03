@@ -25,7 +25,7 @@ def _advisory_lock_key(name: str) -> int:
 def _execute_with_advisory_lock(app, lock_name: str, target: Callable[[], None]) -> bool:
     """Run ``target`` while holding a Postgres advisory lock for ``lock_name``."""
     try:
-        engine = db.get_engine(app)
+        engine = db.engine
     except RuntimeError:
         # Happens when no app is bound; fall back to running without locking.
         app.logger.warning(
