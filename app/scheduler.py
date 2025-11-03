@@ -24,32 +24,51 @@ def _advisory_lock_key(name: str) -> int:
 
 def _execute_with_advisory_lock(app, lock_name: str, target: Callable[[], None]) -> bool:
     """Run ``target`` while holding a Postgres advisory lock for ``lock_name``."""
-    engine = db.engine
+    try:
+        engine = db.get_engine(app)
+    except RuntimeError:
+        # Happens when no app is bound; fall back to running without locking.
+        app.logger.warning(
+            "Skipping advisory lock for %s because no application context is bound.",
+            lock_name,
+        )
+        target()
+        return False
+
     if engine.dialect.name != "postgresql":
         target()
         return True
 
     lock_key = _advisory_lock_key(lock_name)
-    with engine.connect() as connection:
-        acquired = connection.execute(
-            text("SELECT pg_try_advisory_lock(:key)"),
-            {"key": lock_key},
-        ).scalar()
-
-        if not acquired:
-            app.logger.info(
-                "Skipped %s because another worker holds the advisory lock.",
-                lock_name,
-            )
-            return False
-
-        try:
-            target()
-        finally:
-            connection.execute(
-                text("SELECT pg_advisory_unlock(:key)"),
+    try:
+        with engine.connect() as connection:
+            acquired = connection.execute(
+                text("SELECT pg_try_advisory_lock(:key)"),
                 {"key": lock_key},
-            )
+            ).scalar()
+
+            if not acquired:
+                app.logger.info(
+                    "Skipped %s because another worker holds the advisory lock.",
+                    lock_name,
+                )
+                return False
+
+            try:
+                target()
+            finally:
+                connection.execute(
+                    text("SELECT pg_advisory_unlock(:key)"),
+                    {"key": lock_key},
+                )
+
+    except Exception:  # pragma: no cover - defensive fallback for unexpected DB issues
+        app.logger.exception(
+            "Failed to obtain advisory lock for %s; running job without locking.",
+            lock_name,
+        )
+        target()
+        return False
 
     return True
 
