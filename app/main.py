@@ -9,6 +9,7 @@ import io
 import json
 import logging
 import os
+from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Any, List
 from urllib.parse import urlparse, parse_qs
@@ -23,6 +24,7 @@ from flask import (
     url_for,
     flash,
     current_app,
+    abort,
     send_file,
     send_from_directory,
 )
@@ -1141,11 +1143,18 @@ def resize_image():
         return jsonify({"error": "Image processing failed"}), 500
 
 
-@main_bp.route('/sw.js')
+@main_bp.route("/sw.js")
 def service_worker():
-    """Serve the compiled service worker from ``static/dist``."""
-    response = current_app.send_static_file('dist/sw.js')
-    response.headers['Content-Type'] = 'application/javascript'
+    """Serve the compiled service worker from ``static/dist`` with explicit payload."""
+    sw_path = Path(current_app.static_folder) / "dist" / "sw.js"
+    try:
+        payload = sw_path.read_bytes()
+    except FileNotFoundError:
+        current_app.logger.error("Service worker not found at %s", sw_path)
+        abort(404)
+
+    response = current_app.response_class(payload, mimetype="application/javascript")
+    response.headers["Cache-Control"] = "no-cache"
     return response
 
 
