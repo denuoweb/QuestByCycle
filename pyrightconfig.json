@@ -1,0 +1,8 @@
+{
+  "venvPath": ".",
+  "venv": ".venv",
+  "stubPath": "typings",
+  "typeCheckingMode": "off",
+  "reportInvalidTypeForm": "none",
+  "reportMissingImports": "none"
+}

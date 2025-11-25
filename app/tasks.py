@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from redis import Redis
 from rq import Queue
 from flask import current_app
 
 from app.models import db, User
 
+if TYPE_CHECKING:
+    from flask import Flask
 
-def init_queue(app):
+def init_queue(app: "Flask") -> Queue:
     """Initialize and attach an RQ queue to the Flask app."""
     redis_url = app.config.get("REDIS_URL", "redis://localhost:6379/0")
     queue = Queue('default', connection=Redis.from_url(redis_url))

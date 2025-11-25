@@ -1,29 +1,33 @@
 """Application factory and configuration for the QuestByCycle Flask app."""
 
+from __future__ import annotations
+
 import logging
 import os
 from datetime import timedelta
 from logging.handlers import RotatingFileHandler
+from typing import TYPE_CHECKING, Any, Mapping, cast
 from urllib.parse import urlparse, urlunparse
 
 from flask import (
-    current_app,
     Flask,
-    render_template,
+    Response,
+    current_app,
     flash,
-    redirect,
-    url_for,
     jsonify,
+    redirect,
+    render_template,
     request,
+    url_for,
 )
+from flask.typing import ResponseReturnValue
 from flask_login import LoginManager, current_user
+from flask_wtf.csrf import CSRFError, CSRFProtect, validate_csrf
+from flask_limiter import Limiter  # pyright: ignore[reportMissingModuleSource]
+from flask_limiter.util import get_remote_address  # pyright: ignore[reportMissingModuleSource]
 from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.proxy_fix import ProxyFix
-from flask_wtf.csrf import CSRFProtect, CSRFError, validate_csrf
 from wtforms.validators import ValidationError
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-from types import SimpleNamespace
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -46,18 +50,32 @@ from app.utils import generate_demo_game
 from app.utils.encryption import encrypt_game_secrets_if_needed
 from .config import load_config
 
+
+class HumanifyStub:
+    """Lightweight stand-in used during tests when Humanify is unavailable."""
+
+    has_valid_clearance_token: bool = True
+
+    def challenge(self) -> ResponseReturnValue:
+        return redirect(url_for("main.index"))
+
+    def init_app(self, app: Flask) -> None:
+        return None
+
+    def register_middleware(self, action: str, endpoint_patterns: Any) -> None:
+        return None
+
+
+if TYPE_CHECKING:
+    from app.models.user import User
+
                         
                             
                         
 login_manager = LoginManager()
 csrf = CSRFProtect()
 # Default lightweight stub to avoid heavy imports during tests; swapped in create_app.
-humanify = SimpleNamespace(
-    has_valid_clearance_token=True,
-    challenge=lambda: redirect(url_for('main.index')),
-    init_app=lambda app: None,
-    register_middleware=lambda action, endpoint_patterns: None,
-)
+humanify: HumanifyStub = HumanifyStub()
 
                         
                 
@@ -84,7 +102,7 @@ logger = logging.getLogger(__name__)
 _original_url_for = url_for
 
 
-def _url_for(*args, **kwargs):
+def _url_for(*args: Any, **kwargs: Any) -> str:  # pyright: ignore[reportUnusedFunction]
     """Build URLs outside a request context and strip scheme during tests.
 
     Falls back to a temporary request context when `url_for` is called without an
@@ -95,12 +113,13 @@ def _url_for(*args, **kwargs):
     try:
         url = _original_url_for(*args, **kwargs)
     except RuntimeError:
-        app = current_app._get_current_object()
-        with app.test_request_context():
+        app_proxy = cast(Any, current_app)
+        app_obj = app_proxy._get_current_object()
+        with app_obj.test_request_context():
             url = _original_url_for(*args, **kwargs)
 
-    app = current_app._get_current_object()
-    if app.config.get("TESTING"):
+    app_obj = cast(Any, current_app)._get_current_object()
+    if app_obj.config.get("TESTING"):
         p = urlparse(url)
         return urlunparse(("", "", p.path, p.params, p.query, p.fragment))
     return url
@@ -108,7 +127,7 @@ def _url_for(*args, **kwargs):
                         
                       
                         
-def create_app(config_overrides=None):
+def create_app(config_overrides: Mapping[str, Any] | None = None) -> Flask:
     """Create and configure the Flask application instance.
 
     Loads settings via :func:`load_config`, applies optional overrides, initializes
@@ -116,11 +135,11 @@ def create_app(config_overrides=None):
     """
     app = Flask(__name__)
 
-    inscopeconfig = load_config()
+    inscopeconfig = cast(Any, load_config())
 
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
-                                                    
-    app.config.update({
+    app.wsgi_app = cast(Any, ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1))
+
+    config_values: dict[str, Any] = {
         "SECRET_KEY": inscopeconfig.encryption.SECRET_KEY,
         "DATA_ENCRYPTION_KEY": inscopeconfig.encryption.DATA_ENCRYPTION_KEY,
         "SQLALCHEMY_DATABASE_URI": inscopeconfig.flask.SQLALCHEMY_DATABASE_URI,
@@ -180,7 +199,9 @@ def create_app(config_overrides=None):
             "pool_pre_ping": inscopeconfig.sqlalchemy_engine_options.pool_pre_ping,
             "pool_recycle": inscopeconfig.sqlalchemy_engine_options.pool_recycle,
         },
-    })
+    }
+
+    app.config.update(config_values)
 
     if config_overrides:
         app.config.update(config_overrides)
@@ -278,7 +299,7 @@ def create_app(config_overrides=None):
     csrf.exempt(ap_bp)
 
     @app.before_request
-    def enforce_csrf_header() -> None:
+    def enforce_csrf_header() -> None:  # pyright: ignore[reportUnusedFunction]
         """Validate CSRF token from headers for JSON requests."""
         if not app.config.get("WTF_CSRF_ENABLED", True):
             return
@@ -290,7 +311,7 @@ def create_app(config_overrides=None):
                 raise CSRFError(exc.args[0])
 
     @app.before_request
-    def expire_admin_if_needed() -> None:
+    def expire_admin_if_needed() -> None:  # pyright: ignore[reportUnusedFunction]
         """Downgrade admin users when their subscription has expired."""
         if current_user.is_authenticated:
             was_admin = current_user.is_admin
@@ -301,7 +322,7 @@ def create_app(config_overrides=None):
     login_manager.login_view = "auth.login"
 
     @login_manager.unauthorized_handler
-    def unauthorized_callback():
+    def unauthorized_callback() -> ResponseReturnValue:  # pyright: ignore[reportUnusedFunction]
         """Return JSON for unauthorized AJAX requests or redirect to login."""
         if (
             request.headers.get("X-Requested-With") == "XMLHttpRequest"
@@ -311,37 +332,39 @@ def create_app(config_overrides=None):
         return redirect(url_for("auth.login", next=request.url))
 
     @login_manager.user_loader
-    def load_user(user_id):
+    def load_user(user_id: str | int | None) -> "User | None":  # pyright: ignore[reportUnusedFunction]
         """Retrieve a user for Flask-Login by primary key."""
         from app.models import db
         from app.models.user import User
         try:
+            if user_id is None:
+                return None
             return db.session.get(User, int(user_id))
         except (TypeError, ValueError):
             logger.error("Invalid user_id in session: %s", user_id)
             return None
 
     @app.errorhandler(404)
-    def not_found_error(error):
+    def not_found_error(error: HTTPException | Exception) -> ResponseReturnValue:  # pyright: ignore[reportUnusedFunction]
         """Render the 404 template and log missing resources."""
         logger.warning("404 error at %s: %s", request.path, error)
         return render_template("404.html"), 404
 
     @app.errorhandler(500)
-    def internal_error(error):
+    def internal_error(error: Exception) -> ResponseReturnValue:  # pyright: ignore[reportUnusedFunction]
         """Handle unexpected errors by rolling back the session and logging."""
         logger.error(f"500 error: {error}")
         db.session.rollback()
         return render_template("500.html"), 500
 
     @app.errorhandler(429)
-    def too_many_requests(e):
+    def too_many_requests(e: Exception) -> ResponseReturnValue:  # pyright: ignore[reportUnusedFunction]
         """Return a rate limit response when too many requests are made."""
         logger.warning(f"429 error: {e}")
         return render_template("429.html"), 429
 
     @app.errorhandler(CSRFError)
-    def handle_csrf_error(e):
+    def handle_csrf_error(e: CSRFError) -> ResponseReturnValue:  # pyright: ignore[reportUnusedFunction]
         """Return a JSON response when CSRF validation fails."""
         logger.warning(
             "CSRF failure on %s: %s form=%s headers=%s",
@@ -354,7 +377,7 @@ def create_app(config_overrides=None):
 
     if not app.config.get("TESTING"):
         @app.errorhandler(Exception)
-        def handle_exception(e):
+        def handle_exception(e: Exception) -> ResponseReturnValue:  # pyright: ignore[reportUnusedFunction]
             """Convert uncaught exceptions into user friendly responses."""
             if isinstance(e, HTTPException):
                 return e
@@ -363,7 +386,7 @@ def create_app(config_overrides=None):
             return redirect(url_for("main.index"))
 
     @app.context_processor
-    def inject_logout_form():
+    def inject_logout_form() -> dict[str, Any]:  # pyright: ignore[reportUnusedFunction]
         """Provide a logout form and placeholder image to templates."""
         from app.forms import LogoutForm
         placeholder_url = url_for(
@@ -378,14 +401,14 @@ def create_app(config_overrides=None):
     # In tests, ensure a demo game exists when the first request comes in
     if app.config.get("TESTING"):
         @app.before_request
-        def _ensure_demo_on_request():  # pragma: no cover - test helper
+        def _ensure_demo_on_request() -> None:  # pragma: no cover - test helper  # pyright: ignore[reportUnusedFunction]
             try:
                 generate_demo_game()
             except Exception:
                 pass
 
     @app.context_processor
-    def inject_selected_game_id():
+    def inject_selected_game_id() -> dict[str, int | None]:  # pyright: ignore[reportUnusedFunction]
         """Inject the ID of the user's currently selected game."""
         if current_user.is_authenticated:
             return dict(selected_game_id=current_user.selected_game_id or 0)
@@ -393,12 +416,12 @@ def create_app(config_overrides=None):
             return dict(selected_game_id=None)
 
     @app.context_processor
-    def inject_asset_version():
+    def inject_asset_version() -> dict[str, Any]:  # pyright: ignore[reportUnusedFunction]
         """Expose the static asset version for cache busting."""
         return dict(asset_version=current_app.config["ASSET_VERSION"])
 
     @app.after_request
-    def set_security_headers(response):
+    def set_security_headers(response: Response) -> Response:  # pyright: ignore[reportUnusedFunction]
         """Apply standard security headers to all responses."""
         headers = {
             "Strict-Transport-Security": "max-age=31536000; includeSubDomains",

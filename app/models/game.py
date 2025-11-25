@@ -1,7 +1,11 @@
 import random
 import string
 from datetime import datetime
+from typing import Any
+
 from sqlalchemy import DateTime, event
+from sqlalchemy.engine import Connection
+from sqlalchemy.orm import Mapper
 
 from app.constants import UTC
 from app.utils.encryption import EncryptedString
@@ -89,7 +93,7 @@ class Game(db.Model):
         Raises:
             RuntimeError: If a unique code could not be generated.
         """
-        attempts = max_attempts or cls.MAX_CODE_ATTEMPTS
+        attempts = max_attempts if max_attempts is not None else cls.MAX_CODE_ATTEMPTS
         for _ in range(attempts):
             code = "".join(
                 random.choices(string.ascii_letters + string.digits, k=cls.CODE_LENGTH)
@@ -102,7 +106,7 @@ class Game(db.Model):
     @classmethod
     def generate_album_code(cls, max_attempts: int | None = None) -> str:
         """Generate a unique album access code."""
-        attempts = max_attempts or cls.MAX_CODE_ATTEMPTS
+        attempts = max_attempts if max_attempts is not None else cls.MAX_CODE_ATTEMPTS
         for _ in range(attempts):
             code = "".join(
                 random.choices(string.ascii_letters + string.digits, k=cls.ALBUM_CODE_LENGTH)
@@ -111,26 +115,12 @@ class Game(db.Model):
                 return code
         raise RuntimeError("Failed to generate a unique album code.")
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
         if not self.custom_game_code:
             self.custom_game_code = self.generate_unique_code()
         if not self.album_code:
             self.album_code = self.generate_album_code()
-        if kwargs.get("custom_game_code"):
-            for _ in range(self.MAX_CODE_ATTEMPTS):
-                try:
-                    db.session.add(self)
-                    db.session.commit()
-                    break
-                except IntegrityError:
-                    db.session.rollback()
-                    self.custom_game_code = self.generate_unique_code()
-                    self.album_code = self.generate_album_code()
-            else:
-                raise RuntimeError(
-                    "Failed to assign a unique custom_game_code after retries."
-                )
 
     @property
     def twitter_url(self):
@@ -155,7 +145,7 @@ class Game(db.Model):
 
 
 @event.listens_for(Game, "before_insert")
-def set_game_codes(mapper, connection, target):
+def set_game_codes(mapper: Mapper[Any], connection: Connection, target: Game) -> None:
     """Ensure each game has unique codes before insert."""
     if target.custom_game_code:
         while Game.query.filter_by(custom_game_code=target.custom_game_code).first():
