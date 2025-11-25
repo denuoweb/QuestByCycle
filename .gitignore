@@ -210,3 +210,5 @@ my-map-key.json
 .venv311/
 app/static/videos/
 app/static/images/game_logos/
+
+secret.key
