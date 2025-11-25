@@ -6,10 +6,12 @@ section.  Using dataclasses provides type hints and an easy way to
 access configuration values without deep dictionary lookups.
 """
 
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
 import os
 import secrets
+
+from cryptography.fernet import Fernet
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -81,6 +83,34 @@ def _get_secret_key() -> str:
     return key
 
 
+def _get_data_encryption_key() -> str:
+    """Return the symmetric key used for encrypting sensitive data.
+
+    The key is sourced from the ``DATA_ENCRYPTION_KEY`` environment variable when
+    present. When unset, a persistent key file is used (defaulting to
+    ``PROJECT_ROOT/data_encryption.key``) so that encrypted database values
+    remain readable across application restarts.
+    """
+
+    env_key = _get_env("DATA_ENCRYPTION_KEY")
+    if env_key:
+        return env_key
+
+    file_path = _get_env("DATA_ENCRYPTION_KEY_FILE")
+    key_path = Path(file_path) if file_path else PROJECT_ROOT / "data_encryption.key"
+
+    if key_path.exists():
+        return key_path.read_text().strip()
+
+    key = Fernet.generate_key().decode()
+    try:
+        key_path.write_text(key)
+    except OSError:
+        # If the file cannot be written, fall back to the in-memory key.
+        pass
+    return key
+
+
 @dataclass
 class MainConfig:
     """Configuration options for general application behavior."""
@@ -106,6 +136,7 @@ class EncryptionConfig:
     DEFAULT_SUPER_ADMIN_USERNAME: str
     DEFAULT_SUPER_ADMIN_PASSWORD: str
     DEFAULT_SUPER_ADMIN_EMAIL: str
+    DATA_ENCRYPTION_KEY: str
     SECRET_KEY: str
     SESSION_COOKIE_SECURE: bool
     SESSION_COOKIE_HTTPONLY: bool
@@ -219,6 +250,7 @@ def load_config() -> AppConfig:
             DEFAULT_SUPER_ADMIN_USERNAME=_get_env("DEFAULT_SUPER_ADMIN_USERNAME", "test"),
             DEFAULT_SUPER_ADMIN_PASSWORD=_get_env("DEFAULT_SUPER_ADMIN_PASSWORD", "test"),
             DEFAULT_SUPER_ADMIN_EMAIL=_get_env("DEFAULT_SUPER_ADMIN_EMAIL", "test@test.com"),
+            DATA_ENCRYPTION_KEY=_get_data_encryption_key(),
             SECRET_KEY=_get_secret_key(),
             SESSION_COOKIE_SECURE=_get_env_boolean("SESSION_COOKIE_SECURE", False),
             SESSION_COOKIE_HTTPONLY=_get_env_boolean("SESSION_COOKIE_HTTPONLY", True),

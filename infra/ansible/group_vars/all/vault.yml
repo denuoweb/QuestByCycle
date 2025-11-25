@@ -12,6 +12,7 @@ db_dev_password:        "{{ lookup('env', 'DB_DEV_PASSWORD') }}"
 
 # Application (Flask) secrets
 app_secret_key:         "{{ lookup('env', 'FLASK_SECRET_KEY') }}"
+data_encryption_key:    "{{ lookup('env', 'DATA_ENCRYPTION_KEY') }}"
 session_cookie_secure:  "{{ lookup('env', 'SESSION_COOKIE_SECURE') }}"
 
 # Default super-admin credentials

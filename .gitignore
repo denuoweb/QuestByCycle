@@ -186,6 +186,7 @@ logs/gunicorn-access.log
 app/static/videos/welcomeQuestByCycle.mp4
 welcomeQuestByCycle.mp4
 credentials.json
+data_encryption.key
 node_modules/
 logs/
 # Never commit real .env files:

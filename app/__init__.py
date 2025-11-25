@@ -43,6 +43,7 @@ from app.activitypub_utils import ap_bp
 from app.ai import ai_bp
 from app.models import db
 from app.utils import generate_demo_game
+from app.utils.encryption import encrypt_game_secrets_if_needed
 from .config import load_config
 
                         
@@ -121,6 +122,7 @@ def create_app(config_overrides=None):
                                                     
     app.config.update({
         "SECRET_KEY": inscopeconfig.encryption.SECRET_KEY,
+        "DATA_ENCRYPTION_KEY": inscopeconfig.encryption.DATA_ENCRYPTION_KEY,
         "SQLALCHEMY_DATABASE_URI": inscopeconfig.flask.SQLALCHEMY_DATABASE_URI,
         "DEBUG": inscopeconfig.flask.DEBUG,
         "SQLALCHEMY_ECHO": inscopeconfig.main.SQLALCHEMY_ECHO,
@@ -233,6 +235,9 @@ def create_app(config_overrides=None):
             admin_module.create_super_admin(app)
             init_queue(app)
             generate_demo_game()
+            updated_games = encrypt_game_secrets_if_needed()
+            if updated_games:
+                app.logger.info("Encrypted secrets for %s games", updated_games)
     else:
         with app.app_context():
             # Ensure tables exist for tests that don't call create_all() themselves
@@ -245,6 +250,11 @@ def create_app(config_overrides=None):
                 generate_demo_game()
             except Exception:
                 # Keep tests resilient even if demo setup fails under sqlite memory
+                pass
+            try:
+                encrypt_game_secrets_if_needed()
+            except Exception:
+                # Tests may use in-memory databases without the table present.
                 pass
 
                             

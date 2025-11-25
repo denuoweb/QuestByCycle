@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import DateTime, event
 
 from app.constants import UTC
+from app.utils.encryption import EncryptedString
 from . import db, game_admins
 
 
@@ -49,16 +50,16 @@ class Game(db.Model):
     logo = db.Column(db.String(255), nullable=True)
     logo_url = db.Column(db.String(500), nullable=True)
     twitter_username = db.Column(db.String(500), nullable=True)
-    twitter_api_key = db.Column(db.String(500), nullable=True)
-    twitter_api_secret = db.Column(db.String(500), nullable=True)
-    twitter_access_token = db.Column(db.String(500), nullable=True)
-    twitter_access_token_secret = db.Column(db.String(500), nullable=True)
-    facebook_app_id = db.Column(db.String(500), nullable=True)
-    facebook_app_secret = db.Column(db.String(500), nullable=True)
-    facebook_access_token = db.Column(db.String(500), nullable=True)
-    facebook_page_id = db.Column(db.String(500), nullable=True)
-    instagram_user_id = db.Column(db.String(500), nullable=True)
-    instagram_access_token = db.Column(db.String(500), nullable=True)
+    twitter_api_key = db.Column(EncryptedString(), nullable=True)
+    twitter_api_secret = db.Column(EncryptedString(), nullable=True)
+    twitter_access_token = db.Column(EncryptedString(), nullable=True)
+    twitter_access_token_secret = db.Column(EncryptedString(), nullable=True)
+    facebook_app_id = db.Column(EncryptedString(), nullable=True)
+    facebook_app_secret = db.Column(EncryptedString(), nullable=True)
+    facebook_access_token = db.Column(EncryptedString(), nullable=True)
+    facebook_page_id = db.Column(EncryptedString(), nullable=True)
+    instagram_user_id = db.Column(EncryptedString(), nullable=True)
+    instagram_access_token = db.Column(EncryptedString(), nullable=True)
     calendar_url = db.Column(db.String(500), nullable=True)
     calendar_service_json_path = db.Column(db.String(500), nullable=True)
     last_calendar_sync = db.Column(db.DateTime(timezone=True), nullable=True)
@@ -198,4 +199,3 @@ class Sponsor(db.Model):
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
 
     game = db.relationship('Game', back_populates='sponsors')
-

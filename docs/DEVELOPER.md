@@ -168,6 +168,8 @@ Update the `.env` file with settings appropriate for your environment. The appli
 - `DEFAULT_SUPER_ADMIN_PASSWORD`: Password for the initial super admin.
 - `DEFAULT_SUPER_ADMIN_EMAIL`: Email for the initial super admin.
 - `SECRET_KEY`: Secret used to sign session cookies.
+- `DATA_ENCRYPTION_KEY`: Fernet key used to encrypt sensitive per-game credentials; falls back to
+  `data_encryption.key` when unset.
 - `SESSION_COOKIE_SECURE`: Require HTTPS for the session cookie.
 - `SESSION_COOKIE_NAME`: Name of the session cookie.
 - `SESSION_COOKIE_SAMESITE`: SameSite policy for the session cookie.
